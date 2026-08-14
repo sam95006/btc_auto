@@ -21,8 +21,8 @@ function spark(seed: number, n = 24): number[] {
   return out;
 }
 
-function candles(seed: number, n = 48) {
-  const out: Array<{ o: number; h: number; l: number; c: number }> = [];
+function candles(seed: number, n = 64) {
+  const out: Array<{ o: number; h: number; l: number; c: number; v: number }> = [];
   let c = seed;
   for (let i = 0; i < n; i++) {
     const o = c;
@@ -30,7 +30,8 @@ function candles(seed: number, n = 48) {
     c = o * (1 + drift);
     const h = Math.max(o, c) * (1 + 0.004 + (i % 5) * 0.001);
     const l = Math.min(o, c) * (1 - 0.004 - (i % 3) * 0.001);
-    out.push({ o, h, l, c });
+    const v = Math.abs(c - o) * (900 + (i % 9) * 140) + 200;
+    out.push({ o, h, l, c, v });
   }
   return out;
 }
@@ -202,7 +203,175 @@ export const MOCK_RANKING: MarketRankingRowDto[] = [
     sparkline: spark(0.62),
     lastChangeLabel: "4 小時前轉弱",
   },
+  {
+    symbol: "MATICUSDT",
+    name: "Polygon",
+    price: 0.58,
+    change24hPct: -0.24,
+    bias: "neutral",
+    biasLabel: BIAS_LABELS.neutral,
+    advice: "wait",
+    adviceLabel: ADVICE_LABELS.wait,
+    score: 41,
+    beginnerReason: "整理偏弱，先不要急",
+    ...riskOf("medium"),
+    sparkline: spark(0.58),
+    lastChangeLabel: "3 小時前",
+  },
+  {
+    symbol: "OPUSDT",
+    name: "Optimism",
+    price: 2.14,
+    change24hPct: -2.1,
+    bias: "bearish",
+    biasLabel: BIAS_LABELS.bearish,
+    advice: "wait",
+    adviceLabel: ADVICE_LABELS.wait,
+    score: 44,
+    beginnerReason: "短線賣壓仍在，風險偏高",
+    ...riskOf("high"),
+    sparkline: spark(2.14),
+    lastChangeLabel: "6 小時前風險上調",
+  },
+  {
+    symbol: "ARBUSDT",
+    name: "Arbitrum",
+    price: 1.05,
+    change24hPct: 0.05,
+    bias: "neutral",
+    biasLabel: BIAS_LABELS.neutral,
+    advice: "observing",
+    adviceLabel: ADVICE_LABELS.observing,
+    score: 58,
+    beginnerReason: "變化不大，維持觀察",
+    ...riskOf("low"),
+    sparkline: spark(1.05),
+    lastChangeLabel: "今天無明顯變化",
+  },
+  {
+    symbol: "LINKUSDT",
+    name: "Chainlink",
+    price: 14.2,
+    change24hPct: 0.12,
+    bias: "neutral",
+    biasLabel: BIAS_LABELS.neutral,
+    advice: "observing",
+    adviceLabel: ADVICE_LABELS.observing,
+    score: 63,
+    beginnerReason: "波動收斂，等待方向",
+    ...riskOf("low"),
+    sparkline: spark(14.2),
+    lastChangeLabel: "今天無明顯變化",
+  },
+  {
+    symbol: "APTUSDT",
+    name: "Aptos",
+    price: 8.4,
+    change24hPct: -0.05,
+    bias: "neutral",
+    biasLabel: BIAS_LABELS.neutral,
+    advice: "observing",
+    adviceLabel: ADVICE_LABELS.observing,
+    score: 57,
+    beginnerReason: "區間整理，暫無新催化",
+    ...riskOf("low"),
+    sparkline: spark(8.4),
+    lastChangeLabel: "昨天",
+  },
+  {
+    symbol: "DOTUSDT",
+    name: "Polkadot",
+    price: 6.8,
+    change24hPct: 1.1,
+    bias: "bullish",
+    biasLabel: BIAS_LABELS.bullish,
+    advice: "observing",
+    adviceLabel: ADVICE_LABELS.observing,
+    score: 66,
+    beginnerReason: "溫和轉強，仍需確認",
+    ...riskOf("medium"),
+    sparkline: spark(6.8),
+    lastChangeLabel: "2 小時前",
+  },
+  {
+    symbol: "NEARUSDT",
+    name: "NEAR",
+    price: 5.2,
+    change24hPct: 2.4,
+    bias: "bullish",
+    biasLabel: BIAS_LABELS.bullish,
+    advice: "watch_closely",
+    adviceLabel: ADVICE_LABELS.watch_closely,
+    score: 74,
+    beginnerReason: "動能回升，可納入優先觀察",
+    ...riskOf("medium"),
+    sparkline: spark(5.2),
+    lastChangeLabel: "45 分鐘前進入可留意",
+  },
+  {
+    symbol: "ATOMUSDT",
+    name: "Cosmos",
+    price: 9.1,
+    change24hPct: -0.9,
+    bias: "neutral",
+    biasLabel: BIAS_LABELS.neutral,
+    advice: "wait",
+    adviceLabel: ADVICE_LABELS.wait,
+    score: 52,
+    beginnerReason: "結構偏弱，先等等",
+    ...riskOf("medium"),
+    sparkline: spark(9.1),
+    lastChangeLabel: "5 小時前",
+  },
+  {
+    symbol: "SUIUSDT",
+    name: "Sui",
+    price: 1.82,
+    change24hPct: 3.8,
+    bias: "bullish",
+    biasLabel: BIAS_LABELS.bullish,
+    advice: "watch_closely",
+    adviceLabel: ADVICE_LABELS.watch_closely,
+    score: 76,
+    beginnerReason: "熱度上升，注意追價風險",
+    ...riskOf("high"),
+    sparkline: spark(1.82),
+    lastChangeLabel: "1 小時前狀態上調",
+  },
+  {
+    symbol: "INJUSDT",
+    name: "Injective",
+    price: 24.5,
+    change24hPct: 1.6,
+    bias: "bullish",
+    biasLabel: BIAS_LABELS.bullish,
+    advice: "observing",
+    adviceLabel: ADVICE_LABELS.observing,
+    score: 70,
+    beginnerReason: "動能尚可，等待更明確突破",
+    ...riskOf("medium"),
+    sparkline: spark(24.5),
+    lastChangeLabel: "90 分鐘前",
+  },
+  {
+    symbol: "TIAUSDT",
+    name: "Celestia",
+    price: 7.3,
+    change24hPct: -1.2,
+    bias: "bearish",
+    biasLabel: BIAS_LABELS.bearish,
+    advice: "wait",
+    adviceLabel: ADVICE_LABELS.wait,
+    score: 46,
+    beginnerReason: "回檔中，先不要急",
+    ...riskOf("high"),
+    sparkline: spark(7.3),
+    lastChangeLabel: "3 小時前轉弱",
+  },
 ];
+
+/** Default Founder demo watchlist — 18 assets for density match */
+export const DEFAULT_WATCHLIST_SYMBOLS = MOCK_RANKING.map((r) => r.symbol).slice(0, 18);
 
 export const MOCK_OVERVIEW: MarketOverviewDto = {
   bias: "bullish",

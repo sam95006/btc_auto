@@ -1,6 +1,6 @@
 /**
  * NEXUS Member Platform UI V2
- * Premium light fintech Â· dense Â· navy sidebar Â· blue accent
+ * Premium light fintech  dense  navy sidebar  blue accent
  */
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap");
 
@@ -76,7 +76,7 @@
   flex-shrink: 0;
 }
 
-/* â€”â€” Buttons â€”â€” */
+/*  Buttons  */
 .mpv1-btn {
   display: inline-flex;
   align-items: center;
@@ -136,7 +136,7 @@
   border-radius: 8px;
 }
 
-/* â€”â€” Chips â€”â€” */
+/*  Chips  */
 .mpv1-chip {
   display: inline-flex;
   align-items: center;
@@ -201,7 +201,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* â€”â€” Marketing â€”â€” */
+/*  Marketing  */
 .mpv1-mkt-top {
   display: flex;
   align-items: center;
@@ -263,7 +263,7 @@
   background: var(--mp-bg);
 }
 
-/* â€”â€” Landing V2 â€”â€” */
+/*  Landing V2  */
 .mpv1-land {
   background: #fff;
 }
@@ -447,7 +447,7 @@
   font-size: 0.88rem;
 }
 
-/* â€”â€” Auth (keep split) â€”â€” */
+/*  Auth (keep split)  */
 .mpv1-auth-body {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -698,7 +698,7 @@
   color: #bfdbfe;
 }
 
-/* â€”â€” App shell â€”â€” */
+/*  App shell  */
 .mpv1-app-shell {
   display: grid;
   grid-template-columns: var(--mp-nav-w) 1fr;
@@ -886,7 +886,7 @@
   font-weight: 700;
 }
 
-/* Tier preview â€” single subtle control */
+/* Tier preview  single subtle control */
 .mpv1-tier-preview {
   display: flex;
   align-items: center;
@@ -914,7 +914,7 @@
   cursor: pointer;
 }
 
-/* â€”â€” Cards / layout â€”â€” */
+/*  Cards / layout  */
 .mpv1-card {
   background: var(--mp-surface);
   border: 1px solid var(--mp-border);
@@ -1714,7 +1714,7 @@
   }
 }
 
-/* ¡X¡X V2 reference-match additions ¡X¡X */
+/* XX V2 reference-match additions XX */
 .mpv1-app-main { max-width: none; width: 100%; }
 .mpv1-topbar { justify-content: stretch; }
 .mpv1-search-wide {
@@ -1897,4 +1897,187 @@
   .mpv1-footer-grid { grid-template-columns: 1fr 1fr; }
   .mpv1-ind-grid { grid-template-columns: 1fr 1fr; }
   .mpv1-change-strip { grid-template-columns: 1fr; }
+}
+
+/*  UI V2.1 polish  */
+.mpv1-preview-panel-dense {
+  gap: 0.7rem;
+  padding: 1rem;
+}
+.mpv1-preview-panel-dense .mpv1-preview-kpi {
+  min-height: 92px;
+}
+.mpv1-preview-panel-dense .mpv1-preview-chart {
+  height: 108px;
+}
+.mpv1-preview-panel-dense .mpv1-bias-gauge {
+  margin: 0.35rem 0 0;
+}
+.mpv1-preview-panel-dense .mpv1-bias-gauge-track {
+  height: 6px;
+}
+.mpv1-preview-panel-dense .mpv1-bias-gauge-needle {
+  width: 10px;
+  height: 10px;
+  top: -2px;
+  background: #fff;
+  border-color: #0f172a;
+}
+
+.mpv1-medal {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 1px rgba(15, 23, 42, 0.25);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.mpv1-dash-fold {
+  display: grid;
+  gap: 0.7rem;
+}
+.mpv1-dash-fold .mpv1-intel {
+  min-height: 0;
+  padding: 0.8rem 0.9rem;
+  gap: 0.25rem;
+}
+.mpv1-dash-fold .mpv1-intel .val {
+  font-size: 1.28rem;
+}
+.mpv1-dash-fold .mpv1-intel-list {
+  margin-top: 0.2rem;
+  gap: 0.22rem;
+}
+.mpv1-dash-fold .mpv1-intel-list li {
+  font-size: 0.76rem;
+}
+.mpv1-dash-fold .mpv1-pulse-stats {
+  margin-bottom: 0.45rem;
+  gap: 0.4rem;
+}
+.mpv1-dash-fold .mpv1-pulse-stat {
+  padding: 0.4rem 0.55rem;
+}
+.mpv1-pulse-chart-compact {
+  height: 88px;
+}
+.mpv1-pulse-chart-compact .mpv1-spark {
+  height: 100%;
+  width: 100%;
+}
+.mpv1-rank-table-compact thead th,
+.mpv1-rank-table-compact tbody td {
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+  font-size: 0.8rem;
+}
+.mpv1-dash-fold .mpv1-aside-card {
+  padding: 0.75rem 0.85rem;
+}
+.mpv1-dash-fold .mpv1-feed li {
+  padding: 0.4rem 0;
+}
+.mpv1-dash-fold .mpv1-feed p {
+  font-size: 0.76rem;
+  -webkit-line-clamp: 2;
+}
+
+.mpv1-chart-card {
+  padding: 0.85rem 0.95rem 0.95rem;
+}
+.mpv1-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+.mpv1-chart-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem 0.75rem;
+  padding: 0.35rem 0.4rem;
+  margin-bottom: 0.55rem;
+  border: 1px solid var(--mp-border);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+.mpv1-chart-intervals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+.mpv1-chart-iv {
+  border: 0;
+  background: transparent;
+  color: var(--mp-text-2);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.28rem 0.55rem;
+  border-radius: 7px;
+  cursor: pointer;
+  line-height: 1;
+}
+.mpv1-chart-iv.is-on {
+  background: #fff;
+  color: var(--mp-accent);
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25), 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+.mpv1-chart-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+.mpv1-chart-tool {
+  width: 30px;
+  height: 28px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--mp-text-2);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.mpv1-chart-tool:hover {
+  background: #fff;
+  color: var(--mp-navy);
+}
+.mpv1-candle-wrap {
+  height: 320px;
+  padding: 0.35rem 0.45rem 0.45rem;
+  background: #fff;
+}
+.mpv1-candle-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.mpv1-auth-deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.95;
+}
+.mpv1-auth-deco-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.mpv1-auth-left::after {
+  inset: auto;
+  width: 70%;
+  height: 55%;
+  right: -8%;
+  bottom: -5%;
+  background: radial-gradient(circle at 40% 40%, rgba(147, 197, 253, 0.28), transparent 60%);
 }

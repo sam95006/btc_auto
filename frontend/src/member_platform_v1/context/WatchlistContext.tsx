@@ -6,8 +6,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { DEFAULT_WATCHLIST_SYMBOLS } from "../mocks/data";
 
 const KEY = "nexus_mp_v1_watchlist";
+const KEY_VER = "nexus_mp_v1_watchlist_ver";
+const CURRENT_VER = "v2.1-18";
 
 type WatchCtx = {
   symbols: string[];
@@ -19,12 +22,19 @@ const Ctx = createContext<WatchCtx | null>(null);
 
 function load(): string[] {
   try {
+    const ver = localStorage.getItem(KEY_VER);
     const raw = localStorage.getItem(KEY);
-    if (!raw) return ["BTCUSDT", "ETHUSDT", "SOLUSDT"];
+    if (ver !== CURRENT_VER || !raw) {
+      localStorage.setItem(KEY_VER, CURRENT_VER);
+      localStorage.setItem(KEY, JSON.stringify(DEFAULT_WATCHLIST_SYMBOLS));
+      return [...DEFAULT_WATCHLIST_SYMBOLS];
+    }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map(String) : ["BTCUSDT", "ETHUSDT", "SOLUSDT"];
+    return Array.isArray(parsed) && parsed.length
+      ? parsed.map(String)
+      : [...DEFAULT_WATCHLIST_SYMBOLS];
   } catch {
-    return ["BTCUSDT", "ETHUSDT", "SOLUSDT"];
+    return [...DEFAULT_WATCHLIST_SYMBOLS];
   }
 }
 
@@ -34,6 +44,7 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
   const persist = (next: string[]) => {
     setSymbols(next);
     localStorage.setItem(KEY, JSON.stringify(next));
+    localStorage.setItem(KEY_VER, CURRENT_VER);
   };
 
   const has = useCallback((symbol: string) => symbols.includes(symbol), [symbols]);

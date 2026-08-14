@@ -3,7 +3,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { AdviceChip, BiasChip } from "../components/Chips";
 import { IconAlert, IconBell, IconCrown, IconLock, IconShield, IconStar, IconTrend } from "../components/Icons";
 import { LockedPanel } from "../components/LockedPanel";
-import { CandleChart, SparkChart } from "../components/SparkChart";
+import { CandleChart, ChartToolbar, SparkChart } from "../components/SparkChart";
 import { BiasGauge, DonutChart, ScoreRing, ToggleSwitch } from "../components/Viz";
 import { useAuth } from "../context/AuthContext";
 import { useWatchlist } from "../context/WatchlistContext";
@@ -37,22 +37,15 @@ function RiskSq({ risk, label }: { risk: string; label: string }) {
 
 function rankMedal(i: number) {
   if (i < 3) {
-    const colors = ["#f59e0b", "#94a3b8", "#b45309"];
+    const styles = [
+      { bg: "linear-gradient(145deg,#f6e27a,#d4a017)", ring: "#b8860b", label: "1" },
+      { bg: "linear-gradient(145deg,#e8eef5,#9aa7b8)", ring: "#6b7c8f", label: "2" },
+      { bg: "linear-gradient(145deg,#e0b07a,#a66a2b)", ring: "#8a5520", label: "3" },
+    ];
+    const s = styles[i];
     return (
-      <span
-        style={{
-          display: "inline-grid",
-          placeItems: "center",
-          width: 22,
-          height: 22,
-          borderRadius: 999,
-          background: colors[i],
-          color: "#fff",
-          fontSize: "0.7rem",
-          fontWeight: 700,
-        }}
-      >
-        {i + 1}
+      <span className="mpv1-medal" style={{ background: s.bg, boxShadow: `inset 0 0 0 1px ${s.ring}` }} title={`第 ${s.label} 名`}>
+        {s.label}
       </span>
     );
   }
@@ -80,7 +73,8 @@ export function DashboardPage() {
 
   return (
     <RequireSession>
-      <div className="mpv1-grid mpv1-grid-4" style={{ marginBottom: "0.85rem" }}>
+      <div className="mpv1-dash-fold">
+      <div className="mpv1-grid mpv1-grid-4 mpv1-dash-intel">
         <article className="mpv1-card mpv1-intel">
           <div className="lbl">市場狀態</div>
           <div className="val bull">{data.overview.biasLabel} ↗</div>
@@ -90,11 +84,11 @@ export function DashboardPage() {
         <article className="mpv1-card mpv1-intel">
           <div className="lbl">最佳機會</div>
           <div className="meta">
-            <strong style={{ fontSize: "1.1rem" }}>{best?.symbol.replace("USDT", "")}</strong>
+            <strong style={{ fontSize: "1.05rem" }}>{best?.symbol.replace("USDT", "")}</strong>
             <span className="mpv1-chip mpv1-chip-bull">高機會</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.35rem" }}>
-            <ScoreRing score={best?.score ?? null} size={52} />
+          <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginTop: "0.25rem" }}>
+            <ScoreRing score={best?.score ?? null} size={46} />
             <div className="hint">{best?.name}<br />{best?.beginnerReason}</div>
           </div>
           <Link className="mpv1-footer-link" to="/app/markets">
@@ -103,7 +97,7 @@ export function DashboardPage() {
         </article>
         <article className="mpv1-card mpv1-intel">
           <div className="lbl">現在怎麼做</div>
-          <div className="val accent" style={{ fontSize: "1.15rem" }}>
+          <div className="val accent" style={{ fontSize: "1.05rem" }}>
             {data.overview.adviceLabel}
           </div>
           <ul className="mpv1-intel-list">
@@ -141,7 +135,7 @@ export function DashboardPage() {
         </article>
       </div>
 
-      <div className="mpv1-grid mpv1-grid-pulse" style={{ marginBottom: "0.85rem" }}>
+      <div className="mpv1-grid mpv1-grid-pulse mpv1-dash-mid">
         <article className="mpv1-card">
           <div className="mpv1-card-head">
             <h2 className="mpv1-card-title">市場脈動</h2>
@@ -173,7 +167,7 @@ export function DashboardPage() {
               <div className="val">17.2%</div>
             </div>
           </div>
-          <div className="mpv1-ticker-row" style={{ marginBottom: "0.75rem" }}>
+          <div className="mpv1-ticker-row" style={{ marginBottom: "0.5rem" }}>
             {data.pulse.tickers.map((t) => (
               <div key={t.symbol} className="mpv1-ticker">
                 <div className="sym">{t.symbol}</div>
@@ -185,14 +179,14 @@ export function DashboardPage() {
               </div>
             ))}
           </div>
-          <div className="mpv1-pulse-chart">
+          <div className="mpv1-pulse-chart mpv1-pulse-chart-compact">
             <SparkChart values={data.pulse.trend} tone="accent" />
           </div>
         </article>
 
         <article className="mpv1-card">
           <h2 className="mpv1-card-title">今日用白話文看市場</h2>
-          <ul className="mpv1-feed" style={{ marginTop: "0.75rem" }}>
+          <ul className="mpv1-feed" style={{ marginTop: "0.55rem" }}>
             {[
               { icon: "↗", t: "今天市場正在發生什麼", b: data.plainLanguage.happening },
               { icon: "★", t: "為什麼市場轉強", b: data.plainLanguage.whyStrong },
@@ -200,7 +194,7 @@ export function DashboardPage() {
               { icon: "🛡", t: "最需要注意的風險", b: data.plainLanguage.topRisk },
             ].map((x) => (
               <li key={x.t}>
-                <span className="mpv1-alert-ico info" style={{ width: 28, height: 28 }}>
+                <span className="mpv1-alert-ico info" style={{ width: 26, height: 26 }}>
                   {x.icon}
                 </span>
                 <div>
@@ -217,91 +211,68 @@ export function DashboardPage() {
         </article>
       </div>
 
-      <div className="mpv1-layout-aside">
-        <div className="mpv1-grid">
-          <article className="mpv1-card" style={{ padding: 0, overflow: "auto" }}>
-            <div className="mpv1-card-head" style={{ padding: "0.85rem 1rem 0" }}>
-              <h2 className="mpv1-card-title">市場機會一覽</h2>
-              <Link className="mpv1-action-link" to="/app/markets">
-                查看全部 →
-              </Link>
-            </div>
-            <table className="mpv1-rank-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>資產</th>
-                  <th>價格</th>
-                  <th>24h</th>
-                  <th className="hide-sm">趨勢</th>
-                  <th>狀態</th>
-                  <th>Score</th>
-                  <th className="hide-sm">原因</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.topAssets.slice(0, 6).map((r, i) => {
-                  const up = r.change24hPct >= 0;
-                  const base = r.symbol.replace("USDT", "");
-                  return (
-                    <tr key={r.symbol}>
-                      <td>{rankMedal(i)}</td>
-                      <td>
-                        <Link to={`/app/market/${base}`} className="mpv1-asset-cell">
-                          <span className={`mpv1-coin ${coinClass(r.symbol)}`}>{base.slice(0, 1)}</span>
-                          <span>
-                            <strong>{base}</strong>
-                            <span>{r.name}</span>
-                          </span>
-                        </Link>
-                      </td>
-                      <td style={{ fontWeight: 600 }}>${fmtPrice(r.price)}</td>
-                      <td className={up ? "mpv1-chg-up" : "mpv1-chg-down"}>
-                        {up ? "+" : ""}
-                        {r.change24hPct.toFixed(2)}%
-                      </td>
-                      <td className="hide-sm">
-                        <SparkChart values={r.sparkline || []} compact tone={up ? "bull" : "bear"} />
-                      </td>
-                      <td>
-                        <AdviceChip advice={r.advice} label={r.adviceLabel} />
-                      </td>
-                      <td>
-                        <ScoreRing score={r.score} size={36} />
-                      </td>
-                      <td className="hide-sm">
-                        <div className="mpv1-reason-cell">{r.beginnerReason}</div>
-                      </td>
-                      <td>
-                        <Link className="mpv1-action-link" to={`/app/market/${base}`}>
-                          查看分析 →
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </article>
-
-          <article className="mpv1-card">
-            <h2 className="mpv1-card-title">近期變化</h2>
-            <div className="mpv1-change-strip">
-              {data.signalChanges.map((s) => (
-                <div key={s.id} className="mpv1-change-chip">
-                  <strong>{s.symbol.replace("USDT", "")}</strong>
-                  <span className="arrow">
-                    {s.fromLabel} → {s.toLabel}
-                  </span>
-                  <div className="mpv1-muted" style={{ marginTop: 4 }}>
-                    {s.timeLabel}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </article>
-        </div>
+      <div className="mpv1-layout-aside mpv1-dash-bottom">
+        <article className="mpv1-card" style={{ padding: 0, overflow: "auto" }}>
+          <div className="mpv1-card-head" style={{ padding: "0.65rem 0.85rem 0" }}>
+            <h2 className="mpv1-card-title">市場機會一覽</h2>
+            <Link className="mpv1-action-link" to="/app/markets">
+              查看全部 →
+            </Link>
+          </div>
+          <table className="mpv1-rank-table mpv1-rank-table-compact">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>資產</th>
+                <th>價格</th>
+                <th>24h</th>
+                <th className="hide-sm">趨勢</th>
+                <th>狀態</th>
+                <th>Score</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.topAssets.slice(0, 4).map((r, i) => {
+                const up = r.change24hPct >= 0;
+                const base = r.symbol.replace("USDT", "");
+                return (
+                  <tr key={r.symbol}>
+                    <td>{rankMedal(i)}</td>
+                    <td>
+                      <Link to={`/app/market/${base}`} className="mpv1-asset-cell">
+                        <span className={`mpv1-coin ${coinClass(r.symbol)}`}>{base.slice(0, 1)}</span>
+                        <span>
+                          <strong>{base}</strong>
+                          <span>{r.name}</span>
+                        </span>
+                      </Link>
+                    </td>
+                    <td style={{ fontWeight: 600 }}>${fmtPrice(r.price)}</td>
+                    <td className={up ? "mpv1-chg-up" : "mpv1-chg-down"}>
+                      {up ? "+" : ""}
+                      {r.change24hPct.toFixed(2)}%
+                    </td>
+                    <td className="hide-sm">
+                      <SparkChart values={r.sparkline || []} compact tone={up ? "bull" : "bear"} />
+                    </td>
+                    <td>
+                      <AdviceChip advice={r.advice} label={r.adviceLabel} />
+                    </td>
+                    <td>
+                      <ScoreRing score={r.score} size={32} />
+                    </td>
+                    <td>
+                      <Link className="mpv1-action-link" to={`/app/market/${base}`}>
+                        分析 →
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </article>
 
         <aside className="mpv1-aside-stack">
           <article className="mpv1-card mpv1-aside-card">
@@ -341,8 +312,8 @@ export function DashboardPage() {
               <ul className="mpv1-feed">
                 {data.riskAlerts.slice(0, 3).map((a) => (
                   <li key={a.id}>
-                    <span className={`mpv1-alert-ico ${a.severity}`} style={{ width: 28, height: 28 }}>
-                      <IconAlert size={14} />
+                    <span className={`mpv1-alert-ico ${a.severity}`} style={{ width: 26, height: 26 }}>
+                      <IconAlert size={13} />
                     </span>
                     <div>
                       <strong>{a.title}</strong>
@@ -358,6 +329,24 @@ export function DashboardPage() {
           </article>
         </aside>
       </div>
+      </div>
+
+      <article className="mpv1-card" style={{ marginTop: "0.75rem" }}>
+        <h2 className="mpv1-card-title">近期變化</h2>
+        <div className="mpv1-change-strip">
+          {data.signalChanges.map((s) => (
+            <div key={s.id} className="mpv1-change-chip">
+              <strong>{s.symbol.replace("USDT", "")}</strong>
+              <span className="arrow">
+                {s.fromLabel} → {s.toLabel}
+              </span>
+              <div className="mpv1-muted" style={{ marginTop: 4 }}>
+                {s.timeLabel}
+              </div>
+            </div>
+          ))}
+        </div>
+      </article>
     </RequireSession>
   );
 }
@@ -590,6 +579,7 @@ export function MarketDetailPage() {
   const { has, toggle } = useWatchlist();
   const [asset, setAsset] = useState<AssetDetailDto | null>(null);
   const [tab, setTab] = useState("概覽");
+  const [interval, setInterval] = useState("15m");
 
   useEffect(() => {
     void marketApi.getAsset(symbol).then(setAsset);
@@ -654,17 +644,25 @@ export function MarketDetailPage() {
       </div>
 
       <div className="mpv1-layout-aside" style={{ marginBottom: "0.85rem" }}>
-        <article className="mpv1-card">
-          <div className="mpv1-card-head">
-            <h2 className="mpv1-card-title">行情圖</h2>
-            <div className="mpv1-filters">
-              {["15m", "1H", "4H", "1D"].map((t) => (
-                <span key={t} className={`mpv1-filter${t === "15m" ? " is-on" : ""}`}>
-                  {t}
-                </span>
-              ))}
+        <article className="mpv1-card mpv1-chart-card">
+          <div className="mpv1-chart-header">
+            <div>
+              <h2 className="mpv1-card-title">{base} / USDT</h2>
+              <p className="mpv1-muted" style={{ fontSize: "0.75rem" }}>
+                {base}/USDT · {interval} · NEXUS 模擬行情（非即時）
+                {asset.candles?.length
+                  ? ` · O ${fmtPrice(asset.candles[asset.candles.length - 1].o)} H ${fmtPrice(asset.candles[asset.candles.length - 1].h)} L ${fmtPrice(asset.candles[asset.candles.length - 1].l)} C ${fmtPrice(asset.candles[asset.candles.length - 1].c)}`
+                  : ""}
+              </p>
+            </div>
+            <div className="mpv1-asset-badges">
+              <span className={asset.change24hPct >= 0 ? "mpv1-chg-up" : "mpv1-chg-down"}>
+                {asset.change24hPct >= 0 ? "+" : ""}
+                {asset.change24hPct.toFixed(2)}%
+              </span>
             </div>
           </div>
+          <ChartToolbar interval={interval} onInterval={setInterval} />
           <div className="mpv1-candle-wrap">
             <CandleChart candles={asset.candles || []} />
           </div>
@@ -900,6 +898,7 @@ export function WatchlistPage() {
   const [rows, setRows] = useState<MarketRankingRowDto[]>([]);
   const [filter, setFilter] = useState<"all" | "watch" | "observing" | "wait" | "changed">("all");
   const [alertsOn, setAlertsOn] = useState<Record<string, boolean>>({});
+  const [pageSize, setPageSize] = useState(8);
 
   useEffect(() => {
     void marketApi.getRanking("enterprise").then((all) => {
@@ -907,21 +906,26 @@ export function WatchlistPage() {
     });
   }, [symbols]);
 
+  const isChanged = (r: MarketRankingRowDto) =>
+    /狀態上調|進入可留意|轉弱|風險上調/.test(r.lastChangeLabel || "");
+
   const counts = {
     all: rows.length,
     watch: rows.filter((r) => r.advice === "watch_closely").length,
     observing: rows.filter((r) => r.advice === "observing").length,
     wait: rows.filter((r) => r.advice === "wait").length,
-    changed: Math.min(2, rows.length),
+    changed: rows.filter(isChanged).length,
   };
 
   const filtered = rows.filter((r) => {
     if (filter === "watch") return r.advice === "watch_closely";
     if (filter === "observing") return r.advice === "observing";
     if (filter === "wait") return r.advice === "wait";
-    if (filter === "changed") return Boolean(r.lastChangeLabel);
+    if (filter === "changed") return isChanged(r);
     return true;
   });
+
+  const visibleRows = filtered.slice(0, pageSize);
 
   const priority = [...rows].sort((a, b) => b.change24hPct - a.change24hPct).slice(0, 3);
   const risingRisk = [...rows].filter((r) => r.risk === "high" || r.change24hPct < 0).slice(0, 3);
@@ -959,7 +963,10 @@ export function WatchlistPage() {
                     key={id}
                     type="button"
                     className={`mpv1-filter${filter === id ? " is-on" : ""}`}
-                    onClick={() => setFilter(id)}
+                    onClick={() => {
+                      setFilter(id);
+                      setPageSize(8);
+                    }}
                   >
                     {label}
                   </button>
@@ -990,7 +997,7 @@ export function WatchlistPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filtered.map((r) => {
+                      {visibleRows.map((r) => {
                         const up = r.change24hPct >= 0;
                         const base = r.symbol.replace("USDT", "");
                         const on = alertsOn[r.symbol] ?? true;
@@ -1042,8 +1049,8 @@ export function WatchlistPage() {
                       })}
                     </tbody>
                   </table>
-                  <button type="button" className="mpv1-load-more">
-                    載入更多 ↓
+                  <button type="button" className="mpv1-load-more" onClick={() => setPageSize((n) => Math.min(n + 8, filtered.length))}>
+                    {pageSize < filtered.length ? "載入更多 ↓" : "已顯示全部"}
                   </button>
                 </>
               )}
@@ -1082,10 +1089,10 @@ export function WatchlistPage() {
                   centerLabel={String(counts.all || 0)}
                   centerSub="總資產"
                   segments={[
-                    { value: counts.watch || 1, color: "#059669" },
-                    { value: counts.observing || 1, color: "#2563eb" },
-                    { value: counts.wait || 1, color: "#d97706" },
-                    { value: counts.changed || 1, color: "#7c3aed" },
+                    { value: Math.max(counts.watch, 0), color: "#059669" },
+                    { value: Math.max(counts.observing, 0), color: "#2563eb" },
+                    { value: Math.max(counts.wait, 0), color: "#d97706" },
+                    { value: Math.max(counts.changed, 1), color: "#7c3aed" },
                   ]}
                 />
                 <div className="mpv1-legend">

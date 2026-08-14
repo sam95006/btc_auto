@@ -79,29 +79,60 @@ export function LandingPage() {
           </div>
         </div>
 
-        <div className="mpv1-preview-panel" aria-label="產品預覽">
+        <div className="mpv1-preview-panel mpv1-preview-panel-dense" aria-label="產品預覽">
           <div className="mpv1-preview-top">
             <div className="mpv1-preview-kpi">
               <div className="lbl">市場狀態</div>
-              <div className="val bull">偏多</div>
+              <div className="val bull">偏多 ↗</div>
+              <div className="mpv1-bias-gauge" style={{ marginTop: 6 }}>
+                <div className="mpv1-bias-gauge-track" />
+                <div className="mpv1-bias-gauge-needle" style={{ left: "72%" }} />
+              </div>
+              <div style={{ color: "#94a3b8", fontSize: "0.68rem", marginTop: 4 }}>恐懼與貪婪 64</div>
             </div>
             <div className="mpv1-preview-kpi">
               <div className="lbl">最佳機會</div>
-              <div className="val">ETH 82/100</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", marginTop: 4 }}>
+                <strong style={{ color: "#fff", fontSize: "1rem" }}>ETH</strong>
+                <span className="mpv1-chip mpv1-chip-bull">高機會</span>
+              </div>
+              <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden>
+                  <circle cx="20" cy="20" r="15" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="3" />
+                  <circle
+                    cx="20"
+                    cy="20"
+                    r="15"
+                    fill="none"
+                    stroke="#34d399"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 15 * 0.82} ${2 * Math.PI * 15}`}
+                    transform="rotate(-90 20 20)"
+                  />
+                  <text x="20" y="21" textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize="11" fontWeight="700">
+                    82
+                  </text>
+                </svg>
+                <span style={{ color: "#93c5fd", fontSize: "0.75rem" }}>/ 100</span>
+              </div>
             </div>
             <div className="mpv1-preview-kpi">
               <div className="lbl">市場風險</div>
               <div className="val warn">中等風險</div>
+              <div style={{ color: "#94a3b8", fontSize: "0.72rem", marginTop: 6 }}>短線波動增加</div>
             </div>
           </div>
           <div className="mpv1-preview-chart">
+            <div style={{ color: "#93c5fd", fontSize: "0.72rem", marginBottom: 4 }}>Market Pulse · 總市值 $2.41T</div>
             <SparkChart values={[2.05, 2.1, 2.08, 2.18, 2.22, 2.2, 2.3, 2.35, 2.41]} tone="accent" />
           </div>
           <div className="mpv1-preview-assets">
+            <div style={{ color: "#93c5fd", fontSize: "0.72rem", marginBottom: 2 }}>熱門資產 Top 3</div>
             {[
-              ["BTC", "$68,450", "+1.2%"],
-              ["ETH", "$3,420", "+2.8%"],
-              ["SOL", "$168", "+4.1%"],
+              ["BTC", "$68,450", "+0.40%"],
+              ["ETH", "$3,420", "+2.80%"],
+              ["SOL", "$168", "+4.10%"],
             ].map(([sym, px, chg]) => (
               <div key={sym} className="mpv1-preview-asset">
                 <strong>{sym}</strong>
@@ -308,6 +339,54 @@ export function LandingPage() {
   );
 }
 
+function AuthFinancialDeco({ patternId = "mpv1DotGrid" }: { patternId?: string }) {
+  const softId = `${patternId}-soft`;
+  return (
+    <div className="mpv1-auth-deco" aria-hidden>
+      <svg className="mpv1-auth-deco-svg" viewBox="0 0 480 640" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <pattern id={patternId} width="18" height="18" patternUnits="userSpaceOnUse">
+            <circle cx="1.2" cy="1.2" r="1.1" fill="rgba(191,219,254,0.22)" />
+          </pattern>
+          <linearGradient id={softId} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="rgba(96,165,250,0.18)" />
+            <stop offset="100%" stopColor="rgba(37,99,235,0.05)" />
+          </linearGradient>
+        </defs>
+        <rect width="480" height="640" fill={`url(#${patternId})`} />
+        <rect x="40" y="280" width="400" height="280" rx="24" fill={`url(#${softId})`} />
+        <polyline
+          fill="none"
+          stroke="rgba(147,197,253,0.55)"
+          strokeWidth="2.2"
+          points="60,520 110,490 150,505 200,430 250,450 300,360 350,390 400,310 440,330"
+        />
+        {[
+          [90, 470, 500, true],
+          [130, 455, 495, false],
+          [170, 440, 480, true],
+          [210, 400, 460, true],
+          [250, 420, 470, false],
+          [290, 350, 430, true],
+          [330, 370, 440, false],
+          [370, 300, 390, true],
+          [410, 315, 400, true],
+        ].map(([x, o, c, up], i) => {
+          const top = Math.min(o as number, c as number);
+          const bot = Math.max(o as number, c as number);
+          const color = up ? "rgba(52,211,153,0.55)" : "rgba(248,113,113,0.5)";
+          return (
+            <g key={i}>
+              <line x1={x as number} x2={x as number} y1={top - 18} y2={bot + 18} stroke={color} strokeWidth="1.4" />
+              <rect x={(x as number) - 6} y={top} width="12" height={Math.max(8, bot - top)} rx="1.5" fill={color} />
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
 function AuthLeftBrand({
   title,
   lead,
@@ -319,6 +398,7 @@ function AuthLeftBrand({
 }) {
   return (
     <aside className="mpv1-auth-left">
+      <AuthFinancialDeco />
       <div className="mpv1-auth-left-inner">
         <div className="mpv1-logo" style={{ color: "#fff" }}>
           NEXUS
@@ -493,6 +573,7 @@ export function RegisterPage() {
       <MarketingHeader />
       <div className="mpv1-auth-body">
         <aside className="mpv1-auth-left">
+          <AuthFinancialDeco patternId="mpv1DotGridReg" />
           <div className="mpv1-auth-left-inner">
             <div className="mpv1-logo" style={{ color: "#fff" }}>
               NEXUS
