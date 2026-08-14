@@ -81,7 +81,7 @@ export interface AssetDetailDto {
   risks: string[];
   invalidation: string[];
   sparkline: number[];
-  candles?: Array<{ o: number; h: number; l: number; c: number }>;
+  candles?: Array<{ o: number; h: number; l: number; c: number; v?: number }>;
   evidence?: {
     supporting: string[];
     contradicting: string[];

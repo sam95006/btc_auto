@@ -22,8 +22,9 @@ export function LandingPage() {
           </div>
           <h1>看懂市場，再做決定</h1>
           <p className="mpv1-land-lead">
-            即時市場信號 × 機會評分 × 風險控管，幫你在波動中掌握優勢。NEXUS
-            把複雜行情翻譯成白話結論：市場偏哪邊、哪些幣先看、今天最好先不要做什麼。
+            即時市場信號 × 機會評分 × 風險控管。
+            <br />
+            把複雜行情翻成白話結論，再做決定。
           </p>
           <ul className="mpv1-feature-list" style={{ marginTop: "1.15rem", color: "var(--mp-text)" }}>
             <li>
@@ -32,7 +33,7 @@ export function LandingPage() {
               </span>
               <div>
                 <strong>即時市場脈動</strong>
-                <span>24/7 監控全球市場動態與資金流向</span>
+                <span>24/7 監控資金與市場溫度</span>
               </div>
             </li>
             <li>
@@ -41,7 +42,7 @@ export function LandingPage() {
               </span>
               <div>
                 <strong>機會優先排序</strong>
-                <span>以評分與狀態排出今天該先看的標的</span>
+                <span>今天該先看哪些標的</span>
               </div>
             </li>
             <li>
@@ -50,7 +51,7 @@ export function LandingPage() {
               </span>
               <div>
                 <strong>風險控管先行</strong>
-                <span>多維風險指標，先告訴你今天不要做什麼</span>
+                <span>先告訴你今天不要做什麼</span>
               </div>
             </li>
           </ul>
@@ -81,7 +82,7 @@ export function LandingPage() {
 
         <div className="mpv1-preview-panel mpv1-preview-panel-dense" aria-label="產品預覽">
           <div className="mpv1-preview-top">
-            <div className="mpv1-preview-kpi">
+            <div className="mpv1-preview-kpi mpv1-preview-tile">
               <div className="lbl">市場狀態</div>
               <div className="val bull">偏多 ↗</div>
               <div className="mpv1-bias-gauge" style={{ marginTop: 6 }}>
@@ -90,7 +91,7 @@ export function LandingPage() {
               </div>
               <div style={{ color: "#94a3b8", fontSize: "0.68rem", marginTop: 4 }}>恐懼與貪婪 64</div>
             </div>
-            <div className="mpv1-preview-kpi">
+            <div className="mpv1-preview-kpi mpv1-preview-tile">
               <div className="lbl">最佳機會</div>
               <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", marginTop: 4 }}>
                 <strong style={{ color: "#fff", fontSize: "1rem" }}>ETH</strong>
@@ -117,17 +118,17 @@ export function LandingPage() {
                 <span style={{ color: "#93c5fd", fontSize: "0.75rem" }}>/ 100</span>
               </div>
             </div>
-            <div className="mpv1-preview-kpi">
+            <div className="mpv1-preview-kpi mpv1-preview-tile">
               <div className="lbl">市場風險</div>
               <div className="val warn">中等風險</div>
               <div style={{ color: "#94a3b8", fontSize: "0.72rem", marginTop: 6 }}>短線波動增加</div>
             </div>
           </div>
-          <div className="mpv1-preview-chart">
+          <div className="mpv1-preview-chart mpv1-preview-tile">
             <div style={{ color: "#93c5fd", fontSize: "0.72rem", marginBottom: 4 }}>Market Pulse · 總市值 $2.41T</div>
             <SparkChart values={[2.05, 2.1, 2.08, 2.18, 2.22, 2.2, 2.3, 2.35, 2.41]} tone="accent" />
           </div>
-          <div className="mpv1-preview-assets">
+          <div className="mpv1-preview-assets mpv1-preview-tile">
             <div style={{ color: "#93c5fd", fontSize: "0.72rem", marginBottom: 2 }}>熱門資產 Top 3</div>
             {[
               ["BTC", "$68,450", "+0.40%"],
@@ -147,7 +148,7 @@ export function LandingPage() {
       <section className="mpv1-section" id="features">
         <div className="mpv1-section-head">
           <h2>市場到底發生什麼</h2>
-          <p>先給結論，再給理由——讓初學者讀得懂，進階者查得到，專業者追得深。</p>
+          <p>先給結論，再給理由。</p>
         </div>
         <div className="mpv1-pillars">
           <article className="mpv1-pillar">
@@ -155,21 +156,21 @@ export function LandingPage() {
               <IconTrend size={18} />
             </div>
             <h3>現在市場偏哪邊</h3>
-            <p>偏多／偏空／不明，搭配風險等級與一句白話說明，打開就能掌握方向。</p>
+            <p>偏多／偏空／中性，一句話看懂方向。</p>
           </article>
           <article className="mpv1-pillar">
             <div className="ico">
               <IconTarget size={18} />
             </div>
             <h3>哪些幣值得先看</h3>
-            <p>用評分、狀態與一句理由，排出今天該優先觀察的標的，減少資訊過載。</p>
+            <p>用評分與狀態排出今天優先標的。</p>
           </article>
           <article className="mpv1-pillar">
             <div className="ico">
               <IconShield size={18} />
             </div>
             <h3>今天最好先不要做什麼</h3>
-            <p>把「先等等」也寫清楚，降低雜訊、追價與不必要風險。</p>
+            <p>把「先等等」寫清楚，降低追價風險。</p>
           </article>
         </div>
       </section>
@@ -178,7 +179,7 @@ export function LandingPage() {
         <div className="mpv1-section">
           <div className="mpv1-section-head">
             <h2>我們把複雜資料變成簡單答案</h2>
-            <p>總覽、深度分析與風險事件日曆，對齊日常決策節奏。</p>
+            <p>總覽、深度分析與風險日曆，對齊日常決策節奏。</p>
           </div>
           <div className="mpv1-value-grid">
             <article className="mpv1-card" style={{ margin: 0 }}>
@@ -186,7 +187,7 @@ export function LandingPage() {
                 <IconChart size={16} /> 市場總覽
               </div>
               <p className="mpv1-muted" style={{ margin: "0.45rem 0 0.75rem" }}>
-                一眼看懂資金、波動與市場溫度。
+                一眼看懂資金、波動與溫度。
               </p>
               <div style={{ height: 100 }}>
                 <SparkChart values={[2.1, 2.15, 2.12, 2.25, 2.3, 2.28, 2.4, 2.38, 2.45]} />
@@ -208,7 +209,7 @@ export function LandingPage() {
                 <IconTarget size={16} /> 深度分析
               </div>
               <p className="mpv1-muted" style={{ margin: "0.45rem 0 0.75rem" }}>
-                把機會拆成可檢查的清單，而不是模糊感覺。
+                把機會拆成可檢查的清單。
               </p>
               <ul className="mpv1-intel-list">
                 <li>
@@ -235,7 +236,7 @@ export function LandingPage() {
                 <IconShield size={16} /> 風險事件日曆
               </div>
               <p className="mpv1-muted" style={{ margin: "0.45rem 0 0.75rem" }}>
-                先知道今天可能踩到的雷，再決定要不要出手。
+                先看今天可能踩到的雷。
               </p>
               <ul className="mpv1-intel-list">
                 <li>
@@ -263,7 +264,7 @@ export function LandingPage() {
       <section className="mpv1-section">
         <div className="mpv1-section-head">
           <h2>選擇最適合你的會員方案</h2>
-          <p>從免費入門到完整證據，依需求開通深度。隨時可升級，隨時可取消。</p>
+          <p>從免費入門到完整證據，依需求開通深度。</p>
         </div>
         <div className="mpv1-plan-grid">
           {[
@@ -357,8 +358,8 @@ function AuthFinancialDeco({ patternId = "mpv1DotGrid" }: { patternId?: string }
         <rect x="40" y="280" width="400" height="280" rx="24" fill={`url(#${softId})`} />
         <polyline
           fill="none"
-          stroke="rgba(147,197,253,0.55)"
-          strokeWidth="2.2"
+          stroke="rgba(147,197,253,0.42)"
+          strokeWidth="2"
           points="60,520 110,490 150,505 200,430 250,450 300,360 350,390 400,310 440,330"
         />
         {[
@@ -374,10 +375,10 @@ function AuthFinancialDeco({ patternId = "mpv1DotGrid" }: { patternId?: string }
         ].map(([x, o, c, up], i) => {
           const top = Math.min(o as number, c as number);
           const bot = Math.max(o as number, c as number);
-          const color = up ? "rgba(52,211,153,0.55)" : "rgba(248,113,113,0.5)";
+          const color = up ? "rgba(52,211,153,0.38)" : "rgba(248,113,113,0.34)";
           return (
             <g key={i}>
-              <line x1={x as number} x2={x as number} y1={top - 18} y2={bot + 18} stroke={color} strokeWidth="1.4" />
+              <line x1={x as number} x2={x as number} y1={top - 18} y2={bot + 18} stroke={color} strokeWidth="1.3" />
               <rect x={(x as number) - 6} y={top} width="12" height={Math.max(8, bot - top)} rx="1.5" fill={color} />
             </g>
           );

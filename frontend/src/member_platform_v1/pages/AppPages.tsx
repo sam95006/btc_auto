@@ -38,24 +38,26 @@ function RiskSq({ risk, label }: { risk: string; label: string }) {
 function rankMedal(i: number) {
   if (i < 3) {
     const styles = [
-      { bg: "linear-gradient(145deg,#f6e27a,#d4a017)", ring: "#b8860b", label: "1" },
-      { bg: "linear-gradient(145deg,#e8eef5,#9aa7b8)", ring: "#6b7c8f", label: "2" },
-      { bg: "linear-gradient(145deg,#e0b07a,#a66a2b)", ring: "#8a5520", label: "3" },
+      { bg: "linear-gradient(160deg,#fff6c8 0%,#f0d060 38%,#c9a227 72%,#a67c00 100%)", ring: "rgba(146,110,16,0.55)", label: "1" },
+      { bg: "linear-gradient(160deg,#f8fafc 0%,#e2e8f0 40%,#94a3b8 78%,#64748b 100%)", ring: "rgba(71,85,105,0.45)", label: "2" },
+      { bg: "linear-gradient(160deg,#f3d5b5 0%,#d4a574 40%,#a66a2b 78%,#7a4a1a 100%)", ring: "rgba(120,70,25,0.5)", label: "3" },
     ];
     const s = styles[i];
     return (
-      <span className="mpv1-medal" style={{ background: s.bg, boxShadow: `inset 0 0 0 1px ${s.ring}` }} title={`第 ${s.label} 名`}>
+      <span className="mpv1-medal" style={{ background: s.bg, boxShadow: `inset 0 1px 0 rgba(255,255,255,0.45), inset 0 0 0 1px ${s.ring}` }} title={`第 ${s.label} 名`}>
         {s.label}
       </span>
     );
   }
-  return <span style={{ color: "var(--mp-text-3)", fontWeight: 700 }}>{i + 1}</span>;
+  return <span className="mpv1-rank-num">{i + 1}</span>;
 }
 
 export function DashboardPage() {
   const { tier } = useAuth();
   const { symbols } = useWatchlist();
   const [data, setData] = useState<DashboardDto | null>(null);
+  const [pulseRange, setPulseRange] = useState<"24H" | "7D" | "30D">("24H");
+  const [pulseMetric, setPulseMetric] = useState<"cap" | "btc" | "vol" | "breadth">("cap");
 
   useEffect(() => {
     void marketApi.getDashboard(tier, symbols).then(setData);
@@ -70,63 +72,68 @@ export function DashboardPage() {
   }
 
   const best = data.topAssets.find((r) => r.advice === "watch_closely") || data.topAssets[0];
+  const pulseSeries: Record<typeof pulseRange, number[]> = {
+    "24H": data.pulse.trend,
+    "7D": [2.05, 2.08, 2.12, 2.1, 2.18, 2.22, 2.2, 2.28, 2.35, 2.41],
+    "30D": [1.92, 1.98, 2.05, 2.02, 2.12, 2.18, 2.15, 2.25, 2.3, 2.38, 2.41],
+  };
+  const metricLabel =
+    pulseMetric === "cap"
+      ? `總市值 ${data.pulse.marketCapLabel}`
+      : pulseMetric === "btc"
+        ? "BTC 主導率 53.1%"
+        : pulseMetric === "vol"
+          ? "成交量 $128.6B"
+          : "市場廣度 62% 上漲";
 
   return (
     <RequireSession>
       <div className="mpv1-dash-fold">
       <div className="mpv1-grid mpv1-grid-4 mpv1-dash-intel">
-        <article className="mpv1-card mpv1-intel">
+        <article className="mpv1-card mpv1-intel mpv1-intel-primary">
           <div className="lbl">市場狀態</div>
           <div className="val bull">{data.overview.biasLabel} ↗</div>
           <BiasGauge position={0.72} />
-          <div className="hint">恐懼與貪婪指數 64（貪婪）</div>
+          <div className="hint">恐懼與貪婪 64 · 貪婪</div>
         </article>
-        <article className="mpv1-card mpv1-intel">
+        <article className="mpv1-card mpv1-intel mpv1-intel-primary">
           <div className="lbl">最佳機會</div>
           <div className="meta">
-            <strong style={{ fontSize: "1.05rem" }}>{best?.symbol.replace("USDT", "")}</strong>
+            <strong style={{ fontSize: "1.1rem" }}>{best?.symbol.replace("USDT", "")}</strong>
             <span className="mpv1-chip mpv1-chip-bull">高機會</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginTop: "0.25rem" }}>
-            <ScoreRing score={best?.score ?? null} size={46} />
+            <ScoreRing score={best?.score ?? null} size={48} />
             <div className="hint">{best?.name}<br />{best?.beginnerReason}</div>
           </div>
           <Link className="mpv1-footer-link" to="/app/markets">
             查看機會清單 →
           </Link>
         </article>
-        <article className="mpv1-card mpv1-intel">
+        <article className="mpv1-card mpv1-intel mpv1-intel-support">
           <div className="lbl">現在怎麼做</div>
-          <div className="val accent" style={{ fontSize: "1.05rem" }}>
-            {data.overview.adviceLabel}
-          </div>
+          <div className="val accent">{data.overview.adviceLabel}</div>
           <ul className="mpv1-intel-list">
             <li>
-              <span className="bullet">•</span>關注強勢主流幣，避免追高雜訊幣
+              <span className="bullet">•</span>先鎖定少數強勢標的
             </li>
             <li>
-              <span className="bullet">•</span>先鎖定觀察清單，等待更清楚結構
-            </li>
-            <li>
-              <span className="bullet">•</span>控制一次關注數量，降低資訊過載
+              <span className="bullet">•</span>避免追高雜訊幣
             </li>
           </ul>
           <Link className="mpv1-footer-link" to="/app/markets">
             查看策略建議 →
           </Link>
         </article>
-        <article className="mpv1-card mpv1-intel">
+        <article className="mpv1-card mpv1-intel mpv1-intel-support">
           <div className="lbl">市場風險</div>
           <div className="val warn">{data.overview.riskLabel}風險</div>
           <ul className="mpv1-intel-list">
             <li>
-              <span className="bullet warn">•</span>短線波動上升，追價回撤空間變大
+              <span className="bullet warn">•</span>短線波動上升
             </li>
             <li>
-              <span className="bullet warn">•</span>宏觀事件可能快速切換方向
-            </li>
-            <li>
-              <span className="bullet warn">•</span>部分山寨幣槓桿與情緒偏擁擠
+              <span className="bullet warn">•</span>留意宏觀事件切換
             </li>
           </ul>
           <Link className="mpv1-footer-link" to="/app/alerts">
@@ -139,13 +146,40 @@ export function DashboardPage() {
         <article className="mpv1-card">
           <div className="mpv1-card-head">
             <h2 className="mpv1-card-title">市場脈動</h2>
-            <div className="mpv1-tabs" style={{ margin: 0, border: 0, padding: 0 }}>
-              {data.pulse.tickers.map((t) => (
-                <span key={t.symbol} className="mpv1-tab is-on" style={{ pointerEvents: "none" }}>
-                  {t.symbol}
-                </span>
-              ))}
+            <div className="mpv1-pulse-controls">
+              <div className="mpv1-tabs mpv1-pulse-range" role="tablist" aria-label="脈動區間">
+                {(["24H", "7D", "30D"] as const).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    role="tab"
+                    className={`mpv1-tab${pulseRange === r ? " is-on" : ""}`}
+                    onClick={() => setPulseRange(r)}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
             </div>
+          </div>
+          <div className="mpv1-pulse-metrics" role="tablist" aria-label="脈動指標">
+            {(
+              [
+                ["cap", "總市值"],
+                ["btc", "BTC 主導率"],
+                ["vol", "成交量"],
+                ["breadth", "市場廣度"],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                className={`mpv1-pulse-metric${pulseMetric === id ? " is-on" : ""}`}
+                onClick={() => setPulseMetric(id)}
+              >
+                {label}
+              </button>
+            ))}
           </div>
           <div className="mpv1-pulse-stats">
             <div className="mpv1-pulse-stat">
@@ -163,8 +197,8 @@ export function DashboardPage() {
               <div className="val">53.1%</div>
             </div>
             <div className="mpv1-pulse-stat">
-              <div className="lbl">ETH 主導率</div>
-              <div className="val">17.2%</div>
+              <div className="lbl">市場廣度</div>
+              <div className="val">62% 上漲</div>
             </div>
           </div>
           <div className="mpv1-ticker-row" style={{ marginBottom: "0.5rem" }}>
@@ -180,7 +214,8 @@ export function DashboardPage() {
             ))}
           </div>
           <div className="mpv1-pulse-chart mpv1-pulse-chart-compact">
-            <SparkChart values={data.pulse.trend} tone="accent" />
+            <div className="mpv1-pulse-chart-lbl">{metricLabel} · {pulseRange}</div>
+            <SparkChart values={pulseSeries[pulseRange]} tone="accent" />
           </div>
         </article>
 
@@ -260,7 +295,7 @@ export function DashboardPage() {
                       <AdviceChip advice={r.advice} label={r.adviceLabel} />
                     </td>
                     <td>
-                      <ScoreRing score={r.score} size={32} />
+                      <ScoreRing score={r.score} size={36} />
                     </td>
                     <td>
                       <Link className="mpv1-action-link" to={`/app/market/${base}`}>
@@ -495,7 +530,7 @@ export function MarketsPage() {
                       <AdviceChip advice={r.advice} label={r.adviceLabel} />
                     </td>
                     <td>
-                      <ScoreRing score={r.score} size={38} />
+                      <ScoreRing score={r.score} size={36} />
                     </td>
                     <td className="hide-sm">
                       <SparkChart values={r.sparkline || []} compact tone={up ? "bull" : "bear"} />
@@ -647,13 +682,35 @@ export function MarketDetailPage() {
         <article className="mpv1-card mpv1-chart-card">
           <div className="mpv1-chart-header">
             <div>
-              <h2 className="mpv1-card-title">{base} / USDT</h2>
-              <p className="mpv1-muted" style={{ fontSize: "0.75rem" }}>
-                {base}/USDT · {interval} · NEXUS 模擬行情（非即時）
-                {asset.candles?.length
-                  ? ` · O ${fmtPrice(asset.candles[asset.candles.length - 1].o)} H ${fmtPrice(asset.candles[asset.candles.length - 1].h)} L ${fmtPrice(asset.candles[asset.candles.length - 1].l)} C ${fmtPrice(asset.candles[asset.candles.length - 1].c)}`
-                  : ""}
-              </p>
+              <div className="mpv1-chart-title-row">
+                <h2 className="mpv1-card-title">{base} / USDT</h2>
+                <span className="mpv1-demo-badge">模擬資料</span>
+              </div>
+              {asset.candles?.length ? (
+                <div className="mpv1-ohlc" aria-label="OHLC 與成交量（示意）">
+                  <span>
+                    <em>O</em> {fmtPrice(asset.candles[asset.candles.length - 1].o)}
+                  </span>
+                  <span>
+                    <em>H</em> {fmtPrice(asset.candles[asset.candles.length - 1].h)}
+                  </span>
+                  <span>
+                    <em>L</em> {fmtPrice(asset.candles[asset.candles.length - 1].l)}
+                  </span>
+                  <span>
+                    <em>C</em> {fmtPrice(asset.candles[asset.candles.length - 1].c)}
+                  </span>
+                  <span>
+                    <em>Vol</em>{" "}
+                    {(
+                      (asset.candles[asset.candles.length - 1].v ??
+                        Math.abs(asset.candles[asset.candles.length - 1].c - asset.candles[asset.candles.length - 1].o) * 1200) /
+                      1000
+                    ).toFixed(1)}
+                    K
+                  </span>
+                </div>
+              ) : null}
             </div>
             <div className="mpv1-asset-badges">
               <span className={asset.change24hPct >= 0 ? "mpv1-chg-up" : "mpv1-chg-down"}>
@@ -1021,7 +1078,7 @@ export function WatchlistPage() {
                             </td>
                             <td>{up ? "↗" : "↘"}</td>
                             <td>
-                              <ScoreRing score={r.score} size={38} />
+                              <ScoreRing score={r.score} size={36} />
                             </td>
                             <td>
                               <AdviceChip advice={r.advice} label={r.adviceLabel} />
