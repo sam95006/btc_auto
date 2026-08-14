@@ -1,6 +1,6 @@
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useEffect, useState, type FormEvent } from "react";
-import { MarketingFooter, MarketingHeader } from "../layout/Shells";
+import { AuthFooter, MarketingFooter, MarketingHeader } from "../layout/Shells";
 import { useAuth } from "../context/AuthContext";
 import { memberApi } from "../services";
 import type { PlanDto } from "../types/dto";
@@ -11,23 +11,71 @@ export function LandingPage() {
   return (
     <div className="mpv1-auth-shell mpv1-land">
       <MarketingHeader />
+
       <section className="mpv1-land-hero">
         <div>
-          <div className="mpv1-land-kicker">CRYPTO MARKET INTELLIGENCE</div>
+          <div
+            className="mpv1-chip mpv1-chip-obs"
+            style={{ gap: "0.35rem", padding: "0.35rem 0.75rem", fontSize: "0.78rem" }}
+          >
+            <IconShield size={14} /> 全球加密市場情報平台
+          </div>
           <h1>看懂市場，再做決定</h1>
           <p className="mpv1-land-lead">
-            NEXUS 把複雜行情翻譯成白話結論：市場偏哪邊、哪些幣先看、今天最好先不要做什麼。給初學者結論，給進階者理由，給專業者完整證據。
+            即時市場信號 × 機會評分 × 風險控管，幫你在波動中掌握優勢。NEXUS
+            把複雜行情翻譯成白話結論：市場偏哪邊、哪些幣先看、今天最好先不要做什麼。
           </p>
+          <ul className="mpv1-feature-list" style={{ marginTop: "1.15rem", color: "var(--mp-text)" }}>
+            <li>
+              <span className="mpv1-ico" aria-hidden>
+                <IconTrend size={16} />
+              </span>
+              <div>
+                <strong>即時市場脈動</strong>
+                <span>24/7 監控全球市場動態與資金流向</span>
+              </div>
+            </li>
+            <li>
+              <span className="mpv1-ico" aria-hidden>
+                <IconTarget size={16} />
+              </span>
+              <div>
+                <strong>機會優先排序</strong>
+                <span>以評分與狀態排出今天該先看的標的</span>
+              </div>
+            </li>
+            <li>
+              <span className="mpv1-ico" aria-hidden>
+                <IconShield size={16} />
+              </span>
+              <div>
+                <strong>風險控管先行</strong>
+                <span>多維風險指標，先告訴你今天不要做什麼</span>
+              </div>
+            </li>
+          </ul>
           <div className="mpv1-land-cta">
             <Link className="mpv1-btn mpv1-btn-primary" to="/register">
-              開始使用
+              開始免費體驗
             </Link>
             <Link className="mpv1-btn mpv1-btn-outline" to="/plans">
-              會員方案
+              查看會員方案
             </Link>
-            <Link className="mpv1-btn mpv1-btn-ghost" to="/login">
-              已有帳號
-            </Link>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "0.75rem 1.1rem",
+              marginTop: "0.95rem",
+              color: "var(--mp-text-2)",
+              fontSize: "0.82rem",
+              fontWeight: 600,
+            }}
+          >
+            <span>✓ 無需綁卡</span>
+            <span>✓ 7天免費</span>
+            <span>✓ 隨時取消</span>
           </div>
         </div>
 
@@ -39,11 +87,11 @@ export function LandingPage() {
             </div>
             <div className="mpv1-preview-kpi">
               <div className="lbl">最佳機會</div>
-              <div className="val">ETH · 84</div>
+              <div className="val">ETH 82/100</div>
             </div>
             <div className="mpv1-preview-kpi">
               <div className="lbl">市場風險</div>
-              <div className="val warn">中等</div>
+              <div className="val warn">中等風險</div>
             </div>
           </div>
           <div className="mpv1-preview-chart">
@@ -51,14 +99,14 @@ export function LandingPage() {
           </div>
           <div className="mpv1-preview-assets">
             {[
-              ["ETH", "+2.8%", "可留意"],
-              ["AVAX", "+3.3%", "可留意"],
-              ["SOL", "+4.1%", "觀察中"],
-            ].map(([sym, chg, st]) => (
+              ["BTC", "$68,450", "+1.2%"],
+              ["ETH", "$3,420", "+2.8%"],
+              ["SOL", "$168", "+4.1%"],
+            ].map(([sym, px, chg]) => (
               <div key={sym} className="mpv1-preview-asset">
                 <strong>{sym}</strong>
+                <span>{px}</span>
                 <span style={{ color: "#34d399" }}>{chg}</span>
-                <span style={{ color: "#93c5fd" }}>{st}</span>
               </div>
             ))}
           </div>
@@ -68,7 +116,7 @@ export function LandingPage() {
       <section className="mpv1-section" id="features">
         <div className="mpv1-section-head">
           <h2>市場到底發生什麼</h2>
-          <p>我們把複雜資料變成簡單答案——先告訴你結論，再讓你決定要不要往下看。</p>
+          <p>先給結論，再給理由——讓初學者讀得懂，進階者查得到，專業者追得深。</p>
         </div>
         <div className="mpv1-pillars">
           <article className="mpv1-pillar">
@@ -76,21 +124,21 @@ export function LandingPage() {
               <IconTrend size={18} />
             </div>
             <h3>現在市場偏哪邊</h3>
-            <p>偏多／偏空／不明，搭配風險等級與一句白話說明。</p>
+            <p>偏多／偏空／不明，搭配風險等級與一句白話說明，打開就能掌握方向。</p>
           </article>
           <article className="mpv1-pillar">
             <div className="ico">
               <IconTarget size={18} />
             </div>
             <h3>哪些幣值得先看</h3>
-            <p>用評分、狀態與一句理由，排出今天該優先觀察的標的。</p>
+            <p>用評分、狀態與一句理由，排出今天該優先觀察的標的，減少資訊過載。</p>
           </article>
           <article className="mpv1-pillar">
             <div className="ico">
               <IconShield size={18} />
             </div>
             <h3>今天最好先不要做什麼</h3>
-            <p>降低雜訊與追價風險，把「先等等」也寫清楚。</p>
+            <p>把「先等等」也寫清楚，降低雜訊、追價與不必要風險。</p>
           </article>
         </div>
       </section>
@@ -98,71 +146,134 @@ export function LandingPage() {
       <section className="mpv1-land-band">
         <div className="mpv1-section">
           <div className="mpv1-section-head">
-            <h2>真實產品介面預覽</h2>
-            <p>不是空泛文案——總覽、排行、風險提醒都為日常決策密度而設計。</p>
+            <h2>我們把複雜資料變成簡單答案</h2>
+            <p>總覽、深度分析與風險事件日曆，對齊日常決策節奏。</p>
           </div>
-          <div className="mpv1-ui-shot">
-            <div className="mpv1-ui-shot-bar">
-              <span>NEXUS · 總覽</span>
-              <span>市場偏多</span>
-              <span>風險中等</span>
-            </div>
-            <div className="mpv1-ui-shot-body">
-              <div className="mpv1-card" style={{ margin: 0 }}>
-                <div className="mpv1-card-title">Market Pulse</div>
-                <div style={{ height: 120, marginTop: "0.5rem" }}>
-                  <SparkChart values={[2.1, 2.15, 2.12, 2.25, 2.3, 2.28, 2.4]} />
+          <div className="mpv1-value-grid">
+            <article className="mpv1-card" style={{ margin: 0 }}>
+              <div className="mpv1-card-title" style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <IconChart size={16} /> 市場總覽
+              </div>
+              <p className="mpv1-muted" style={{ margin: "0.45rem 0 0.75rem" }}>
+                一眼看懂資金、波動與市場溫度。
+              </p>
+              <div style={{ height: 100 }}>
+                <SparkChart values={[2.1, 2.15, 2.12, 2.25, 2.3, 2.28, 2.4, 2.38, 2.45]} />
+              </div>
+              <div className="mpv1-ticker-row" style={{ marginTop: "0.65rem" }}>
+                <div className="mpv1-ticker">
+                  <div className="sym">市值</div>
+                  <div className="px">$2.41T</div>
                 </div>
-                <div className="mpv1-ticker-row">
-                  <div className="mpv1-ticker">
-                    <div className="sym">BTC</div>
-                    <div className="px">$68,450</div>
-                  </div>
-                  <div className="mpv1-ticker">
-                    <div className="sym">ETH</div>
-                    <div className="px">$3,420</div>
-                  </div>
-                  <div className="mpv1-ticker">
-                    <div className="sym">SOL</div>
-                    <div className="px">$168</div>
-                  </div>
+                <div className="mpv1-ticker">
+                  <div className="sym">24h</div>
+                  <div className="px">$126B</div>
                 </div>
               </div>
-              <div className="mpv1-card" style={{ margin: 0 }}>
-                <div className="mpv1-card-title">Today in Plain Language</div>
-                <div className="mpv1-plain-grid" style={{ marginTop: "0.65rem", gridTemplateColumns: "1fr" }}>
-                  <div className="mpv1-plain-item">
-                    <h4>今天市場正在發生什麼</h4>
-                    <p>大型幣整體偏多，資金集中在少數相對強勢標的。</p>
-                  </div>
-                  <div className="mpv1-plain-item caution">
-                    <h4>今天先不要做什麼</h4>
-                    <p>不要追高波動、已大漲且風險偏高的幣。</p>
-                  </div>
-                </div>
+            </article>
+
+            <article className="mpv1-card" style={{ margin: 0 }}>
+              <div className="mpv1-card-title" style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <IconTarget size={16} /> 深度分析
               </div>
-            </div>
+              <p className="mpv1-muted" style={{ margin: "0.45rem 0 0.75rem" }}>
+                把機會拆成可檢查的清單，而不是模糊感覺。
+              </p>
+              <ul className="mpv1-intel-list">
+                <li>
+                  <span className="bullet">✓</span>
+                  <span>技術結構：趨勢與關鍵支撐／壓力</span>
+                </li>
+                <li>
+                  <span className="bullet">✓</span>
+                  <span>資金流向：現貨／合約相對強弱</span>
+                </li>
+                <li>
+                  <span className="bullet">✓</span>
+                  <span>情緒與鏈上：過熱或過冷的訊號</span>
+                </li>
+                <li>
+                  <span className="bullet warn">!</span>
+                  <span>風險標記：波動、解鎖與事件衝突</span>
+                </li>
+              </ul>
+            </article>
+
+            <article className="mpv1-card" style={{ margin: 0 }}>
+              <div className="mpv1-card-title" style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <IconShield size={16} /> 風險事件日曆
+              </div>
+              <p className="mpv1-muted" style={{ margin: "0.45rem 0 0.75rem" }}>
+                先知道今天可能踩到的雷，再決定要不要出手。
+              </p>
+              <ul className="mpv1-intel-list">
+                <li>
+                  <span className="bullet warn">•</span>
+                  <span>SOL 大量解鎖提醒 · 今日</span>
+                </li>
+                <li>
+                  <span className="bullet warn">•</span>
+                  <span>US CPI 數據公布 · 明日</span>
+                </li>
+                <li>
+                  <span className="bullet">•</span>
+                  <span>BTC 期權到期週 · 本週</span>
+                </li>
+                <li>
+                  <span className="bullet">•</span>
+                  <span>穩定幣流動性異常觀察</span>
+                </li>
+              </ul>
+            </article>
           </div>
         </div>
       </section>
 
       <section className="mpv1-section">
         <div className="mpv1-section-head">
-          <h2>會員方案預覽</h2>
-          <p>依需求開通深度：結論 → 理由 → 完整證據。</p>
+          <h2>選擇最適合你的會員方案</h2>
+          <p>從免費入門到完整證據，依需求開通深度。隨時可升級，隨時可取消。</p>
         </div>
-        <div className="mpv1-plan-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+        <div className="mpv1-plan-grid">
           {[
-            ["入門版", "NT$ 299", "市場方向與精選排行"],
-            ["專業版", "NT$ 1,599", "完整證據與即時風險"],
-            ["企業版", "聯絡我們", "團隊權限與整合諮詢"],
-          ].map(([n, p, d]) => (
-            <article key={n} className={`mpv1-plan${n === "專業版" ? " is-hot" : ""}`}>
-              {n === "專業版" ? <div className="mpv1-plan-badge">推薦</div> : null}
-              <h3 className="mpv1-card-title">{n}</h3>
-              <div className="price">{p}</div>
-              <p className="audience">{d}</p>
-              <Link className="mpv1-btn mpv1-btn-outline mpv1-btn-block" to="/plans">
+            {
+              id: "starter",
+              name: "入門",
+              price: "NT$0",
+              desc: "市場方向、精選排行與今日白話重點",
+              hot: false,
+            },
+            {
+              id: "advanced",
+              name: "進階",
+              price: "NT$299",
+              desc: "完整排行、進出場觀察與進階風險提醒",
+              hot: true,
+            },
+            {
+              id: "professional",
+              name: "專業",
+              price: "NT$799",
+              desc: "即時風險、完整證據與自訂提醒策略",
+              hot: false,
+            },
+            {
+              id: "enterprise",
+              name: "企業",
+              price: "客製化",
+              desc: "團隊權限、高額度 API 與專屬顧問",
+              hot: false,
+            },
+          ].map((p) => (
+            <article key={p.id} className={`mpv1-plan${p.hot ? " is-hot" : ""}`}>
+              {p.hot ? <div className="mpv1-plan-badge">最受歡迎</div> : null}
+              <h3 className="mpv1-card-title">{p.name}</h3>
+              <div className="price">{p.price}</div>
+              <p className="audience">{p.desc}</p>
+              <Link
+                className={`mpv1-btn ${p.hot ? "mpv1-btn-primary" : "mpv1-btn-outline"} mpv1-btn-block`}
+                to="/plans"
+              >
                 查看詳情
               </Link>
             </article>
@@ -330,7 +441,7 @@ export function LoginPage() {
           </div>
         </section>
       </div>
-      <MarketingFooter />
+      <AuthFooter />
     </div>
   );
 }
@@ -353,6 +464,14 @@ export function RegisterPage() {
     e.preventDefault();
     if (!agree) {
       setErr("請先同意服務條款與隱私權政策");
+      return;
+    }
+    if (password.length < 8 || password.length > 20) {
+      setErr("密碼需為 8-20 字元");
+      return;
+    }
+    if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+      setErr("密碼需英數混合");
       return;
     }
     if (password !== confirm) {
@@ -382,13 +501,18 @@ export function RegisterPage() {
             <p className="mpv1-lead">快速、安全地完成註冊，立即開始使用市場情報。</p>
             <div className="mpv1-auth-left-steps">
               {[
-                ["1", "建立帳號"],
-                ["2", "選擇會員方案"],
-                ["3", "開始使用"],
-              ].map(([n, t]) => (
+                ["1", "建立帳號", "填寫基本資料，快速建立您的專屬帳號"],
+                ["2", "選擇會員方案", "依需求選擇最適合的會員方案與服務"],
+                ["3", "開始使用", "完成註冊後，即可使用 NEXUS 各項功能"],
+              ].map(([n, t, d]) => (
                 <div className="step" key={n}>
                   <span className="bubble">{n}</span>
-                  <strong>{t}</strong>
+                  <div>
+                    <strong>{t}</strong>
+                    <span style={{ display: "block", opacity: 0.85, fontSize: "0.82rem", marginTop: "0.15rem" }}>
+                      {d}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -437,9 +561,10 @@ export function RegisterPage() {
             </div>
             <form onSubmit={onSubmit}>
               <div className="mpv1-field">
-                <label>姓名</label>
+                <label htmlFor="reg-name">姓名</label>
                 <div className="mpv1-input">
                   <input
+                    id="reg-name"
                     placeholder="請輸入您的姓名"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
@@ -448,12 +573,13 @@ export function RegisterPage() {
                 </div>
               </div>
               <div className="mpv1-field">
-                <label>電子郵件</label>
+                <label htmlFor="reg-email">電子郵件</label>
                 <div className="mpv1-input">
                   <span className="mpv1-input-ico">
                     <IconMail size={15} />
                   </span>
                   <input
+                    id="reg-email"
                     type="email"
                     placeholder="請輸入電子郵件"
                     value={email}
@@ -463,34 +589,43 @@ export function RegisterPage() {
                 </div>
               </div>
               <div className="mpv1-field">
-                <label>手機號碼</label>
+                <label htmlFor="reg-phone">手機號碼</label>
                 <div className="mpv1-input">
                   <span className="mpv1-input-ico">TW</span>
-                  <input placeholder="請輸入手機號碼" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <input
+                    id="reg-phone"
+                    placeholder="請輸入手機號碼"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
                 </div>
               </div>
               <div className="mpv1-field">
-                <label>密碼</label>
+                <label htmlFor="reg-password">密碼</label>
                 <div className="mpv1-input">
                   <span className="mpv1-input-ico">
                     <IconLock size={15} />
                   </span>
                   <input
+                    id="reg-password"
                     type="password"
                     placeholder="8-20 字元英數混合"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    minLength={8}
+                    maxLength={20}
                   />
                 </div>
               </div>
               <div className="mpv1-field">
-                <label>確認密碼</label>
+                <label htmlFor="reg-confirm">確認密碼</label>
                 <div className="mpv1-input">
                   <span className="mpv1-input-ico">
                     <IconLock size={15} />
                   </span>
                   <input
+                    id="reg-confirm"
                     type="password"
                     placeholder="再次輸入密碼"
                     value={confirm}
@@ -521,7 +656,7 @@ export function RegisterPage() {
           </div>
         </section>
       </div>
-      <MarketingFooter />
+      <AuthFooter />
     </div>
   );
 }
@@ -539,7 +674,7 @@ export function ForgotPasswordPage() {
           </Link>
         </div>
       </div>
-      <MarketingFooter />
+      <AuthFooter />
     </div>
   );
 }
@@ -587,10 +722,10 @@ export function PlansPage() {
 
         <div className="mpv1-plan-grid">
           {plans.map((p) => {
-            const hot = p.id === "professional";
+            const hot = Boolean(p.highlighted) || p.id === "professional";
             return (
               <article key={p.id} className={`mpv1-plan${hot ? " is-hot" : ""}`}>
-                {hot ? <div className="mpv1-plan-badge">最多人選擇</div> : null}
+                {hot ? <div className="mpv1-plan-badge">最受歡迎</div> : null}
                 <h3 className="mpv1-card-title">{p.name}</h3>
                 <div className="price">{p.priceLabel}</div>
                 <div className="audience">適合誰：{p.audience}</div>
