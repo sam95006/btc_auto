@@ -46,18 +46,24 @@ export function FounderAuthGate({ children }: { children: ReactNode }) {
   }
 
   if (state.phase === "denied") {
+    const reason =
+      state.reason === "Session unavailable" ||
+      state.reason === "Permission denied" ||
+      state.reason === "Founder access required" ||
+      state.reason === "Runtime not bound"
+        ? state.reason
+        : "Founder access required";
     return (
-      <div className="page-stack nx-founder-gate nx-founder-gate-denied" role="alert">
+      <div className="page-stack nx-founder-gate nx-founder-gate-denied" role="alert" data-classification="AUTH_REQUIRED">
         <header>
-          <h1>Founder Authorization Required</h1>
+          <h1>Founder access required</h1>
           <p className="muted">此為 Founder 私有營運介面，會員工作階段無法存取。</p>
-          <div className="tag tag-warn">founder-only · member session denied</div>
+          <div className="tag tag-warn">AUTH_REQUIRED · founder-only</div>
         </header>
         <section className="nx-card">
-          <p className="sm muted">reason: {state.reason}</p>
+          <p className="sm muted">{reason}</p>
           <p className="sm muted">
-            Client headers / query / localStorage 無法提升為 Founder。私有 capture、Lesson、
-            kill-switch readiness 與執行模擬狀態不會對會員暴露。
+            Client headers / query / localStorage 無法提升為 Founder。診斷細節僅保留在後端日誌。
           </p>
         </section>
       </div>

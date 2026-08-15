@@ -21,19 +21,15 @@ export function LandingPage() {
             <IconShield size={14} /> 全球加密市場情報平台
           </div>
           <h1>看懂市場，再做決定</h1>
-          <p className="mpv1-land-lead">
-            即時市場信號 × 機會評分 × 風險控管。
-            <br />
-            把複雜行情翻成白話結論，再做決定。
-          </p>
+          <p className="mpv1-land-lead">公開市場資料、成員觀察清單與官方市場新聞。</p>
           <ul className="mpv1-feature-list" style={{ marginTop: "1.15rem", color: "var(--mp-text)" }}>
             <li>
               <span className="mpv1-ico" aria-hidden>
                 <IconTrend size={16} />
               </span>
               <div>
-                <strong>即時市場脈動</strong>
-                <span>24/7 監控資金與市場溫度</span>
+                <strong>公開市場資料</strong>
+                <span>Binance USD-M 公開行情</span>
               </div>
             </li>
             <li>
@@ -41,8 +37,8 @@ export function LandingPage() {
                 <IconTarget size={16} />
               </span>
               <div>
-                <strong>機會優先排序</strong>
-                <span>今天該先看哪些標的</span>
+                <strong>市場排行</strong>
+                <span>依 24h 漲跌、成交量、波動與流動性排序</span>
               </div>
             </li>
             <li>
@@ -50,14 +46,14 @@ export function LandingPage() {
                 <IconShield size={16} />
               </span>
               <div>
-                <strong>風險控管先行</strong>
-                <span>先告訴你今天不要做什麼</span>
+                <strong>資料來源透明</strong>
+                <span>Runtime 未綁定時不顯示 NEXUS 觀點</span>
               </div>
             </li>
           </ul>
           <div className="mpv1-land-cta">
             <Link className="mpv1-btn mpv1-btn-primary" to="/register">
-              開始免費體驗
+              Staging 登入
             </Link>
             <Link className="mpv1-btn mpv1-btn-outline" to="/plans">
               查看會員方案
@@ -74,74 +70,16 @@ export function LandingPage() {
               fontWeight: 600,
             }}
           >
-            <span>✓ 無需綁卡</span>
-            <span>✓ 7天免費</span>
-            <span>✓ 隨時取消</span>
+            <span>staging-only identity</span>
+            <span>帳務未開放</span>
           </div>
         </div>
 
-        <div className="mpv1-preview-panel mpv1-preview-panel-dense" aria-label="產品預覽">
-          <div className="mpv1-preview-top">
-            <div className="mpv1-preview-kpi mpv1-preview-tile">
-              <div className="lbl">市場狀態</div>
-              <div className="val bull">偏多 ↗</div>
-              <div className="mpv1-bias-gauge" style={{ marginTop: 6 }}>
-                <div className="mpv1-bias-gauge-track" />
-                <div className="mpv1-bias-gauge-needle" style={{ left: "72%" }} />
-              </div>
-              <div style={{ color: "#94a3b8", fontSize: "0.68rem", marginTop: 4 }}>恐懼與貪婪 64</div>
-            </div>
-            <div className="mpv1-preview-kpi mpv1-preview-tile">
-              <div className="lbl">最佳機會</div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", marginTop: 4 }}>
-                <strong style={{ color: "#fff", fontSize: "1rem" }}>ETH</strong>
-                <span className="mpv1-chip mpv1-chip-bull">高機會</span>
-              </div>
-              <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8 }}>
-                <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden>
-                  <circle cx="20" cy="20" r="15" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="3" />
-                  <circle
-                    cx="20"
-                    cy="20"
-                    r="15"
-                    fill="none"
-                    stroke="#34d399"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 15 * 0.82} ${2 * Math.PI * 15}`}
-                    transform="rotate(-90 20 20)"
-                  />
-                  <text x="20" y="21" textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize="11" fontWeight="700">
-                    82
-                  </text>
-                </svg>
-                <span style={{ color: "#93c5fd", fontSize: "0.75rem" }}>/ 100</span>
-              </div>
-            </div>
-            <div className="mpv1-preview-kpi mpv1-preview-tile">
-              <div className="lbl">市場風險</div>
-              <div className="val warn">中等風險</div>
-              <div style={{ color: "#94a3b8", fontSize: "0.72rem", marginTop: 6 }}>短線波動增加</div>
-            </div>
-          </div>
-          <div className="mpv1-preview-chart mpv1-preview-tile">
-            <div style={{ color: "#93c5fd", fontSize: "0.72rem", marginBottom: 4 }}>Market Pulse · 總市值 $2.41T</div>
-            <SparkChart values={[2.05, 2.1, 2.08, 2.18, 2.22, 2.2, 2.3, 2.35, 2.41]} tone="accent" />
-          </div>
-          <div className="mpv1-preview-assets mpv1-preview-tile">
-            <div style={{ color: "#93c5fd", fontSize: "0.72rem", marginBottom: 2 }}>熱門資產 Top 3</div>
-            {[
-              ["BTC", "$68,450", "+0.40%"],
-              ["ETH", "$3,420", "+2.80%"],
-              ["SOL", "$168", "+4.10%"],
-            ].map(([sym, px, chg]) => (
-              <div key={sym} className="mpv1-preview-asset">
-                <strong>{sym}</strong>
-                <span>{px}</span>
-                <span style={{ color: "#34d399" }}>{chg}</span>
-              </div>
-            ))}
-          </div>
+        <div className="mpv1-preview-panel" data-classification="RUNTIME_REQUIRED">
+          <h2>即時市場與成員產品</h2>
+          <p>公開市場行情、成員觀察清單和官方新聞會在登入後顯示。</p>
+          <p className="mpv1-muted">NEXUS 分數、方向訊號、AI 解讀與風險結論需要 Runtime；目前未綁定。</p>
+          <Link className="mpv1-btn mpv1-btn-outline" to="/login">前往 staging 登入</Link>
         </div>
       </section>
 
@@ -430,8 +368,8 @@ function AuthLeftBrand({
 export function LoginPage() {
   const { login, session } = useAuth();
   const nav = useNavigate();
-  const [email, setEmail] = useState("founder@nexus.local");
-  const [password, setPassword] = useState("demo");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -443,22 +381,26 @@ export function LoginPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      await login(email || "founder@nexus.local", password || "demo");
+      await login(email, password);
       nav("/app");
     } finally {
       setBusy(false);
     }
   }
 
-  async function mockPasskey() {
-    setBusy(true);
-    try {
-      await login("founder@nexus.local", "demo");
-      nav("/app");
-    } finally {
-      setBusy(false);
-    }
-  }
+  return (
+    <div className="mpv1-auth-shell" data-classification="NOT_IMPLEMENTED">
+      <MarketingHeader />
+      <div className="mpv1-page-pad">
+        <div className="mpv1-auth-card" style={{ margin: "2rem auto" }}>
+          <h2>公開註冊尚未開放</h2>
+          <p className="mpv1-sub">此 staging 環境僅支援已由管理員佈建的身份登入。此頁不會建立帳號或傳送驗證信。</p>
+          <Link className="mpv1-btn mpv1-btn-primary mpv1-btn-block" to="/login">返回 staging 登入</Link>
+        </div>
+      </div>
+      <AuthFooter />
+    </div>
+  );
 
   return (
     <div className="mpv1-auth-shell">
@@ -552,10 +494,7 @@ export function LoginPage() {
           <p>查看今天市場重點與你的觀察清單</p>
         </div>
 
-        <button type="button" className="mpv1-btn mpv1-btn-primary mpv1-btn-block mpv1-m-passkey" disabled={busy} onClick={() => void mockPasskey()}>
-          使用 Passkey / Face ID 登入
-        </button>
-        <p className="mpv1-m-passkey-hint">快速、安全，不需要輸入密碼</p>
+        <p className="mpv1-m-passkey-hint">staging 僅支援已由管理員佈建的帳號密碼登入。</p>
 
         <div className="mpv1-divider">或使用帳號</div>
 
@@ -889,7 +828,7 @@ export function ForgotPasswordPage() {
       <div className="mpv1-page-pad">
         <div className="mpv1-auth-card" style={{ margin: "2rem auto" }}>
           <h2>忘記密碼</h2>
-          <p className="mpv1-sub">本機預覽不寄送郵件。正式版會透過安全 API 處理重設流程。</p>
+          <p className="mpv1-sub">此 staging 環境未開放密碼重設。請聯絡 staging 管理員；此頁不會寄送重設郵件。</p>
           <Link className="mpv1-btn mpv1-btn-primary mpv1-btn-block" to="/login">
             返回登入
           </Link>

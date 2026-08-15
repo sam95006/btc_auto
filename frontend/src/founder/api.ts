@@ -11,7 +11,34 @@ import type {
 /**
  * Founder private API client.
  * Never invents Founder identity client-side — server is sole authority.
+ * Never exposes raw JSON/parser/HTML body errors to the UI.
  */
+function sanitizeFounderError(status: number, raw?: string): string {
+  const text = (raw || "").toLowerCase();
+  if (status === 401) return "Session unavailable";
+  if (status === 403) return "Permission denied";
+  if (status === 404 || text.includes("unexpected token") || text.includes("<!doctype") || text.includes("syntaxerror")) {
+    return "Founder access required";
+  }
+  if (text.includes("network") || text.includes("failed to fetch")) return "Session unavailable";
+  return "Founder access required";
+}
+
+async function readFounderJson<T extends { error?: string }>(
+  res: Response
+): Promise<{ ok: true; body: T } | { ok: false; error: string }> {
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    return { ok: false, error: sanitizeFounderError(res.status) };
+  }
+  try {
+    const body = (await res.json()) as T;
+    return { ok: true, body };
+  } catch {
+    return { ok: false, error: sanitizeFounderError(res.status) };
+  }
+}
+
 export async function fetchFounderStatus(): Promise<FounderStatus> {
   try {
     const res = await fetch("/api/nexus/founder/status", {
@@ -19,13 +46,20 @@ export async function fetchFounderStatus(): Promise<FounderStatus> {
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
-    const body = (await res.json()) as FounderStatus;
-    if (!res.ok) {
-      return { ok: false, error: body.error || `http_${res.status}`, memberAccessible: false };
+    const parsed = await readFounderJson<FounderStatus>(res);
+    if (!parsed.ok) {
+      return { ok: false, error: parsed.error, memberAccessible: false };
     }
-    return body;
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "network_error", memberAccessible: false };
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: sanitizeFounderError(res.status, parsed.body.error),
+        memberAccessible: false,
+      };
+    }
+    return parsed.body;
+  } catch {
+    return { ok: false, error: "Session unavailable", memberAccessible: false };
   }
 }
 
@@ -36,13 +70,12 @@ export async function fetchFounderOperatorSnapshot(): Promise<FounderOperatorSna
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
-    const body = (await res.json()) as FounderOperatorSnapshot & { error?: string };
-    if (!res.ok) {
-      return { ok: false, error: body.error || `http_${res.status}` };
-    }
-    return body;
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "network_error" };
+    const parsed = await readFounderJson<FounderOperatorSnapshot & { error?: string }>(res);
+    if (!parsed.ok) return { ok: false, error: parsed.error };
+    if (!res.ok) return { ok: false, error: sanitizeFounderError(res.status, parsed.body.error) };
+    return parsed.body;
+  } catch {
+    return { ok: false, error: "Session unavailable" };
   }
 }
 
@@ -55,13 +88,12 @@ export async function fetchFounderDiagnostics(): Promise<
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
-    const body = (await res.json()) as FounderDiagnosticsSnapshot & { error?: string };
-    if (!res.ok) {
-      return { ok: false, error: body.error || `http_${res.status}` };
-    }
-    return body;
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "network_error" };
+    const parsed = await readFounderJson<FounderDiagnosticsSnapshot & { error?: string }>(res);
+    if (!parsed.ok) return { ok: false, error: parsed.error };
+    if (!res.ok) return { ok: false, error: sanitizeFounderError(res.status, parsed.body.error) };
+    return parsed.body;
+  } catch {
+    return { ok: false, error: "Session unavailable" };
   }
 }
 
@@ -74,13 +106,12 @@ export async function fetchFounderLiveOps(): Promise<
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
-    const body = (await res.json()) as FounderLiveOpsSnapshot & { error?: string };
-    if (!res.ok) {
-      return { ok: false, error: body.error || `http_${res.status}` };
-    }
-    return body;
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "network_error" };
+    const parsed = await readFounderJson<FounderLiveOpsSnapshot & { error?: string }>(res);
+    if (!parsed.ok) return { ok: false, error: parsed.error };
+    if (!res.ok) return { ok: false, error: sanitizeFounderError(res.status, parsed.body.error) };
+    return parsed.body;
+  } catch {
+    return { ok: false, error: "Session unavailable" };
   }
 }
 
@@ -94,21 +125,20 @@ export async function fetchFounderDemoMonitor(): Promise<
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
-    const body = (await res.json()) as FounderDemoMonitorSnapshot & { error?: string };
+    const parsed = await readFounderJson<FounderDemoMonitorSnapshot & { error?: string }>(res);
+    if (!parsed.ok) {
+      return { ok: false, error: parsed.error, memberAccessible: false };
+    }
     if (!res.ok) {
       return {
         ok: false,
-        error: body.error || `http_${res.status}`,
+        error: sanitizeFounderError(res.status, parsed.body.error),
         memberAccessible: false,
       };
     }
-    return body;
-  } catch (err) {
-    return {
-      ok: false,
-      error: err instanceof Error ? err.message : "network_error",
-      memberAccessible: false,
-    };
+    return parsed.body;
+  } catch {
+    return { ok: false, error: "Session unavailable", memberAccessible: false };
   }
 }
 
@@ -134,7 +164,7 @@ export async function postFounderLiveOpsControl(
         ok: false,
         applied: false,
         control,
-        error: body.error || `http_${res.status}`,
+        error: sanitizeFounderError(res.status, body.error),
         banned: body.banned,
         exchangeWriteEnabled: false,
         mainnetShortcut: false,
@@ -150,7 +180,7 @@ export async function postFounderLiveOpsControl(
       ok: false,
       applied: false,
       control,
-      error: err instanceof Error ? err.message : "network_error",
+      error: "Session unavailable",
       exchangeWriteEnabled: false,
       founderOnly: true,
       memberAccessible: false,
@@ -180,7 +210,7 @@ export async function postResearchAuthorize(
         ok: false,
         authorized: false,
         scope,
-        error: body.error || `http_${res.status}`,
+        error: sanitizeFounderError(res.status, body.error),
         researchOnly: true,
         realExecutionEnabled: false,
         memberAccessible: false,
@@ -192,7 +222,7 @@ export async function postResearchAuthorize(
       ok: false,
       authorized: false,
       scope,
-      error: err instanceof Error ? err.message : "network_error",
+      error: "Session unavailable",
       researchOnly: true,
       realExecutionEnabled: false,
       memberAccessible: false,

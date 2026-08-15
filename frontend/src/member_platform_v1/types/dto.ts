@@ -1,6 +1,6 @@
 /**
  * Member Platform — public DTOs for UI.
- * Mock Adapter → future Zeabur Public Read-only API.
+ * Product DTOs retained for static product configuration.
  * Never includes wallet, keys, positions, or execution controls.
  */
 export type MembershipTier = "starter" | "advanced" | "professional" | "enterprise";

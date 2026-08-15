@@ -149,14 +149,12 @@ export function MobileDashboard({ data }: { data: DashboardDto }) {
       </article>
 
       <article className="mpv1-m-card">
-        <div className="mpv1-m-kicker">最佳機會</div>
+        <div className="mpv1-m-kicker">市場排行預覽</div>
         <div className="mpv1-m-best">
           <div>
             <strong>{best?.symbol.replace("USDT", "")}</strong>
-            <AdviceChip advice={best?.advice || "observing"} label={best?.adviceLabel || "觀察中"} />
-            <p>{best?.beginnerReason}</p>
+            <p>公開市場排行；NEXUS 機會評分需 Runtime。</p>
           </div>
-          <ScoreRing score={best?.score ?? null} size={52} />
         </div>
         <Link className="mpv1-m-cta" to={`/app/market/${best?.symbol.replace("USDT", "") || "ETH"}`}>
           查看分析 →
@@ -189,6 +187,9 @@ export function MobileDashboard({ data }: { data: DashboardDto }) {
             </span>
           ))}
         </div>
+        <p className="mpv1-muted" style={{ margin: "0.35rem 0 0", fontSize: "0.7rem" }}>
+          LIVE_API · 公開行情；NEXUS 解讀為 RUNTIME_REQUIRED
+        </p>
         <div className="mpv1-m-metric">
           <span>總市值</span>
           <strong>

@@ -2,56 +2,40 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
-import { DEFAULT_WATCHLIST_SYMBOLS } from "../mocks/data";
-
-const KEY = "nexus_mp_v1_watchlist";
-const KEY_VER = "nexus_mp_v1_watchlist_ver";
-const CURRENT_VER = "v2.1-18";
+import { changeMemberWatchlist, getMemberWatchlist } from "../services/stagingApi";
+import { useAuth } from "./AuthContext";
 
 type WatchCtx = {
   symbols: string[];
   has: (symbol: string) => boolean;
-  toggle: (symbol: string) => void;
+  toggle: (symbol: string) => Promise<void>;
 };
 
 const Ctx = createContext<WatchCtx | null>(null);
 
-function load(): string[] {
-  try {
-    const ver = localStorage.getItem(KEY_VER);
-    const raw = localStorage.getItem(KEY);
-    if (ver !== CURRENT_VER || !raw) {
-      localStorage.setItem(KEY_VER, CURRENT_VER);
-      localStorage.setItem(KEY, JSON.stringify(DEFAULT_WATCHLIST_SYMBOLS));
-      return [...DEFAULT_WATCHLIST_SYMBOLS];
-    }
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length
-      ? parsed.map(String)
-      : [...DEFAULT_WATCHLIST_SYMBOLS];
-  } catch {
-    return [...DEFAULT_WATCHLIST_SYMBOLS];
-  }
-}
-
 export function WatchlistProvider({ children }: { children: ReactNode }) {
-  const [symbols, setSymbols] = useState<string[]>(() => load());
+  const { session } = useAuth();
+  const [symbols, setSymbols] = useState<string[]>([]);
 
-  const persist = (next: string[]) => {
-    setSymbols(next);
-    localStorage.setItem(KEY, JSON.stringify(next));
-    localStorage.setItem(KEY_VER, CURRENT_VER);
-  };
+  useEffect(() => {
+    if (!session) {
+      setSymbols([]);
+      return;
+    }
+    void getMemberWatchlist().then((response) => setSymbols(response.symbols)).catch(() => setSymbols([]));
+  }, [session]);
 
   const has = useCallback((symbol: string) => symbols.includes(symbol), [symbols]);
 
   const toggle = useCallback(
     (symbol: string) => {
-      persist(symbols.includes(symbol) ? symbols.filter((s) => s !== symbol) : [...symbols, symbol]);
+      const add = !symbols.includes(symbol);
+      return changeMemberWatchlist(symbol, add).then((response) => setSymbols(response.symbols));
     },
     [symbols]
   );

@@ -1,7 +1,8 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { TIER_LABELS } from "../lib/entitlements";
-import { TierSwitcher } from "../components/TierSwitcher";
+import { StagingApiStatus } from "../components/StagingApiStatus";
+import { LiveMarketTicker } from "../components/LiveMarketTicker";
 import { IconHome } from "../components/MobileLayouts";
 import {
   IconBell,
@@ -183,10 +184,8 @@ export function AppShell() {
             <kbd className="mpv1-kbd">/</kbd>
           </label>
           <div className="mpv1-top-actions">
-            <TierSwitcher />
             <Link className="mpv1-icon-btn" to="/app/alerts" title="提醒" aria-label="提醒">
               <IconBell size={16} />
-              <span className="mpv1-badge-count">3</span>
             </Link>
             <Link className="mpv1-plan-pill" to="/app/membership">
               <IconCrown size={14} /> {TIER_LABELS[tier]}
@@ -197,6 +196,10 @@ export function AppShell() {
             </Link>
           </div>
         </div>
+        <div style={{ padding: "0.35rem 1.25rem 0" }}>
+          <StagingApiStatus />
+        </div>
+        <LiveMarketTicker />
 
         {!hideMobileChrome ? (
           <div className="mpv1-m-topbar mpv1-m-only">

@@ -2,15 +2,13 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 import type { MembershipTier, MemberSession } from "../types/dto";
-import { memberApi } from "../services";
-
-const SESSION_KEY = "nexus_mp_v1_session";
-const TIER_PREVIEW_KEY = "nexus_mp_v1_tier_preview";
+import { getMemberEntitlements, getMemberSession, stagingLogin, stagingLogout } from "../services/stagingApi";
 
 type AuthCtx = {
   session: MemberSession | null;
@@ -24,70 +22,50 @@ type AuthCtx = {
     password: string;
     displayName: string;
     accountType: "individual" | "enterprise";
-  }) => Promise<void>;
-  logout: () => void;
+  }) => Promise<never>;
+  logout: () => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
 
-function loadSession(): MemberSession | null {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? (JSON.parse(raw) as MemberSession) : null;
-  } catch {
-    return null;
-  }
-}
-
-function loadPreview(): MembershipTier | null {
-  try {
-    const raw = localStorage.getItem(TIER_PREVIEW_KEY);
-    if (raw === "starter" || raw === "advanced" || raw === "professional" || raw === "enterprise") {
-      return raw;
-    }
-  } catch {
-    /* ignore */
-  }
-  return null;
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<MemberSession | null>(() => loadSession());
-  const [previewTier, setPreviewTierState] = useState<MembershipTier | null>(() => loadPreview());
+  const [session, setSession] = useState<MemberSession | null>(null);
+  const [previewTier] = useState<MembershipTier | null>(null);
 
-  const setPreviewTier = useCallback((t: MembershipTier | null) => {
-    setPreviewTierState(t);
-    if (t) localStorage.setItem(TIER_PREVIEW_KEY, t);
-    else localStorage.removeItem(TIER_PREVIEW_KEY);
+  const setPreviewTier = useCallback((_t: MembershipTier | null) => undefined, []);
+
+  const hydrate = useCallback(async () => {
+    const [{ session: remote, profile }, entitlements] = await Promise.all([getMemberSession(), getMemberEntitlements()]);
+    const tier: MembershipTier = entitlements.entitlements.includes("ENTERPRISE") ? "enterprise"
+      : entitlements.entitlements.includes("PROFESSIONAL") ? "professional"
+      : entitlements.entitlements.includes("ADVANCED") ? "advanced" : "starter";
+    setSession({
+      id: remote.account_id, email: remote.email, displayName: profile.display_name || remote.email.split("@")[0],
+      accountType: "individual", tier,
+    });
   }, []);
 
-  const persist = (s: MemberSession | null) => {
-    setSession(s);
-    if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s));
-    else localStorage.removeItem(SESSION_KEY);
-  };
+  useEffect(() => {
+    void hydrate().catch(() => setSession(null));
+  }, [hydrate]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const s = await memberApi.login(email, password);
-    persist(s);
+    await stagingLogin(email, password);
+    await hydrate();
+  }, [hydrate]);
+
+  const register = useCallback(async (_input: {
+    email: string; password: string; displayName: string; accountType: "individual" | "enterprise";
+  }): Promise<never> => {
+    throw new Error("registration_not_implemented");
   }, []);
 
-  const register = useCallback(
-    async (input: {
-      email: string;
-      password: string;
-      displayName: string;
-      accountType: "individual" | "enterprise";
-    }) => {
-      const s = await memberApi.register(input);
-      persist(s);
-    },
-    []
-  );
+  const logout = useCallback(async () => {
+    await stagingLogout().catch(() => undefined);
+    setSession(null);
+  }, []);
 
-  const logout = useCallback(() => persist(null), []);
-
-  const tier: MembershipTier = previewTier || session?.tier || "starter";
+  const tier: MembershipTier = session?.tier || "starter";
 
   const value = useMemo(
     () => ({ session, tier, previewTier, setPreviewTier, login, register, logout }),

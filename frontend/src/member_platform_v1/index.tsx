@@ -3,14 +3,14 @@ import { AuthProvider } from "./context/AuthContext";
 import { WatchlistProvider } from "./context/WatchlistContext";
 import { AppShell, PublicShell } from "./layout/Shells";
 import {
-  AccountPage,
-  AlertsPage,
-  DashboardPage,
-  MarketDetailPage,
-  MarketsPage,
-  MembershipPage,
-  WatchlistPage,
-} from "./pages/AppPages";
+  AccountPage as RealAccountPage,
+  AlertsPage as RealAlertsPage,
+  DashboardPage as RealDashboardPage,
+  MarketDetailPage as RealMarketDetailPage,
+  MarketsPage as RealMarketsPage,
+  MembershipPage as RealMembershipPage,
+  WatchlistPage as RealWatchlistPage,
+} from "./pages/RealAppPages";
 import {
   ForgotPasswordPage,
   LandingPage,
@@ -34,13 +34,13 @@ export function MemberPlatformV1App() {
             <Route path="/plans" element={<PlansPage />} />
           </Route>
           <Route path="/app" element={<AppShell />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="markets" element={<MarketsPage />} />
-            <Route path="market/:symbol" element={<MarketDetailPage />} />
-            <Route path="watchlist" element={<WatchlistPage />} />
-            <Route path="alerts" element={<AlertsPage />} />
-            <Route path="membership" element={<MembershipPage />} />
-            <Route path="account" element={<AccountPage />} />
+            <Route index element={<RealDashboardPage />} />
+            <Route path="markets" element={<RealMarketsPage />} />
+            <Route path="market/:symbol" element={<RealMarketDetailPage />} />
+            <Route path="watchlist" element={<RealWatchlistPage />} />
+            <Route path="alerts" element={<RealAlertsPage />} />
+            <Route path="membership" element={<RealMembershipPage />} />
+            <Route path="account" element={<RealAccountPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
