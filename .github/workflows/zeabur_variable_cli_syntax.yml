@@ -1,0 +1,25 @@
+name: zeabur-variable-cli-syntax
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+      - name: Inspect installed variable command syntax
+        run: |
+          set -euo pipefail
+          zeabur --version
+          zeabur variable --help
+          for subcommand in create update upsert set list; do
+            echo "== zeabur variable $subcommand --help =="
+            zeabur variable "$subcommand" --help || true
+          done
