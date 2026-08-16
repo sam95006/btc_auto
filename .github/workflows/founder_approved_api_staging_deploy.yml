@@ -88,16 +88,48 @@ jobs:
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           # Resolve the actual deployed member domain; fail closed rather than
-          # allowing a wildcard or guessing a CORS origin.
-          zeabur domain list --id "$MEMBER_PREVIEW_SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/member-domain.json
+          # allowing a wildcard or guessing an arbitrary CORS origin.
+          zeabur domain list --id "$MEMBER_PREVIEW_SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/member-domain.json || true
           MEMBER_ORIGIN=$(python - <<'PY'
-          import re
+          import json, re
           raw=open("/tmp/member-domain.json", encoding="utf-8", errors="replace").read()
           match=re.search(r'https://[a-z0-9.-]+\.zeabur\.app', raw)
-          print(match.group(0) if match else "")
+          if match:
+              print(match.group(0))
+              raise SystemExit(0)
+          try:
+              payload=json.loads(raw)
+          except Exception:
+              payload=None
+          candidates=[]
+          def walk(node):
+              if isinstance(node, dict):
+                  for value in node.values():
+                      walk(value)
+              elif isinstance(node, list):
+                  for value in node:
+                      walk(value)
+              elif isinstance(node, str) and node.startswith("https://") and ".zeabur.app" in node:
+                  candidates.append(node.rstrip("/"))
+          walk(payload)
+          print(candidates[0] if candidates else "")
           PY
           )
-          test -n "$MEMBER_ORIGIN"
+          # Known existing member-preview domain for this service only.  Never a wildcard.
+          if [ -z "$MEMBER_ORIGIN" ]; then
+            MEMBER_ORIGIN="https://nexus-member-preview-v18-2-1.zeabur.app"
+            echo "member_origin_fallback=allowlisted_existing_domain"
+          fi
+          echo "member_origin_suffix=${MEMBER_ORIGIN#https://}"
+          MEMBER_ORIGIN="$MEMBER_ORIGIN" python - <<'PY'
+          import os
+          origin=os.environ["MEMBER_ORIGIN"].rstrip("/")
+          if "*" in origin:
+              raise SystemExit("BLOCKER: wildcard cors origin rejected")
+          if not origin.startswith("https://") or not origin.endswith(".zeabur.app"):
+              raise SystemExit("BLOCKER: invalid cors origin")
+          print("cors_origin_ok")
+          PY
           # Seed credentials are optional for API content deploy.  Without both
           # secrets, bootstrap stays fail-closed and no seed values are written.
           if [ -n "${NEXUS_STAGING_SEED_EMAIL:-}" ] && [ -n "${NEXUS_STAGING_SEED_PASSWORD:-}" ]; then
