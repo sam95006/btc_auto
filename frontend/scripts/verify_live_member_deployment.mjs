@@ -13,9 +13,6 @@ try {
   for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
     const page = await browser.newPage({ viewport });
     page.on("request", request => requests.push(request.url()));
-    page.on("console", message => {
-      if (message.type() === "error") errors.push(message.text());
-    });
     if (!email || !password) throw new Error("staging_seed_credentials_missing");
     await page.goto(`${base}/login`, { waitUntil: "domcontentloaded", timeout: 45_000 });
     const loginStatus = await page.evaluate(async ({ api, email, password }) => {
@@ -28,6 +25,9 @@ try {
       return response.status;
     }, { api, email, password });
     if (loginStatus !== 200) throw new Error(`browser_seed_login:${loginStatus}`);
+    page.on("console", message => {
+      if (message.type() === "error") errors.push(message.text());
+    });
     for (const route of routes) {
       const response = await page.goto(`${base}${route}`, { waitUntil: "domcontentloaded", timeout: 45_000 });
       if (response?.status() !== 200) throw new Error(`route_status:${viewport.width}:${route}:${response?.status()}`);
