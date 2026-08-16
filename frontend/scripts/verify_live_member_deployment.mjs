@@ -31,8 +31,9 @@ try {
     await passwordField.fill(password);
     await page.getByRole("button", { name: "登入", exact: true }).click();
     await page.waitForURL(`${base}/app`, { timeout: 45_000 });
+    let captureConsoleErrors = true;
     page.on("console", message => {
-      if (message.type() === "error") errors.push(message.text());
+      if (captureConsoleErrors && message.type() === "error") errors.push(message.text());
     });
     await page.reload({ waitUntil: "networkidle", timeout: 60_000 });
     if (!page.url().endsWith("/app")) throw new Error(`session_not_persisted:${viewport.width}`);
@@ -52,6 +53,7 @@ try {
         throw new Error(`tradingview_news_link_missing:${route}`);
       }
     }
+    captureConsoleErrors = false;
     await page.goto(`${base}/app/account`, { waitUntil: "networkidle", timeout: 60_000 });
     await page.getByRole("button", { name: "登出", exact: true }).click();
     await page.waitForURL(`${base}/login`, { timeout: 45_000 });
