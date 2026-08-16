@@ -84,11 +84,15 @@ jobs:
           SERVICE_ID: ${{ steps.svc.outputs.service_id }}
           NEXUS_STAGING_SEED_EMAIL: ${{ secrets.NEXUS_STAGING_SEED_EMAIL }}
           NEXUS_STAGING_SEED_PASSWORD: ${{ secrets.NEXUS_STAGING_SEED_PASSWORD }}
+          NEXUS_FOUNDER_EMAIL: ${{ secrets.NEXUS_FOUNDER_EMAIL }}
+          NEXUS_FOUNDER_REGISTRATION_CODE: ${{ secrets.NEXUS_FOUNDER_REGISTRATION_CODE }}
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           test -n "$NEXUS_STAGING_SEED_EMAIL"
           test -n "$NEXUS_STAGING_SEED_PASSWORD"
+          test -n "$NEXUS_FOUNDER_EMAIL"
+          test -n "$NEXUS_FOUNDER_REGISTRATION_CODE"
           MEMBER_ORIGIN="https://nexus-member-preview-v18-2-1.zeabur.app"
           zeabur variable list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/staging-vars.json
           python - <<'PY' > /tmp/existing-var-names.txt
@@ -120,8 +124,12 @@ jobs:
           }
           set_required_variable NEXUS_ENV STAGING
           set_required_variable NEXUS_STAGING_SESSION_BOOTSTRAP true
+          set_required_variable NEXUS_STAGING_MEMBER_AUTH_ENABLED true
+          set_required_variable NEXUS_STAGING_REGISTRATION_ENABLED true
           set_required_variable NEXUS_STAGING_SEED_EMAIL "$NEXUS_STAGING_SEED_EMAIL"
           set_required_variable NEXUS_STAGING_SEED_PASSWORD "$NEXUS_STAGING_SEED_PASSWORD"
+          set_required_variable NEXUS_FOUNDER_EMAIL "$NEXUS_FOUNDER_EMAIL"
+          set_required_variable NEXUS_FOUNDER_REGISTRATION_CODE "$NEXUS_FOUNDER_REGISTRATION_CODE"
           set_required_variable NEXUS_CORS_ALLOWED_ORIGINS "$MEMBER_ORIGIN"
           set_required_variable EXCHANGE_WRITE false
           set_required_variable MAINNET false
@@ -157,6 +165,8 @@ jobs:
           expected={
               "NEXUS_ENV": "STAGING",
               "NEXUS_STAGING_SESSION_BOOTSTRAP": "true",
+              "NEXUS_STAGING_MEMBER_AUTH_ENABLED": "true",
+              "NEXUS_STAGING_REGISTRATION_ENABLED": "true",
               "EXCHANGE_WRITE": "false",
               "MAINNET": "false",
               "REAL_MONEY": "false",
@@ -167,10 +177,14 @@ jobs:
               assert values.get(key) == value, f"required_variable_mismatch:{key}"
           assert values.get("NEXUS_STAGING_SEED_EMAIL") == os.environ["NEXUS_STAGING_SEED_EMAIL"]
           assert values.get("NEXUS_STAGING_SEED_PASSWORD") == os.environ["NEXUS_STAGING_SEED_PASSWORD"]
+          assert values.get("NEXUS_FOUNDER_EMAIL") == os.environ["NEXUS_FOUNDER_EMAIL"]
+          assert values.get("NEXUS_FOUNDER_REGISTRATION_CODE") == os.environ["NEXUS_FOUNDER_REGISTRATION_CODE"]
           print("NEXUS_ENV=STAGING")
           print("NEXUS_STAGING_SESSION_BOOTSTRAP=true")
           print("NEXUS_STAGING_SEED_EMAIL=CONFIGURED")
           print("NEXUS_STAGING_SEED_PASSWORD=CONFIGURED")
+          print("NEXUS_FOUNDER_EMAIL=CONFIGURED")
+          print("NEXUS_FOUNDER_REGISTRATION_CODE=CONFIGURED")
           print("STAGING_SEEDED_SESSION_BOUNDARY_PASS")
           PY
 

@@ -33,6 +33,17 @@ class AuthAlphaService:
         session_id = self.repo.create_session(account_id)
         return {"account_id": account_id, "session_id": session_id, "status": self.ALPHA_READY}
 
+    def register_staging_member(
+        self, *, email: str, password: str, display_name: str, founder: bool
+    ) -> dict[str, Any]:
+        if len(password) < 12:
+            raise ValueError("weak_password")
+        password_hash = self._hasher.hash(password)
+        account_id, session_id = self.repo.register_staging_account(
+            email=email, password_hash=password_hash, display_name=display_name, founder=founder
+        )
+        return {"account_id": account_id, "session_id": session_id}
+
     def login(self, email: str, password: str, *, ip: str = "unknown") -> dict[str, Any]:
         if self._rate_limit_hook:
             self._rate_limit_hook(email, ip)

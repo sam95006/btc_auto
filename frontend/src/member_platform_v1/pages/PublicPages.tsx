@@ -52,7 +52,7 @@ export function LandingPage() {
             </li>
           </ul>
           <div className="mpv1-land-cta">
-            <Link className="mpv1-btn mpv1-btn-primary" to="/login">
+            <Link className="mpv1-btn mpv1-btn-primary" to="/register">
               Staging 登入
             </Link>
             <Link className="mpv1-btn mpv1-btn-outline" to="/plans">
@@ -531,13 +531,25 @@ export function RegisterPage() {
   const [err, setErr] = useState("");
   if (session) return <Navigate to="/app" replace />;
   return (
-    <div className="mpv1-auth-shell" data-classification="NOT_IMPLEMENTED">
+    <div className="mpv1-auth-shell">
       <MarketingHeader />
       <div className="mpv1-page-pad">
         <div className="mpv1-auth-card" style={{ margin: "2rem auto" }}>
-          <h2>公開註冊尚未開放</h2>
-          <p className="mpv1-sub">此 staging 環境僅支援已由管理員佈建的帳號登入。</p>
-          <Link className="mpv1-btn mpv1-btn-primary mpv1-btn-block" to="/login">前往登入</Link>
+          <h2>Staging 測試註冊</h2>
+          <p className="mpv1-sub">僅供 staging 測試使用，非 Production 開放註冊。</p>
+          <form onSubmit={(event) => void onSubmit(event)}>
+            <label className="mpv1-field">名稱<input value={displayName} onChange={(event) => setDisplayName(event.target.value)} required maxLength={120} /></label>
+            <label className="mpv1-field">Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
+            <label className="mpv1-field">密碼<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={12} /></label>
+            <label className="mpv1-field">確認密碼<input type="password" value={confirm} onChange={(event) => setConfirm(event.target.value)} required minLength={12} /></label>
+            <details className="mpv1-field">
+              <summary>Founder 初始化（選填）</summary>
+              <input aria-label="Founder Claim Code" type="password" value={phone} onChange={(event) => setPhone(event.target.value)} />
+            </details>
+            {err ? <p className="mpv1-auth-error" role="alert">{err}</p> : null}
+            <button className="mpv1-btn mpv1-btn-primary mpv1-btn-block" disabled={busy} type="submit">{busy ? "建立中…" : "建立 staging 帳號"}</button>
+          </form>
+          <p className="mpv1-sub">已有帳號？ <Link to="/login">登入</Link></p>
         </div>
       </div>
       <AuthFooter />
@@ -546,12 +558,8 @@ export function RegisterPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!agree) {
-      setErr("請先同意服務條款與隱私權政策");
-      return;
-    }
-    if (password.length < 8 || password.length > 20) {
-      setErr("密碼需為 8-20 字元");
+    if (password.length < 12 || password.length > 128) {
+      setErr("密碼至少需為 12 字元");
       return;
     }
     if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
@@ -565,7 +573,7 @@ export function RegisterPage() {
     setErr("");
     setBusy(true);
     try {
-      await register({ email, password, displayName, accountType });
+      await register({ email, password, confirmPassword: confirm, displayName, founderClaimCode: phone || undefined });
       nav("/app");
     } finally {
       setBusy(false);
@@ -820,7 +828,7 @@ export function PlansPage() {
                     <li key={f}>{f}</li>
                   ))}
                 </ul>
-                <Link className={`mpv1-btn ${hot ? "mpv1-btn-primary" : "mpv1-btn-outline"} mpv1-btn-block`} to="/login">
+                <Link className={`mpv1-btn ${hot ? "mpv1-btn-primary" : "mpv1-btn-outline"} mpv1-btn-block`} to="/register">
                   {p.id === "enterprise" ? "聯絡我們" : "選擇此方案"}
                 </Link>
               </article>

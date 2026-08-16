@@ -78,6 +78,14 @@ def create_app() -> Flask:
         os.getenv("NEXUS_STAGING_SESSION_BOOTSTRAP", "").strip().lower() == "true"
         and (os.getenv("NEXUS_ENV") or os.getenv("NEXUS_DEPLOYMENT_ENV") or "").strip().lower() == "staging"
     )
+    app.config["NEXUS_STAGING_MEMBER_AUTH_ENABLED"] = (
+        os.getenv("NEXUS_STAGING_MEMBER_AUTH_ENABLED", "").strip().lower() == "true"
+        and (os.getenv("NEXUS_ENV") or os.getenv("NEXUS_DEPLOYMENT_ENV") or "").strip().lower() == "staging"
+    )
+    app.config["NEXUS_STAGING_REGISTRATION_ENABLED"] = (
+        os.getenv("NEXUS_STAGING_REGISTRATION_ENABLED", "").strip().lower() == "true"
+        and (os.getenv("NEXUS_ENV") or os.getenv("NEXUS_DEPLOYMENT_ENV") or "").strip().lower() == "staging"
+    )
     _provision_staging_seed(app.config["NEXUS_PRODUCT_ALPHA_SERVICES"])
 
     @app.get("/health")

@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import type { MembershipTier, MemberSession } from "../types/dto";
-import { getMemberEntitlements, getMemberSession, stagingLogin, stagingLogout } from "../services/stagingApi";
+import { getMemberEntitlements, getMemberSession, stagingLogin, stagingLogout, stagingRegister } from "../services/stagingApi";
 
 type AuthCtx = {
   session: MemberSession | null;
@@ -21,9 +21,10 @@ type AuthCtx = {
   register: (input: {
     email: string;
     password: string;
+    confirmPassword: string;
     displayName: string;
-    accountType: "individual" | "enterprise";
-  }) => Promise<never>;
+    founderClaimCode?: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -56,11 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await hydrate();
   }, [hydrate]);
 
-  const register = useCallback(async (_input: {
-    email: string; password: string; displayName: string; accountType: "individual" | "enterprise";
-  }): Promise<never> => {
-    throw new Error("registration_not_implemented");
-  }, []);
+  const register = useCallback(async (input: {
+    email: string; password: string; confirmPassword: string; displayName: string; founderClaimCode?: string;
+  }) => {
+    await stagingRegister(input);
+    await hydrate();
+  }, [hydrate]);
 
   const logout = useCallback(async () => {
     await stagingLogout().catch(() => undefined);

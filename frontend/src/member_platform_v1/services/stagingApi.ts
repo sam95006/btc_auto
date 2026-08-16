@@ -184,6 +184,21 @@ export async function stagingLogin(email: string, password: string) {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }),
   });
 }
+export async function stagingRegister(input: {
+  displayName: string; email: string; password: string; confirmPassword: string; founderClaimCode?: string;
+}) {
+  return getJson<{ registered: true; role: "MEMBER" | "FOUNDER"; tier: "FREE" | "ENTERPRISE" }>("/member/registration", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      display_name: input.displayName,
+      email: input.email,
+      password: input.password,
+      confirm_password: input.confirmPassword,
+      founder_claim_code: input.founderClaimCode || undefined,
+    }),
+  });
+}
 export async function stagingLogout() {
   return getJson<{ ok: boolean }>("/member/session/logout", { method: "POST" });
 }

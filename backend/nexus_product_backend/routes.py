@@ -7,6 +7,9 @@ by the hosting application, which makes local/test wiring explicit.
 from __future__ import annotations
 
 import json
+import hmac
+import os
+import re
 from datetime import datetime, timezone
 from typing import Any
 
@@ -92,6 +95,15 @@ def register_product_alpha_routes(app: Flask) -> None:
         build_public_market_telemetry_service(),
     )
 
+    def session_response(payload: dict[str, Any], session_id: str, status: int = 200) -> Response:
+        response = jsonify(payload)
+        response.status_code = status
+        response.set_cookie(
+            "nexus_session", session_id, secure=True, httponly=True,
+            samesite="None", max_age=24 * 60 * 60,
+        )
+        return response
+
     @app.get("/api/v1/market/snapshot")
     def market_snapshot():
         """Credential-free public telemetry; no trading or account surfaces."""
@@ -145,23 +157,67 @@ def register_product_alpha_routes(app: Flask) -> None:
 
     @app.post("/api/v1/member/session/login")
     def member_login():
-        # This bootstrap is intentionally absent from non-staging hosts.
-        if not app.config.get("NEXUS_STAGING_SESSION_BOOTSTRAP", False):
-            return jsonify({"error": "staging_session_bootstrap_unavailable", "classification": "NOT_IMPLEMENTED"}), 404
+        if not app.config.get("NEXUS_STAGING_MEMBER_AUTH_ENABLED", False):
+            return jsonify({"error": "staging_member_auth_unavailable", "classification": "NOT_IMPLEMENTED"}), 404
         auth = _services(app).get("auth")
         body = request.get_json(silent=True) or {}
         if not auth or not isinstance(body.get("email"), str) or not isinstance(body.get("password"), str):
             return jsonify({"error": "invalid_credentials"}), 401
         try:
             session = auth.login(body["email"].strip().lower(), body["password"], ip=request.remote_addr or "unknown")
-            response = jsonify({"email": session["email"], "staging_only": True})
-            response.set_cookie(
-                "nexus_session", session["session_id"], secure=True, httponly=True,
-                samesite="None", max_age=24 * 60 * 60,
-            )
-            return response
+            return session_response({"email": session["email"], "staging_only": True}, session["session_id"])
         except ValueError:
             return jsonify({"error": "invalid_credentials"}), 401
+
+    @app.post("/api/v1/member/registration")
+    def member_registration():
+        """Staging-only persisted registration. Client input has no authority fields."""
+        if not app.config.get("NEXUS_STAGING_REGISTRATION_ENABLED", False):
+            return jsonify({"error": "registration_unavailable", "classification": "NOT_IMPLEMENTED"}), 404
+        body = request.get_json(silent=True) or {}
+        email = str(body.get("email") or "").strip().lower()
+        display_name = str(body.get("display_name") or "").strip()
+        password = body.get("password")
+        confirmation = body.get("confirm_password")
+        if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email) or not 1 <= len(display_name) <= 120:
+            return jsonify({"error": "invalid_registration"}), 400
+        if not isinstance(password, str) or password != confirmation or len(password) < 12:
+            return jsonify({"error": "invalid_registration"}), 400
+        founder_email = os.getenv("NEXUS_FOUNDER_EMAIL", "").strip().lower()
+        founder_code = os.getenv("NEXUS_FOUNDER_REGISTRATION_CODE", "")
+        supplied_code = body.get("founder_claim_code")
+        is_founder_email = bool(founder_email) and hmac.compare_digest(email, founder_email)
+        has_valid_claim = (
+            is_founder_email
+            and isinstance(supplied_code, str)
+            and bool(founder_code)
+            and hmac.compare_digest(supplied_code, founder_code)
+        )
+        if is_founder_email and not has_valid_claim:
+            return jsonify({"error": "reserved_identity_unavailable"}), 403
+        auth = _services(app).get("auth")
+        if not auth:
+            return jsonify({"error": "member_store_unavailable"}), 503
+        try:
+            registered = auth.register_staging_member(
+                email=email, password=password, display_name=display_name, founder=has_valid_claim
+            )
+            return session_response(
+                {
+                    "classification": "LIVE_MEMBER_DB",
+                    "registered": True,
+                    "role": "FOUNDER" if has_valid_claim else "MEMBER",
+                    "tier": "ENTERPRISE" if has_valid_claim else "FREE",
+                },
+                registered["session_id"],
+                201,
+            )
+        except ValueError as exc:
+            if str(exc) == "founder_already_initialized":
+                return jsonify({"error": "Founder identity has already been initialized"}), 409
+            if str(exc) == "email_already_registered":
+                return jsonify({"error": "email_already_registered"}), 409
+            return jsonify({"error": "invalid_registration"}), 400
 
     @app.post("/api/v1/member/session/logout")
     def member_logout():
@@ -364,6 +420,32 @@ def register_product_alpha_routes(app: Flask) -> None:
         if not _verified_session(app):
             return jsonify({"allowed": False, "reason": "invalid_or_expired_session"}), 401
         return jsonify(rbac.permissions_for_session(session_id, org_id=request.args.get("org_id")))
+
+    def founder_surface(permission: str, surface: str):
+        rbac = _services(app).get("rbac")
+        session_id = _session_id()
+        if not rbac or not session_id or not _verified_session(app):
+            return jsonify({"allowed": False, "reason": "invalid_or_expired_session"}), 401
+        try:
+            rbac.require_permission(session_id, permission)
+        except PermissionError:
+            return jsonify({"allowed": False, "reason": "founder_permission_required"}), 403
+        return jsonify({
+            "allowed": True, "classification": "RUNTIME_REQUIRED", "surface": surface,
+            "runtime_state": "UNAVAILABLE_NOT_BOUND", "read_only": True,
+        })
+
+    @app.get("/api/v1/founder/operator")
+    def founder_operator():
+        return founder_surface("founder.operator.read", "operator")
+
+    @app.get("/api/v1/founder/diagnostics")
+    def founder_diagnostics():
+        return founder_surface("founder.diagnostics.read", "diagnostics")
+
+    @app.get("/api/v1/founder/live-ops")
+    def founder_live_ops():
+        return founder_surface("founder.live_ops.read", "live_ops")
 
     @app.post("/api/v1/product/audit/protected-operation")
     def protected_audit_operation():

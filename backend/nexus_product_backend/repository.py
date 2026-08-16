@@ -45,6 +45,100 @@ class ProductRepository:
         )
         return account_id
 
+    def register_staging_account(
+        self, *, email: str, password_hash: str, display_name: str, founder: bool
+    ) -> tuple[str, str]:
+        """Atomically create the complete staging member identity and session."""
+        account_id = f"acct_{uuid.uuid4().hex[:16]}"
+        identity_id = f"id_{uuid.uuid4().hex[:16]}"
+        session_id = f"sess_{uuid.uuid4().hex}"
+        role_id = "role_founder" if founder else "role_member"
+        product_code = "ENTERPRISE" if founder else "FREE"
+        org_id = "org_staging_founder" if founder else None
+        org_role = "OWNER" if founder else "MEMBER"
+        expires = _utcnow() + timedelta(hours=24)
+        with self.pool.connection() as conn:
+            with conn.transaction():
+                with conn.cursor() as cur:
+                    cur.execute("SELECT 1 FROM nexus.email_identities WHERE email=%s FOR UPDATE", (email,))
+                    if cur.fetchone():
+                        raise ValueError("email_already_registered")
+                    if founder:
+                        cur.execute(
+                            "SELECT founder_claimed FROM nexus.founder_claim_state WHERE claim_key='staging_founder' FOR UPDATE"
+                        )
+                        row = cur.fetchone()
+                        if not row or row[0]:
+                            raise ValueError("founder_already_initialized")
+                    cur.execute(
+                        "INSERT INTO nexus.accounts (account_id, org_id, email, status) VALUES (%s, %s, %s, 'active')",
+                        (account_id, org_id, email),
+                    )
+                    cur.execute(
+                        "INSERT INTO nexus.email_identities (identity_id, account_id, email, verified) VALUES (%s, %s, %s, FALSE)",
+                        (identity_id, account_id, email),
+                    )
+                    cur.execute(
+                        "INSERT INTO nexus.password_credentials (account_id, password_hash) VALUES (%s, %s)",
+                        (account_id, password_hash),
+                    )
+                    cur.execute(
+                        "INSERT INTO nexus.account_profiles (account_id, display_name) VALUES (%s, %s)",
+                        (account_id, display_name),
+                    )
+                    cur.execute("INSERT INTO nexus.member_preferences (account_id) VALUES (%s)", (account_id,))
+                    cur.execute("INSERT INTO nexus.notification_preferences (account_id) VALUES (%s)", (account_id,))
+                    cur.execute(
+                        "INSERT INTO nexus.entitlements (entitlement_id, account_id, product_code, active) VALUES (%s, %s, %s, TRUE)",
+                        (f"ent_{uuid.uuid4().hex[:16]}", account_id, product_code),
+                    )
+                    cur.execute(
+                        "INSERT INTO nexus.rbac_bindings (binding_id, account_id, role_id, org_id) VALUES (%s, %s, %s, %s)",
+                        (f"bind_{uuid.uuid4().hex[:16]}", account_id, role_id, org_id),
+                    )
+                    if founder:
+                        cur.execute(
+                            """
+                            INSERT INTO nexus.organization_memberships
+                              (membership_id, org_id, account_id, organization_role)
+                            VALUES (%s, 'org_staging_founder', %s, 'OWNER')
+                            ON CONFLICT (org_id, account_id) DO NOTHING
+                            """,
+                            (f"orgmem_{uuid.uuid4().hex[:16]}", account_id),
+                        )
+                        cur.execute(
+                            """
+                            UPDATE nexus.founder_claim_state
+                            SET founder_claimed=TRUE, founder_account_id=%s, claimed_at=NOW()
+                            WHERE claim_key='staging_founder' AND founder_claimed=FALSE
+                            """,
+                            (account_id,),
+                        )
+                        if cur.rowcount != 1:
+                            raise ValueError("founder_already_initialized")
+                    cur.execute(
+                        "INSERT INTO nexus.auth_sessions (session_id, account_id, expires_at) VALUES (%s, %s, %s)",
+                        (session_id, account_id, expires),
+                    )
+                    self._append_audit_cursor(
+                        cur, account_id, "member.registration", "account", account_id,
+                        {"founder": founder, "role": "FOUNDER" if founder else "MEMBER"},
+                    )
+        return account_id, session_id
+
+    @staticmethod
+    def _append_audit_cursor(cur: Any, account_id: str, action: str, resource_type: str, resource_id: str, detail: dict[str, Any]) -> None:
+        event_id = f"paudit_{uuid.uuid4().hex[:16]}"
+        content_hash = hashlib.sha256(f"{event_id}:{action}:{detail}".encode("utf-8")).hexdigest()
+        cur.execute(
+            """
+            INSERT INTO nexus.product_audit_events
+              (event_id, actor_account_id, action, resource_type, resource_id, detail_json, content_hash)
+            VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s)
+            """,
+            (event_id, account_id, action, resource_type, resource_id, json.dumps(detail), content_hash),
+        )
+
     def get_account_by_email(self, email: str) -> dict[str, Any] | None:
         rows = self.pool.fetchall(
             """
