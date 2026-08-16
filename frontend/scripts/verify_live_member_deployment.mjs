@@ -1,6 +1,9 @@
 import { chromium } from "playwright";
 
 const base = process.env.NEXUS_MEMBER_URL || "https://nexus-member-preview-v18-2-1.zeabur.app";
+const api = process.env.NEXUS_API_URL || "https://nexus-api-staging.zeabur.app";
+const email = process.env.NEXUS_STAGING_SEED_EMAIL || "";
+const password = process.env.NEXUS_STAGING_SEED_PASSWORD || "";
 const routes = ["/", "/login", "/register", "/forgot-password", "/plans", "/app", "/app/markets", "/app/watchlist", "/app/alerts", "/app/market/BTC", "/app/market/ETH", "/app/market/SOL", "/app/membership", "/app/account"];
 const browser = await chromium.launch({ headless: true });
 const requests = [];
@@ -13,6 +16,18 @@ try {
     page.on("console", message => {
       if (message.type() === "error") errors.push(message.text());
     });
+    if (!email || !password) throw new Error("staging_seed_credentials_missing");
+    await page.goto(`${base}/login`, { waitUntil: "domcontentloaded", timeout: 45_000 });
+    const loginStatus = await page.evaluate(async ({ api, email, password }) => {
+      const response = await fetch(`${api}/api/v1/member/session/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+      return response.status;
+    }, { api, email, password });
+    if (loginStatus !== 200) throw new Error(`browser_seed_login:${loginStatus}`);
     for (const route of routes) {
       const response = await page.goto(`${base}${route}`, { waitUntil: "domcontentloaded", timeout: 45_000 });
       if (response?.status() !== 200) throw new Error(`route_status:${viewport.width}:${route}:${response?.status()}`);

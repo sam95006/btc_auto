@@ -31,3 +31,6 @@ jobs:
         working-directory: frontend
         env:
           NEXUS_MEMBER_URL: https://nexus-member-preview-v18-2-1.zeabur.app
+          NEXUS_API_URL: https://nexus-api-staging.zeabur.app
+          NEXUS_STAGING_SEED_EMAIL: ${{ secrets.NEXUS_STAGING_SEED_EMAIL }}
+          NEXUS_STAGING_SEED_PASSWORD: ${{ secrets.NEXUS_STAGING_SEED_PASSWORD }}
