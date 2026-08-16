@@ -1,0 +1,11 @@
+# Prebuilt static SPA deploy for nexus-member-preview-v18-2-1.
+# Expects frontend/dist already built in the upload context.
+FROM python:3.11-slim-bookworm
+WORKDIR /app
+COPY frontend/dist /app/dist
+COPY deploy/zeabur_member_preview_v18_2_1/server.py /app/server.py
+ENV PORT=8080 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+EXPOSE 8080
+CMD ["python", "/app/server.py"]

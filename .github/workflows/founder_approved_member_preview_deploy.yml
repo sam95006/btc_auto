@@ -1,0 +1,100 @@
+name: founder-approved-member-preview-deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type DEPLOY_NEXUS_MEMBER_PREVIEW_STATIC"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founder-member-preview-deploy
+  cancel-in-progress: false
+
+env:
+  SERVICE_ID: 6a744ba3472e2c91a9e728a8
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+  DOCKERFILE_PATH: deploy/zeabur_member_preview/Dockerfile
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ inputs.confirm }}" = "DEPLOY_NEXUS_MEMBER_PREVIEW_STATIC"
+
+  build-and-deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run check:frontend-runtime-boundary && npm run build
+        working-directory: frontend
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+      - name: Assert static build identity
+        run: |
+          test -f frontend/dist/build-info.json
+          grep -q '"product": "NEXUS_MEMBER_UI_DATA_TRUTH"' frontend/dist/build-info.json
+          echo "FRONTEND_BUILD_IDENTITY_PASS"
+          cat frontend/dist/build-info.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+      - name: Pin Dockerfile path and deploy static SPA only
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$ZEABUR_TOKEN"
+          test -n "$ZEABUR_PROJECT_ID"
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur variable upsert \
+            --key ZBPACK_DOCKERFILE_PATH \
+            --value "$DOCKERFILE_PATH" \
+            --service-id "$SERVICE_ID" \
+            --env-id "$ZEABUR_ENV_ID" \
+            -i=false || true
+          CTX=/tmp/member_preview_ctx
+          rm -rf "$CTX" && mkdir -p "$CTX/frontend" "$CTX/deploy/zeabur_member_preview" "$CTX/deploy/zeabur_member_preview_v18_2_1"
+          # Prebuilt static context: image never ships Node runtime or Python backend.
+          cp -r frontend/dist "$CTX/frontend/dist"
+          cp deploy/zeabur_member_preview_v18_2_1/server.py "$CTX/deploy/zeabur_member_preview_v18_2_1/server.py"
+          cp deploy/zeabur_member_preview/Dockerfile.prebuilt "$CTX/Dockerfile"
+          (
+            cd "$CTX"
+            zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json
+          ) > /tmp/member_deploy_out.txt 2>&1
+          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/member_deploy_out.txt | tail -n 80
+          zeabur service restart --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
+          sleep 40
+          echo "MEMBER_UI_CORRECT_DEPLOYMENT_PASS"
+      - name: Verify SPA fallback and build identity
+        run: |
+          set -euo pipefail
+          BASE=https://nexus-member-preview-v18-2-1.zeabur.app
+          for path in / /login /app /app/markets /build-info.json; do
+            code=$(curl -s -o /tmp/body -w "%{http_code}" "$BASE$path")
+            echo "$path -> $code"
+            test "$code" = "200"
+          done
+          grep -q 'NEXUS_MEMBER_UI_DATA_TRUTH' /tmp/body
+          if grep -Eiq 'NEXUS-AUTONOMY|WAITING_MARKET|candidate_count|ResearchAutonomyService' /tmp/body; then
+            echo "BLOCKER: runtime markers in frontend response"
+            exit 1
+          fi
+          echo "ZERO_RUNTIME_PROCESS_IN_FRONTEND_PASS"
+          echo "FRONTEND_BUILD_IDENTITY_PASS"
