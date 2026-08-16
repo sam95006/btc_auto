@@ -59,10 +59,49 @@ jobs:
           set -euo pipefail
           test -n "$ZEABUR_TOKEN"
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          zeabur variable upsert \
-            --key ZBPACK_DOCKERFILE_PATH \
-            --value "$DOCKERFILE_PATH" \
-            --service-id "$SERVICE_ID" \
-            --env-id "$ZEABUR_ENV_ID" \
-            -i=false
-          echo "MEMBER_PREVIEW_BUILD_BOUNDARY_FIXED"
+          zeabur variable list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/member-vars.json
+          python - <<'PY' > /tmp/member-var-names.txt
+          import json
+          raw=json.load(open("/tmp/member-vars.json", encoding="utf-8"))
+          names=set()
+          def walk(node):
+              if isinstance(node, dict):
+                  for field in ("key", "name"):
+                      value=node.get(field)
+                      if isinstance(value, str):
+                          names.add(value)
+                  for value in node.values():
+                      walk(value)
+              elif isinstance(node, list):
+                  for value in node:
+                      walk(value)
+          walk(raw)
+          print("\n".join(sorted(names)))
+          PY
+          if grep -Fxq ZBPACK_DOCKERFILE_PATH /tmp/member-var-names.txt; then
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" \
+              -k "ZBPACK_DOCKERFILE_PATH=$DOCKERFILE_PATH" -y -i=false
+          else
+            zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" \
+              -k "ZBPACK_DOCKERFILE_PATH=$DOCKERFILE_PATH" -y -i=false
+          fi
+          zeabur variable list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/member-vars-verified.json
+          python - <<'PY'
+          import json
+          raw=json.load(open("/tmp/member-vars-verified.json", encoding="utf-8"))
+          values={}
+          def walk(node):
+              if isinstance(node, dict):
+                  key=node.get("key") or node.get("name")
+                  value=node.get("value")
+                  if isinstance(key, str) and isinstance(value, str):
+                      values[key]=value
+                  for value in node.values():
+                      walk(value)
+              elif isinstance(node, list):
+                  for value in node:
+                      walk(value)
+          walk(raw)
+          assert values.get("ZBPACK_DOCKERFILE_PATH") == "deploy/zeabur_member_preview/Dockerfile"
+          print("MEMBER_PREVIEW_BUILD_BOUNDARY_FIXED")
+          PY

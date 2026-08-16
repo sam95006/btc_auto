@@ -53,7 +53,7 @@ jobs:
         with:
           node-version: "20"
       - run: npm i -g zeabur@latest
-      - name: Pin Dockerfile path and deploy static SPA only
+      - name: Deploy static SPA only
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
@@ -62,12 +62,6 @@ jobs:
           test -n "$ZEABUR_TOKEN"
           test -n "$ZEABUR_PROJECT_ID"
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          zeabur variable upsert \
-            --key ZBPACK_DOCKERFILE_PATH \
-            --value "$DOCKERFILE_PATH" \
-            --service-id "$SERVICE_ID" \
-            --env-id "$ZEABUR_ENV_ID" \
-            -i=false || true
           CTX=/tmp/member_preview_ctx
           rm -rf "$CTX" && mkdir -p "$CTX/frontend" "$CTX/deploy/zeabur_member_preview" "$CTX/deploy/zeabur_member_preview_v18_2_1"
           # Prebuilt static context: image never ships Node runtime or Python backend.
@@ -79,7 +73,7 @@ jobs:
             zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json
           ) > /tmp/member_deploy_out.txt 2>&1
           sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/member_deploy_out.txt | tail -n 80
-          zeabur service restart --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
+          zeabur service restart --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false
           sleep 40
           echo "MEMBER_UI_CORRECT_DEPLOYMENT_PASS"
       - name: Verify SPA fallback and build identity
