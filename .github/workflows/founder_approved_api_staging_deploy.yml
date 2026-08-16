@@ -1,0 +1,197 @@
+# Founder-approved nexus-api-staging deploy (API-only; no runtime/autonomy).
+# Does NOT redeploy member-preview, Stage3, or Demo Validation services.
+
+name: founder-approved-api-staging-deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type DEPLOY_NEXUS_API_STAGING"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founder-api-staging-deploy
+  cancel-in-progress: false
+
+env:
+  SERVICE_NAME: nexus-api-staging
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+  MEMBER_PREVIEW_SERVICE_ID: 6a744ba3472e2c91a9e728a8
+  FORBIDDEN_MEMBER_PREVIEW: 69d559cb2696d526abde8cda
+  FORBIDDEN_STAGE3: 6a3b81652fdef84a45a2a553
+  FORBIDDEN_VALIDATION: 6a69ad539949111176cefe63
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [ "${{ github.event.inputs.confirm }}" != "DEPLOY_NEXUS_API_STAGING" ]; then
+            echo "Confirmation mismatch"
+            exit 1
+          fi
+
+  tests:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: python -m pytest tests/test_v18_3_3_contracts_health.py tests/test_v18_3_4_product_http_api.py -q --tb=line
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          NEXUS_RUNTIME_BINDING: UNAVAILABLE
+
+  deploy:
+    needs: [validate, tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+
+      - name: Resolve or create API staging service
+        id: svc
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          PRESET_SERVICE_ID: ${{ secrets.ZEABUR_API_STAGING_SERVICE_ID }}
+        run: |
+          set -euo pipefail
+          SID=$(python tools/ci/ensure_api_staging_zeabur_service.py)
+          if [ -z "$SID" ] || [ "$SID" = "$FORBIDDEN_MEMBER_PREVIEW" ] || [ "$SID" = "$FORBIDDEN_STAGE3" ] || [ "$SID" = "$FORBIDDEN_VALIDATION" ]; then
+            echo "BLOCKER: forbidden or unresolved service id"
+            exit 1
+          fi
+          echo "service_id=$SID" >> "$GITHUB_OUTPUT"
+          echo "resolved_prefix=${SID:0:6}"
+
+      - name: Set staging API env vars (references only)
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.svc.outputs.service_id }}
+          NEXUS_STAGING_SEED_EMAIL: ${{ secrets.NEXUS_STAGING_SEED_EMAIL }}
+          NEXUS_STAGING_SEED_PASSWORD: ${{ secrets.NEXUS_STAGING_SEED_PASSWORD }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          # Resolve the actual deployed member domain; fail closed rather than
+          # allowing a wildcard or guessing a CORS origin.
+          zeabur domain list --id "$MEMBER_PREVIEW_SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/member-domain.json
+          MEMBER_ORIGIN=$(python - <<'PY'
+          import re
+          raw=open("/tmp/member-domain.json", encoding="utf-8", errors="replace").read()
+          match=re.search(r'https://[a-z0-9.-]+\.zeabur\.app', raw)
+          print(match.group(0) if match else "")
+          PY
+          )
+          test -n "$MEMBER_ORIGIN"
+          test -n "$NEXUS_STAGING_SEED_EMAIL"
+          test -n "$NEXUS_STAGING_SEED_PASSWORD"
+          for kv in \
+            "NEXUS_ENV=STAGING" \
+            "NEXUS_STAGING_SESSION_BOOTSTRAP=true" \
+            "NEXUS_CORS_ALLOWED_ORIGINS=$MEMBER_ORIGIN" \
+            "EXCHANGE_WRITE=false" \
+            "MAINNET=false" \
+            "REAL_MONEY=false" \
+            "NEXUS_MEMBER_EXECUTION=false" \
+            "NEXUS_PRODUCTION_BILLING=false" \
+            "NEXUS_WEB_ONLY=true" \
+            "NEXUS_EMBEDDED_WORKER=false" \
+            "NEXUS_ZEABUR_AUTONOMY_DEPLOYED=false" \
+            "NEXUS_RUNTIME_BINDING=UNAVAILABLE" \
+            "NEXUS_PG_RUNTIME_ENABLED=true" \
+            "NEXUS_PG_EVIDENCE_MIRROR_ENABLED=false" \
+            "DATABASE_URL=\${POSTGRES_CONNECTION_STRING}" \
+            "NEXUS_POSTGRES_URL=\${POSTGRES_CONNECTION_STRING}"
+          do
+            KEY="${kv%%=*}"
+            VAL="${kv#*=}"
+            zeabur variable upsert --key "$KEY" --value "$VAL" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || \
+            zeabur variable create --key "$KEY" --value "$VAL" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
+          done
+          # Seed values remain GitHub/Zeabur secrets; neither is echoed.
+          zeabur variable upsert --key NEXUS_STAGING_SEED_EMAIL --value "$NEXUS_STAGING_SEED_EMAIL" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false
+          zeabur variable upsert --key NEXUS_STAGING_SEED_PASSWORD --value "$NEXUS_STAGING_SEED_PASSWORD" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false
+
+      - name: Build slim API-only deploy context
+        run: |
+          set -euo pipefail
+          CTX=/tmp/api_staging_ctx
+          rm -rf "$CTX" && mkdir -p "$CTX"
+          # api_staging_app.py is the API-only entrypoint; do not ship unified app.py.
+          cp api_staging_app.py gunicorn.conf.py requirements.txt "$CTX/"
+          cp -r backend config static templates "$CTX/"
+          mkdir -p "$CTX/deploy/zeabur_api_staging"
+          cp deploy/zeabur_api_staging/Dockerfile "$CTX/Dockerfile"
+          cp deploy/zeabur_api_staging/start.sh "$CTX/deploy/zeabur_api_staging/start.sh"
+          chmod +x "$CTX/deploy/zeabur_api_staging/start.sh"
+          echo "ctx_files=$(find "$CTX" | wc -l)"
+
+      - name: Deploy API staging only
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          SERVICE_ID: ${{ steps.svc.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          (
+            cd /tmp/api_staging_ctx
+            zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json
+          ) > /tmp/deploy_out.txt 2>&1
+          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 60
+          zeabur service restart --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
+          sleep 50
+
+      - name: Verify redacted health/readiness
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.svc.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur domain list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/dom.txt 2>&1 || true
+          URL=$(python - <<'PY'
+          import re
+          raw=open('/tmp/dom.txt',encoding='utf-8',errors='replace').read()
+          m=re.search(r'https://[a-z0-9.-]+\.zeabur\.app', raw)
+          print(m.group(0) if m else '')
+          PY
+          )
+          if [ -z "$URL" ]; then
+            echo "domain_not_ready_yet"
+            exit 0
+          fi
+          python tools/ci/verify_api_staging_deployment.py "$URL"
+
+      - name: Private Postgres staging E2E (in-pod, auto-cleanup)
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.svc.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          # Never dumps DATABASE_URL / session IDs; prints boolean checks only.
+          OUT=$(zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            python -m backend.nexus_product_backend.staging_e2e)
+          echo "$OUT" | python - <<'PY'
+          import json,sys
+          raw=sys.stdin.read().strip().splitlines()[-1]
+          payload=json.loads(raw)
+          assert payload.get("ok") is True and payload.get("cleanup")=="completed", payload
+          print("staging_e2e_ok")
+          PY
