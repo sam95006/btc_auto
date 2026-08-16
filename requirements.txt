@@ -10,3 +10,5 @@ python-dotenv
 requests
 flask-sock
 websocket-client
+psycopg[binary,pool]>=3.2.0
+argon2-cffi>=23.1.0

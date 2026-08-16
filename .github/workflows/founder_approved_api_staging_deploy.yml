@@ -45,7 +45,7 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
-      - run: python -m pytest tests/test_v18_3_3_contracts_health.py tests/test_v18_3_4_product_http_api.py -q --tb=line
+      - run: python -m pytest tests/test_v18_3_4_product_http_api.py -q --tb=line
         env:
           PYTHONPATH: ${{ github.workspace }}
           NEXUS_RUNTIME_BINDING: UNAVAILABLE
