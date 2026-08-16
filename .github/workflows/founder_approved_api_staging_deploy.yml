@@ -98,11 +98,17 @@ jobs:
           PY
           )
           test -n "$MEMBER_ORIGIN"
-          test -n "$NEXUS_STAGING_SEED_EMAIL"
-          test -n "$NEXUS_STAGING_SEED_PASSWORD"
+          # Seed credentials are optional for API content deploy.  Without both
+          # secrets, bootstrap stays fail-closed and no seed values are written.
+          if [ -n "${NEXUS_STAGING_SEED_EMAIL:-}" ] && [ -n "${NEXUS_STAGING_SEED_PASSWORD:-}" ]; then
+            BOOTSTRAP=true
+          else
+            BOOTSTRAP=false
+            echo "staging_seed_bootstrap=disabled_missing_secrets"
+          fi
           for kv in \
             "NEXUS_ENV=STAGING" \
-            "NEXUS_STAGING_SESSION_BOOTSTRAP=true" \
+            "NEXUS_STAGING_SESSION_BOOTSTRAP=$BOOTSTRAP" \
             "NEXUS_CORS_ALLOWED_ORIGINS=$MEMBER_ORIGIN" \
             "EXCHANGE_WRITE=false" \
             "MAINNET=false" \
@@ -123,9 +129,11 @@ jobs:
             zeabur variable upsert --key "$KEY" --value "$VAL" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || \
             zeabur variable create --key "$KEY" --value "$VAL" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
           done
-          # Seed values remain GitHub/Zeabur secrets; neither is echoed.
-          zeabur variable upsert --key NEXUS_STAGING_SEED_EMAIL --value "$NEXUS_STAGING_SEED_EMAIL" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false
-          zeabur variable upsert --key NEXUS_STAGING_SEED_PASSWORD --value "$NEXUS_STAGING_SEED_PASSWORD" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false
+          if [ "$BOOTSTRAP" = "true" ]; then
+            # Seed values remain GitHub/Zeabur secrets; neither is echoed.
+            zeabur variable upsert --key NEXUS_STAGING_SEED_EMAIL --value "$NEXUS_STAGING_SEED_EMAIL" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false
+            zeabur variable upsert --key NEXUS_STAGING_SEED_PASSWORD --value "$NEXUS_STAGING_SEED_PASSWORD" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false
+          fi
 
       - name: Build slim API-only deploy context
         run: |
