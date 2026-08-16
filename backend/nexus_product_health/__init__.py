@@ -7,7 +7,6 @@ from typing import Any
 from backend.nexus_api_contract import validate_contract as validate_api_contract
 from backend.nexus_event_contract import validate_contract as validate_event_contract
 from backend.nexus_persistence_pg.runtime import PostgresRuntimeConfig
-from backend.nexus_shadow_watch.watch import ACTIVE_CAMPAIGN_ID, collect_campaign_watch
 
 
 def _ai_provider_health() -> dict[str, Any]:
@@ -27,21 +26,20 @@ def _ai_provider_health() -> dict[str, Any]:
     }
 
 
-def compose_health(*, campaign_id: str = ACTIVE_CAMPAIGN_ID) -> dict[str, Any]:
+def compose_health(*, campaign_id: str = "RUNTIME_REQUIRED") -> dict[str, Any]:
     pg = PostgresRuntimeConfig.from_env()
     pg_health = pg.health()
     runtime_binding = (os.getenv("NEXUS_RUNTIME_BINDING") or "LOCAL_SHADOW").upper()
-    shadow = (
-        {
-            "campaign_id": campaign_id,
-            "process_alive": None,
-            "runtime_state": "UNAVAILABLE_NOT_BOUND",
-            "evidence": {"persistence_health": None},
-            "safety": {"exchange_write": 0},
-        }
-        if runtime_binding == "UNAVAILABLE"
-        else collect_campaign_watch(campaign_id=campaign_id)
-    )
+    # Product/API deployments never bind a runtime.  Health must not import,
+    # inspect, or imply the state of an isolated Shadow campaign.
+    shadow = {
+        "campaign_id": campaign_id,
+        "process_alive": None,
+        "runtime_state": "UNAVAILABLE_NOT_BOUND",
+        "evidence": {"persistence_health": None},
+        "safety": {"exchange_write": 0},
+    }
+    runtime_binding = "UNAVAILABLE"
     api = validate_api_contract()
     events = validate_event_contract()
     return {
@@ -64,7 +62,7 @@ def compose_health(*, campaign_id: str = ACTIVE_CAMPAIGN_ID) -> dict[str, Any]:
     }
 
 
-def compose_readiness(*, campaign_id: str = ACTIVE_CAMPAIGN_ID) -> dict[str, Any]:
+def compose_readiness(*, campaign_id: str = "RUNTIME_REQUIRED") -> dict[str, Any]:
     health = compose_health(campaign_id=campaign_id)
     pg_ready = health["postgres"].get("db_ready", False) or not health["postgres"].get(
         "runtime_enabled", False
