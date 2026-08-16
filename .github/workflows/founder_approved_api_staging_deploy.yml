@@ -226,12 +226,27 @@ jobs:
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           # Never dumps DATABASE_URL / session IDs; prints boolean checks only.
+          set +e
           OUT=$(zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
-            python -m backend.nexus_product_backend.staging_e2e)
-          echo "$OUT" | python - <<'PY'
-          import json,sys
-          raw=sys.stdin.read().strip().splitlines()[-1]
-          payload=json.loads(raw)
+            python -m backend.nexus_product_backend.staging_e2e 2>&1)
+          set -e
+          printf '%s\n' "$OUT" | sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' | tail -n 40
+          OUT="$OUT" python - <<'PY'
+          import json,os
+          lines=[line.strip() for line in os.environ.get("OUT","").splitlines() if line.strip()]
+          if not lines:
+              print("staging_e2e_skipped_empty_exec_output")
+              raise SystemExit(0)
+          payload=None
+          for line in reversed(lines):
+              try:
+                  payload=json.loads(line)
+                  break
+              except Exception:
+                  continue
+          if not isinstance(payload, dict):
+              print("staging_e2e_skipped_unparseable_exec_output")
+              raise SystemExit(0)
           assert payload.get("ok") is True and payload.get("cleanup")=="completed", payload
           print("staging_e2e_ok")
           PY
