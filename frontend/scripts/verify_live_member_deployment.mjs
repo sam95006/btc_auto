@@ -22,8 +22,12 @@ try {
     }
     for (const route of ["/app", "/app/market/BTC"]) {
       await page.goto(`${base}${route}`, { waitUntil: "networkidle", timeout: 60_000 });
-      const hasTimeline = await page.locator('script[src*="tradingview.com/external-embedding/embed-widget-timeline.js"]').count();
-      if (!hasTimeline) throw new Error(`tradingview_widget_missing:${route}`);
+      await page.waitForTimeout(2_000);
+      const widget = page.locator('[data-classification="LIVE_TRADINGVIEW"]');
+      if (!await widget.count()) throw new Error(`tradingview_widget_missing:${route}`);
+      if (!await widget.locator('a[href*="tradingview.com/news"]').count()) {
+        throw new Error(`tradingview_news_link_missing:${route}`);
+      }
     }
     await page.close();
   }
