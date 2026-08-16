@@ -21,8 +21,8 @@ function fmt(value: number | null | undefined) {
 function status(freshness?: string) {
   return freshness === "LIVE" || freshness === "FRESH" ? "LIVE" : freshness === "DATA_DELAYED" || freshness === "STALE" ? "DATA DELAYED" : "UNAVAILABLE";
 }
-function RuntimeRequired({ title = "NEXUS Runtime Not Bound" }: { title?: string }) {
-  return <section className="mpv1-card" data-classification="RUNTIME_REQUIRED"><h2 className="mpv1-card-title">{title}</h2><p className="mpv1-muted">此區需要已核准的 NEXUS Runtime。目前未綁定，因此不顯示評分、訊號、AI 解讀或風險結論。</p></section>;
+function RuntimeRequired({ title = "進階市場功能尚未啟用" }: { title?: string }) {
+  return <section className="mpv1-card" data-classification="RUNTIME_REQUIRED"><h2 className="mpv1-card-title">{title}</h2><p className="mpv1-muted">此功能將在 Runtime 綁定後啟用。目前不顯示評分、訊號、AI 解讀或風險結論。</p></section>;
 }
 
 export function DashboardPage() {
@@ -35,7 +35,7 @@ export function DashboardPage() {
       <p className="mpv1-muted">Provider time: {market.updatedAt || "—"} · 由中央 staging API 快取後輪詢</p></section>
     <section className="mpv1-card" data-classification="LIVE_API"><div className="mpv1-card-head"><h2 className="mpv1-card-title">漲幅排行</h2><Link className="mpv1-action-link" to="/app/markets">查看市場排行 →</Link></div>
       <MarketTable rows={ranking?.rows || []} /></section>
-    <RuntimeRequired title="NEXUS 市場解讀" />
+    <RuntimeRequired title="進階市場解讀尚未啟用" />
     <TradingViewTopStories title="市場新聞總覽" />
   </RequireSession>;
 }
@@ -53,7 +53,7 @@ export function MarketsPage() {
   return <RequireSession><div className="mpv1-page-head"><div><h1 className="mpv1-page-title">市場排行</h1><p className="mpv1-page-sub">僅依 Binance USD-M 公開 24h 統計排序；不是 NEXUS/AI 機會排行。</p></div></div>
     <div className="mpv1-filters">{(Object.keys(labels) as Array<typeof metric>).map(item => <button key={item} type="button" className={`mpv1-filter${metric === item ? " is-on" : ""}`} onClick={() => setMetric(item)}>{labels[item]}</button>)}</div>
     <section className="mpv1-card" data-classification="LIVE_API"><div className="mpv1-card-head"><h2 className="mpv1-card-title">{labels[metric]}</h2><span>{status(data?.freshness)}</span></div><MarketTable rows={data?.rows || []} /><p className="mpv1-muted">Provider: Binance USD-M · {data?.server_timestamp || "—"}</p></section>
-    <RuntimeRequired title="NEXUS Opportunity Ranking" />
+    <RuntimeRequired title="進階市場排序尚未啟用" />
   </RequireSession>;
 }
 
@@ -101,7 +101,7 @@ export function AlertsPage() {
   useEffect(refresh, []);
   return <RequireSession><div className="mpv1-page-head"><div><h1 className="mpv1-page-title">市場提醒</h1><p className="mpv1-page-sub">LIVE_MEMBER_DB · 市場資料提醒與成員讀取狀態</p></div></div>
     <section className="mpv1-card" data-classification="LIVE_MEMBER_DB">{items.length ? items.map(item => <article key={item.id} className="mpv1-alert-card"><div><strong>{item.symbol ? `${item.symbol} · ` : ""}{item.title}</strong><p>{item.body}</p><time>{new Date(item.created_at).toLocaleString()}</time></div>{!item.read && <button className="mpv1-btn mpv1-btn-ghost" onClick={() => void markMemberNotificationRead(item.id).then(refresh)}>標示已讀</button>}</article>) : <p className="mpv1-empty">目前沒有已持久化的市場提醒。NEXUS 訊號/風險提醒需要 Runtime。</p>}</section>
-    <RuntimeRequired title="NEXUS Signal / Risk Alerts" />
+    <RuntimeRequired title="進階訊號與風險提醒尚未啟用" />
   </RequireSession>;
 }
 

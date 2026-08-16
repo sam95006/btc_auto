@@ -190,10 +190,10 @@ export function AppShell() {
             <Link className="mpv1-plan-pill" to="/app/membership">
               <IconCrown size={14} /> {TIER_LABELS[tier]}
             </Link>
-            <Link to="/app/account" className="mpv1-user-chip">
+            <span className="mpv1-user-chip" aria-label={`${name} 的帳號`}>
               <span className="mpv1-avatar">{name.slice(0, 1).toUpperCase()}</span>
               {name}
-            </Link>
+            </span>
           </div>
         </div>
         <div style={{ padding: "0.35rem 1.25rem 0" }}>
