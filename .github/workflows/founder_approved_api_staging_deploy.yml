@@ -78,7 +78,7 @@ jobs:
           echo "service_id=$SID" >> "$GITHUB_OUTPUT"
           echo "resolved_prefix=${SID:0:6}"
 
-      - name: Set staging API env vars (references only)
+      - name: Set and verify required staging API variables
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           SERVICE_ID: ${{ steps.svc.outputs.service_id }}
@@ -87,85 +87,92 @@ jobs:
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          # Resolve the actual deployed member domain; fail closed rather than
-          # allowing a wildcard or guessing an arbitrary CORS origin.
-          zeabur domain list --id "$MEMBER_PREVIEW_SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/member-domain.json || true
-          MEMBER_ORIGIN=$(python - <<'PY'
-          import json, re
-          raw=open("/tmp/member-domain.json", encoding="utf-8", errors="replace").read()
-          match=re.search(r'https://[a-z0-9.-]+\.zeabur\.app', raw)
-          if match:
-              print(match.group(0))
-              raise SystemExit(0)
-          try:
-              payload=json.loads(raw)
-          except Exception:
-              payload=None
-          candidates=[]
+          test -n "$NEXUS_STAGING_SEED_EMAIL"
+          test -n "$NEXUS_STAGING_SEED_PASSWORD"
+          MEMBER_ORIGIN="https://nexus-member-preview-v18-2-1.zeabur.app"
+          zeabur variable list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/staging-vars.json
+          python - <<'PY' > /tmp/existing-var-names.txt
+          import json
+          raw=json.load(open("/tmp/staging-vars.json", encoding="utf-8"))
+          names=set()
           def walk(node):
               if isinstance(node, dict):
+                  for field in ("key", "name"):
+                      value=node.get(field)
+                      if isinstance(value, str):
+                          names.add(value)
                   for value in node.values():
                       walk(value)
               elif isinstance(node, list):
                   for value in node:
                       walk(value)
-              elif isinstance(node, str) and node.startswith("https://") and ".zeabur.app" in node:
-                  candidates.append(node.rstrip("/"))
-          walk(payload)
-          print(candidates[0] if candidates else "")
+          walk(raw)
+          print("\n".join(sorted(names)))
           PY
-          )
-          # Known existing member-preview domain for this service only.  Never a wildcard.
-          if [ -z "$MEMBER_ORIGIN" ]; then
-            MEMBER_ORIGIN="https://nexus-member-preview-v18-2-1.zeabur.app"
-            echo "member_origin_fallback=allowlisted_existing_domain"
-          fi
-          echo "member_origin_suffix=${MEMBER_ORIGIN#https://}"
-          MEMBER_ORIGIN="$MEMBER_ORIGIN" python - <<'PY'
-          import os
-          origin=os.environ["MEMBER_ORIGIN"].rstrip("/")
-          if "*" in origin:
-              raise SystemExit("BLOCKER: wildcard cors origin rejected")
-          if not origin.startswith("https://") or not origin.endswith(".zeabur.app"):
-              raise SystemExit("BLOCKER: invalid cors origin")
-          print("cors_origin_ok")
+          set_required_variable() {
+            KEY="$1"
+            VALUE="$2"
+            if grep -Fxq "$KEY" /tmp/existing-var-names.txt; then
+              zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "$KEY=$VALUE" -y -i=false
+            else
+              zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "$KEY=$VALUE" -y -i=false
+            fi
+          }
+          set_required_variable NEXUS_ENV STAGING
+          set_required_variable NEXUS_STAGING_SESSION_BOOTSTRAP true
+          set_required_variable NEXUS_STAGING_SEED_EMAIL "$NEXUS_STAGING_SEED_EMAIL"
+          set_required_variable NEXUS_STAGING_SEED_PASSWORD "$NEXUS_STAGING_SEED_PASSWORD"
+          set_required_variable NEXUS_CORS_ALLOWED_ORIGINS "$MEMBER_ORIGIN"
+          set_required_variable EXCHANGE_WRITE false
+          set_required_variable MAINNET false
+          set_required_variable REAL_MONEY false
+          set_required_variable NEXUS_MEMBER_EXECUTION false
+          set_required_variable NEXUS_PRODUCTION_BILLING false
+          set_required_variable NEXUS_WEB_ONLY true
+          set_required_variable NEXUS_EMBEDDED_WORKER false
+          set_required_variable NEXUS_ZEABUR_AUTONOMY_DEPLOYED false
+          set_required_variable NEXUS_RUNTIME_BINDING UNAVAILABLE
+          set_required_variable NEXUS_PG_RUNTIME_ENABLED true
+          set_required_variable NEXUS_PG_EVIDENCE_MIRROR_ENABLED false
+          # Do not change DATABASE_URL or NEXUS_POSTGRES_URL credentials.
+          zeabur variable list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/staging-vars-verified.json
+          NEXUS_STAGING_SEED_EMAIL="$NEXUS_STAGING_SEED_EMAIL" \
+          NEXUS_STAGING_SEED_PASSWORD="$NEXUS_STAGING_SEED_PASSWORD" \
+          python - <<'PY'
+          import json, os
+          raw=json.load(open("/tmp/staging-vars-verified.json", encoding="utf-8"))
+          values={}
+          def walk(node):
+              if isinstance(node, dict):
+                  key=node.get("key") or node.get("name")
+                  value=node.get("value")
+                  if isinstance(key, str) and isinstance(value, str):
+                      values[key]=value
+                  for value in node.values():
+                      walk(value)
+              elif isinstance(node, list):
+                  for value in node:
+                      walk(value)
+          walk(raw)
+          expected={
+              "NEXUS_ENV": "STAGING",
+              "NEXUS_STAGING_SESSION_BOOTSTRAP": "true",
+              "EXCHANGE_WRITE": "false",
+              "MAINNET": "false",
+              "REAL_MONEY": "false",
+              "NEXUS_MEMBER_EXECUTION": "false",
+              "NEXUS_RUNTIME_BINDING": "UNAVAILABLE",
+          }
+          for key, value in expected.items():
+              assert values.get(key) == value, f"required_variable_mismatch:{key}"
+          assert values.get("NEXUS_STAGING_SEED_EMAIL") == os.environ["NEXUS_STAGING_SEED_EMAIL"]
+          assert values.get("NEXUS_STAGING_SEED_PASSWORD") == os.environ["NEXUS_STAGING_SEED_PASSWORD"]
+          print("NEXUS_ENV=STAGING")
+          print("NEXUS_STAGING_SESSION_BOOTSTRAP=true")
+          print("NEXUS_STAGING_SEED_EMAIL=CONFIGURED")
+          print("NEXUS_STAGING_SEED_PASSWORD=CONFIGURED")
+          print("STAGING_SEEDED_SESSION_BOUNDARY_PASS")
           PY
-          # Seed credentials are optional for API content deploy.  Without both
-          # secrets, bootstrap stays fail-closed and no seed values are written.
-          if [ -n "${NEXUS_STAGING_SEED_EMAIL:-}" ] && [ -n "${NEXUS_STAGING_SEED_PASSWORD:-}" ]; then
-            BOOTSTRAP=true
-          else
-            BOOTSTRAP=false
-            echo "staging_seed_bootstrap=disabled_missing_secrets"
-          fi
-          for kv in \
-            "NEXUS_ENV=STAGING" \
-            "NEXUS_STAGING_SESSION_BOOTSTRAP=$BOOTSTRAP" \
-            "NEXUS_CORS_ALLOWED_ORIGINS=$MEMBER_ORIGIN" \
-            "EXCHANGE_WRITE=false" \
-            "MAINNET=false" \
-            "REAL_MONEY=false" \
-            "NEXUS_MEMBER_EXECUTION=false" \
-            "NEXUS_PRODUCTION_BILLING=false" \
-            "NEXUS_WEB_ONLY=true" \
-            "NEXUS_EMBEDDED_WORKER=false" \
-            "NEXUS_ZEABUR_AUTONOMY_DEPLOYED=false" \
-            "NEXUS_RUNTIME_BINDING=UNAVAILABLE" \
-            "NEXUS_PG_RUNTIME_ENABLED=true" \
-            "NEXUS_PG_EVIDENCE_MIRROR_ENABLED=false" \
-            "DATABASE_URL=\${POSTGRES_CONNECTION_STRING}" \
-            "NEXUS_POSTGRES_URL=\${POSTGRES_CONNECTION_STRING}"
-          do
-            KEY="${kv%%=*}"
-            VAL="${kv#*=}"
-            zeabur variable upsert --key "$KEY" --value "$VAL" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || \
-            zeabur variable create --key "$KEY" --value "$VAL" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
-          done
-          if [ "$BOOTSTRAP" = "true" ]; then
-            # Seed values remain GitHub/Zeabur secrets; neither is echoed.
-            zeabur variable upsert --key NEXUS_STAGING_SEED_EMAIL --value "$NEXUS_STAGING_SEED_EMAIL" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false
-            zeabur variable upsert --key NEXUS_STAGING_SEED_PASSWORD --value "$NEXUS_STAGING_SEED_PASSWORD" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false
-          fi
 
       - name: Build slim API-only deploy context
         run: |
