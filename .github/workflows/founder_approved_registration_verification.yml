@@ -1,0 +1,55 @@
+name: founder-approved-registration-verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type VERIFY_AND_RETIRE_NEXUS_STAGING_SEED"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  SERVICE_ID: 6a7ee0a82b4272705cd1c9c8
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+
+jobs:
+  normal-member-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ inputs.confirm }}" = "VERIFY_AND_RETIRE_NEXUS_STAGING_SEED"
+      - uses: actions/checkout@v4
+      - name: Verify normal registered member persistence and RBAC
+        run: python tools/ci/live_staging_registration_e2e.py
+
+  founder-state-and-seed-retirement:
+    needs: normal-member-e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+      - name: Verify durable Founder state and API RBAC in the deployed pod
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          OUT=$(zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            python -c "import json,os; from api_staging_app import app; s=app.config['NEXUS_PRODUCT_ALPHA_SERVICES']; r=s['repo']; a=r.get_account_by_email(os.environ['NEXUS_FOUNDER_EMAIL'].strip().lower()); assert a; aid=a['account_id']; codes=r.active_entitlements(aid); perms=r.role_permissions(aid); owner=bool(r.pool.fetchval(\"SELECT 1 FROM nexus.organization_memberships WHERE account_id=%s AND organization_role='OWNER'\",(aid,))); claimed=bool(r.pool.fetchval(\"SELECT founder_claimed AND founder_account_id=%s FROM nexus.founder_claim_state WHERE claim_key='staging_founder'\",(aid,))); sid=r.pool.fetchval(\"SELECT session_id FROM nexus.auth_sessions WHERE account_id=%s AND revoked_at IS NULL ORDER BY created_at DESC LIMIT 1\",(aid,)); c=app.test_client(); h={'X-Nexus-Session':sid}; f=[c.get(p,headers=h).status_code==200 for p in ('/api/v1/founder/operator','/api/v1/founder/diagnostics','/api/v1/founder/live-ops')]; print(json.dumps({'ok':bool('ENTERPRISE' in codes and 'founder.operator.read' in perms and owner and claimed and all(f)),'FOUNDER_ONE_TIME_CLAIM_PASS':claimed,'FOUNDER_RBAC_E2E_PASS':all(f),'founder_identifier':'not_printed'}))" 2>&1)
+          printf '%s\n' "$OUT" | tail -n 5
+          OUT="$OUT" python -c "import json,os; p=next((json.loads(x) for x in reversed(os.environ['OUT'].splitlines()) if x.startswith('{')),None); assert p and p['ok'], p"
+      - name: Revoke seeded sessions and retire seed bootstrap
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            python -c "import os; from api_staging_app import app; r=app.config['NEXUS_PRODUCT_ALPHA_SERVICES']['repo']; a=r.get_account_by_email(os.environ['NEXUS_STAGING_SEED_EMAIL'].strip().lower()); r.pool.execute('UPDATE nexus.auth_sessions SET revoked_at=NOW() WHERE account_id=%s AND revoked_at IS NULL',(a['account_id'],)) if a else None; print('seed_sessions_revoked')"
+          zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "NEXUS_STAGING_SESSION_BOOTSTRAP=false" -y -i=false
+          echo "SEEDED_BOOTSTRAP_RETIREMENT_PASS"
