@@ -22,7 +22,6 @@ from backend.nexus_product_backend.market_snapshot import (
 )
 from backend.nexus_product_health import compose_health, compose_readiness
 from backend.nexus_public_realtime_transport.routes import get_hub
-from backend.nexus_shadow_watch.watch import collect_campaign_watch
 
 
 def _services(app: Flask) -> dict[str, Any]:
@@ -300,15 +299,12 @@ def register_product_alpha_routes(app: Flask) -> None:
 
     @app.get("/api/v1/product/runtime-status")
     def product_runtime_status():
-        watch = collect_campaign_watch()
         return jsonify(
             {
-                "campaign_id": watch["campaign_id"],
-                "runtime_state": watch.get("runtime_state"),
-                "process_alive": watch.get("process_alive"),
-                "eligibility": watch.get("eligibility"),
-                "lifecycle": watch.get("lifecycle"),
-                "safety": watch.get("safety"),
+                "classification": "RUNTIME_REQUIRED",
+                "runtime_state": "UNAVAILABLE_NOT_BOUND",
+                "reason": "nexus_runtime_staging_not_deployed",
+                "read_only": True,
             }
         )
 
@@ -325,15 +321,12 @@ def register_product_alpha_routes(app: Flask) -> None:
             )
             if not decision.get("allowed"):
                 return jsonify(decision), 403
-        watch = collect_campaign_watch()
         return jsonify(
             {
-                "campaign_id": watch["campaign_id"],
+                "classification": "RUNTIME_REQUIRED",
                 "read_only": True,
-                "eligibility": watch.get("eligibility"),
-                "lifecycle": watch.get("lifecycle"),
-                "native_warmup": watch.get("native_warmup"),
-                "safety": watch.get("safety"),
+                "runtime_state": "UNAVAILABLE_NOT_BOUND",
+                "reason": "nexus_runtime_staging_not_deployed",
             }
         )
 
