@@ -12,6 +12,7 @@ import { getMemberEntitlements, getMemberSession, stagingLogin, stagingLogout } 
 
 type AuthCtx = {
   session: MemberSession | null;
+  ready: boolean;
   /** Effective tier = preview override or session tier */
   tier: MembershipTier;
   previewTier: MembershipTier | null;
@@ -30,6 +31,7 @@ const Ctx = createContext<AuthCtx | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<MemberSession | null>(null);
+  const [ready, setReady] = useState(false);
   const [previewTier] = useState<MembershipTier | null>(null);
 
   const setPreviewTier = useCallback((_t: MembershipTier | null) => undefined, []);
@@ -46,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void hydrate().catch(() => setSession(null));
+    void hydrate().catch(() => setSession(null)).finally(() => setReady(true));
   }, [hydrate]);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -68,8 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const tier: MembershipTier = session?.tier || "starter";
 
   const value = useMemo(
-    () => ({ session, tier, previewTier, setPreviewTier, login, register, logout }),
-    [session, tier, previewTier, setPreviewTier, login, register, logout]
+    () => ({ session, ready, tier, previewTier, setPreviewTier, login, register, logout }),
+    [session, ready, tier, previewTier, setPreviewTier, login, register, logout]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

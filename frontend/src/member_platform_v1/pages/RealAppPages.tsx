@@ -12,7 +12,8 @@ import {
 } from "../services/stagingApi";
 
 function RequireSession({ children }: { children: ReactNode }) {
-  const { session } = useAuth();
+  const { session, ready } = useAuth();
+  if (!ready) return null;
   return session ? <>{children}</> : <Navigate to="/login" replace />;
 }
 function fmt(value: number | null | undefined) {
