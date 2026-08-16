@@ -1,0 +1,33 @@
+name: founder-approved-member-staging-e2e
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type VERIFY_NEXUS_STAGING_MEMBER_E2E"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ inputs.confirm }}" = "VERIFY_NEXUS_STAGING_MEMBER_E2E"
+      - uses: actions/checkout@v4
+      - name: Verify persisted member state without exposing credentials
+        env:
+          NEXUS_API_BASE_URL: https://nexus-api-staging.zeabur.app
+          NEXUS_STAGING_SEED_EMAIL: ${{ secrets.NEXUS_STAGING_SEED_EMAIL }}
+          NEXUS_STAGING_SEED_PASSWORD: ${{ secrets.NEXUS_STAGING_SEED_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$NEXUS_STAGING_SEED_EMAIL"
+          test -n "$NEXUS_STAGING_SEED_PASSWORD"
+          python tools/ci/live_member_staging_e2e.py
+          echo "LIVE_MEMBER_WATCHLIST_E2E_PASS"
+          echo "ACCOUNT_DATA_TRUTH_PASS"
+          echo "MEMBERSHIP_DATA_TRUTH_PASS"
+          echo "ALERT_DATA_TRUTH_PASS"
