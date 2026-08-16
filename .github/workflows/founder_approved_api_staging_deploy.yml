@@ -123,7 +123,9 @@ jobs:
             fi
           }
           set_required_variable NEXUS_ENV STAGING
-          set_required_variable NEXUS_STAGING_SESSION_BOOTSTRAP true
+          # Founder registration is canonical; deploys must not revive the
+          # retired seed bootstrap path.
+          set_required_variable NEXUS_STAGING_SESSION_BOOTSTRAP false
           set_required_variable NEXUS_STAGING_MEMBER_AUTH_ENABLED true
           set_required_variable NEXUS_STAGING_REGISTRATION_ENABLED true
           set_required_variable NEXUS_STAGING_SEED_EMAIL "$NEXUS_STAGING_SEED_EMAIL"
@@ -164,7 +166,7 @@ jobs:
           walk(raw)
           expected={
               "NEXUS_ENV": "STAGING",
-              "NEXUS_STAGING_SESSION_BOOTSTRAP": "true",
+              "NEXUS_STAGING_SESSION_BOOTSTRAP": "false",
               "NEXUS_STAGING_MEMBER_AUTH_ENABLED": "true",
               "NEXUS_STAGING_REGISTRATION_ENABLED": "true",
               "EXCHANGE_WRITE": "false",
@@ -180,7 +182,7 @@ jobs:
           assert values.get("NEXUS_FOUNDER_EMAIL") == os.environ["NEXUS_FOUNDER_EMAIL"]
           assert values.get("NEXUS_FOUNDER_REGISTRATION_CODE") == os.environ["NEXUS_FOUNDER_REGISTRATION_CODE"]
           print("NEXUS_ENV=STAGING")
-          print("NEXUS_STAGING_SESSION_BOOTSTRAP=true")
+          print("NEXUS_STAGING_SESSION_BOOTSTRAP=false")
           print("NEXUS_STAGING_SEED_EMAIL=CONFIGURED")
           print("NEXUS_STAGING_SEED_PASSWORD=CONFIGURED")
           print("NEXUS_FOUNDER_EMAIL=CONFIGURED")

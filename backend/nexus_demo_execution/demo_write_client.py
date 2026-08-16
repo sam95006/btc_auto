@@ -340,6 +340,23 @@ class DemoWriteClient:
         data = self._get("/v5/order/realtime", params)
         return list((data.get("result") or {}).get("list") or [])
 
+    def find_order(
+        self, *, symbol: str, order_id: str = "", order_link_id: str = ""
+    ) -> dict[str, Any] | None:
+        """Official Demo lookup; acknowledgement is never treated as a fill."""
+        if not order_id and not order_link_id:
+            raise DemoWriteError("order_lookup_identity_missing")
+        params: dict[str, str] = {"category": "linear", "symbol": symbol.upper()}
+        if order_id:
+            params["orderId"] = order_id
+        if order_link_id:
+            params["orderLinkId"] = order_link_id
+        for path in ("/v5/order/realtime", "/v5/order/history"):
+            rows = (self._get(path, params).get("result") or {}).get("list") or []
+            if rows:
+                return rows[0]
+        return None
+
     def fetch_fee_rate_quote(self, symbol: str):
         """Resolve taker fee with honest status — never invent silent zeros.
 
