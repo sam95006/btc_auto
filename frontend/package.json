@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/check_member_product_generation.mjs && node scripts/check_v18_2_15_exchange_visual_terminal.mjs && node scripts/check_v18_2_16_server_side_live_radar.mjs && node scripts/check_v18_2_18_paid_product_visual.mjs && node scripts/check_v18_2_19_visual_analytics.mjs && node scripts/check_v18_2_20_paid_beta_retention.mjs && node scripts/check_v18_2_21_paid_beta_identity.mjs && node scripts/check_v18_2_22_closed_beta_readiness.mjs && tsc -b && vite build",
+    "build": "npm run check:frontend-runtime-boundary && npm run write:build-info && node scripts/check_member_product_generation.mjs && node scripts/check_v18_2_15_exchange_visual_terminal.mjs && node scripts/check_v18_2_16_server_side_live_radar.mjs && node scripts/check_v18_2_18_paid_product_visual.mjs && node scripts/check_v18_2_19_visual_analytics.mjs && node scripts/check_v18_2_20_paid_beta_retention.mjs && node scripts/check_v18_2_21_paid_beta_identity.mjs && node scripts/check_v18_2_22_closed_beta_readiness.mjs && tsc -b && vite build",
     "typecheck": "tsc -b --pretty false",
     "check:product-gen": "node scripts/check_member_product_generation.mjs",
+    "check:frontend-runtime-boundary": "node scripts/check_frontend_runtime_boundary.mjs",
+    "write:build-info": "node scripts/write_member_build_info.mjs",
     "check:v18-2-15": "node scripts/check_v18_2_15_exchange_visual_terminal.mjs",
     "check:v18-2-16": "node scripts/check_v18_2_16_server_side_live_radar.mjs",
     "check:v18-2-18": "node scripts/check_v18_2_18_paid_product_visual.mjs",
