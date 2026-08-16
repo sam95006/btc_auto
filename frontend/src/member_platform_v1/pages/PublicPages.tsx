@@ -52,7 +52,7 @@ export function LandingPage() {
             </li>
           </ul>
           <div className="mpv1-land-cta">
-            <Link className="mpv1-btn mpv1-btn-primary" to="/register">
+            <Link className="mpv1-btn mpv1-btn-primary" to="/login">
               Staging 登入
             </Link>
             <Link className="mpv1-btn mpv1-btn-outline" to="/plans">
@@ -370,37 +370,24 @@ export function LoginPage() {
   const nav = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [mode, setMode] = useState<"email" | "phone">("email");
-  const [step, setStep] = useState<"id" | "password">("id");
+  const [error, setError] = useState("");
   if (session) return <Navigate to="/app" replace />;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    setError("");
     setBusy(true);
     try {
       await login(email, password);
       nav("/app");
+    } catch {
+      setError("Email 或密碼錯誤");
     } finally {
       setBusy(false);
     }
   }
-
-  return (
-    <div className="mpv1-auth-shell" data-classification="NOT_IMPLEMENTED">
-      <MarketingHeader />
-      <div className="mpv1-page-pad">
-        <div className="mpv1-auth-card" style={{ margin: "2rem auto" }}>
-          <h2>公開註冊尚未開放</h2>
-          <p className="mpv1-sub">此 staging 環境僅支援已由管理員佈建的身份登入。此頁不會建立帳號或傳送驗證信。</p>
-          <Link className="mpv1-btn mpv1-btn-primary mpv1-btn-block" to="/login">返回 staging 登入</Link>
-        </div>
-      </div>
-      <AuthFooter />
-    </div>
-  );
 
   return (
     <div className="mpv1-auth-shell">
@@ -465,16 +452,11 @@ export function LoginPage() {
                   </Link>
                 </div>
                 <button className="mpv1-btn mpv1-btn-primary mpv1-btn-block" disabled={busy} type="submit">
-                  {busy ? "登入中…" : "登入 NEXUS"}
+                  {busy ? "登入中…" : "登入"}
                 </button>
+                {error ? <p className="mpv1-auth-error" role="alert">{error}</p> : null}
               </form>
-              <div className="mpv1-divider">或</div>
-              <Link className="mpv1-btn mpv1-btn-outline mpv1-btn-block" to="/register">
-                建立新帳號
-              </Link>
-              <button type="button" className="mpv1-btn mpv1-btn-ghost mpv1-btn-block" style={{ marginTop: "0.65rem" }}>
-                使用 Google 帳號登入
-              </button>
+              <p className="mpv1-sub">僅限已佈建帳號登入。</p>
             </div>
           </section>
         </div>
@@ -496,103 +478,33 @@ export function LoginPage() {
 
         <p className="mpv1-m-passkey-hint">staging 僅支援已由管理員佈建的帳號密碼登入。</p>
 
-        <div className="mpv1-divider">或使用帳號</div>
-
-        <div className="mpv1-m-seg">
-          <button type="button" className={mode === "email" ? "is-on" : undefined} onClick={() => setMode("email")}>
-            電子郵件
-          </button>
-          <button type="button" className={mode === "phone" ? "is-on" : undefined} onClick={() => setMode("phone")}>
-            手機
-          </button>
-        </div>
-
         <form onSubmit={onSubmit} className="mpv1-m-login-form">
-          {step === "id" ? (
-            <>
-              {mode === "email" ? (
-                <div className="mpv1-field">
-                  <label htmlFor="m-email">電子郵件</label>
-                  <div className="mpv1-input">
-                    <span className="mpv1-input-ico">
-                      <IconMail size={15} />
-                    </span>
-                    <input
-                      id="m-email"
-                      type="email"
-                      placeholder="name@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="mpv1-field">
-                  <label htmlFor="m-phone">手機號碼</label>
-                  <div className="mpv1-input mpv1-m-phone">
-                    <span className="cc">+886</span>
-                    <input
-                      id="m-phone"
-                      type="tel"
-                      placeholder="912345678"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                    />
-                  </div>
-                </div>
-              )}
-              <button
-                type="button"
-                className="mpv1-btn mpv1-btn-primary mpv1-btn-block"
-                onClick={() => setStep("password")}
-              >
-                繼續
-              </button>
-            </>
-          ) : (
-            <>
-              <div className="mpv1-field">
-                <label htmlFor="m-password">密碼</label>
-                <div className="mpv1-input">
-                  <span className="mpv1-input-ico">
-                    <IconLock size={15} />
-                  </span>
-                  <input
-                    id="m-password"
-                    type={show ? "text" : "password"}
-                    placeholder="請輸入密碼"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button type="button" className="mpv1-link" onClick={() => setShow((v) => !v)}>
-                    {show ? "隱藏" : "顯示"}
-                  </button>
-                </div>
-              </div>
-              <button className="mpv1-btn mpv1-btn-primary mpv1-btn-block" disabled={busy} type="submit">
-                {busy ? "登入中…" : "登入 NEXUS"}
-              </button>
-              <button type="button" className="mpv1-link" style={{ marginTop: 8 }} onClick={() => setStep("id")}>
-                ← 返回
-              </button>
-            </>
-          )}
+          <div className="mpv1-field">
+            <label htmlFor="m-email">電子郵件</label>
+            <div className="mpv1-input">
+              <span className="mpv1-input-ico"><IconMail size={15} /></span>
+              <input id="m-email" type="email" placeholder="name@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+          </div>
+          <div className="mpv1-field">
+            <label htmlFor="m-password">密碼</label>
+            <div className="mpv1-input">
+              <span className="mpv1-input-ico"><IconLock size={15} /></span>
+              <input id="m-password" type={show ? "text" : "password"} placeholder="請輸入密碼" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <button type="button" className="mpv1-link" onClick={() => setShow((v) => !v)}>{show ? "隱藏" : "顯示"}</button>
+            </div>
+          </div>
+          <button className="mpv1-btn mpv1-btn-primary mpv1-btn-block" disabled={busy} type="submit">
+            {busy ? "登入中…" : "登入"}
+          </button>
+          {error ? <p className="mpv1-auth-error" role="alert">{error}</p> : null}
         </form>
-
-        <div className="mpv1-m-social">
-          <button type="button" className="mpv1-btn mpv1-btn-outline mpv1-btn-block">
-            Google
-          </button>
-          <button type="button" className="mpv1-btn mpv1-btn-outline mpv1-btn-block">
-            Apple
-          </button>
-        </div>
 
         <p className="mpv1-m-recover">
           登入遇到問題？ <Link to="/forgot-password">找回帳號 / 忘記密碼</Link>
         </p>
         <p className="mpv1-m-register">
-          還沒有帳號？ <Link to="/register">建立免費帳號</Link>
+          僅限已佈建帳號登入
         </p>
 
         <footer className="mpv1-m-trust">
@@ -618,6 +530,19 @@ export function RegisterPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   if (session) return <Navigate to="/app" replace />;
+  return (
+    <div className="mpv1-auth-shell" data-classification="NOT_IMPLEMENTED">
+      <MarketingHeader />
+      <div className="mpv1-page-pad">
+        <div className="mpv1-auth-card" style={{ margin: "2rem auto" }}>
+          <h2>公開註冊尚未開放</h2>
+          <p className="mpv1-sub">此 staging 環境僅支援已由管理員佈建的帳號登入。</p>
+          <Link className="mpv1-btn mpv1-btn-primary mpv1-btn-block" to="/login">前往登入</Link>
+        </div>
+      </div>
+      <AuthFooter />
+    </div>
+  );
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -895,7 +820,7 @@ export function PlansPage() {
                     <li key={f}>{f}</li>
                   ))}
                 </ul>
-                <Link className={`mpv1-btn ${hot ? "mpv1-btn-primary" : "mpv1-btn-outline"} mpv1-btn-block`} to="/register">
+                <Link className={`mpv1-btn ${hot ? "mpv1-btn-primary" : "mpv1-btn-outline"} mpv1-btn-block`} to="/login">
                   {p.id === "enterprise" ? "聯絡我們" : "選擇此方案"}
                 </Link>
               </article>

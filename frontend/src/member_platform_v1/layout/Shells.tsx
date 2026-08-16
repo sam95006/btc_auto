@@ -40,7 +40,7 @@ export function MarketingHeader({ active }: { active?: "plans" | "login" | "feat
             <Link className="mpv1-link" to="/login" style={{ fontWeight: 600 }}>
               登入
             </Link>
-            <Link className="mpv1-btn mpv1-btn-primary mpv1-btn-sm" to="/register">
+            <Link className="mpv1-btn mpv1-btn-primary mpv1-btn-sm" to="/login">
               開始體驗 →
             </Link>
           </>
