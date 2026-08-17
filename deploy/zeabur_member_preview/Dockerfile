@@ -9,11 +9,17 @@ COPY frontend/lightweight-charts-5.2.0.tgz ./
 RUN npm ci
 
 COPY frontend/ ./
+# The boundary checker resolves the repository root as /build and verifies
+# these two static-deployment files. They exist only in the build stage.
+COPY deploy/zeabur_member_preview/Dockerfile \
+     /build/deploy/zeabur_member_preview/Dockerfile
+COPY deploy/zeabur_member_preview_v18_2_1/server.py \
+     /build/deploy/zeabur_member_preview_v18_2_1/server.py
 # Zeabur exposes this build-phase value for Git-backed services.  The build
 # script also supports GITHUB_SHA for remote CI and a safe local fallback.
 ARG ZEABUR_GIT_COMMIT_SHA=""
 ENV ZEABUR_GIT_COMMIT_SHA=${ZEABUR_GIT_COMMIT_SHA}
-RUN npm run check:frontend-runtime-boundary && npm run build
+RUN npm run build
 
 FROM python:3.11-slim-bookworm AS runtime
 
