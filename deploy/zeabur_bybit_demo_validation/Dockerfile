@@ -6,7 +6,7 @@
 #
 # Zeabur CLI `zeabur deploy` from repo root uses RootDirectory="" and this
 # path must be selected explicitly if used; otherwise root ./Dockerfile applies.
-# Both root and this file start the same Flask entry: gunicorn app:app.
+# This image starts only the dedicated validation health endpoint.
 
 FROM python:3.11-slim-bookworm
 
@@ -32,28 +32,16 @@ RUN mkdir -p /tmp/nexus_demo_validation /data/nexus_demo_validation || true
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Full app tree required for Flask entry app:app / run.py
-COPY app.py run.py gunicorn.conf.py zbpack.json ./
+# Only P1 recovery/qualification dependencies and the minimal boot boundary.
 COPY backend/ backend/
 COPY config/ config/
-COPY static/ static/
-COPY templates/ templates/
-COPY tools/ci/ tools/ci/
-# Prefer root-copied entrypoint + Founder gate file (CI CTX layout).
-COPY entrypoint.sh ./entrypoint.sh
-COPY demo_founder_gate.env ./demo_founder_gate.env
-# Bake actual deploy commit (written by CI into build context). Never rely solely on stale Zeabur env labels.
-COPY DEPLOYMENT_COMMIT ./DEPLOYMENT_COMMIT
-COPY SOURCE_COMMIT ./SOURCE_COMMIT
+COPY deploy/zeabur_bybit_demo_validation/entrypoint.sh ./entrypoint.sh
+COPY deploy/zeabur_bybit_demo_validation/validation_health_server.py ./validation_health_server.py
 RUN chmod +x entrypoint.sh \
- && test -f app.py \
- && test -f gunicorn.conf.py \
  && test -f entrypoint.sh \
- && test -f demo_founder_gate.env \
- && test -s DEPLOYMENT_COMMIT \
- && test -s SOURCE_COMMIT \
- && grep -q "DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" demo_founder_gate.env \
- && ! grep -q "_run_placeholder" backend/nexus_demo_execution/bounded_12h_session.py
+ && test -f validation_health_server.py \
+ && test -f backend/nexus_demo_execution/p1_recovery.py \
+ && test -f backend/nexus_demo_execution/p1_qualification.py
 
 EXPOSE 8080
 CMD ["/bin/sh", "./entrypoint.sh"]

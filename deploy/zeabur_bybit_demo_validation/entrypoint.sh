@@ -1,5 +1,5 @@
 #!/bin/sh
-# Demo Validation entrypoint — Flask/Gunicorn only; no Bybit calls at boot.
+# Demo Validation entrypoint — minimal health server only; no Bybit or DB calls at boot.
 set -eu
 
 cd /app 2>/dev/null || cd "$(dirname "$0")/../.."
@@ -77,7 +77,9 @@ export DEMO_AUTONOMOUS_ENABLED=false
 export AUTONOMOUS_SEND=false
 export EXCHANGE_WRITE=false
 export NEXUS_AUTONOMOUS_DEMO_AUTO_SEND=false
-export NEXUS_WEB_ONLY="${NEXUS_WEB_ONLY:-true}"
-export NEXUS_EMBEDDED_WORKER="${NEXUS_EMBEDDED_WORKER:-false}"
+export NEXUS_WEB_ONLY=true
+export NEXUS_EMBEDDED_WORKER=false
 
-exec gunicorn -c gunicorn.conf.py -b "0.0.0.0:${PORT}" app:app
+# Do not import app.py/run.py: this container is solely an isolated,
+# persistently-disarmed command boundary for Founder-approved P1 operations.
+exec python ./validation_health_server.py
