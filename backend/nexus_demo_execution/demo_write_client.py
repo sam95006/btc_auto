@@ -184,7 +184,13 @@ class DemoWriteClient:
         rows = (data.get("result") or {}).get("list") or []
         if not rows:
             raise DemoWriteError("ticker_missing", symbol)
-        return rows[0]
+        ticker = dict(rows[0])
+        # Bybit V5 puts the authoritative response timestamp on its envelope,
+        # not in the ticker list row. Do not synthesize a local timestamp.
+        response_time = data.get("time")
+        if response_time not in (None, ""):
+            ticker["time"] = response_time
+        return ticker
 
     def fetch_klines(self, symbol: str, *, interval: str = "15", limit: int = 20) -> list[dict[str, Any]]:
         symbol = symbol.upper()

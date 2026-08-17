@@ -382,6 +382,21 @@ def test_preflight_fails_on_stale_ticker(monkeypatch: pytest.MonkeyPatch):
     assert evidence["create_order_calls"] == 0
 
 
+def test_preflight_fails_on_missing_official_ticker_time(monkeypatch: pytest.MonkeyPatch):
+    _auth_env(monkeypatch)
+    clock = FakeClock()
+    ledger = MemoryLedger()
+    client = FakeBybit(ledger, now_ms=clock.now_ms())
+    client.fail_create = True
+    client.fetch_ticker = lambda _symbol: {"lastPrice": "100000", "markPrice": "100000"}  # type: ignore[method-assign]
+    evidence = _run(monkeypatch, client, ledger, clock)
+    assert evidence["FRESH_OFFICIAL_EXECUTION_DATA_PASS"] is False
+    assert evidence["NO_MOCK_EXECUTION_PRICE_PASS"] is False
+    assert evidence["RISK_ENGINE_FINAL_AUTHORITY_PASS"] is False
+    assert evidence["create_order_calls"] == 0
+    assert client.write_call_count == 0
+
+
 def test_preflight_fails_on_mainnet_flag(monkeypatch: pytest.MonkeyPatch):
     _auth_env(monkeypatch)
     monkeypatch.setenv("MAINNET", "true")

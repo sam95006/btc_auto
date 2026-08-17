@@ -12,6 +12,15 @@ SECRET_MARKERS = ("api_key", "api_secret", "password", "token", "postgres", "dsn
 
 
 def _load(text: str) -> dict | None:
+    # The evidence file is normally a complete, pretty-printed JSON document.
+    # Parse it before attempting legacy stdout line extraction.
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        payload = None
+    if isinstance(payload, dict) and "BYBIT_DEMO_SINGLE_TRADE_E2E_PASS" in payload:
+        return payload
+
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     for line in reversed(lines):
         if not (line.startswith("{") and line.endswith("}")):
@@ -57,7 +66,11 @@ def main() -> int:
     print(f"P1_CLOSE_RECONCILIATION_PASS={payload.get('P1_CLOSE_RECONCILIATION_PASS')}")
     print(f"P1_EXCHANGE_REALIZED_PNL_PASS={payload.get('P1_EXCHANGE_REALIZED_PNL_PASS')}")
     print(f"P1_DURABLE_LEDGER_LIFECYCLE_PASS={payload.get('P1_DURABLE_LEDGER_LIFECYCLE_PASS')}")
+    print(f"FRESH_OFFICIAL_EXECUTION_DATA_PASS={payload.get('FRESH_OFFICIAL_EXECUTION_DATA_PASS')}")
+    print(f"NO_MOCK_EXECUTION_PRICE_PASS={payload.get('NO_MOCK_EXECUTION_PRICE_PASS')}")
+    print(f"RISK_ENGINE_FINAL_AUTHORITY_PASS={payload.get('RISK_ENGINE_FINAL_AUTHORITY_PASS')}")
     print(f"create_order_calls={payload.get('create_order_calls')}")
+    print(f"error={payload.get('error')}")
     print(f"symbol={payload.get('symbol')}")
     print(f"side={payload.get('side')}")
     print(f"ledger_final_state={payload.get('ledger_final_state')}")
