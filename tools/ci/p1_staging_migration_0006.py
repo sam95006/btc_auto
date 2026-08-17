@@ -104,6 +104,8 @@ def run() -> dict[str, Any]:
         pool.open()
         before = _state(pool)
         evidence["pre_migration"] = before
+        # Persist the read-only preflight before any MigrationRunner apply call.
+        _write_evidence(evidence)
         if (
             not before["migration_catalog_valid"]
             or before["checksum_drift"]
@@ -160,7 +162,16 @@ def run() -> dict[str, Any]:
 
 
 def main() -> int:
-    evidence = run()
+    try:
+        evidence = run()
+    except Exception as exc:  # noqa: BLE001
+        # Do not preserve exception text: database drivers can include DSNs.
+        evidence = {
+            "P1_MIGRATION_0006_APPLIED_PASS": False,
+            "exchange_write_call_count": 0,
+            "create_order_calls": 0,
+            "error": f"migration_unhandled_error:{type(exc).__name__}",
+        }
     _write_evidence(evidence)
     print(json.dumps(evidence, sort_keys=True))
     return 0 if evidence["P1_MIGRATION_0006_APPLIED_PASS"] else 1

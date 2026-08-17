@@ -50,7 +50,7 @@ jobs:
           EXCHANGE_WRITE: "false"
         run: |
           pip install -r requirements.txt pytest
-          python -m pytest tests/test_bybit_demo_p1_qualification.py tests/test_p1_staging_migration_0006.py -q --tb=line
+          python -m pytest tests/test_bybit_demo_p1_qualification.py tests/test_p1_staging_migration_0006.py tests/test_p1_zeabur_transport.py -q --tb=line
 
       - name: Verify required secret presence only
         env:
@@ -147,6 +147,33 @@ jobs:
           test "$READY" = true
           echo "P1_MIGRATION_RUNTIME_READY=true"
 
+      - name: Prove migration service exec and file download share filesystem
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          MARKER_PATH="/tmp/nexus_demo_validation/p1_migration_transport_probe_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.txt"
+          MARKER="P1_MIGRATION_TRANSPORT_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            /bin/sh -lc "printf '%s' '$MARKER' > '$MARKER_PATH'" >/tmp/p1_migration_probe_exec.out 2>&1
+          ENCODED_PATH=$(jq -rn --arg value "$MARKER_PATH" '$value|@uri')
+          FOUND=false
+          for attempt in 1 2 3 4 5 6; do
+            rm -f /tmp/p1_migration_transport_probe_download.txt
+            HTTP_CODE=$(curl --silent --show-error --output /tmp/p1_migration_transport_probe_download.txt \
+              --write-out '%{http_code}' -H "Authorization: Bearer $ZEABUR_TOKEN" \
+              "https://api.zeabur.com/projects/${ZEABUR_PROJECT_ID}/services/${SERVICE_ID}/files?path=${ENCODED_PATH}&environment=${ZEABUR_ENV_ID}" || true)
+            BYTES=$(wc -c < /tmp/p1_migration_transport_probe_download.txt 2>/dev/null || echo 0)
+            echo "migration_transport_probe_attempt=${attempt} http_status=${HTTP_CODE} bytes=${BYTES}"
+            if [ "$HTTP_CODE" = 200 ] && [ "$BYTES" -gt 0 ] && cmp -s /tmp/p1_migration_transport_probe_download.txt <(printf '%s' "$MARKER"); then FOUND=true; break; fi
+            sleep 2
+          done
+          test "$FOUND" = true
+          echo "P1_MIGRATION_SERVICE_EXEC_FILE_CHANNEL_PASS=true"
+
       - name: Apply and verify only migration 0006 through MigrationRunner
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
@@ -163,6 +190,7 @@ jobs:
           EXEC_CODE=$?
           set -e
           echo "migration_service_exec_transport_exit=$EXEC_CODE"
+          python tools/ci/p1_parse_migration_stdout.py < /tmp/p1_migration_exec.out | tee artifacts/bybit_demo_p1/p1_migration_stdout_diagnostic.txt
           ENCODED_PATH=$(jq -rn --arg value "$EVIDENCE_PATH" '$value|@uri')
           FOUND=false
           for attempt in 1 2 3 4 5 6; do

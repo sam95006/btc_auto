@@ -4,8 +4,11 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 import tools.ci.p1_staging_migration_0006 as migration
 from tools.ci.p1_staging_migration_0006 import EXPECTED_PENDING, REQUIRED_COLUMNS
+from tools.ci.p1_parse_migration_stdout import parse_migration_stdout
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,6 +53,13 @@ def test_migration_workflow_is_dispatch_only_and_disarmed() -> None:
     assert "EXCHANGE_WRITE false" in source
     assert "NEXUS_POSTGRES_URL" in source
     assert "zeabur variable delete" in source
+    assert "p1_migration_transport_probe_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.txt" in source
+    assert "P1_MIGRATION_TRANSPORT_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}" in source
+    assert "P1_MIGRATION_SERVICE_EXEC_FILE_CHANNEL_PASS=true" in source
+    assert source.index("P1_MIGRATION_SERVICE_EXEC_FILE_CHANNEL_PASS=true") < source.index(
+        "python tools/ci/p1_staging_migration_0006.py"
+    )
+    assert "p1_parse_migration_stdout.py" in source
 
 
 class _PostVerifyPool:
@@ -167,3 +177,56 @@ def test_run_fails_closed_when_post_verify_is_incomplete(monkeypatch) -> None:
     evidence = migration.run()
     assert evidence["P1_MIGRATION_0006_APPLIED_PASS"] is False
     assert evidence["error"] == "post_migration_verification_failed"
+
+
+def test_unexpected_pending_migration_blocks_apply_before_subprocess(monkeypatch) -> None:
+    monkeypatch.setenv("NEXUS_POSTGRES_URL", "postgresql://not-used-in-test")
+    monkeypatch.setattr(migration, "PostgresPool", _RunPool)
+    state = _migration_state(["0001", "0002", "0003", "0004", "0005"])
+    state["pending_versions"] = ["0006", "0007"]
+    monkeypatch.setattr(migration, "_state", lambda _pool: state)
+    monkeypatch.setattr(
+        migration.subprocess,
+        "run",
+        lambda *_args, **_kwargs: pytest.fail("MigrationRunner must not execute for an unexpected pending migration"),
+    )
+    evidence = migration.run()
+    assert evidence["error"] == "pre_migration_state_not_exactly_0006"
+    assert evidence["pre_migration"]["applied_versions"] == ["0001", "0002", "0003", "0004", "0005"]
+
+
+def test_main_writes_sanitized_evidence_for_unhandled_exception(monkeypatch, tmp_path, capsys) -> None:
+    evidence_path = tmp_path / "migration_evidence.json"
+    monkeypatch.setenv("P1_MIGRATION_EVIDENCE_PATH", str(evidence_path))
+    monkeypatch.setattr(migration, "run", lambda: (_ for _ in ()).throw(RuntimeError("postgres://sensitive")))
+    assert migration.main() == 1
+    payload = json.loads(evidence_path.read_text(encoding="utf-8"))
+    assert payload == {
+        "P1_MIGRATION_0006_APPLIED_PASS": False,
+        "exchange_write_call_count": 0,
+        "create_order_calls": 0,
+        "error": "migration_unhandled_error:RuntimeError",
+    }
+    assert "postgres://sensitive" not in capsys.readouterr().out
+
+
+def test_migration_stdout_diagnostic_is_allowlisted_only() -> None:
+    raw = json.dumps(
+        {
+            "P1_MIGRATION_0006_APPLIED_PASS": False,
+            "error": "postgres://secret",
+            "pre_migration": {"applied_versions": ["0001"], "pending_versions": ["0006"], "checksum_drift": []},
+            "apply": {"exit_code": 1, "ok": False, "applied": []},
+            "post_migration": {"applied_versions": [], "missing_columns": ["wallet_delta"], "parent_index_present": False},
+        }
+    )
+    diagnostic = parse_migration_stdout(f"transport prefix {raw}")
+    assert diagnostic["migration_runner_json_detected"] is True
+    assert diagnostic["migration_runner_error"] == "redacted"
+    assert diagnostic["migration_pre_pending_versions"] == ["0006"]
+    assert "NEXUS_POSTGRES_URL" not in diagnostic
+
+
+def test_migration_stdout_traceback_reports_exception_type_only() -> None:
+    diagnostic = parse_migration_stdout("Traceback (most recent call last):\nRuntimeError: sensitive details\n")
+    assert diagnostic == {"migration_runner_json_detected": False, "migration_exception_type": "RuntimeError"}
