@@ -11,8 +11,11 @@ from tools.ci.p1_zeabur_transport import (
     evidence_download_ready,
     parse_execute_command_response,
     parse_recovery_evidence,
+    parse_runner_stdout_diagnostic,
     recovery_gate_may_pass,
+    transport_probe_matches,
     unique_evidence_path,
+    unique_transport_probe_path,
 )
 
 
@@ -109,6 +112,23 @@ def test_unique_evidence_path_binds_current_run_and_attempt():
     assert "12345" in path and "2" in path
 
 
+def test_unique_transport_probe_path_binds_current_run_and_attempt():
+    path = unique_transport_probe_path(run_id="12345", run_attempt="2")
+    assert path == "/tmp/nexus_demo_validation/p1_transport_probe_12345_2.txt"
+
+
+@pytest.mark.parametrize(
+    "status,downloaded,expected",
+    [(200, b"", b"marker"), (200, b"wrong", b"marker"), (404, b"marker", b"marker")],
+)
+def test_transport_probe_rejects_empty_or_mismatched_downloads(status: int, downloaded: bytes, expected: bytes):
+    assert transport_probe_matches(http_status=status, downloaded=downloaded, expected=expected) is False
+
+
+def test_transport_probe_accepts_exact_nonempty_marker_only():
+    assert transport_probe_matches(http_status=200, downloaded=b"P1_TRANSPORT_1_1", expected=b"P1_TRANSPORT_1_1")
+
+
 @pytest.mark.parametrize("status,size", [(404, 100), (200, 0), (500, 0)])
 def test_missing_or_empty_unique_evidence_fails_closed(status: int, size: int):
     assert evidence_download_ready(http_status=status, content_bytes=size) is False
@@ -119,6 +139,54 @@ def test_service_exec_transport_never_decides_recovery_pass():
     assert recovery_gate_may_pass(service_exec_exit=1, evidence_verdict=None) is False
     assert recovery_gate_may_pass(service_exec_exit=0, evidence_verdict="HOLD") is False
     assert recovery_gate_may_pass(service_exec_exit=1, evidence_verdict="PASS") is True
+
+
+def test_runner_stdout_diagnostic_is_allowlisted_and_cannot_set_gate():
+    raw = 'transport preface {"P1_RUN2_RECOVERY_CLEAR":"PASS","run2_order_count_found":2,"run2_position_count_found":1,"p1_unresolved_ledger_count":3,"error":"postgres://secret"}'
+    diagnostic = parse_runner_stdout_diagnostic(raw)
+    assert diagnostic == {
+        "runner_json_detected": True,
+        "runner_verdict": "PASS",
+        "runner_error": "redacted",
+        "runner_run2_order_count_found": 2,
+        "runner_run2_position_count_found": 1,
+        "runner_unresolved_ledger_count": 3,
+    }
+    assert recovery_gate_may_pass(service_exec_exit=0, evidence_verdict=None) is False
+
+
+def test_non_json_stdout_is_diagnostic_hold_only():
+    assert parse_runner_stdout_diagnostic("transport only") == {"runner_json_detected": False}
+
+
+def test_workflows_configure_dsn_before_deploy_and_probe_the_final_runtime():
+    workflows = (
+        Path(".github/workflows/founder_approved_bybit_demo_p1_run2_recovery.yml"),
+        Path(".github/workflows/founder_approved_bybit_demo_p1_qualification.yml"),
+    )
+    for workflow_path in workflows:
+        source = workflow_path.read_text(encoding="utf-8")
+        assert source.index('set_var NEXUS_POSTGRES_URL "$NEXUS_STAGING_POSTGRES_URL"') < source.index(
+            "zeabur deploy"
+        )
+        assert "P1_LEDGER_DSN_PRESENT=true" in source
+        assert "P1_SERVICE_EXEC_FILE_CHANNEL_PASS=true" in source
+        readiness_end = source.index("P1_VALIDATION_SERVICE_RUNTIME_READY=true")
+        recovery_or_qualification_exec = source.index("python -m backend.nexus_demo_execution.p1_")
+        between = source[readiness_end:recovery_or_qualification_exec]
+        assert "zeabur variable create" not in between
+        assert "zeabur variable update" not in between
+
+
+def test_recovery_workflow_uses_unique_probe_and_stdout_is_diagnostic_only():
+    source = Path(".github/workflows/founder_approved_bybit_demo_p1_run2_recovery.yml").read_text(encoding="utf-8")
+    assert "p1_transport_probe_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.txt" in source
+    assert "P1_TRANSPORT_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}" in source
+    assert "p1_parse_recovery_stdout.py" in source
+    assert source.index("P1_SERVICE_EXEC_FILE_CHANNEL_PASS=true") < source.index(
+        "python -m backend.nexus_demo_execution.p1_recovery"
+    )
+    assert source.index("p1_parse_recovery_stdout.py") < source.index("p1_parse_recovery_json.py")
 
 
 def test_recovery_module_contains_no_exchange_write_methods():

@@ -144,6 +144,7 @@ jobs:
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
           BYBIT_DEMO_API_KEY: ${{ secrets.BYBIT_DEMO_API_KEY }}
           BYBIT_DEMO_API_SECRET: ${{ secrets.BYBIT_DEMO_API_SECRET }}
+          NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
         run: |
           set -euo pipefail
           if [ "$SERVICE_ID" = "$FORBIDDEN_STAGE3" ]; then
@@ -182,6 +183,8 @@ jobs:
           set_var NEXUS_EMBEDDED_WORKER false
           set_var NEXUS_ENV STAGING
           set_var NEXUS_PG_RUNTIME_ENABLED true
+          set_var NEXUS_POSTGRES_URL "$NEXUS_STAGING_POSTGRES_URL"
+          set_var DATABASE_URL "$NEXUS_STAGING_POSTGRES_URL"
           set_var NEXUS_DATA_DIR /tmp/nexus_demo_validation
           set_var FOUNDER_P1_APPROVED false
           set_var P1_GO ""
@@ -263,7 +266,7 @@ jobs:
           echo "restart_exit=$?"
           set -e
 
-      - name: Require validation service runtime readiness before DSN injection
+      - name: Require final validation runtime readiness
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
@@ -274,7 +277,7 @@ jobs:
           for attempt in 1 2 3 4 5 6 7 8; do
             set +e
             zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
-              /bin/sh -lc 'echo P1_VALIDATION_CONTAINER_READY' >/tmp/p1_ready.out 2>&1
+              /bin/sh -lc 'test -n "${NEXUS_POSTGRES_URL:-}" && test "${MAINNET:-}" = false && test "${REAL_MONEY:-}" = false && test "${DEMO_AUTONOMOUS_ENABLED:-}" = false && test "${AUTONOMOUS_SEND:-}" = false && test "${EXCHANGE_WRITE:-}" = false && echo P1_LEDGER_DSN_PRESENT=true && echo P1_VALIDATION_CONTAINER_READY' >/tmp/p1_ready.out 2>&1
             PROBE_CODE=$?
             set -e
             echo "validation_readiness_attempt=${attempt} transport_exit=${PROBE_CODE}"
@@ -283,29 +286,34 @@ jobs:
           done
           test "$READY" = true
           echo "P1_VALIDATION_SERVICE_RUNTIME_READY=true"
+          echo "P1_LEDGER_DSN_PRESENT=true"
 
-      - name: Inject staging ledger DSN for one-shot window
+      - name: Prove service-exec and file-download share the current filesystem
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
-          NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
         run: |
           set -euo pipefail
-          python tools/ci/p1_mask_dsn.py
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          set +e
-          zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "NEXUS_POSTGRES_URL=${NEXUS_STAGING_POSTGRES_URL}" -y -i=false >/tmp/dsn_out.txt 2>&1
-          if [ "$?" != "0" ]; then
-            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "NEXUS_POSTGRES_URL=${NEXUS_STAGING_POSTGRES_URL}" -y -i=false >/tmp/dsn_out.txt 2>&1
-          fi
-          zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "DATABASE_URL=${NEXUS_STAGING_POSTGRES_URL}" -y -i=false >/tmp/dsn_out2.txt 2>&1
-          if [ "$?" != "0" ]; then
-            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "DATABASE_URL=${NEXUS_STAGING_POSTGRES_URL}" -y -i=false >/tmp/dsn_out2.txt 2>&1
-          fi
-          set -e
-          echo "ledger_dsn_injected=true"
-          echo "BYBIT_DEMO_P1_LEDGER_CONNECTION_PREPARED"
+          MARKER_PATH="/tmp/nexus_demo_validation/p1_transport_probe_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.txt"
+          MARKER="P1_TRANSPORT_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            /bin/sh -lc "printf '%s' '$MARKER' > '$MARKER_PATH'" >/tmp/p1_probe_exec.out 2>&1
+          ENCODED_PATH=$(jq -rn --arg value "$MARKER_PATH" '$value|@uri')
+          FOUND=false
+          for attempt in 1 2 3 4 5 6; do
+            rm -f /tmp/p1_transport_probe_download.txt
+            HTTP_CODE=$(curl --silent --show-error --output /tmp/p1_transport_probe_download.txt \
+              --write-out '%{http_code}' -H "Authorization: Bearer $ZEABUR_TOKEN" \
+              "https://api.zeabur.com/projects/${ZEABUR_PROJECT_ID}/services/${SERVICE_ID}/files?path=${ENCODED_PATH}&environment=${ZEABUR_ENV_ID}" || true)
+            BYTES=$(wc -c < /tmp/p1_transport_probe_download.txt 2>/dev/null || echo 0)
+            echo "transport_probe_attempt=${attempt} http_status=${HTTP_CODE} bytes=${BYTES}"
+            if [ "$HTTP_CODE" = 200 ] && [ "$BYTES" -gt 0 ] && cmp -s /tmp/p1_transport_probe_download.txt <(printf '%s' "$MARKER"); then FOUND=true; break; fi
+            sleep 2
+          done
+          test "$FOUND" = true
+          echo "P1_SERVICE_EXEC_FILE_CHANNEL_PASS=true"
 
       - name: Execute one-shot P1 qualification
         env:

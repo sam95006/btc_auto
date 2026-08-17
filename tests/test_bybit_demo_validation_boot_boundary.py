@@ -91,7 +91,7 @@ def test_health_server_reports_disarmed_flags() -> None:
         process.wait(timeout=5)
 
 
-def test_p1_workflows_require_runtime_readiness_before_dsn_injection() -> None:
+def test_p1_workflows_require_final_runtime_readiness_before_transport_probe() -> None:
     for name in (
         "founder_approved_bybit_demo_p1_run2_recovery.yml",
         "founder_approved_bybit_demo_p1_qualification.yml",
@@ -99,7 +99,7 @@ def test_p1_workflows_require_runtime_readiness_before_dsn_injection() -> None:
         workflow = (ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
         assert "P1_VALIDATION_SERVICE_RUNTIME_READY=true" in workflow
         assert "echo P1_VALIDATION_CONTAINER_READY" in workflow
-        assert workflow.index("P1_VALIDATION_SERVICE_RUNTIME_READY=true") < workflow.index("Inject")
+        assert workflow.index("P1_VALIDATION_SERVICE_RUNTIME_READY=true") < workflow.index("Prove service-exec")
 
 
 @pytest.mark.skipif(shutil.which("docker") is None, reason="Docker is required for container smoke coverage")

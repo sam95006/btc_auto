@@ -19,14 +19,53 @@ def unique_evidence_path(*, kind: str, run_id: str, run_attempt: str) -> str:
     return f"/tmp/nexus_demo_validation/{kind}_{run_id}_{run_attempt}.json"
 
 
+def unique_transport_probe_path(*, run_id: str, run_attempt: str) -> str:
+    if not run_id or not run_attempt or not run_id.isdigit() or not run_attempt.isdigit():
+        raise ValueError("transport_probe_run_identity_invalid")
+    return f"/tmp/nexus_demo_validation/p1_transport_probe_{run_id}_{run_attempt}.txt"
+
+
 def evidence_download_ready(*, http_status: int, content_bytes: int) -> bool:
     return http_status == 200 and content_bytes > 0
+
+
+def transport_probe_matches(*, http_status: int, downloaded: bytes, expected: bytes) -> bool:
+    return http_status == 200 and bool(downloaded) and downloaded == expected
 
 
 def recovery_gate_may_pass(*, service_exec_exit: int, evidence_verdict: str | None) -> bool:
     """Evidence, never trigger transport, decides the recovery gate."""
     del service_exec_exit
     return evidence_verdict == "PASS"
+
+
+def parse_runner_stdout_diagnostic(raw: str) -> dict[str, Any]:
+    """Extract a tightly allowlisted diagnostic; never make a control decision."""
+    decoder = json.JSONDecoder()
+    payload: dict[str, Any] | None = None
+    for index, char in enumerate(raw):
+        if char != "{":
+            continue
+        try:
+            candidate, _ = decoder.raw_decode(raw[index:])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(candidate, dict):
+            payload = candidate
+    if payload is None:
+        return {"runner_json_detected": False}
+
+    error = str(payload.get("error") or "").replace("\n", " ")[:160]
+    if any(marker in error.lower() for marker in ("postgres", "password", "secret", "api_key", "token")):
+        error = "redacted"
+    return {
+        "runner_json_detected": True,
+        "runner_verdict": str(payload.get("P1_RUN2_RECOVERY_CLEAR") or "UNKNOWN"),
+        "runner_error": error or None,
+        "runner_run2_order_count_found": payload.get("run2_order_count_found"),
+        "runner_run2_position_count_found": payload.get("run2_position_count_found"),
+        "runner_unresolved_ledger_count": payload.get("p1_unresolved_ledger_count"),
+    }
 
 
 def build_execute_command_request(
