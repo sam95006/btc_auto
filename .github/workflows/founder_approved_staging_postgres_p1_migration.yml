@@ -112,7 +112,7 @@ jobs:
           cp deploy/zeabur_bybit_demo_validation/validation_health_server.py "$CTX/validation_health_server.py"
           cat > "$CTX/Dockerfile" <<'DOCKER'
           FROM python:3.11-slim-bookworm
-          ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_DATA_DIR=/tmp/nexus_demo_validation PORT=8080
+          ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONPATH=/app MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_DATA_DIR=/tmp/nexus_demo_validation PORT=8080
           WORKDIR /app
           COPY requirements.txt .
           RUN pip install --no-cache-dir -r requirements.txt
@@ -174,6 +174,17 @@ jobs:
           test "$FOUND" = true
           echo "P1_MIGRATION_SERVICE_EXEC_FILE_CHANNEL_PASS=true"
 
+      - name: Require migration helper imports before apply
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            /bin/sh -lc 'export PYTHONPATH=/app; python -c "import backend.nexus_persistence_pg.migrate; import backend.nexus_persistence_pg.pool; import tools.ci.p1_staging_migration_0006; print(\"P1_MIGRATION_IMPORT_PASS=true\")"' >/tmp/p1_migration_import_probe.out 2>&1
+          echo "P1_MIGRATION_IMPORT_PASS=true"
+
       - name: Apply and verify only migration 0006 through MigrationRunner
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
@@ -183,7 +194,7 @@ jobs:
           set -euo pipefail
           mkdir -p artifacts/bybit_demo_p1
           EVIDENCE_PATH="/tmp/nexus_demo_validation/p1_migration_0006_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"
-          COMMAND="export MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true P1_MIGRATION_EVIDENCE_PATH=${EVIDENCE_PATH}; python tools/ci/p1_staging_migration_0006.py"
+          COMMAND="export MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true PYTHONPATH=/app P1_MIGRATION_EVIDENCE_PATH=${EVIDENCE_PATH}; python -m tools.ci.p1_staging_migration_0006"
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           set +e
           zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- /bin/sh -lc "$COMMAND" >/tmp/p1_migration_exec.out 2>&1

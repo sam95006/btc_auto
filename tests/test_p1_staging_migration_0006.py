@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -44,7 +47,9 @@ def test_migration_workflow_is_dispatch_only_and_disarmed() -> None:
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "workflow_dispatch:" in source
     assert "APPLY_NEXUS_STAGING_P1_MIGRATION_0006" in source
-    assert "python tools/ci/p1_staging_migration_0006.py" in source
+    assert "python -m tools.ci.p1_staging_migration_0006" in source
+    assert "PYTHONPATH=/app" in source
+    assert "P1_MIGRATION_IMPORT_PASS=true" in source
     assert "backend.nexus_persistence_pg.cli" not in source  # helper exclusively owns runner invocation
     assert "MAINNET false" in source
     assert "REAL_MONEY false" in source
@@ -57,7 +62,10 @@ def test_migration_workflow_is_dispatch_only_and_disarmed() -> None:
     assert "P1_MIGRATION_TRANSPORT_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}" in source
     assert "P1_MIGRATION_SERVICE_EXEC_FILE_CHANNEL_PASS=true" in source
     assert source.index("P1_MIGRATION_SERVICE_EXEC_FILE_CHANNEL_PASS=true") < source.index(
-        "python tools/ci/p1_staging_migration_0006.py"
+        "python -m tools.ci.p1_staging_migration_0006"
+    )
+    assert source.index("P1_MIGRATION_IMPORT_PASS=true") < source.index(
+        "python -m tools.ci.p1_staging_migration_0006"
     )
     assert "p1_parse_migration_stdout.py" in source
 
@@ -230,3 +238,28 @@ def test_migration_stdout_diagnostic_is_allowlisted_only() -> None:
 def test_migration_stdout_traceback_reports_exception_type_only() -> None:
     diagnostic = parse_migration_stdout("Traceback (most recent call last):\nRuntimeError: sensitive details\n")
     assert diagnostic == {"migration_runner_json_detected": False, "migration_exception_type": "RuntimeError"}
+
+
+def test_migration_helper_module_executes_from_app_import_root_without_db_access() -> None:
+    env = {**os.environ, "PYTHONPATH": str(ROOT)}
+    env.pop("NEXUS_POSTGRES_URL", None)
+    result = subprocess.run(
+        [sys.executable, "-m", "tools.ci.p1_staging_migration_0006"],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 1
+    evidence = json.loads(result.stdout)
+    assert evidence["error"] == "postgres_url_missing"
+    assert evidence["exchange_write_call_count"] == 0
+    assert evidence["create_order_calls"] == 0
+
+
+def test_workflow_import_probe_precedes_migration_module_execution() -> None:
+    source = WORKFLOW.read_text(encoding="utf-8")
+    probe = "import backend.nexus_persistence_pg.migrate; import backend.nexus_persistence_pg.pool; import tools.ci.p1_staging_migration_0006"
+    assert probe in source
+    assert source.index(probe) < source.index("python -m tools.ci.p1_staging_migration_0006")
