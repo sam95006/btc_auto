@@ -822,6 +822,14 @@ def _write_artifacts(evidence: dict[str, Any]) -> None:
         )
     except OSError:
         return
+    remote_path = os.environ.get("P1_EVIDENCE_PATH") or ""
+    if remote_path:
+        try:
+            destination = Path(remote_path)
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_text(json.dumps(evidence, indent=2, default=str), encoding="utf-8")
+        except OSError:
+            pass
     report_path = os.environ.get("NEXUS_FINAL_ACCELERATION_REPORT") or ""
     if not report_path:
         candidate = Path(r"D:\NEXUS_RUNTIME\NEXUS_FINAL_ACCELERATION_REPORT.json")

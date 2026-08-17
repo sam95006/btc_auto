@@ -16,6 +16,11 @@ import urllib.request
 API = "https://api.zeabur.com/graphql"
 SERVICE_NAME = os.environ.get("SERVICE_NAME", "nexus-bybit-demo-learning-validation")
 FORBIDDEN = os.environ.get("FORBIDDEN_SERVICE_ID", "6a3b81652fdef84a45a2a553")
+FORBIDDEN_IDS = frozenset(
+    item.strip()
+    for item in os.environ.get("FORBIDDEN_SERVICE_IDS", FORBIDDEN).split(",")
+    if item.strip()
+)
 PROJECT_ID = os.environ.get("ZEABUR_PROJECT_ID", "").strip()
 TOKEN = os.environ.get("ZEABUR_TOKEN", "").strip()
 PRESET = os.environ.get("PRESET_SERVICE_ID", "").strip()
@@ -214,18 +219,30 @@ def _create_empty_cli() -> str:
     raise RuntimeError("cli_create_unresolved")
 
 
+def _service_id(row: dict) -> str:
+    return str(row.get("_id") or row.get("id") or row.get("ID") or "")
+
+
+def _service_name(row: dict) -> str:
+    return str(row.get("name") or row.get("Name") or "").lower().replace("_", "-")
+
+
+def _matches_expected_service(row: dict) -> bool:
+    return _service_name(row) == SERVICE_NAME.lower().replace("_", "-") and _service_id(row) not in FORBIDDEN_IDS
+
+
 def _match(rows: list[dict]) -> str:
     want = SERVICE_NAME.lower().replace("_", "-")
     for r in rows:
-        name = str(r.get("name") or r.get("Name") or "").lower().replace("_", "-")
-        sid = str(r.get("_id") or r.get("id") or r.get("ID") or "")
-        if name == want and sid and sid != FORBIDDEN:
+        name = _service_name(r)
+        sid = _service_id(r)
+        if name == want and sid and sid not in FORBIDDEN_IDS:
             return sid
     # partial contains
     for r in rows:
-        name = str(r.get("name") or r.get("Name") or "").lower().replace("_", "-")
-        sid = str(r.get("_id") or r.get("id") or r.get("ID") or "")
-        if want in name and sid and sid != FORBIDDEN:
+        name = _service_name(r)
+        sid = _service_id(r)
+        if want in name and sid and sid not in FORBIDDEN_IDS:
             return sid
     return ""
 
@@ -234,13 +251,6 @@ def main() -> int:
     if not TOKEN or not PROJECT_ID:
         print("missing_ZEABUR_TOKEN_or_PROJECT_ID", file=sys.stderr)
         return 2
-    if PRESET:
-        if PRESET == FORBIDDEN:
-            print("BLOCKED_STAGE3_SERVICE_ID", file=sys.stderr)
-            return 3
-        print(PRESET, end="")
-        return 0
-
     # Probe auth
     try:
         me = _gql("query { me { username } }", {})
@@ -263,8 +273,22 @@ def main() -> int:
 
     for r in rows:
         n = str(r.get("name") or r.get("Name") or "")
-        i = str(r.get("_id") or r.get("id") or r.get("ID") or "")
+        i = _service_id(r)
         print(f"svc_name={n} id_prefix={i[:6]}", file=sys.stderr)
+
+    if PRESET:
+        preset_row = next((row for row in rows if _service_id(row) == PRESET), None)
+        if PRESET in FORBIDDEN_IDS:
+            print("BLOCKED_PRESET_SERVICE_ID", file=sys.stderr)
+            return 3
+        if preset_row is None:
+            print("preset_service_id_stale_or_missing=true", file=sys.stderr)
+        elif not _matches_expected_service(preset_row):
+            print("preset_service_id_wrong_service=true", file=sys.stderr)
+        else:
+            print("preset_service_id_verified=true", file=sys.stderr)
+            print(PRESET, end="")
+            return 0
 
     sid = _match(rows)
     if not sid:
@@ -285,7 +309,7 @@ def main() -> int:
                     print(f"relist_failed:{_redact(str(exc3))}", file=sys.stderr)
                     return 5
 
-    if not sid or sid == FORBIDDEN:
+    if not sid or sid in FORBIDDEN_IDS:
         print("BLOCKER_service_id_unresolved", file=sys.stderr)
         return 1
     print(f"resolved_prefix={sid[:6]}", file=sys.stderr)

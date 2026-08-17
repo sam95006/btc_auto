@@ -114,6 +114,7 @@ jobs:
           ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
           PRESET_SERVICE_ID: ${{ secrets.ZEABUR_DEMO_VALIDATION_SERVICE_ID }}
           FORBIDDEN_SERVICE_ID: ${{ env.FORBIDDEN_STAGE3 }}
+          FORBIDDEN_SERVICE_IDS: ${{ env.FORBIDDEN_STAGE3 }},${{ env.FORBIDDEN_MEMBER_PREVIEW }},${{ env.FORBIDDEN_MEMBER_PREVIEW_V18 }},${{ secrets.ZEABUR_API_STAGING_SERVICE_ID }}
         run: |
           set -euo pipefail
           SID=$(python tools/ci/ensure_demo_validation_zeabur_service.py)
@@ -131,6 +132,7 @@ jobs:
           fi
           echo "service_id=$SID" >> "$GITHUB_OUTPUT"
           echo "resolved_service_id_prefix=${SID:0:6}"
+          echo "P1_VALIDATION_SERVICE_ID_PASS=true"
 
       - name: Deploy disarmed validation service
         env:
@@ -180,6 +182,7 @@ jobs:
           set_var NEXUS_DATA_DIR /tmp/nexus_demo_validation
           set_var FOUNDER_P1_APPROVED false
           set_var P1_GO ""
+          set_var P1_RUN2_RECOVERY_REQUIRED true
           set_var NEXUS_DEPLOYMENT_ID "${GITHUB_SHA:-unknown}"
           set_var GITHUB_SHA "${GITHUB_SHA:-unknown}"
           set_var GITHUB_RUN_ID "${GITHUB_RUN_ID:-unknown}"
@@ -262,6 +265,32 @@ jobs:
           set -e
           sleep 40
 
+      - name: Verify remote execution boundary
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          set +e
+          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            /bin/sh -c 'test "${P1_RUN2_RECOVERY_CLEAR:-false}" = true && python -c '"'"'import json; print(json.dumps({"p1_remote_exec_boundary":"ready","p1_run2_recovery_clear":True}))'"'"'' \
+            > /tmp/p1_remote_boundary.txt 2>&1
+          CODE=$?
+          set -e
+          echo "remote_boundary_transport_exit=$CODE"
+          echo "remote_boundary_output_bytes=$(wc -c </tmp/p1_remote_boundary.txt)"
+          echo "remote_boundary_output_lines=$(wc -l </tmp/p1_remote_boundary.txt)"
+          test "$CODE" = "0"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          raw=Path("/tmp/p1_remote_boundary.txt").read_text(encoding="utf-8", errors="replace")
+          assert '"p1_remote_exec_boundary": "ready"' in raw or '"p1_remote_exec_boundary":"ready"' in raw
+          assert '"p1_run2_recovery_clear": true' in raw or '"p1_run2_recovery_clear":true' in raw
+          print("P1_REMOTE_EXEC_BOUNDARY_PASS")
+          PY
+
       - name: Inject staging ledger DSN for one-shot window
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
@@ -297,15 +326,30 @@ jobs:
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           set +e
           zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
-            /bin/sh -c 'export FOUNDER_P1_APPROVED=true; export P1_GO=RUN_ONE_BYBIT_DEMO_TRADE; export MAINNET=false; export REAL_MONEY=false; export DEMO_AUTONOMOUS_ENABLED=false; export AUTONOMOUS_SEND=false; export EXCHANGE_WRITE=false; export NEXUS_ENV=STAGING; export NEXUS_PG_RUNTIME_ENABLED=true; python -m backend.nexus_demo_execution.p1_qualification' \
+            /bin/sh -c 'export FOUNDER_P1_APPROVED=true; export P1_GO=RUN_ONE_BYBIT_DEMO_TRADE; export MAINNET=false; export REAL_MONEY=false; export DEMO_AUTONOMOUS_ENABLED=false; export AUTONOMOUS_SEND=false; export EXCHANGE_WRITE=false; export NEXUS_ENV=STAGING; export NEXUS_PG_RUNTIME_ENABLED=true; export P1_EVIDENCE_PATH=/tmp/nexus_demo_validation/p1_qualification_evidence.json; python -m backend.nexus_demo_execution.p1_qualification' \
             > /tmp/p1_exec.txt 2>&1
           EXEC_CODE=$?
           set -e
-          echo "p1_exec_exit=$EXEC_CODE"
+          echo "remote_exec_transport_exit=$EXEC_CODE"
+          echo "remote_output_present=$([ -s /tmp/p1_exec.txt ] && echo true || echo false)"
+          echo "remote_output_bytes=$(wc -c </tmp/p1_exec.txt)"
+          echo "remote_output_lines=$(wc -l </tmp/p1_exec.txt)"
           set +e
-          python tools/ci/p1_parse_exec_json.py < /tmp/p1_exec.txt
+          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            /bin/sh -c 'test -s /tmp/nexus_demo_validation/p1_qualification_evidence.json && cat /tmp/nexus_demo_validation/p1_qualification_evidence.json' \
+            > /tmp/p1_evidence_channel.txt 2>&1
+          EVIDENCE_CHANNEL_CODE=$?
+          set -e
+          echo "remote_result_channel=file_readback"
+          echo "remote_evidence_transport_exit=$EVIDENCE_CHANNEL_CODE"
+          echo "remote_evidence_output_present=$([ -s /tmp/p1_evidence_channel.txt ] && echo true || echo false)"
+          echo "remote_evidence_output_bytes=$(wc -c </tmp/p1_evidence_channel.txt)"
+          echo "remote_evidence_output_lines=$(wc -l </tmp/p1_evidence_channel.txt)"
+          set +e
+          python tools/ci/p1_parse_exec_json.py < /tmp/p1_evidence_channel.txt
           PARSE_CODE=$?
           set -e
+          echo "json_evidence_detected=$([ "$PARSE_CODE" != "2" ] && echo true || echo false)"
           echo "p1_parse_exit=$PARSE_CODE"
           if [ "$PARSE_CODE" != "0" ]; then
             echo "P1 qualification did not return PASS evidence"

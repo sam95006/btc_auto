@@ -1,0 +1,207 @@
+name: founder-approved-bybit-demo-p1-run2-recovery
+
+# Read-only recovery for outcome-unknown P1 Run #2. Never invokes order creation.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type RECOVER_BYBIT_DEMO_P1_RUN2 to confirm"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founder-bybit-demo-p1-recovery
+  cancel-in-progress: false
+
+env:
+  SERVICE_NAME: nexus-bybit-demo-learning-validation
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+  FORBIDDEN_STAGE3: 6a3b81652fdef84a45a2a553
+  FORBIDDEN_MEMBER_PREVIEW: 69d559cb2696d526abde8cda
+  FORBIDDEN_MEMBER_PREVIEW_V18: 6a744ba3472e2c91a9e728a8
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Confirm read-only recovery intent
+        run: test "${{ github.event.inputs.confirm }}" = "RECOVER_BYBIT_DEMO_P1_RUN2"
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+
+      - name: Verify required secret presence only
+        env:
+          BYBIT_DEMO_API_KEY: ${{ secrets.BYBIT_DEMO_API_KEY }}
+          BYBIT_DEMO_API_SECRET: ${{ secrets.BYBIT_DEMO_API_SECRET }}
+          NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          python tools/ci/p1_mask_dsn.py
+          test -n "${BYBIT_DEMO_API_KEY:-}"
+          test -n "${BYBIT_DEMO_API_SECRET:-}"
+          test -n "${NEXUS_STAGING_POSTGRES_URL:-}"
+          test -n "${ZEABUR_TOKEN:-}"
+          test -n "${ZEABUR_PROJECT_ID:-}"
+          echo "recovery_secret_boundary_pass=true"
+
+      - name: Resolve and validate independent service identity
+        id: resolve
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          PRESET_SERVICE_ID: ${{ secrets.ZEABUR_DEMO_VALIDATION_SERVICE_ID }}
+          FORBIDDEN_SERVICE_ID: ${{ env.FORBIDDEN_STAGE3 }}
+          FORBIDDEN_SERVICE_IDS: ${{ env.FORBIDDEN_STAGE3 }},${{ env.FORBIDDEN_MEMBER_PREVIEW }},${{ env.FORBIDDEN_MEMBER_PREVIEW_V18 }},${{ secrets.ZEABUR_API_STAGING_SERVICE_ID }}
+        run: |
+          set -euo pipefail
+          SID=$(python tools/ci/ensure_demo_validation_zeabur_service.py)
+          test -n "$SID"
+          echo "service_id=$SID" >> "$GITHUB_OUTPUT"
+          echo "service_id_prefix=${SID:0:6}"
+          echo "P1_VALIDATION_SERVICE_ID_PASS=true"
+
+      - name: Deploy disarmed recovery-capable validation image
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+          BYBIT_DEMO_API_KEY: ${{ secrets.BYBIT_DEMO_API_KEY }}
+          BYBIT_DEMO_API_SECRET: ${{ secrets.BYBIT_DEMO_API_SECRET }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          set_var() {
+            local k="$1" v="$2"
+            zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "${k}=${v}" -y -i=false >/tmp/var.out 2>&1 ||
+              zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "${k}=${v}" -y -i=false >/tmp/var.out 2>&1
+          }
+          set_var BYBIT_DEMO true
+          set_var MAINNET false
+          set_var REAL_MONEY false
+          set_var DEMO_AUTONOMOUS_ENABLED false
+          set_var AUTONOMOUS_SEND false
+          set_var EXCHANGE_WRITE false
+          set_var NEXUS_WEB_ONLY true
+          set_var NEXUS_EMBEDDED_WORKER false
+          set_var NEXUS_DATA_DIR /tmp/nexus_demo_validation
+          set_var NEXUS_ENV STAGING
+          set_var NEXUS_PG_RUNTIME_ENABLED true
+          set_var BYBIT_DEMO_API_KEY "$BYBIT_DEMO_API_KEY"
+          set_var BYBIT_DEMO_API_SECRET "$BYBIT_DEMO_API_SECRET"
+          CTX=/tmp/p1_recovery_ctx
+          rm -rf "$CTX"; mkdir -p "$CTX/tools"
+          cp -a app.py run.py gunicorn.conf.py requirements.txt zbpack.json "$CTX/"
+          cp -a backend config static templates "$CTX/"
+          cp -a tools/ci "$CTX/tools/ci"
+          cp deploy/zeabur_bybit_demo_validation/entrypoint.sh "$CTX/entrypoint.sh"
+          cat > "$CTX/Dockerfile" <<'DOCKER'
+          FROM python:3.11-slim-bookworm
+          ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 BYBIT_DEMO=true MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_WEB_ONLY=true NEXUS_EMBEDDED_WORKER=false NEXUS_DATA_DIR=/tmp/nexus_demo_validation PORT=8080
+          WORKDIR /app
+          COPY requirements.txt .
+          RUN pip install --no-cache-dir -r requirements.txt
+          COPY . .
+          RUN chmod +x entrypoint.sh
+          CMD ["/bin/sh", "./entrypoint.sh"]
+          DOCKER
+          python - <<'PY'
+          from pathlib import Path
+          p=Path("/tmp/p1_recovery_ctx/Dockerfile")
+          p.write_text("\n".join(x[10:] if x.startswith("          ") else x for x in p.read_text().splitlines())+"\n")
+          PY
+          (cd "$CTX" && zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json) >/tmp/deploy.out 2>&1
+          echo "recovery_deploy_pass=true"
+          sleep 40
+
+      - name: Inject ledger DSN for bounded read-only recovery
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+          NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
+        run: |
+          set -euo pipefail
+          python tools/ci/p1_mask_dsn.py
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "NEXUS_POSTGRES_URL=${NEXUS_STAGING_POSTGRES_URL}" -y -i=false >/tmp/dsn.out 2>&1 ||
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "NEXUS_POSTGRES_URL=${NEXUS_STAGING_POSTGRES_URL}" -y -i=false >/tmp/dsn.out 2>&1
+
+      - name: Perform read-only exchange and ledger recovery
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          set +e
+          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            /bin/sh -c 'export MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true P1_EVIDENCE_PATH=/tmp/nexus_demo_validation/p1_run2_recovery_evidence.json; python -m backend.nexus_demo_execution.p1_recovery' \
+            >/tmp/recovery_exec.out 2>&1
+          EXEC_CODE=$?
+          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            /bin/sh -c 'test -s /tmp/nexus_demo_validation/p1_run2_recovery_evidence.json && cat /tmp/nexus_demo_validation/p1_run2_recovery_evidence.json' \
+            >/tmp/recovery_evidence.out 2>&1
+          READBACK_CODE=$?
+          set -e
+          echo "remote_exec_transport_exit=$EXEC_CODE"
+          echo "remote_output_present=$([ -s /tmp/recovery_exec.out ] && echo true || echo false)"
+          echo "remote_output_bytes=$(wc -c </tmp/recovery_exec.out)"
+          echo "remote_output_lines=$(wc -l </tmp/recovery_exec.out)"
+          echo "remote_result_channel=file_readback"
+          echo "remote_evidence_transport_exit=$READBACK_CODE"
+          echo "remote_evidence_output_bytes=$(wc -c </tmp/recovery_evidence.out)"
+          set +e
+          python tools/ci/p1_parse_recovery_json.py < /tmp/recovery_evidence.out
+          PARSE_CODE=$?
+          set -e
+          echo "json_evidence_detected=$([ "$PARSE_CODE" != "2" ] && echo true || echo false)"
+          exit "$PARSE_CODE"
+
+      - name: Upload sanitized recovery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bybit-demo-p1-run2-recovery-evidence
+          path: artifacts/bybit_demo_p1/
+          if-no-files-found: warn
+
+      - name: Record cleared recovery gate
+        if: success()
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "P1_RUN2_RECOVERY_CLEAR=true" -y -i=false >/tmp/recovery_gate.out 2>&1 ||
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "P1_RUN2_RECOVERY_CLEAR=true" -y -i=false >/tmp/recovery_gate.out 2>&1
+          echo "P1_RUN2_RECOVERY_CLEAR=PASS"
+
+      - name: Always disarm and clear recovery DSN
+        if: always()
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          test -n "${SERVICE_ID:-}" || exit 0
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          for pair in MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_PG_RUNTIME_ENABLED=false; do
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "$pair" -y -i=false >/tmp/cleanup.out 2>&1 ||
+              zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "$pair" -y -i=false >/tmp/cleanup.out 2>&1
+          done
+          zeabur variable delete --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k NEXUS_POSTGRES_URL -y -i=false >/tmp/delete.out 2>&1 ||
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "NEXUS_POSTGRES_URL=" -y -i=false >/tmp/delete.out 2>&1
+          echo "service_disarmed=true"
