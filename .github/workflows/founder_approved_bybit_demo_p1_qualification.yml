@@ -1,0 +1,363 @@
+name: founder-approved-bybit-demo-p1-qualification
+
+# One-shot Bybit Demo P1 qualification. Does NOT start autonomous trading.
+# Required GitHub secrets:
+#   BYBIT_DEMO_API_KEY
+#   BYBIT_DEMO_API_SECRET
+#   NEXUS_STAGING_POSTGRES_URL
+#   ZEABUR_TOKEN
+#   ZEABUR_PROJECT_ID
+# Optional:
+#   ZEABUR_DEMO_VALIDATION_SERVICE_ID
+# Never print secret values. Persistent service flags remain disarmed.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type RUN_BYBIT_DEMO_P1_QUALIFICATION to confirm"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founder-bybit-demo-p1-qualification
+  cancel-in-progress: false
+
+env:
+  SERVICE_NAME: nexus-bybit-demo-learning-validation
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+  FORBIDDEN_STAGE3: 6a3b81652fdef84a45a2a553
+  FORBIDDEN_MEMBER_PREVIEW: 69d559cb2696d526abde8cda
+  FORBIDDEN_MEMBER_PREVIEW_V18: 6a744ba3472e2c91a9e728a8
+
+jobs:
+  validate-input:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm P1 qualification intent
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "RUN_BYBIT_DEMO_P1_QUALIFICATION" ]; then
+            echo "Confirmation mismatch. Expected RUN_BYBIT_DEMO_P1_QUALIFICATION"
+            exit 1
+          fi
+
+  offline-tests:
+    needs: validate-input
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt pytest
+      - name: Offline P1 and ledger tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          MAINNET: "false"
+          REAL_MONEY: "false"
+          DEMO_AUTONOMOUS_ENABLED: "false"
+        run: |
+          python -m pytest \
+            tests/test_bybit_demo_p1_qualification.py \
+            tests/test_bybit_demo_durable_order_foundation.py \
+            tests/test_nexus_persistence_pg_foundation.py \
+            -q --tb=line
+
+  qualify:
+    needs: [validate-input, offline-tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Zeabur CLI
+        run: npm i -g zeabur@latest
+
+      - name: Verify secret presence only
+        env:
+          BYBIT_DEMO_API_KEY: ${{ secrets.BYBIT_DEMO_API_KEY }}
+          BYBIT_DEMO_API_SECRET: ${{ secrets.BYBIT_DEMO_API_SECRET }}
+          NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          python tools/ci/p1_mask_dsn.py
+          echo "bybit_key_present=$([ -n "${BYBIT_DEMO_API_KEY:-}" ] && echo true || echo false)"
+          echo "bybit_secret_present=$([ -n "${BYBIT_DEMO_API_SECRET:-}" ] && echo true || echo false)"
+          echo "zeabur_token_present=$([ -n "${ZEABUR_TOKEN:-}" ] && echo true || echo false)"
+          echo "zeabur_project_present=$([ -n "${ZEABUR_PROJECT_ID:-}" ] && echo true || echo false)"
+          test -n "${BYBIT_DEMO_API_KEY:-}"
+          test -n "${BYBIT_DEMO_API_SECRET:-}"
+          test -n "${NEXUS_STAGING_POSTGRES_URL:-}"
+          test -n "${ZEABUR_TOKEN:-}"
+          test -n "${ZEABUR_PROJECT_ID:-}"
+          echo "BYBIT_DEMO_SECRET_BOUNDARY_PASS"
+
+      - name: Resolve independent Demo validation service
+        id: resolve
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          PRESET_SERVICE_ID: ${{ secrets.ZEABUR_DEMO_VALIDATION_SERVICE_ID }}
+          FORBIDDEN_SERVICE_ID: ${{ env.FORBIDDEN_STAGE3 }}
+        run: |
+          set -euo pipefail
+          SID=$(python tools/ci/ensure_demo_validation_zeabur_service.py)
+          if [ -z "$SID" ]; then
+            echo "BLOCKER: unresolved service id"
+            exit 1
+          fi
+          if [ "$SID" = "$FORBIDDEN_STAGE3" ] || [ "$SID" = "$FORBIDDEN_MEMBER_PREVIEW" ] || [ "$SID" = "$FORBIDDEN_MEMBER_PREVIEW_V18" ]; then
+            echo "BLOCKER: forbidden service id"
+            exit 1
+          fi
+          if [ -n "${{ secrets.ZEABUR_API_STAGING_SERVICE_ID }}" ] && [ "$SID" = "${{ secrets.ZEABUR_API_STAGING_SERVICE_ID }}" ]; then
+            echo "BLOCKER: refused to use nexus-api-staging as trading runtime"
+            exit 1
+          fi
+          echo "service_id=$SID" >> "$GITHUB_OUTPUT"
+          echo "resolved_service_id_prefix=${SID:0:6}"
+
+      - name: Deploy disarmed validation service
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+          BYBIT_DEMO_API_KEY: ${{ secrets.BYBIT_DEMO_API_KEY }}
+          BYBIT_DEMO_API_SECRET: ${{ secrets.BYBIT_DEMO_API_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ "$SERVICE_ID" = "$FORBIDDEN_STAGE3" ]; then
+            echo "BLOCKED Stage3 id"
+            exit 1
+          fi
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur context set project --id "$ZEABUR_PROJECT_ID" -y -i=false || true
+          zeabur context set service --id "$SERVICE_ID" -y -i=false || true
+
+          set_var() {
+            local k="$1" v="$2"
+            set +e
+            zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "${k}=${v}" -y -i=false >/tmp/var_out.txt 2>&1
+            code=$?
+            if [ "$code" != "0" ]; then
+              zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "${k}=${v}" -y -i=false >/tmp/var_out.txt 2>&1
+              code=$?
+            fi
+            set -e
+            echo "var_${k}_exit=$code"
+          }
+
+          set_var BYBIT_DEMO true
+          set_var MAINNET false
+          set_var REAL_MONEY false
+          set_var LIVE_PRODUCTION false
+          set_var DEMO_AUTONOMOUS_ENABLED false
+          set_var AUTONOMOUS_SEND false
+          set_var NEXUS_AUTONOMOUS_DEMO_AUTO_SEND false
+          set_var EXCHANGE_WRITE false
+          set_var EXCHANGE_WRITE_ALLOWED false
+          set_var NEXUS_EXCHANGE_WRITE_ALLOWED false
+          set_var ARM false
+          set_var NEXUS_WEB_ONLY true
+          set_var NEXUS_EMBEDDED_WORKER false
+          set_var NEXUS_ENV STAGING
+          set_var NEXUS_PG_RUNTIME_ENABLED true
+          set_var NEXUS_DATA_DIR /tmp/nexus_demo_validation
+          set_var FOUNDER_P1_APPROVED false
+          set_var P1_GO ""
+          set_var NEXUS_DEPLOYMENT_ID "${GITHUB_SHA:-unknown}"
+          set_var GITHUB_SHA "${GITHUB_SHA:-unknown}"
+          set_var GITHUB_RUN_ID "${GITHUB_RUN_ID:-unknown}"
+
+          if [ -n "${BYBIT_DEMO_API_KEY:-}" ]; then
+            set_var BYBIT_DEMO_API_KEY "$BYBIT_DEMO_API_KEY"
+            echo "demo_key_present=true"
+          else
+            echo "demo_key_present=false"
+            exit 1
+          fi
+          if [ -n "${BYBIT_DEMO_API_SECRET:-}" ]; then
+            set_var BYBIT_DEMO_API_SECRET "$BYBIT_DEMO_API_SECRET"
+            echo "demo_secret_present=true"
+          else
+            echo "demo_secret_present=false"
+            exit 1
+          fi
+
+          CTX=/tmp/demo_validation_ctx
+          rm -rf "$CTX"
+          mkdir -p "$CTX"
+          cp -a app.py run.py gunicorn.conf.py requirements.txt zbpack.json "$CTX/"
+          cp -a Dockerfile "$CTX/Dockerfile"
+          cp -a backend "$CTX/backend"
+          cp -a config "$CTX/config"
+          cp -a static "$CTX/static"
+          cp -a templates "$CTX/templates"
+          mkdir -p "$CTX/tools"
+          cp -a tools/ci "$CTX/tools/ci"
+          cp -a deploy/zeabur_bybit_demo_validation/entrypoint.sh "$CTX/entrypoint.sh"
+          chmod +x "$CTX/entrypoint.sh"
+          cat > "$CTX/Dockerfile" <<'DOCKER'
+          FROM python:3.11-slim-bookworm
+          ENV PYTHONDONTWRITEBYTECODE=1 \
+              PYTHONUNBUFFERED=1 \
+              BYBIT_DEMO=true \
+              MAINNET=false \
+              REAL_MONEY=false \
+              DEMO_AUTONOMOUS_ENABLED=false \
+              AUTONOMOUS_SEND=false \
+              EXCHANGE_WRITE=false \
+              NEXUS_WEB_ONLY=true \
+              NEXUS_EMBEDDED_WORKER=false \
+              NEXUS_DATA_DIR=/tmp/nexus_demo_validation \
+              PORT=8080
+          WORKDIR /app
+          RUN mkdir -p /tmp/nexus_demo_validation
+          COPY requirements.txt .
+          RUN pip install --no-cache-dir -r requirements.txt
+          COPY . .
+          RUN chmod +x entrypoint.sh || true
+          EXPOSE 8080
+          CMD ["/bin/sh", "./entrypoint.sh"]
+          DOCKER
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/demo_validation_ctx/Dockerfile')
+          lines=p.read_text(encoding='utf-8').splitlines()
+          cleaned=[]
+          for ln in lines:
+            cleaned.append(ln[10:] if ln.startswith('          ') else ln)
+          p.write_text('\n'.join(cleaned)+'\n', encoding='utf-8')
+          print('dockerfile_bytes', p.stat().st_size)
+          PY
+
+          set +e
+          (
+            cd "$CTX"
+            zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json
+          ) > /tmp/deploy_out.txt 2>&1
+          DEPLOY_CODE=$?
+          set -e
+          echo "deploy_exit=$DEPLOY_CODE"
+          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 40
+          test "$DEPLOY_CODE" = "0"
+          set +e
+          zeabur service restart --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/restart_out.txt 2>&1
+          echo "restart_exit=$?"
+          set -e
+          sleep 40
+
+      - name: Inject staging ledger DSN for one-shot window
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+          NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
+        run: |
+          set -euo pipefail
+          python tools/ci/p1_mask_dsn.py
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          set +e
+          zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "NEXUS_POSTGRES_URL=${NEXUS_STAGING_POSTGRES_URL}" -y -i=false >/tmp/dsn_out.txt 2>&1
+          if [ "$?" != "0" ]; then
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "NEXUS_POSTGRES_URL=${NEXUS_STAGING_POSTGRES_URL}" -y -i=false >/tmp/dsn_out.txt 2>&1
+          fi
+          zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "DATABASE_URL=${NEXUS_STAGING_POSTGRES_URL}" -y -i=false >/tmp/dsn_out2.txt 2>&1
+          if [ "$?" != "0" ]; then
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "DATABASE_URL=${NEXUS_STAGING_POSTGRES_URL}" -y -i=false >/tmp/dsn_out2.txt 2>&1
+          fi
+          set -e
+          echo "ledger_dsn_injected=true"
+          echo "BYBIT_DEMO_P1_LEDGER_CONNECTION_PREPARED"
+
+      - name: Execute one-shot P1 qualification
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+          BYBIT_DEMO_API_KEY: ${{ secrets.BYBIT_DEMO_API_KEY }}
+          BYBIT_DEMO_API_SECRET: ${{ secrets.BYBIT_DEMO_API_SECRET }}
+          NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
+        run: |
+          set -euo pipefail
+          python tools/ci/p1_mask_dsn.py
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          set +e
+          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            /bin/sh -c 'export FOUNDER_P1_APPROVED=true; export P1_GO=RUN_ONE_BYBIT_DEMO_TRADE; export MAINNET=false; export REAL_MONEY=false; export DEMO_AUTONOMOUS_ENABLED=false; export AUTONOMOUS_SEND=false; export EXCHANGE_WRITE=false; export NEXUS_ENV=STAGING; export NEXUS_PG_RUNTIME_ENABLED=true; python -m backend.nexus_demo_execution.p1_qualification' \
+            > /tmp/p1_exec.txt 2>&1
+          EXEC_CODE=$?
+          set -e
+          echo "p1_exec_exit=$EXEC_CODE"
+          set +e
+          python tools/ci/p1_parse_exec_json.py < /tmp/p1_exec.txt
+          PARSE_CODE=$?
+          set -e
+          echo "p1_parse_exit=$PARSE_CODE"
+          if [ "$PARSE_CODE" != "0" ]; then
+            echo "P1 qualification did not return PASS evidence"
+            exit 1
+          fi
+
+      - name: Upload sanitized P1 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bybit-demo-p1-qualification-evidence
+          path: artifacts/bybit_demo_p1/
+          if-no-files-found: warn
+
+      - name: Always disarm service and clear transient DSN
+        if: always()
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SERVICE_ID:-}" ]; then
+            echo "cleanup_skipped_no_service_id"
+            exit 0
+          fi
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          set_var() {
+            local k="$1" v="$2"
+            set +e
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "${k}=${v}" -y -i=false >/tmp/cleanup_var.txt 2>&1
+            if [ "$?" != "0" ]; then
+              zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "${k}=${v}" -y -i=false >/tmp/cleanup_var.txt 2>&1
+            fi
+            set -e
+            echo "cleanup_${k}_done"
+          }
+          set_var MAINNET false
+          set_var REAL_MONEY false
+          set_var DEMO_AUTONOMOUS_ENABLED false
+          set_var AUTONOMOUS_SEND false
+          set_var EXCHANGE_WRITE false
+          set_var NEXUS_AUTONOMOUS_DEMO_AUTO_SEND false
+          set_var FOUNDER_P1_APPROVED false
+          set_var P1_GO ""
+          set_var NEXUS_PG_RUNTIME_ENABLED false
+          set +e
+          zeabur variable delete --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k NEXUS_POSTGRES_URL -y -i=false >/tmp/del1.txt 2>&1
+          zeabur variable delete --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k DATABASE_URL -y -i=false >/tmp/del2.txt 2>&1
+          if [ "$?" != "0" ]; then
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "NEXUS_POSTGRES_URL=" -y -i=false >/tmp/del1.txt 2>&1
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "DATABASE_URL=" -y -i=false >/tmp/del2.txt 2>&1
+          fi
+          set -e
+          echo "service_disarmed=true"
+          echo "transient_dsn_cleared=true"
+          echo "AUTONOMOUS_BYBIT_DEMO_ARM_READY=HOLD"
