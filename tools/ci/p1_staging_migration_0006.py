@@ -77,9 +77,10 @@ def _post_verify(pool: PostgresPool) -> dict[str, Any]:
             """
         )
     )
+    present_required = REQUIRED_COLUMNS & columns
     state.update(
         {
-            "required_columns_present": sorted(REQUIRED_COLUMNS <= columns),
+            "required_columns_present": sorted(present_required),
             "missing_columns": sorted(REQUIRED_COLUMNS - columns),
             "parent_index_present": index_exists,
         }
