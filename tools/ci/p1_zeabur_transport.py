@@ -4,6 +4,29 @@ from __future__ import annotations
 import json
 from typing import Any
 
+EXECUTE_COMMAND_QUERY = (
+    "mutation ExecuteCommand($serviceId: ObjectID!, $environmentId: ObjectID!, "
+    "$command: [String!]!) { executeCommand(serviceID: $serviceId, "
+    "environmentID: $environmentId, command: $command) { exitCode output } }"
+)
+
+
+def build_execute_command_request(
+    *, service_id: str, environment_id: str, command_argv: list[str]
+) -> dict[str, Any]:
+    if not service_id or not environment_id:
+        raise ValueError("execute_request_identity_missing")
+    if not command_argv or any(not isinstance(item, str) or not item for item in command_argv):
+        raise ValueError("execute_request_command_not_argv")
+    return {
+        "query": EXECUTE_COMMAND_QUERY,
+        "variables": {
+            "serviceId": service_id,
+            "environmentId": environment_id,
+            "command": list(command_argv),
+        },
+    }
+
 
 def parse_execute_command_response(raw: str) -> dict[str, Any]:
     """Return only safe execution metadata; reject GraphQL/API error envelopes."""

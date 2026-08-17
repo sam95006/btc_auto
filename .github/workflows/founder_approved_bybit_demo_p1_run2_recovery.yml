@@ -147,9 +147,11 @@ jobs:
           set -euo pipefail
           mkdir -p artifacts/bybit_demo_p1
           COMMAND='export MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true P1_EVIDENCE_PATH=/tmp/nexus_demo_validation/p1_run2_recovery_evidence.json; python -m backend.nexus_demo_execution.p1_recovery'
-          QUERY='mutation Execute($serviceID: ObjectID!, $environmentID: ObjectID!, $command: String!) { executeCommand(serviceID: $serviceID, environmentID: $environmentID, command: $command) { exitCode output } }'
-          jq -n --arg query "$QUERY" --arg serviceID "$SERVICE_ID" --arg environmentID "$ZEABUR_ENV_ID" --arg command "$COMMAND" \
-            '{query:$query,variables:{serviceID:$serviceID,environmentID:$environmentID,command:$command}}' >/tmp/recovery_execute_request.json
+          QUERY='mutation ExecuteCommand($serviceId: ObjectID!, $environmentId: ObjectID!, $command: [String!]!) { executeCommand(serviceID: $serviceId, environmentID: $environmentId, command: $command) { exitCode output } }'
+          jq -n --arg query "$QUERY" --arg serviceId "$SERVICE_ID" --arg environmentId "$ZEABUR_ENV_ID" --arg command "$COMMAND" \
+            '{query:$query,variables:{serviceId:$serviceId,environmentId:$environmentId,command:["/bin/sh","-lc",$command]}}' >/tmp/recovery_execute_request.json
+          echo "request_operation=ExecuteCommand"
+          echo "command_argv_length=3"
           set +e
           curl --silent --show-error --fail-with-body \
             -H "Authorization: Bearer $ZEABUR_TOKEN" -H "Content-Type: application/json" \
@@ -158,6 +160,21 @@ jobs:
           CURL_CODE=$?
           set -e
           echo "remote_execute_http_exit=$CURL_CODE"
+          if [ "$CURL_CODE" != "0" ]; then
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          try:
+              payload=json.loads(Path("/tmp/recovery_execute_response.json").read_text(encoding="utf-8", errors="replace"))
+              errors=payload.get("errors") or []
+              message=str((errors[0] or {}).get("message") or "unknown")[:160] if errors else "none"
+              print(f"graphql_errors_present={bool(errors)}")
+              print(f"graphql_error_message={message}")
+          except Exception:
+              print("graphql_errors_present=unknown")
+          PY
+            exit 1
+          fi
           test "$CURL_CODE" = 0
           python - <<'PY'
           from pathlib import Path
