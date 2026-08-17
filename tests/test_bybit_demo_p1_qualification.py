@@ -150,6 +150,7 @@ class FakeBybit:
         self.urls_called: list[str] = []
         self.create_states: list[str] = []
         self.ticker_time = now_ms
+        self.server_times: list[int] = [now_ms, now_ms]
         self.last_price = 100_000.0
         self.open_orders: list[dict] = []
         self.positions: list[dict] = []
@@ -171,6 +172,11 @@ class FakeBybit:
 
     def fetch_ticker(self, symbol: str) -> dict:
         return {"lastPrice": str(self.last_price), "markPrice": str(self.last_price), "time": str(self.ticker_time)}
+
+    def fetch_server_time(self) -> int:
+        if not self.server_times:
+            raise RuntimeError("server_time_unavailable")
+        return self.server_times.pop(0)
 
     def fetch_instrument(self, symbol: str) -> dict:
         return dict(INSTRUMENT)
@@ -389,10 +395,53 @@ def test_preflight_fails_on_missing_official_ticker_time(monkeypatch: pytest.Mon
     client = FakeBybit(ledger, now_ms=clock.now_ms())
     client.fail_create = True
     client.fetch_ticker = lambda _symbol: {"lastPrice": "100000", "markPrice": "100000"}  # type: ignore[method-assign]
+    client.server_times = []
     evidence = _run(monkeypatch, client, ledger, clock)
     assert evidence["FRESH_OFFICIAL_EXECUTION_DATA_PASS"] is False
     assert evidence["NO_MOCK_EXECUTION_PRICE_PASS"] is False
     assert evidence["RISK_ENGINE_FINAL_AUTHORITY_PASS"] is False
+    assert evidence["create_order_calls"] == 0
+    assert client.write_call_count == 0
+
+
+def test_fresh_ticker_envelope_time_uses_preferred_official_mode(monkeypatch: pytest.MonkeyPatch):
+    _auth_env(monkeypatch)
+    clock = FakeClock()
+    ledger = MemoryLedger()
+    client = FakeBybit(ledger, now_ms=clock.now_ms())
+    client.fail_create = True
+    runner = P1QualificationRunner(client=client, ledger=ledger, now_ms=clock.now_ms, time_fn=clock.time)
+    market = runner._fresh_market()
+    assert market["fresh"] is True
+    assert market["market_freshness_source"] == "BYBIT_TICKER_ENVELOPE_TIME"
+    assert market["ticker_envelope_time_present"] is True
+
+
+def test_missing_ticker_time_uses_valid_official_server_time_bracket(monkeypatch: pytest.MonkeyPatch):
+    _auth_env(monkeypatch)
+    clock = FakeClock()
+    ledger = MemoryLedger()
+    client = FakeBybit(ledger, now_ms=clock.now_ms())
+    client.fetch_ticker = lambda _symbol: {"lastPrice": "100000", "markPrice": "100000"}  # type: ignore[method-assign]
+    client.server_times = [1_000_000, 1_000_100]
+    runner = P1QualificationRunner(client=client, ledger=ledger, now_ms=clock.now_ms, time_fn=clock.time)
+    market = runner._fresh_market()
+    assert market["fresh"] is True
+    assert market["market_freshness_source"] == "BYBIT_SERVER_TIME_BRACKET"
+    assert market["server_time_bracket_ms"] == 100
+
+
+@pytest.mark.parametrize("server_times", [[], [1_000_000, 1_006_000], [1_000_100, 1_000_000]])
+def test_invalid_official_server_time_bracket_fails_closed(monkeypatch: pytest.MonkeyPatch, server_times: list[int]):
+    _auth_env(monkeypatch)
+    clock = FakeClock()
+    ledger = MemoryLedger()
+    client = FakeBybit(ledger, now_ms=clock.now_ms())
+    client.fetch_ticker = lambda _symbol: {"lastPrice": "100000", "markPrice": "100000"}  # type: ignore[method-assign]
+    client.server_times = server_times
+    client.fail_create = True
+    evidence = _run(monkeypatch, client, ledger, clock)
+    assert evidence["FRESH_OFFICIAL_EXECUTION_DATA_PASS"] is False
     assert evidence["create_order_calls"] == 0
     assert client.write_call_count == 0
 

@@ -33,6 +33,7 @@ P1_GO_PHRASE = "RUN_ONE_BYBIT_DEMO_TRADE"
 P1_CAMPAIGN_ID = "bybit-demo-p1-qualification"
 P1_SYMBOLS = ("BTCUSDT", "ETHUSDT")
 TICKER_MAX_AGE_MS = 15_000
+SERVER_TIME_BRACKET_MAX_MS = 5_000
 FILL_TIMEOUT_SEC = 45
 CLOSE_TIMEOUT_SEC = 45
 POLL_INTERVAL_SEC = 1.0
@@ -283,6 +284,17 @@ class P1QualificationRunner:
         result["wallet_source"] = wallet.get("source_endpoint")
         market = self._fresh_market()
         result["market"] = {k: market[k] for k in ("symbol", "last_price", "fresh", "reason") if k in market}
+        for key in (
+            "market_freshness_source",
+            "ticker_envelope_time_present",
+            "server_time_before_present",
+            "server_time_after_present",
+            "server_time_bracket_ms",
+        ):
+            if key in market:
+                self.evidence[key] = market[key]
+        if market.get("symbol"):
+            self.evidence["market_symbol"] = market["symbol"]
         self.evidence["FRESH_OFFICIAL_EXECUTION_DATA_PASS"] = bool(market.get("fresh"))
         self.evidence["NO_MOCK_EXECUTION_PRICE_PASS"] = bool(market.get("fresh")) and market.get("last_price", 0) > 0
         if not market.get("fresh"):
@@ -322,22 +334,45 @@ class P1QualificationRunner:
                 if last <= 0:
                     last_error = f"{symbol}:price_missing"
                     continue
-                if ticker_time <= 0:
-                    last_error = f"{symbol}:ticker_time_missing"
-                    continue
-                age = now - ticker_time
-                if age < 0 or age > TICKER_MAX_AGE_MS:
-                    last_error = f"{symbol}:stale_ticker:{age}"
-                    continue
+                if ticker_time > 0:
+                    age = now - ticker_time
+                    if age < 0 or age > TICKER_MAX_AGE_MS:
+                        last_error = f"{symbol}:stale_ticker:{age}"
+                        continue
+                    freshness = {
+                        "market_freshness_source": "BYBIT_TICKER_ENVELOPE_TIME",
+                        "ticker_envelope_time_present": True,
+                        "ticker_time": ticker_time,
+                        "age_ms": age,
+                    }
+                else:
+                    server_before = int(self.client.fetch_server_time())
+                    # Re-read the ticker inside the official server-time bracket.
+                    ticker = self.client.fetch_ticker(symbol)
+                    last = float(ticker.get("lastPrice") or ticker.get("markPrice") or 0)
+                    server_after = int(self.client.fetch_server_time())
+                    bracket = server_after - server_before
+                    if last <= 0:
+                        last_error = f"{symbol}:price_missing"
+                        continue
+                    if server_before <= 0 or server_after <= 0 or bracket < 0 or bracket > SERVER_TIME_BRACKET_MAX_MS:
+                        last_error = f"{symbol}:server_time_bracket_invalid:{bracket}"
+                        continue
+                    freshness = {
+                        "market_freshness_source": "BYBIT_SERVER_TIME_BRACKET",
+                        "ticker_envelope_time_present": False,
+                        "server_time_before_present": True,
+                        "server_time_after_present": True,
+                        "server_time_bracket_ms": bracket,
+                    }
                 info = self.client.fetch_instrument(symbol)
                 return {
                     "fresh": True,
                     "symbol": symbol,
                     "last_price": last,
-                    "ticker_time": ticker_time,
-                    "age_ms": age,
                     "info": info,
                     "ticker": ticker,
+                    **freshness,
                 }
             except DemoWriteError as exc:
                 last_error = f"{symbol}:{exc.code}"

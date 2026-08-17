@@ -3,10 +3,14 @@ from __future__ import annotations
 import json
 import io
 import sys
+from pathlib import Path
 
 from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
 from tools.ci import p1_parse_exec_json
 from tools.ci.p1_parse_exec_json import _load
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_fetch_ticker_preserves_official_bybit_v5_envelope_time(monkeypatch) -> None:
@@ -37,6 +41,17 @@ def test_fetch_ticker_does_not_synthesize_missing_envelope_time(monkeypatch) -> 
     )
 
     assert "time" not in client.fetch_ticker("ETHUSDT")
+
+
+def test_fetch_server_time_uses_only_official_bybit_response_fields(monkeypatch) -> None:
+    client = DemoWriteClient(api_key="demo-key", api_secret="demo-secret")
+    monkeypatch.setattr(
+        client,
+        "public_get",
+        lambda *_args, **_kwargs: {"retCode": 0, "result": {"timeSecond": "1234567890"}},
+    )
+
+    assert client.fetch_server_time() == 1234567890000
 
 
 def test_pretty_nested_p1_evidence_document_loads() -> None:
@@ -85,3 +100,15 @@ def test_pretty_hold_evidence_returns_normal_hold_exit(monkeypatch, tmp_path) ->
 
     assert p1_parse_exec_json.main() == 1
     assert (tmp_path / "artifacts/bybit_demo_p1/p1_qualification_evidence.json").is_file()
+
+
+def test_qualification_workflow_requires_read_only_runtime_identity_and_shape_probes() -> None:
+    source = (ROOT / ".github/workflows/founder_approved_bybit_demo_p1_qualification.yml").read_text(encoding="utf-8")
+    assert "P1_RUNTIME_TICKER_FIX_PRESENT=true" in source
+    assert "P1_RUNTIME_CODE_IDENTITY_PASS=true" in source
+    assert "inspect.getsource(DemoWriteClient.fetch_ticker)" in source
+    assert "ticker_top_level_time_present" in source
+    assert "ticker_last_price_present" in source
+    assert source.index("P1_RUNTIME_CODE_IDENTITY_PASS=true") < source.index(
+        "python -m backend.nexus_demo_execution.p1_qualification"
+    )

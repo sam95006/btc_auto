@@ -315,6 +315,21 @@ jobs:
           test "$FOUND" = true
           echo "P1_SERVICE_EXEC_FILE_CHANNEL_PASS=true"
 
+      - name: Verify runtime code identity and official public ticker response shape
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            /bin/sh -lc 'export PYTHONPATH=/app; python -c "import hashlib,inspect,os; from backend.nexus_demo_execution.demo_write_client import DemoWriteClient; src=inspect.getsource(DemoWriteClient.fetch_ticker); fix=(chr(100)+chr(97)+chr(116)+chr(97)+chr(46)+chr(103)+chr(101)+chr(116)+chr(40)+chr(34)+chr(116)+chr(105)+chr(109)+chr(101)+chr(34)+chr(41)) in src; deployment=(os.environ.get(\"NEXUS_DEPLOYMENT_ID\") or \"\").strip(); sha=(os.environ.get(\"GITHUB_SHA\") or \"\").strip(); assert fix and sha and deployment.startswith(sha[:7]); print(\"P1_RUNTIME_TICKER_FIX_PRESENT=true\"); print(\"P1_RUNTIME_SOURCE_HASH=\"+hashlib.sha256(src.encode()).hexdigest()[:12]); print(\"P1_RUNTIME_CODE_IDENTITY_PASS=true\")"' >/tmp/p1_code_identity.out 2>&1
+          echo "P1_RUNTIME_TICKER_FIX_PRESENT=true"
+          echo "P1_RUNTIME_CODE_IDENTITY_PASS=true"
+          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            /bin/sh -lc 'export PYTHONPATH=/app; python -c "from backend.nexus_demo_execution.demo_write_client import DemoWriteClient; data=DemoWriteClient().public_get(\"/v5/market/tickers\", {\"category\":\"linear\",\"symbol\":\"BTCUSDT\"}); rows=((data.get(\"result\") or {}).get(\"list\") or []); row=rows[0] if rows else {}; print(\"ticker_retcode_ok=\"+str(data.get(\"retCode\") in (0,\"0\",None)).lower()); print(\"ticker_result_list_present=\"+str(bool(rows)).lower()); print(\"ticker_top_level_time_present=\"+str(data.get(\"time\") not in (None,\"\")).lower()); print(\"ticker_top_level_time_type=\"+(type(data.get(\"time\")).__name__ if data.get(\"time\") not in (None,\"\") else \"missing\")); print(\"ticker_symbol_present=\"+str(bool(row.get(\"symbol\"))).lower()); print(\"ticker_last_price_present=\"+str(bool(row.get(\"lastPrice\") or row.get(\"markPrice\"))).lower())"' >/tmp/p1_ticker_shape.out 2>&1
+          echo "P1_RUNTIME_PUBLIC_TICKER_SHAPE_PROBE=true"
+
       - name: Execute one-shot P1 qualification
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}

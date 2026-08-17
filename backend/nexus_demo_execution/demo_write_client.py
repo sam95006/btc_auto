@@ -192,6 +192,26 @@ class DemoWriteClient:
             ticker["time"] = response_time
         return ticker
 
+    def fetch_server_time(self) -> int:
+        """Return only official Demo server time in milliseconds."""
+        data = self.public_get("/v5/market/time", {})
+        top_level_time = data.get("time")
+        if top_level_time not in (None, ""):
+            try:
+                value = int(float(top_level_time))
+            except (TypeError, ValueError):
+                value = 0
+            if value > 0:
+                return value
+        result = data.get("result") or {}
+        try:
+            seconds = int(float(result.get("timeSecond") or 0))
+        except (TypeError, ValueError):
+            seconds = 0
+        if seconds > 0:
+            return seconds * 1000
+        raise DemoWriteError("server_time_missing")
+
     def fetch_klines(self, symbol: str, *, interval: str = "15", limit: int = 20) -> list[dict[str, Any]]:
         symbol = symbol.upper()
         if symbol not in SMOKE_SYMBOLS:
