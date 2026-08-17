@@ -5,6 +5,7 @@ FROM node:20-bookworm-slim AS build
 
 WORKDIR /build/frontend
 COPY frontend/package.json frontend/package-lock.json ./
+COPY frontend/lightweight-charts-5.2.0.tgz ./
 RUN npm ci
 
 COPY frontend/ ./
