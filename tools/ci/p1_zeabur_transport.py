@@ -11,6 +11,24 @@ EXECUTE_COMMAND_QUERY = (
 )
 
 
+def unique_evidence_path(*, kind: str, run_id: str, run_attempt: str) -> str:
+    if kind not in {"p1_run2_recovery", "p1_qualification"}:
+        raise ValueError("evidence_kind_invalid")
+    if not run_id or not run_attempt or not run_id.isdigit() or not run_attempt.isdigit():
+        raise ValueError("evidence_run_identity_invalid")
+    return f"/tmp/nexus_demo_validation/{kind}_{run_id}_{run_attempt}.json"
+
+
+def evidence_download_ready(*, http_status: int, content_bytes: int) -> bool:
+    return http_status == 200 and content_bytes > 0
+
+
+def recovery_gate_may_pass(*, service_exec_exit: int, evidence_verdict: str | None) -> bool:
+    """Evidence, never trigger transport, decides the recovery gate."""
+    del service_exec_exit
+    return evidence_verdict == "PASS"
+
+
 def build_execute_command_request(
     *, service_id: str, environment_id: str, command_argv: list[str]
 ) -> dict[str, Any]:
@@ -34,8 +52,12 @@ def parse_execute_command_response(raw: str) -> dict[str, Any]:
         payload = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise ValueError("execute_response_malformed") from exc
-    if not isinstance(payload, dict) or payload.get("errors"):
-        raise ValueError("execute_response_error")
+    if not isinstance(payload, dict):
+        raise ValueError("execute_response_not_object")
+    if payload.get("errors"):
+        first = (payload["errors"] or [{}])[0] or {}
+        message = str(first.get("message") or "unknown").replace("\n", " ")[:160]
+        raise ValueError(f"execute_response_graphql_error:{message}")
     command = ((payload.get("data") or {}).get("executeCommand") or {})
     if not isinstance(command, dict) or "exitCode" not in command:
         raise ValueError("execute_response_missing_result")

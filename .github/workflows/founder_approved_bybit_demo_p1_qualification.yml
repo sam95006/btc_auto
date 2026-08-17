@@ -268,6 +268,7 @@ jobs:
       - name: Inject staging ledger DSN for one-shot window
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
           NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
         run: |
@@ -290,6 +291,7 @@ jobs:
       - name: Execute one-shot P1 qualification
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
           BYBIT_DEMO_API_KEY: ${{ secrets.BYBIT_DEMO_API_KEY }}
           BYBIT_DEMO_API_SECRET: ${{ secrets.BYBIT_DEMO_API_SECRET }}
@@ -298,54 +300,32 @@ jobs:
           set -euo pipefail
           python tools/ci/p1_mask_dsn.py
           mkdir -p artifacts/bybit_demo_p1
-          COMMAND='test "${P1_RUN2_RECOVERY_CLEAR:-false}" = true && export FOUNDER_P1_APPROVED=true P1_GO=RUN_ONE_BYBIT_DEMO_TRADE MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true P1_EVIDENCE_PATH=/tmp/nexus_demo_validation/p1_qualification_evidence.json; test "${P1_RUN2_RECOVERY_CLEAR:-false}" = true && python -m backend.nexus_demo_execution.p1_qualification'
-          QUERY='mutation ExecuteCommand($serviceId: ObjectID!, $environmentId: ObjectID!, $command: [String!]!) { executeCommand(serviceID: $serviceId, environmentID: $environmentId, command: $command) { exitCode output } }'
-          jq -n --arg query "$QUERY" --arg serviceId "$SERVICE_ID" --arg environmentId "$ZEABUR_ENV_ID" --arg command "$COMMAND" \
-            '{query:$query,variables:{serviceId:$serviceId,environmentId:$environmentId,command:["/bin/sh","-lc",$command]}}' >/tmp/p1_execute_request.json
-          echo "request_operation=ExecuteCommand"
-          echo "command_argv_length=3"
+          EVIDENCE_PATH="/tmp/nexus_demo_validation/p1_qualification_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"
+          COMMAND="test \"\${P1_RUN2_RECOVERY_CLEAR:-false}\" = true && export FOUNDER_P1_APPROVED=true P1_GO=RUN_ONE_BYBIT_DEMO_TRADE MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true P1_EVIDENCE_PATH=${EVIDENCE_PATH}; test \"\${P1_RUN2_RECOVERY_CLEAR:-false}\" = true && python -m backend.nexus_demo_execution.p1_qualification"
+          echo "remote_trigger=zeabur_service_exec"
           set +e
-          curl --silent --show-error --fail-with-body \
-            -H "Authorization: Bearer $ZEABUR_TOKEN" -H "Content-Type: application/json" \
-            --data-binary @/tmp/p1_execute_request.json \
-            https://api.zeabur.com/graphql >/tmp/p1_execute_response.json
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            /bin/sh -lc "$COMMAND" >/tmp/p1_service_exec.out 2>&1
           EXEC_CODE=$?
           set -e
-          echo "remote_execute_http_exit=$EXEC_CODE"
-          if [ "$EXEC_CODE" != "0" ]; then
-            python - <<'PY'
-          import json
-          from pathlib import Path
-          try:
-              payload=json.loads(Path("/tmp/p1_execute_response.json").read_text(encoding="utf-8", errors="replace"))
-              errors=payload.get("errors") or []
-              message=str((errors[0] or {}).get("message") or "unknown")[:160] if errors else "none"
-              print(f"graphql_errors_present={bool(errors)}")
-              print(f"graphql_error_message={message}")
-          except Exception:
-              print("graphql_errors_present=unknown")
-          PY
-            exit 1
-          fi
-          test "$EXEC_CODE" = 0
-          python - <<'PY'
-          from pathlib import Path
-          from tools.ci.p1_zeabur_transport import parse_execute_command_response
-          result=parse_execute_command_response(Path("/tmp/p1_execute_response.json").read_text(encoding="utf-8"))
-          for key, value in result.items():
-              print(f"{key}={value}")
-          PY
-          ENCODED_PATH=$(jq -rn --arg value '/tmp/nexus_demo_validation/p1_qualification_evidence.json' '$value|@uri')
-          set +e
-          curl --silent --show-error --fail-with-body \
-            -H "Authorization: Bearer $ZEABUR_TOKEN" \
-            "https://api.zeabur.com/projects/${ZEABUR_PROJECT_ID}/services/${SERVICE_ID}/files?path=${ENCODED_PATH}&environment=${ZEABUR_ENV_ID}" \
-            -o artifacts/bybit_demo_p1/p1_qualification_evidence.json
-          EVIDENCE_CHANNEL_CODE=$?
-          set -e
-          echo "remote_result_channel=zeabur_service_file_download"
-          echo "remote_evidence_download_exit=$EVIDENCE_CHANNEL_CODE"
-          test "$EVIDENCE_CHANNEL_CODE" = 0
+          echo "service_exec_transport_exit=$EXEC_CODE"
+          echo "service_exec_output_present=$([ -s /tmp/p1_service_exec.out ] && echo true || echo false)"
+          echo "service_exec_output_bytes=$(wc -c </tmp/p1_service_exec.out)"
+          ENCODED_PATH=$(jq -rn --arg value "$EVIDENCE_PATH" '$value|@uri')
+          FOUND=false
+          for attempt in 1 2 3 4 5 6; do
+            rm -f artifacts/bybit_demo_p1/p1_qualification_evidence.json
+            HTTP_CODE=$(curl --silent --show-error --output artifacts/bybit_demo_p1/p1_qualification_evidence.json \
+              --write-out '%{http_code}' -H "Authorization: Bearer $ZEABUR_TOKEN" \
+              "https://api.zeabur.com/projects/${ZEABUR_PROJECT_ID}/services/${SERVICE_ID}/files?path=${ENCODED_PATH}&environment=${ZEABUR_ENV_ID}" || true)
+            BYTES=$(wc -c < artifacts/bybit_demo_p1/p1_qualification_evidence.json 2>/dev/null || echo 0)
+            echo "evidence_download_attempt=${attempt} http_status=${HTTP_CODE} bytes=${BYTES}"
+            if [ "$HTTP_CODE" = "200" ] && [ "$BYTES" -gt 0 ]; then FOUND=true; break; fi
+            sleep 2
+          done
+          echo "remote_result_channel=zeabur_service_file_download_unique_path"
+          test "$FOUND" = true
           set +e
           python tools/ci/p1_parse_exec_json.py < artifacts/bybit_demo_p1/p1_qualification_evidence.json
           PARSE_CODE=$?

@@ -73,6 +73,7 @@ def run_recovery() -> dict[str, Any]:
         "campaign": CAMPAIGN_ID,
         "exchange_write_call_count": 0,
         "create_order_calls": 0,
+        "error": None,
     }
     pool: PostgresPool | None = None
     try:

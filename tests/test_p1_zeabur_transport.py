@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
 from tools.ci.p1_zeabur_transport import (
     EXECUTE_COMMAND_QUERY,
     build_execute_command_request,
+    evidence_download_ready,
     parse_execute_command_response,
     parse_recovery_evidence,
+    recovery_gate_may_pass,
+    unique_evidence_path,
 )
 
 
@@ -96,3 +100,29 @@ def test_hold_evidence_cannot_qualify_recovery_gate():
 
 def test_pass_evidence_is_the_only_gate_value():
     assert parse_recovery_evidence(json.dumps(_evidence("PASS")))["P1_RUN2_RECOVERY_CLEAR"] == "PASS"
+
+
+def test_unique_evidence_path_binds_current_run_and_attempt():
+    path = unique_evidence_path(kind="p1_run2_recovery", run_id="12345", run_attempt="2")
+    assert path == "/tmp/nexus_demo_validation/p1_run2_recovery_12345_2.json"
+    assert "p1_run2_recovery_evidence.json" not in path
+    assert "12345" in path and "2" in path
+
+
+@pytest.mark.parametrize("status,size", [(404, 100), (200, 0), (500, 0)])
+def test_missing_or_empty_unique_evidence_fails_closed(status: int, size: int):
+    assert evidence_download_ready(http_status=status, content_bytes=size) is False
+
+
+def test_service_exec_transport_never_decides_recovery_pass():
+    assert recovery_gate_may_pass(service_exec_exit=0, evidence_verdict=None) is False
+    assert recovery_gate_may_pass(service_exec_exit=1, evidence_verdict=None) is False
+    assert recovery_gate_may_pass(service_exec_exit=0, evidence_verdict="HOLD") is False
+    assert recovery_gate_may_pass(service_exec_exit=1, evidence_verdict="PASS") is True
+
+
+def test_recovery_module_contains_no_exchange_write_methods():
+    source = Path("backend/nexus_demo_execution/p1_recovery.py").read_text(encoding="utf-8")
+    assert ".create_market_order(" not in source
+    assert ".close_reduce_only(" not in source
+    assert ".cancel_order(" not in source
