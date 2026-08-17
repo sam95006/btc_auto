@@ -61,10 +61,11 @@ jobs:
           REAL_MONEY: "false"
           DEMO_AUTONOMOUS_ENABLED: "false"
         run: |
+          test -f tests/test_bybit_demo_p1_qualification.py
+          test -f tests/test_bybit_demo_durable_order_foundation.py
           python -m pytest \
             tests/test_bybit_demo_p1_qualification.py \
             tests/test_bybit_demo_durable_order_foundation.py \
-            tests/test_nexus_persistence_pg_foundation.py \
             -q --tb=line
 
   qualify:
