@@ -265,32 +265,6 @@ jobs:
           set -e
           sleep 40
 
-      - name: Verify remote execution boundary
-        env:
-          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
-          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
-        run: |
-          set -euo pipefail
-          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          set +e
-          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
-            /bin/sh -c 'test "${P1_RUN2_RECOVERY_CLEAR:-false}" = true && python -c '"'"'import json; print(json.dumps({"p1_remote_exec_boundary":"ready","p1_run2_recovery_clear":True}))'"'"'' \
-            > /tmp/p1_remote_boundary.txt 2>&1
-          CODE=$?
-          set -e
-          echo "remote_boundary_transport_exit=$CODE"
-          echo "remote_boundary_output_bytes=$(wc -c </tmp/p1_remote_boundary.txt)"
-          echo "remote_boundary_output_lines=$(wc -l </tmp/p1_remote_boundary.txt)"
-          test "$CODE" = "0"
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          raw=Path("/tmp/p1_remote_boundary.txt").read_text(encoding="utf-8", errors="replace")
-          assert '"p1_remote_exec_boundary": "ready"' in raw or '"p1_remote_exec_boundary":"ready"' in raw
-          assert '"p1_run2_recovery_clear": true' in raw or '"p1_run2_recovery_clear":true' in raw
-          print("P1_REMOTE_EXEC_BOUNDARY_PASS")
-          PY
-
       - name: Inject staging ledger DSN for one-shot window
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
@@ -323,30 +297,40 @@ jobs:
         run: |
           set -euo pipefail
           python tools/ci/p1_mask_dsn.py
-          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          mkdir -p artifacts/bybit_demo_p1
+          COMMAND='test "${P1_RUN2_RECOVERY_CLEAR:-false}" = true && export FOUNDER_P1_APPROVED=true P1_GO=RUN_ONE_BYBIT_DEMO_TRADE MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true P1_EVIDENCE_PATH=/tmp/nexus_demo_validation/p1_qualification_evidence.json; test "${P1_RUN2_RECOVERY_CLEAR:-false}" = true && python -m backend.nexus_demo_execution.p1_qualification'
+          QUERY='mutation Execute($serviceID: ObjectID!, $environmentID: ObjectID!, $command: String!) { executeCommand(serviceID: $serviceID, environmentID: $environmentID, command: $command) { exitCode output } }'
+          jq -n --arg query "$QUERY" --arg serviceID "$SERVICE_ID" --arg environmentID "$ZEABUR_ENV_ID" --arg command "$COMMAND" \
+            '{query:$query,variables:{serviceID:$serviceID,environmentID:$environmentID,command:$command}}' >/tmp/p1_execute_request.json
           set +e
-          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
-            /bin/sh -c 'export FOUNDER_P1_APPROVED=true; export P1_GO=RUN_ONE_BYBIT_DEMO_TRADE; export MAINNET=false; export REAL_MONEY=false; export DEMO_AUTONOMOUS_ENABLED=false; export AUTONOMOUS_SEND=false; export EXCHANGE_WRITE=false; export NEXUS_ENV=STAGING; export NEXUS_PG_RUNTIME_ENABLED=true; export P1_EVIDENCE_PATH=/tmp/nexus_demo_validation/p1_qualification_evidence.json; python -m backend.nexus_demo_execution.p1_qualification' \
-            > /tmp/p1_exec.txt 2>&1
+          curl --silent --show-error --fail-with-body \
+            -H "Authorization: Bearer $ZEABUR_TOKEN" -H "Content-Type: application/json" \
+            --data-binary @/tmp/p1_execute_request.json \
+            https://api.zeabur.com/graphql >/tmp/p1_execute_response.json
           EXEC_CODE=$?
           set -e
-          echo "remote_exec_transport_exit=$EXEC_CODE"
-          echo "remote_output_present=$([ -s /tmp/p1_exec.txt ] && echo true || echo false)"
-          echo "remote_output_bytes=$(wc -c </tmp/p1_exec.txt)"
-          echo "remote_output_lines=$(wc -l </tmp/p1_exec.txt)"
+          echo "remote_execute_http_exit=$EXEC_CODE"
+          test "$EXEC_CODE" = 0
+          python - <<'PY'
+          from pathlib import Path
+          from tools.ci.p1_zeabur_transport import parse_execute_command_response
+          result=parse_execute_command_response(Path("/tmp/p1_execute_response.json").read_text(encoding="utf-8"))
+          for key, value in result.items():
+              print(f"{key}={value}")
+          PY
+          ENCODED_PATH=$(jq -rn --arg value '/tmp/nexus_demo_validation/p1_qualification_evidence.json' '$value|@uri')
           set +e
-          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
-            /bin/sh -c 'test -s /tmp/nexus_demo_validation/p1_qualification_evidence.json && cat /tmp/nexus_demo_validation/p1_qualification_evidence.json' \
-            > /tmp/p1_evidence_channel.txt 2>&1
+          curl --silent --show-error --fail-with-body \
+            -H "Authorization: Bearer $ZEABUR_TOKEN" \
+            "https://api.zeabur.com/projects/${ZEABUR_PROJECT_ID}/services/${SERVICE_ID}/files?path=${ENCODED_PATH}&environment=${ZEABUR_ENV_ID}" \
+            -o artifacts/bybit_demo_p1/p1_qualification_evidence.json
           EVIDENCE_CHANNEL_CODE=$?
           set -e
-          echo "remote_result_channel=file_readback"
-          echo "remote_evidence_transport_exit=$EVIDENCE_CHANNEL_CODE"
-          echo "remote_evidence_output_present=$([ -s /tmp/p1_evidence_channel.txt ] && echo true || echo false)"
-          echo "remote_evidence_output_bytes=$(wc -c </tmp/p1_evidence_channel.txt)"
-          echo "remote_evidence_output_lines=$(wc -l </tmp/p1_evidence_channel.txt)"
+          echo "remote_result_channel=zeabur_service_file_download"
+          echo "remote_evidence_download_exit=$EVIDENCE_CHANNEL_CODE"
+          test "$EVIDENCE_CHANNEL_CODE" = 0
           set +e
-          python tools/ci/p1_parse_exec_json.py < /tmp/p1_evidence_channel.txt
+          python tools/ci/p1_parse_exec_json.py < artifacts/bybit_demo_p1/p1_qualification_evidence.json
           PARSE_CODE=$?
           set -e
           echo "json_evidence_detected=$([ "$PARSE_CODE" != "2" ] && echo true || echo false)"

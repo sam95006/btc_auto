@@ -141,29 +141,44 @@ jobs:
       - name: Perform read-only exchange and ledger recovery
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
         run: |
           set -euo pipefail
-          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          mkdir -p artifacts/bybit_demo_p1
+          COMMAND='export MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true P1_EVIDENCE_PATH=/tmp/nexus_demo_validation/p1_run2_recovery_evidence.json; python -m backend.nexus_demo_execution.p1_recovery'
+          QUERY='mutation Execute($serviceID: ObjectID!, $environmentID: ObjectID!, $command: String!) { executeCommand(serviceID: $serviceID, environmentID: $environmentID, command: $command) { exitCode output } }'
+          jq -n --arg query "$QUERY" --arg serviceID "$SERVICE_ID" --arg environmentID "$ZEABUR_ENV_ID" --arg command "$COMMAND" \
+            '{query:$query,variables:{serviceID:$serviceID,environmentID:$environmentID,command:$command}}' >/tmp/recovery_execute_request.json
           set +e
-          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
-            /bin/sh -c 'export MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true P1_EVIDENCE_PATH=/tmp/nexus_demo_validation/p1_run2_recovery_evidence.json; python -m backend.nexus_demo_execution.p1_recovery' \
-            >/tmp/recovery_exec.out 2>&1
-          EXEC_CODE=$?
-          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
-            /bin/sh -c 'test -s /tmp/nexus_demo_validation/p1_run2_recovery_evidence.json && cat /tmp/nexus_demo_validation/p1_run2_recovery_evidence.json' \
-            >/tmp/recovery_evidence.out 2>&1
-          READBACK_CODE=$?
+          curl --silent --show-error --fail-with-body \
+            -H "Authorization: Bearer $ZEABUR_TOKEN" -H "Content-Type: application/json" \
+            --data-binary @/tmp/recovery_execute_request.json \
+            https://api.zeabur.com/graphql >/tmp/recovery_execute_response.json
+          CURL_CODE=$?
           set -e
-          echo "remote_exec_transport_exit=$EXEC_CODE"
-          echo "remote_output_present=$([ -s /tmp/recovery_exec.out ] && echo true || echo false)"
-          echo "remote_output_bytes=$(wc -c </tmp/recovery_exec.out)"
-          echo "remote_output_lines=$(wc -l </tmp/recovery_exec.out)"
-          echo "remote_result_channel=file_readback"
-          echo "remote_evidence_transport_exit=$READBACK_CODE"
-          echo "remote_evidence_output_bytes=$(wc -c </tmp/recovery_evidence.out)"
+          echo "remote_execute_http_exit=$CURL_CODE"
+          test "$CURL_CODE" = 0
+          python - <<'PY'
+          from pathlib import Path
+          from tools.ci.p1_zeabur_transport import parse_execute_command_response
+          result=parse_execute_command_response(Path("/tmp/recovery_execute_response.json").read_text(encoding="utf-8"))
+          for key, value in result.items():
+              print(f"{key}={value}")
+          PY
+          ENCODED_PATH=$(jq -rn --arg value '/tmp/nexus_demo_validation/p1_run2_recovery_evidence.json' '$value|@uri')
           set +e
-          python tools/ci/p1_parse_recovery_json.py < /tmp/recovery_evidence.out
+          curl --silent --show-error --fail-with-body \
+            -H "Authorization: Bearer $ZEABUR_TOKEN" \
+            "https://api.zeabur.com/projects/${ZEABUR_PROJECT_ID}/services/${SERVICE_ID}/files?path=${ENCODED_PATH}&environment=${ZEABUR_ENV_ID}" \
+            -o artifacts/bybit_demo_p1/p1_run2_recovery_evidence.json
+          DOWNLOAD_CODE=$?
+          set -e
+          echo "remote_result_channel=zeabur_service_file_download"
+          echo "remote_evidence_download_exit=$DOWNLOAD_CODE"
+          test "$DOWNLOAD_CODE" = 0
+          set +e
+          python tools/ci/p1_parse_recovery_json.py < artifacts/bybit_demo_p1/p1_run2_recovery_evidence.json
           PARSE_CODE=$?
           set -e
           echo "json_evidence_detected=$([ "$PARSE_CODE" != "2" ] && echo true || echo false)"

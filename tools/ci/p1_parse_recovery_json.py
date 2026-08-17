@@ -6,21 +6,16 @@ import json
 import sys
 from pathlib import Path
 
+from p1_zeabur_transport import parse_recovery_evidence
+
 
 def main() -> int:
     raw = sys.stdin.read()
-    start = raw.find("{")
-    end = raw.rfind("}")
-    if start < 0 or end <= start:
-        print("recovery_json_detected=false")
-        return 2
     try:
-        payload = json.loads(raw[start : end + 1])
-    except json.JSONDecodeError:
+        payload = parse_recovery_evidence(raw)
+    except ValueError as exc:
         print("recovery_json_detected=false")
-        return 2
-    if not isinstance(payload, dict) or "P1_RUN2_RECOVERY_CLEAR" not in payload:
-        print("recovery_json_detected=false")
+        print(f"recovery_evidence_error={exc}")
         return 2
     forbidden = ("postgres://", "postgresql://", "BYBIT_DEMO_API_KEY", "BYBIT_DEMO_API_SECRET")
     text = json.dumps(payload, default=str)
