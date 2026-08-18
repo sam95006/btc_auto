@@ -194,6 +194,52 @@ class DurableOrderLedger:
             "accounting_json": accounting,
         }
 
+    def list_campaign_intents(self, campaign_id: str) -> list[dict[str, Any]]:
+        rows = self.pool.fetchall(
+            """
+            SELECT order_intent_id, decision_id, trade_id, campaign_id, order_link_id, symbol, side,
+                   requested_qty, reduce_only, state, bybit_order_id, filled_qty, avg_fill_price,
+                   parent_order_intent_id, actual_entry_price, actual_exit_price, realized_demo_pnl,
+                   fees, closed_at, pnl_provenance, accounting_json, created_at
+            FROM nexus.bybit_demo_order_intents
+            WHERE campaign_id=%s
+            ORDER BY created_at DESC, order_intent_id DESC
+            """,
+            (campaign_id,),
+        )
+        out: list[dict[str, Any]] = []
+        for r in rows:
+            accounting = r[20] if r[20] is not None else {}
+            if isinstance(accounting, str):
+                accounting = json.loads(accounting)
+            out.append(
+                {
+                    "order_intent_id": r[0],
+                    "decision_id": r[1],
+                    "trade_id": r[2],
+                    "campaign_id": r[3],
+                    "order_link_id": r[4],
+                    "symbol": r[5],
+                    "side": r[6],
+                    "requested_qty": _dec_str(r[7]),
+                    "reduce_only": bool(r[8]),
+                    "state": r[9],
+                    "bybit_order_id": r[10],
+                    "filled_qty": _dec_str(r[11]),
+                    "avg_fill_price": _dec_str(r[12]),
+                    "parent_order_intent_id": r[13],
+                    "actual_entry_price": _dec_str(r[14]),
+                    "actual_exit_price": _dec_str(r[15]),
+                    "realized_demo_pnl": _dec_str(r[16]),
+                    "fees": _dec_str(r[17]),
+                    "closed_at": r[18].isoformat() if getattr(r[18], "isoformat", None) else r[18],
+                    "pnl_provenance": r[19],
+                    "accounting_json": accounting,
+                    "created_at": r[21].isoformat() if getattr(r[21], "isoformat", None) else r[21],
+                }
+            )
+        return out
+
     def history(self, order_intent_id: str) -> list[dict[str, Any]]:
         rows = self.pool.fetchall(
             """

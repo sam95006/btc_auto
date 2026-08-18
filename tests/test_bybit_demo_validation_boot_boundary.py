@@ -95,6 +95,7 @@ def test_p1_workflows_require_final_runtime_readiness_before_transport_probe() -
     for name in (
         "founder_approved_bybit_demo_p1_run2_recovery.yml",
         "founder_approved_bybit_demo_p1_qualification.yml",
+        "founder_approved_bybit_demo_p1_run8_accounting_recovery.yml",
     ):
         workflow = (ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
         assert "P1_VALIDATION_SERVICE_RUNTIME_READY=true" in workflow

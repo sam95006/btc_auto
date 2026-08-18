@@ -109,6 +109,8 @@ def test_unique_evidence_path_binds_current_run_and_attempt():
     path = unique_evidence_path(kind="p1_run2_recovery", run_id="12345", run_attempt="2")
     assert path == "/tmp/nexus_demo_validation/p1_run2_recovery_12345_2.json"
     assert "p1_run2_recovery_evidence.json" not in path
+    run8 = unique_evidence_path(kind="p1_run8_accounting_recovery", run_id="12345", run_attempt="2")
+    assert run8 == "/tmp/nexus_demo_validation/p1_run8_accounting_recovery_12345_2.json"
     assert "12345" in path and "2" in path
 
 
@@ -163,6 +165,7 @@ def test_workflows_configure_dsn_before_deploy_and_probe_the_final_runtime():
     workflows = (
         Path(".github/workflows/founder_approved_bybit_demo_p1_run2_recovery.yml"),
         Path(".github/workflows/founder_approved_bybit_demo_p1_qualification.yml"),
+        Path(".github/workflows/founder_approved_bybit_demo_p1_run8_accounting_recovery.yml"),
     )
     for workflow_path in workflows:
         source = workflow_path.read_text(encoding="utf-8")
@@ -190,7 +193,11 @@ def test_recovery_workflow_uses_unique_probe_and_stdout_is_diagnostic_only():
 
 
 def test_recovery_module_contains_no_exchange_write_methods():
-    source = Path("backend/nexus_demo_execution/p1_recovery.py").read_text(encoding="utf-8")
-    assert ".create_market_order(" not in source
-    assert ".close_reduce_only(" not in source
-    assert ".cancel_order(" not in source
+    for rel in (
+        "backend/nexus_demo_execution/p1_recovery.py",
+        "backend/nexus_demo_execution/p1_run8_accounting_recovery.py",
+    ):
+        source = Path(rel).read_text(encoding="utf-8")
+        assert ".create_market_order(" not in source
+        assert ".close_reduce_only(" not in source
+        assert ".cancel_order(" not in source

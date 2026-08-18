@@ -12,7 +12,7 @@ EXECUTE_COMMAND_QUERY = (
 
 
 def unique_evidence_path(*, kind: str, run_id: str, run_attempt: str) -> str:
-    if kind not in {"p1_run2_recovery", "p1_qualification"}:
+    if kind not in {"p1_run2_recovery", "p1_qualification", "p1_run8_accounting_recovery"}:
         raise ValueError("evidence_kind_invalid")
     if not run_id or not run_attempt or not run_id.isdigit() or not run_attempt.isdigit():
         raise ValueError("evidence_run_identity_invalid")
