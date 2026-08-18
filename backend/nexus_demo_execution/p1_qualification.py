@@ -88,7 +88,16 @@ def _full(value: Decimal | None) -> str | None:
 
 
 def _now_ms() -> int:
+    """Local wall clock for IDs, ledger timestamps, and timeouts only."""
     return int(time.time() * 1000)
+
+
+def _official_ms(value: Any) -> int:
+    try:
+        parsed = int(float(value or 0))
+    except (TypeError, ValueError):
+        return 0
+    return parsed if parsed > 0 else 0
 
 
 def _postgres_url() -> str:
@@ -290,6 +299,8 @@ class P1QualificationRunner:
             "server_time_before_present",
             "server_time_after_present",
             "server_time_bracket_ms",
+            "exchange_age_ms",
+            "LOCAL_WALL_CLOCK_NOT_MARKET_FRESHNESS_AUTHORITY",
         ):
             if key in market:
                 self.evidence[key] = market[key]
@@ -323,47 +334,62 @@ class P1QualificationRunner:
         self.evidence["P1_PREFLIGHT_PASS"] = True
         return result
 
+    def _read_official_server_time(self) -> int:
+        try:
+            return _official_ms(self.client.fetch_server_time())
+        except Exception:  # noqa: BLE001
+            return 0
+
     def _fresh_market(self) -> dict[str, Any]:
-        now = self.now_ms()
+        """Judge freshness only in the official Bybit clock domain.
+
+        Local ``now_ms()`` / ``time.time()`` must not decide whether a Demo
+        ticker is fresh. Sequence is always:
+
+        server_before → ticker → server_after
+        """
         last_error = "ticker_unavailable"
         for symbol in P1_SYMBOLS:
             try:
+                server_before = self._read_official_server_time()
                 ticker = self.client.fetch_ticker(symbol)
+                server_after = self._read_official_server_time()
                 last = float(ticker.get("lastPrice") or ticker.get("markPrice") or 0)
-                ticker_time = int(float(ticker.get("time") or 0))
+                ticker_time = _official_ms(ticker.get("time"))
+                before_present = server_before > 0
+                after_present = server_after > 0
+                bracket = server_after - server_before if before_present and after_present else None
                 if last <= 0:
                     last_error = f"{symbol}:price_missing"
                     continue
+                if not before_present or not after_present:
+                    last_error = f"{symbol}:server_time_unavailable"
+                    continue
+                if server_after < server_before or bracket is None or bracket > SERVER_TIME_BRACKET_MAX_MS:
+                    last_error = f"{symbol}:server_time_bracket_invalid:{bracket}"
+                    continue
                 if ticker_time > 0:
-                    age = now - ticker_time
-                    if age < 0 or age > TICKER_MAX_AGE_MS:
-                        last_error = f"{symbol}:stale_ticker:{age}"
+                    exchange_age_ms = server_after - ticker_time
+                    if exchange_age_ms < 0 or exchange_age_ms > TICKER_MAX_AGE_MS:
+                        last_error = f"{symbol}:stale_ticker:{exchange_age_ms}"
                         continue
                     freshness = {
                         "market_freshness_source": "BYBIT_TICKER_ENVELOPE_TIME",
                         "ticker_envelope_time_present": True,
-                        "ticker_time": ticker_time,
-                        "age_ms": age,
+                        "server_time_before_present": True,
+                        "server_time_after_present": True,
+                        "server_time_bracket_ms": bracket,
+                        "exchange_age_ms": exchange_age_ms,
+                        "LOCAL_WALL_CLOCK_NOT_MARKET_FRESHNESS_AUTHORITY": True,
                     }
                 else:
-                    server_before = int(self.client.fetch_server_time())
-                    # Re-read the ticker inside the official server-time bracket.
-                    ticker = self.client.fetch_ticker(symbol)
-                    last = float(ticker.get("lastPrice") or ticker.get("markPrice") or 0)
-                    server_after = int(self.client.fetch_server_time())
-                    bracket = server_after - server_before
-                    if last <= 0:
-                        last_error = f"{symbol}:price_missing"
-                        continue
-                    if server_before <= 0 or server_after <= 0 or bracket < 0 or bracket > SERVER_TIME_BRACKET_MAX_MS:
-                        last_error = f"{symbol}:server_time_bracket_invalid:{bracket}"
-                        continue
                     freshness = {
                         "market_freshness_source": "BYBIT_SERVER_TIME_BRACKET",
                         "ticker_envelope_time_present": False,
                         "server_time_before_present": True,
                         "server_time_after_present": True,
                         "server_time_bracket_ms": bracket,
+                        "LOCAL_WALL_CLOCK_NOT_MARKET_FRESHNESS_AUTHORITY": True,
                     }
                 info = self.client.fetch_instrument(symbol)
                 return {
@@ -371,7 +397,6 @@ class P1QualificationRunner:
                     "symbol": symbol,
                     "last_price": last,
                     "info": info,
-                    "ticker": ticker,
                     **freshness,
                 }
             except DemoWriteError as exc:
@@ -706,6 +731,7 @@ class P1QualificationRunner:
             "FRESH_OFFICIAL_EXECUTION_DATA_PASS": False,
             "NO_MOCK_EXECUTION_PRICE_PASS": False,
             "RISK_ENGINE_FINAL_AUTHORITY_PASS": False,
+            "LOCAL_WALL_CLOCK_NOT_MARKET_FRESHNESS_AUTHORITY": True,
             "create_order_calls": 0,
             "recurring_loop": False,
             "service_disarmed": True,
