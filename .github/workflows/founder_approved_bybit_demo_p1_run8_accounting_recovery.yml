@@ -51,6 +51,7 @@ jobs:
             tests/test_bybit_demo_validation_boot_boundary.py \
             tests/test_bybit_demo_p1_run8_accounting_recovery.py \
             tests/test_p1_validation_runtime.py \
+            tests/test_p1_run8_predispatch_static.py \
             -q --tb=line
       - uses: actions/setup-node@v4
         with:
@@ -120,6 +121,10 @@ jobs:
           set_var NEXUS_POSTGRES_URL "$NEXUS_STAGING_POSTGRES_URL"
           set_var BYBIT_DEMO_API_KEY "$BYBIT_DEMO_API_KEY"
           set_var BYBIT_DEMO_API_SECRET "$BYBIT_DEMO_API_SECRET"
+          set_var NEXUS_DEPLOYMENT_SHA "$GITHUB_SHA"
+          set_var NEXUS_DEPLOYMENT_ID "$GITHUB_SHA"
+          set_var GITHUB_SHA "$GITHUB_SHA"
+          set_var NEXUS_EXPECTED_SHA "$GITHUB_SHA"
           CTX=/tmp/p1_recovery_ctx
           rm -rf "$CTX"; mkdir -p "$CTX"
           cp -a requirements.txt "$CTX/"
@@ -205,7 +210,7 @@ jobs:
           mkdir -p artifacts/bybit_demo_p1
           EVIDENCE_PATH="/tmp/nexus_demo_validation/p1_run8_accounting_recovery_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"
           BOOTSTRAP_PATH="/tmp/nexus_demo_validation/p1_run8_bootstrap_failure_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"
-          COMMAND="export PYTHONPATH=/app MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true NEXUS_EXPECTED_SHA=${GITHUB_SHA} P1_EVIDENCE_PATH=${EVIDENCE_PATH} P1_BOOTSTRAP_FAILURE_PATH=${BOOTSTRAP_PATH}; python -m backend.nexus_demo_execution.p1_run8_accounting_recovery_bootstrap"
+          COMMAND="export PYTHONPATH=/app MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true GITHUB_SHA=${GITHUB_SHA} NEXUS_EXPECTED_SHA=${GITHUB_SHA} NEXUS_DEPLOYMENT_SHA=${GITHUB_SHA} NEXUS_DEPLOYMENT_ID=${GITHUB_SHA} P1_EVIDENCE_PATH=${EVIDENCE_PATH} P1_BOOTSTRAP_FAILURE_PATH=${BOOTSTRAP_PATH}; python -m backend.nexus_demo_execution.p1_run8_accounting_recovery_bootstrap"
           echo "remote_trigger=zeabur_service_exec"
           set +e
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
@@ -238,7 +243,7 @@ jobs:
               "https://api.zeabur.com/projects/${ZEABUR_PROJECT_ID}/services/${SERVICE_ID}/files?path=${ENCODED_BOOTSTRAP}&environment=${ZEABUR_ENV_ID}" || true
             echo "authoritative_evidence_missing=true"
             test -s artifacts/bybit_demo_p1/p1_run8_bootstrap_failure.json
-            python tools/ci/p1_parse_run8_recovery_json.py < artifacts/bybit_demo_p1/p1_run8_bootstrap_failure.json
+            python tools/ci/p1_parse_run8_recovery_json.py --bootstrap < artifacts/bybit_demo_p1/p1_run8_bootstrap_failure.json
             exit 1
           fi
           set +e

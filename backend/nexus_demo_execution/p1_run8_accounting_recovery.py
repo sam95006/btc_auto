@@ -590,9 +590,16 @@ def run_recovery_with_probes() -> dict[str, Any]:
     evidence["recovery_stage"] = "CODE_IDENTITY"
     expected_sha = (os.environ.get("NEXUS_EXPECTED_SHA") or os.environ.get("GITHUB_SHA") or "").strip()
     loaded_sha = (os.environ.get("NEXUS_DEPLOYMENT_SHA") or os.environ.get("NEXUS_DEPLOYMENT_ID") or "").strip()
-    evidence["code_identity_pass"] = code_identity_matches(expected_sha=expected_sha, loaded_sha=loaded_sha)
-    if expected_sha and loaded_sha and not evidence["code_identity_pass"]:
-        evidence["error"] = "code_identity_mismatch"
+    evidence["code_identity_pass"] = code_identity_matches(
+        expected_sha=expected_sha,
+        loaded_sha=loaded_sha,
+        require_both=True,
+    )
+    if not evidence["code_identity_pass"]:
+        evidence["error"] = "code_identity_missing" if not expected_sha or not loaded_sha else "code_identity_mismatch"
+        evidence["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] = "HOLD"
+        evidence["create_order_calls"] = 0
+        evidence["exchange_write_call_count"] = 0
         return sanitize_evidence(evidence)
 
     evidence["recovery_stage"] = "MODULE_IMPORT"
@@ -619,33 +626,46 @@ def run_recovery_with_probes() -> dict[str, Any]:
         evidence["error"] = "postgres_connect_failed"
         return sanitize_evidence(evidence)
 
+    result = sanitize_evidence(evidence)
     try:
         evidence["recovery_stage"] = "POSTGRES_SELECT_1"
-        try:
-            probe = pool.fetchval("SELECT 1")
-            if int(probe or 0) != 1:
-                evidence["error"] = "postgres_select_1_failed"
-                return sanitize_evidence(evidence)
-        except Exception as exc:  # noqa: BLE001
-            evidence["exception_type"] = exception_type_name(exc)
+        probe = pool.fetchval("SELECT 1")
+        if int(probe or 0) != 1:
             evidence["error"] = "postgres_select_1_failed"
-            return sanitize_evidence(evidence)
-
-        evidence["recovery_stage"] = "LEDGER_CONSTRUCT"
-        ledger = _DurableOrderLedger(pool)
-        present = ledger.required_migrations_present()
-        evidence["migration_0005"] = bool(present.get("migration_0005_present"))
-        evidence["migration_0006"] = bool(present.get("migration_0006_present"))
-        if not present.get("migration_0005_present") or not present.get("migration_0006_present"):
-            evidence["error"] = "required_migrations_missing"
-            return sanitize_evidence(evidence)
-
-        evidence["recovery_stage"] = "BYBIT_CLIENT_CONSTRUCT"
-        client = ReadOnlyExchangeClient(_DemoWriteClient())
-        return recover_run8_accounting(client=client, ledger=ledger)
-    finally:
-        evidence["recovery_stage"] = evidence.get("recovery_stage") or "POOL_CLOSE"
+            result = sanitize_evidence(evidence)
+        else:
+            evidence["recovery_stage"] = "LEDGER_CONSTRUCT"
+            ledger = _DurableOrderLedger(pool)
+            present = ledger.required_migrations_present()
+            evidence["migration_0005"] = bool(present.get("migration_0005_present"))
+            evidence["migration_0006"] = bool(present.get("migration_0006_present"))
+            if not present.get("migration_0005_present") or not present.get("migration_0006_present"):
+                evidence["error"] = "required_migrations_missing"
+                result = sanitize_evidence(evidence)
+            else:
+                evidence["recovery_stage"] = "BYBIT_CLIENT_CONSTRUCT"
+                client = ReadOnlyExchangeClient(_DemoWriteClient())
+                result = recover_run8_accounting(client=client, ledger=ledger)
+    except Exception as exc:  # noqa: BLE001
+        evidence["exception_type"] = exception_type_name(exc)
+        evidence["error"] = (
+            "postgres_select_1_failed" if evidence.get("recovery_stage") == "POSTGRES_SELECT_1" else "recovery_failed"
+        )
+        evidence["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] = "HOLD"
+        result = sanitize_evidence(evidence)
+    try:
         pool.close()
+    except Exception as exc:  # noqa: BLE001
+        payload = dict(result) if isinstance(result, dict) else dict(evidence)
+        payload["recovery_stage"] = "POOL_CLOSE"
+        payload["exception_type"] = exception_type_name(exc)
+        payload["error"] = "pool_close_failed"
+        payload["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] = "HOLD"
+        payload["create_order_calls"] = 0
+        payload["exchange_write_call_count"] = 0
+        payload["AUTONOMOUS_BYBIT_DEMO_ARM_READY"] = "HOLD"
+        return sanitize_evidence(payload)
+    return result
 
 
 def main() -> int:

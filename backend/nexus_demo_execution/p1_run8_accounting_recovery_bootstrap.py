@@ -39,6 +39,7 @@ def _hold_payload(*, stage: str, exception_type: str | None = None) -> dict:
         "create_order_calls": 0,
         "exchange_write_call_count": 0,
         "AUTONOMOUS_BYBIT_DEMO_ARM_READY": "HOLD",
+        "candidate_count": 0,
         "read_only_exchange": True,
         "runner_json_detected": True,
     }
@@ -72,7 +73,10 @@ def main() -> int:
         if not isinstance(payload, dict):
             payload = _hold_payload(stage="MODULE_IMPORT", exception_type="TypeError")
             _write(_bootstrap_path(), payload)
-            _write(_evidence_path(), payload)
+            try:
+                _evidence_path().unlink(missing_ok=True)
+            except OSError:
+                pass
             print(json.dumps(payload, default=str))
             return 1
         payload.setdefault("runner_json_detected", True)
@@ -84,7 +88,10 @@ def main() -> int:
     except Exception as exc:  # noqa: BLE001
         payload = _hold_payload(stage=stage, exception_type=type(exc).__name__)
         _write(_bootstrap_path(), payload)
-        _write(_evidence_path(), payload)
+        try:
+            _evidence_path().unlink(missing_ok=True)
+        except OSError:
+            pass
         print(json.dumps(payload, default=str))
         return 1
 

@@ -389,7 +389,6 @@ def test_bootstrap_exception_writes_nonempty_sanitized_evidence(tmp_path, monkey
     bootstrap_path = tmp_path / "p1_run8_bootstrap_failure.json"
     monkeypatch.setenv("P1_EVIDENCE_PATH", str(evidence_path))
     monkeypatch.setenv("P1_BOOTSTRAP_FAILURE_PATH", str(bootstrap_path))
-    monkeypatch.setenv("PYTHONPATH", str(tmp_path))
     import backend.nexus_demo_execution.p1_run8_accounting_recovery_bootstrap as bootstrap
 
     class Boom(Exception):
@@ -404,12 +403,10 @@ def test_bootstrap_exception_writes_nonempty_sanitized_evidence(tmp_path, monkey
     )
     rc = bootstrap.main()
     assert rc == 1
-    payload = json.loads(evidence_path.read_text(encoding="utf-8"))
+    assert not evidence_path.exists()
     fail = json.loads(bootstrap_path.read_text(encoding="utf-8"))
-    assert evidence_path.stat().st_size > 0
     assert fail["recovery_stage"] == "MODULE_IMPORT"
     assert fail["exception_type"] == "Boom"
-    assert "postgres://" not in json.dumps(payload)
-    assert "secret" not in json.dumps(payload).lower() or payload["exception_type"] == "Boom"
-    assert payload["create_order_calls"] == 0
-    assert payload["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] == "HOLD"
+    assert "postgres://" not in json.dumps(fail)
+    assert fail["create_order_calls"] == 0
+    assert fail["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] == "HOLD"

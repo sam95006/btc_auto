@@ -61,11 +61,11 @@ def load_valid_json_object(path: Path) -> dict[str, Any] | None:
     return payload if isinstance(payload, dict) else None
 
 
-def code_identity_matches(*, expected_sha: str, loaded_sha: str) -> bool:
+def code_identity_matches(*, expected_sha: str, loaded_sha: str, require_both: bool = False) -> bool:
     expected = (expected_sha or "").strip()
     loaded = (loaded_sha or "").strip()
     if not expected or not loaded:
-        return True
+        return not require_both
     return loaded.startswith(expected[:7]) or expected.startswith(loaded[:7])
 
 

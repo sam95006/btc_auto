@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
-"""Extract sanitized Run #8 accounting-recovery JSON from the remote file channel."""
+"""Parse sanitized Run #8 accounting-recovery JSON. Never uses the Run #2 schema."""
 from __future__ import annotations
 
 import json
 import sys
 from pathlib import Path
 
-from p1_zeabur_transport import parse_recovery_evidence
+from p1_zeabur_transport import parse_run8_accounting_recovery_evidence, parse_run8_bootstrap_failure_evidence
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
+    bootstrap = "--bootstrap" in args
     raw = sys.stdin.read()
     try:
-        payload = parse_recovery_evidence(raw)
+        payload = (
+            parse_run8_bootstrap_failure_evidence(raw)
+            if bootstrap
+            else parse_run8_accounting_recovery_evidence(raw)
+        )
     except ValueError as exc:
         print("recovery_json_detected=false")
         print(f"recovery_evidence_error={exc}")
@@ -22,35 +28,26 @@ def main() -> int:
     if any(marker in text for marker in forbidden):
         print("recovery_json_detected=false")
         print("recovery_json_secret_leak_blocked=true")
-        return 3
+        return 2
     root = Path("artifacts/bybit_demo_p1")
     root.mkdir(parents=True, exist_ok=True)
-    (root / "p1_run8_accounting_recovery_evidence.json").write_text(
-        json.dumps(payload, indent=2), encoding="utf-8"
-    )
+    name = "p1_run8_bootstrap_failure.json" if bootstrap else "p1_run8_accounting_recovery_evidence.json"
+    (root / name).write_text(json.dumps(payload, indent=2), encoding="utf-8")
     for key in (
         "BYBIT_DEMO_SINGLE_TRADE_E2E_PASS",
-        "P1_EXCHANGE_REALIZED_PNL_PASS",
-        "P1_DURABLE_LEDGER_LIFECYCLE_PASS",
-        "P1_RUN8_EXACT_CLOSED_PNL_MATCH",
-        "P1_RUN8_LEDGER_FINALIZED",
-        "P1_RUN8_POSITION_FLAT",
+        "AUTONOMOUS_BYBIT_DEMO_ARM_READY",
         "recovery_stage",
         "exception_type",
         "candidate_count",
-        "entry_read_pass",
-        "close_read_pass",
-        "position_flat",
-        "execution_identity_pass",
-        "closed_pnl_exact_match",
-        "ledger_finalization_pass",
-        "ledger_final_state",
         "create_order_calls",
         "exchange_write_call_count",
         "error",
     ):
-        print(f"{key}={payload.get(key)}")
+        if key in payload:
+            print(f"{key}={payload.get(key)}")
     print("recovery_json_detected=true")
+    if bootstrap:
+        return 1
     return 0 if payload.get("BYBIT_DEMO_SINGLE_TRADE_E2E_PASS") == "PASS" else 1
 
 
