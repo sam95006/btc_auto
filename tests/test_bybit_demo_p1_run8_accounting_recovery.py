@@ -1,15 +1,17 @@
 """Offline Run #8 accounting recovery — no live Bybit writes."""
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from backend.nexus_demo_execution.durable_order_ledger import ALLOWED_TRANSITIONS
 from backend.nexus_demo_execution.p1_qualification import P1_CAMPAIGN_ID
+from backend.nexus_demo_execution.p1_exchange_accounting import match_closed_pnl_by_close_order_id
 from backend.nexus_demo_execution.p1_run8_accounting_recovery import (
     PNL_PROVENANCE,
     ReadOnlyExchangeClient,
     identify_latest_p1_lifecycle,
-    match_closed_pnl_by_close_order_id,
     recover_run8_accounting,
 )
 
@@ -81,10 +83,25 @@ class FakeClient:
     def list_open_orders(self, symbol: str | None = None) -> list[dict]:
         return [dict(row) for row in self.open_orders]
 
-    def list_executions(self, *, symbol: str | None = None, limit: int = 50) -> list[dict]:
-        return [dict(row) for row in self.executions[:limit]]
+    def list_executions(self, *, symbol: str | None = None, limit: int = 50, order_id: str | None = None) -> list[dict]:
+        rows = [dict(row) for row in self.executions]
+        if order_id:
+            rows = [row for row in rows if str(row.get("orderId") or "") == str(order_id)]
+        return rows[:limit]
 
     def list_closed_pnl(self, *, symbol: str | None = None, limit: int = 50) -> list[dict]:
+        return self.list_closed_pnl_paginated(symbol=symbol, limit=limit)
+
+    def list_closed_pnl_paginated(
+        self,
+        *,
+        symbol: str | None = None,
+        limit: int = 100,
+        max_pages: int = 10,
+        start_time_ms: int | None = None,
+        end_time_ms: int | None = None,
+    ) -> list[dict]:
+        del symbol, max_pages, start_time_ms, end_time_ms
         self.closed_pnl_calls += 1
         if not self.closed_pnl_pages:
             return []
@@ -125,7 +142,7 @@ def _seed_run8(ledger: FakeLedger) -> None:
         "actual_entry_price": None,
         "actual_exit_price": None,
         "realized_demo_pnl": None,
-        "pnl_provenance": None,
+        "pnl_provenance": "STRATEGY_OUTCOME_MODEL",
     }
     ledger.intents["p1cls_run8"] = {
         "order_intent_id": "p1cls_run8",
@@ -338,3 +355,61 @@ def test_existing_run8_can_become_e2e_pass_without_a_new_trade():
     assert evidence["AUTONOMOUS_BYBIT_DEMO_ARM_READY"] == "HOLD"
     assert set(ledger.intents) == {"p1ent_run8", "p1cls_run8"}
     assert evidence["create_order_calls"] == 0
+
+
+def test_zero_or_multiple_candidates_hold():
+    ledger = FakeLedger()
+    client = FakeClient()
+    _seed_exchange(client)
+    evidence = _run(ledger, client)
+    assert evidence["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] == "HOLD"
+    assert evidence["candidate_count"] == 0
+    _seed_run8(ledger)
+    clone_entry = dict(ledger.intents["p1ent_run8"])
+    clone_close = dict(ledger.intents["p1cls_run8"])
+    clone_entry["order_intent_id"] = "p1ent_other"
+    clone_entry["trade_id"] = "p1trd_otherbbbbbb"
+    clone_entry["decision_id"] = "p1dec_otheraaaaaa"
+    clone_entry["bybit_order_id"] = "entry-oid-other"
+    clone_close["order_intent_id"] = "p1cls_other"
+    clone_close["trade_id"] = "p1trd_otherbbbbbb"
+    clone_close["decision_id"] = "p1dec_otheraaaaaa"
+    clone_close["bybit_order_id"] = "close-oid-other"
+    clone_close["parent_order_intent_id"] = "p1ent_other"
+    ledger.intents["p1ent_other"] = clone_entry
+    ledger.intents["p1cls_other"] = clone_close
+    evidence = _run(ledger, client)
+    assert evidence["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] == "HOLD"
+    assert evidence["candidate_count"] == 2
+    assert evidence["create_order_calls"] == 0
+
+
+def test_bootstrap_exception_writes_nonempty_sanitized_evidence(tmp_path, monkeypatch):
+    evidence_path = tmp_path / "p1_run8_accounting_recovery_evidence.json"
+    bootstrap_path = tmp_path / "p1_run8_bootstrap_failure.json"
+    monkeypatch.setenv("P1_EVIDENCE_PATH", str(evidence_path))
+    monkeypatch.setenv("P1_BOOTSTRAP_FAILURE_PATH", str(bootstrap_path))
+    monkeypatch.setenv("PYTHONPATH", str(tmp_path))
+    import backend.nexus_demo_execution.p1_run8_accounting_recovery_bootstrap as bootstrap
+
+    class Boom(Exception):
+        pass
+
+    def explode():
+        raise Boom("postgres://user:secret@host/db")
+
+    monkeypatch.setattr(
+        "backend.nexus_demo_execution.p1_run8_accounting_recovery.run_recovery_with_probes",
+        explode,
+    )
+    rc = bootstrap.main()
+    assert rc == 1
+    payload = json.loads(evidence_path.read_text(encoding="utf-8"))
+    fail = json.loads(bootstrap_path.read_text(encoding="utf-8"))
+    assert evidence_path.stat().st_size > 0
+    assert fail["recovery_stage"] == "MODULE_IMPORT"
+    assert fail["exception_type"] == "Boom"
+    assert "postgres://" not in json.dumps(payload)
+    assert "secret" not in json.dumps(payload).lower() or payload["exception_type"] == "Boom"
+    assert payload["create_order_calls"] == 0
+    assert payload["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] == "HOLD"

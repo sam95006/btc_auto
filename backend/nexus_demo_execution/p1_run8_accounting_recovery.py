@@ -5,6 +5,7 @@ Never creates, closes, or cancels an exchange order.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import time
@@ -15,7 +16,23 @@ from typing import Any, Callable
 from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
 from backend.nexus_demo_execution.durable_order_ledger import DurableOrderLedger
 from backend.nexus_demo_execution.http_demo_reader import redact_secrets
+from backend.nexus_demo_execution.p1_exchange_accounting import (
+    aggregate_executions,
+    bounded_window_ms,
+    is_exchange_backed_provenance,
+    is_provisional_provenance,
+    list_executions_for_order,
+    match_closed_pnl_by_close_order_id,
+    poll_exact_closed_pnl,
+    realized_pnl_absent,
+)
 from backend.nexus_demo_execution.p1_qualification import P1_CAMPAIGN_ID, sanitize_evidence
+from backend.nexus_demo_execution.p1_validation_runtime import (
+    apply_disarmed_flags,
+    code_identity_matches,
+    exception_type_name,
+    write_json_file,
+)
 
 
 CONFIRM_PHRASE = "RECOVER_BYBIT_DEMO_P1_RUN8_ACCOUNTING"
@@ -109,62 +126,101 @@ def _position_size(row: dict[str, Any]) -> Decimal:
     return abs(_d(row.get("size") or 0))
 
 
-def identify_latest_p1_lifecycle(intents: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """Bind the latest P1 entry/close pair that already has exact Bybit order IDs."""
+def _target_hash(entry: dict[str, Any], close: dict[str, Any]) -> str:
+    raw = "|".join(
+        [
+            str(entry.get("trade_id") or ""),
+            str(entry.get("decision_id") or ""),
+            str(entry.get("bybit_order_id") or ""),
+            str(close.get("bybit_order_id") or ""),
+        ]
+    )
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+
+
+def _lifecycle_closed_or_filled(state: str) -> bool:
+    return str(state or "") in {"FILLED", "CLOSE_PENDING", "CLOSED"}
+
+
+def identify_run8_target(intents: list[dict[str, Any]]) -> dict[str, Any]:
+    """Resolve exactly one unfinished P1 accounting candidate. Never 'latest trade'."""
     campaign = [row for row in intents if str(row.get("campaign_id") or "") == P1_CAMPAIGN_ID]
     entries = [row for row in campaign if not bool(row.get("reduce_only"))]
     closes = [row for row in campaign if bool(row.get("reduce_only"))]
-    entries.sort(key=lambda row: str(row.get("created_at") or ""), reverse=True)
+    unfinished: list[dict[str, Any]] = []
+    finished: list[dict[str, Any]] = []
     for entry in entries:
         children = [
             row
             for row in closes
             if str(row.get("parent_order_intent_id") or "") == str(entry.get("order_intent_id") or "")
+            and str(row.get("trade_id") or "") == str(entry.get("trade_id") or "")
+            and str(row.get("decision_id") or "") == str(entry.get("decision_id") or "")
         ]
-        children.sort(key=lambda row: str(row.get("created_at") or ""), reverse=True)
-        if not children:
+        if len(children) != 1:
             continue
         close = children[0]
-        if str(entry.get("bybit_order_id") or "") and str(close.get("bybit_order_id") or ""):
-            return {"entry": entry, "close": close}
-    return None
-
-
-def match_closed_pnl_by_close_order_id(rows: list[dict[str, Any]], close_order_id: str) -> dict[str, Any] | None:
-    wanted = str(close_order_id or "")
-    if not wanted:
-        return None
-    for row in rows:
-        if str(row.get("orderId") or "") == wanted:
-            return row
-    return None
-
-
-def aggregate_executions(rows: list[dict[str, Any]], order_id: str) -> dict[str, Any]:
-    wanted = str(order_id or "")
-    qty = Decimal("0")
-    notional = Decimal("0")
-    fee = Decimal("0")
-    matched = 0
-    for row in rows:
-        if str(row.get("orderId") or "") != wanted:
+        if not str(entry.get("bybit_order_id") or "") or not str(close.get("bybit_order_id") or ""):
             continue
-        matched += 1
-        exec_qty = _d(row.get("execQty") or row.get("qty"))
-        exec_price = _d(row.get("execPrice") or row.get("price"))
-        qty += exec_qty
-        notional += exec_qty * exec_price
-        fee += abs(_d(row.get("execFee") or row.get("fee")))
+        if not _lifecycle_closed_or_filled(str(entry.get("state") or "")):
+            continue
+        if str(close.get("state") or "") not in {"FILLED", "CLOSED"}:
+            continue
+        pair = {"entry": entry, "close": close}
+        exchange_done = is_exchange_backed_provenance(entry.get("pnl_provenance")) and not realized_pnl_absent(
+            entry.get("realized_demo_pnl")
+        )
+        if exchange_done:
+            finished.append(pair)
+        else:
+            unfinished.append(pair)
+    if len(unfinished) == 1:
+        pair = unfinished[0]
+        return {
+            "ok": True,
+            "candidate_count": 1,
+            "entry": pair["entry"],
+            "close": pair["close"],
+            "idempotent_existing": False,
+            "target_identity_hash": _target_hash(pair["entry"], pair["close"]),
+        }
+    if len(unfinished) == 0 and len(finished) == 1:
+        pair = finished[0]
+        return {
+            "ok": True,
+            "candidate_count": 1,
+            "entry": pair["entry"],
+            "close": pair["close"],
+            "idempotent_existing": True,
+            "target_identity_hash": _target_hash(pair["entry"], pair["close"]),
+        }
     return {
-        "qty": qty,
-        "vwap": (notional / qty) if qty > 0 else None,
-        "fee": fee,
-        "count": matched,
+        "ok": False,
+        "candidate_count": len(unfinished) if unfinished else len(finished),
+        "entry": None,
+        "close": None,
+        "idempotent_existing": False,
+        "target_identity_hash": None,
     }
 
 
+def identify_latest_p1_lifecycle(intents: list[dict[str, Any]]) -> dict[str, Any] | None:
+    resolved = identify_run8_target(intents)
+    if not resolved.get("ok"):
+        return None
+    return {"entry": resolved["entry"], "close": resolved["close"]}
+
+
 def accounting_conflicts(existing: dict[str, Any], recovered: dict[str, Any]) -> list[str]:
+    """Conflict only when an existing exchange-sourced record disagrees with Bybit truth."""
     conflicts: list[str] = []
+    existing_provenance = existing.get("pnl_provenance")
+    if not is_exchange_backed_provenance(existing_provenance):
+        if realized_pnl_absent(existing.get("realized_demo_pnl")) and is_provisional_provenance(existing_provenance):
+            return []
+        if realized_pnl_absent(existing.get("realized_demo_pnl")):
+            return []
+        return []
     mapping = (
         ("actual_entry_price", "actual_entry_price"),
         ("actual_exit_price", "actual_exit_price"),
@@ -177,7 +233,7 @@ def accounting_conflicts(existing: dict[str, Any], recovered: dict[str, Any]) ->
         if current in (None, "", {}) or incoming in (None, ""):
             continue
         if existing_key == "pnl_provenance":
-            if str(current) != str(incoming):
+            if str(current) != str(incoming) and is_exchange_backed_provenance(current):
                 conflicts.append(existing_key)
         elif not _num_eq(current, incoming):
             conflicts.append(existing_key)
@@ -229,6 +285,15 @@ def _base_evidence() -> dict[str, Any]:
         "exact_closed_pnl_identity_rule": "closed_pnl.orderId==run8_close_bybit_orderId",
         "pnl_provenance": None,
         "ledger_final_state": None,
+        "recovery_stage": "TARGET_RESOLUTION",
+        "candidate_count": 0,
+        "entry_read_pass": False,
+        "close_read_pass": False,
+        "position_flat": False,
+        "execution_identity_pass": False,
+        "closed_pnl_exact_match": False,
+        "ledger_finalization_pass": False,
+        "exception_type": None,
         "error": None,
     }
 
@@ -258,7 +323,9 @@ def recover_run8_accounting(
     evidence = _base_evidence()
     guarded = client if isinstance(client, ReadOnlyExchangeClient) else ReadOnlyExchangeClient(client)
 
-    def _hold(reason: str) -> dict[str, Any]:
+    def _hold(reason: str, *, stage: str | None = None) -> dict[str, Any]:
+        if stage:
+            evidence["recovery_stage"] = stage
         evidence["error"] = reason
         evidence["create_order_calls"] = int(getattr(guarded, "create_order_calls", 0) or 0)
         evidence["exchange_write_call_count"] = int(getattr(guarded, "write_call_count", 0) or 0)
@@ -267,12 +334,15 @@ def recover_run8_accounting(
         return sanitize_evidence(evidence)
 
     try:
+        evidence["recovery_stage"] = "TARGET_RESOLUTION"
         intents = list(ledger.list_campaign_intents(P1_CAMPAIGN_ID) or [])
-        pair = identify_latest_p1_lifecycle(intents)
-        if pair is None:
-            return _hold("run8_trade_identity_missing")
-        entry = dict(pair["entry"])
-        close = dict(pair["close"])
+        resolved = identify_run8_target(intents)
+        evidence["candidate_count"] = int(resolved.get("candidate_count") or 0)
+        if not resolved.get("ok"):
+            return _hold("run8_trade_identity_missing", stage="TARGET_RESOLUTION")
+        entry = dict(resolved["entry"])
+        close = dict(resolved["close"])
+        evidence["target_identity_hash"] = resolved.get("target_identity_hash")
         symbol = str(entry.get("symbol") or "")
         side = str(entry.get("side") or "")
         entry_order_id = str(entry.get("bybit_order_id") or "")
@@ -296,19 +366,24 @@ def recover_run8_accounting(
             }
         )
 
+        evidence["recovery_stage"] = "ENTRY_ORDER_READ"
         entry_order = guarded.find_order(symbol=symbol, order_id=entry_order_id, order_link_id=entry_link_id)
+        evidence["recovery_stage"] = "CLOSE_ORDER_READ"
         close_order = guarded.find_order(symbol=symbol, order_id=close_order_id, order_link_id=close_link_id)
         entry_filled = _is_filled(entry_order)
         close_filled = _is_filled(close_order)
+        evidence["entry_read_pass"] = entry_filled
+        evidence["close_read_pass"] = close_filled
         evidence["P1_RUN8_ENTRY_EXCHANGE_CONFIRMED"] = entry_filled
         evidence["P1_RUN8_CLOSE_EXCHANGE_CONFIRMED"] = close_filled
         evidence["P1_ENTRY_RECONCILIATION_PASS"] = entry_filled
         evidence["P1_CLOSE_RECONCILIATION_PASS"] = close_filled
         if not entry_filled:
-            return _hold("entry_order_not_filled")
+            return _hold("entry_order_not_filled", stage="ENTRY_ORDER_READ")
         if not close_filled:
-            return _hold("close_order_not_filled")
+            return _hold("close_order_not_filled", stage="CLOSE_ORDER_READ")
 
+        evidence["recovery_stage"] = "POSITION_READ"
         positions = list(guarded.list_positions(symbol) or [])
         open_size = sum(_position_size(row) for row in positions)
         open_orders = list(guarded.list_open_orders(symbol) or [])
@@ -319,35 +394,56 @@ def recover_run8_accounting(
             or str(row.get("orderId") or "") in {entry_order_id, close_order_id}
         ]
         flat = open_size == 0 and not p1_open
+        evidence["position_flat"] = flat
         evidence["P1_RUN8_POSITION_FLAT"] = flat
         evidence["position_after_close"] = "0" if flat else str(open_size)
         if open_size != 0:
-            return _hold("position_not_flat")
+            return _hold("position_not_flat", stage="POSITION_READ")
         if p1_open:
-            return _hold("p1_open_order_remaining")
+            return _hold("p1_open_order_remaining", stage="POSITION_READ")
 
-        executions = list(guarded.list_executions(symbol=symbol, limit=100) or [])
-        entry_fills = aggregate_executions(executions, entry_order_id)
-        close_fills = aggregate_executions(executions, close_order_id)
+        evidence["recovery_stage"] = "EXECUTION_READ"
+        entry_execs = list_executions_for_order(guarded, symbol=symbol, order_id=entry_order_id)
+        close_execs = list_executions_for_order(guarded, symbol=symbol, order_id=close_order_id)
+        entry_fills = aggregate_executions(entry_execs, entry_order_id)
+        close_fills = aggregate_executions(close_execs, close_order_id)
+        evidence["execution_identity_pass"] = entry_fills["count"] > 0 and close_fills["count"] > 0
         if entry_fills["count"] == 0 or close_fills["count"] == 0:
-            return _hold("execution_identity_missing")
+            return _hold("execution_identity_missing", stage="EXECUTION_READ")
         if requested_qty and not _qty_eq(entry_fills["qty"], requested_qty):
-            return _hold("entry_fill_qty_mismatch")
+            return _hold("entry_fill_qty_mismatch", stage="EXECUTION_READ")
         if not _qty_eq(close_fills["qty"], entry_fills["qty"]):
-            return _hold("close_fill_qty_mismatch")
+            return _hold("close_fill_qty_mismatch", stage="EXECUTION_READ")
 
-        pnl_row, attempts = poll_closed_pnl(
+        evidence["recovery_stage"] = "CLOSED_PNL_READ"
+        now_ms = int(time_fn() * 1000)
+        close_anchor = None
+        for key in ("updatedTime", "createdTime", "closed_at", "created_at"):
+            raw = (close_order or {}).get(key) or close.get(key)
+            if raw not in (None, ""):
+                try:
+                    close_anchor = int(float(raw))
+                    if close_anchor < 10_000_000_000:
+                        close_anchor *= 1000
+                    break
+                except (TypeError, ValueError):
+                    close_anchor = None
+        start_ms, end_ms = bounded_window_ms(close_anchor, now_ms=now_ms)
+        pnl_row, attempts = poll_exact_closed_pnl(
             guarded,
             symbol=symbol,
             close_order_id=close_order_id,
+            start_time_ms=start_ms,
+            end_time_ms=end_ms,
             sleep=sleep,
+            time_fn=time_fn,
             interval_sec=poll_interval_sec,
             timeout_sec=poll_timeout_sec,
-            time_fn=time_fn,
         )
         evidence["closed_pnl_poll_attempts"] = attempts
         if pnl_row is None:
-            return _hold("exact_closed_pnl_unavailable")
+            return _hold("exact_closed_pnl_unavailable", stage="CLOSED_PNL_READ")
+        evidence["closed_pnl_exact_match"] = True
         evidence["P1_RUN8_EXACT_CLOSED_PNL_MATCH"] = True
         evidence["P1_EXCHANGE_REALIZED_PNL_PASS"] = True
         closed_qty = (
@@ -399,11 +495,12 @@ def recover_run8_accounting(
             }
         )
 
+        evidence["recovery_stage"] = "LEDGER_FINALIZATION"
         latest_entry = ledger.get_intent(str(entry.get("order_intent_id"))) or entry
         conflicts = accounting_conflicts(latest_entry, recovered)
         if conflicts:
             evidence["evidence_conflict_fields"] = conflicts
-            return _hold("exchange_ledger_evidence_conflict")
+            return _hold("exchange_ledger_evidence_conflict", stage="LEDGER_FINALIZATION")
 
         already_final = (
             str(latest_entry.get("state") or "") == "CLOSED"
@@ -438,8 +535,9 @@ def recover_run8_accounting(
         evidence["ledger_final_state"] = ledger_state
         evidence["P1_RUN8_LEDGER_FINALIZED"] = lifecycle_ok
         evidence["P1_DURABLE_LEDGER_LIFECYCLE_PASS"] = lifecycle_ok
+        evidence["ledger_finalization_pass"] = lifecycle_ok
         if not lifecycle_ok:
-            return _hold("ledger_lifecycle_not_closed")
+            return _hold("ledger_lifecycle_not_closed", stage="LEDGER_FINALIZATION")
 
         evidence["create_order_calls"] = int(getattr(guarded, "create_order_calls", 0) or 0)
         evidence["exchange_write_call_count"] = int(getattr(guarded, "write_call_count", 0) or 0)
@@ -455,9 +553,11 @@ def recover_run8_accounting(
             and ledger_state == "CLOSED"
             and evidence["create_order_calls"] == 0
         )
+        evidence["recovery_stage"] = "POOL_CLOSE"
         evidence["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] = "PASS" if all_pass else "HOLD"
         return sanitize_evidence(evidence)
-    except Exception:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
+        evidence["exception_type"] = type(exc).__name__
         return _hold("recovery_failed")
 
 
@@ -481,32 +581,77 @@ def _write_evidence(payload: dict[str, Any]) -> None:
 
 
 def run_recovery() -> dict[str, Any]:
-    for key, value in DISARMED_FLAGS.items():
-        os.environ[key] = value
+    return run_recovery_with_probes()
+
+
+def run_recovery_with_probes() -> dict[str, Any]:
+    apply_disarmed_flags()
+    evidence = _base_evidence()
+    evidence["recovery_stage"] = "CODE_IDENTITY"
+    expected_sha = (os.environ.get("NEXUS_EXPECTED_SHA") or os.environ.get("GITHUB_SHA") or "").strip()
+    loaded_sha = (os.environ.get("NEXUS_DEPLOYMENT_SHA") or os.environ.get("NEXUS_DEPLOYMENT_ID") or "").strip()
+    evidence["code_identity_pass"] = code_identity_matches(expected_sha=expected_sha, loaded_sha=loaded_sha)
+    if expected_sha and loaded_sha and not evidence["code_identity_pass"]:
+        evidence["error"] = "code_identity_mismatch"
+        return sanitize_evidence(evidence)
+
+    evidence["recovery_stage"] = "MODULE_IMPORT"
+    try:
+        from backend.nexus_demo_execution.demo_write_client import DemoWriteClient as _DemoWriteClient
+        from backend.nexus_demo_execution.durable_order_ledger import DurableOrderLedger as _DurableOrderLedger
+    except Exception as exc:  # noqa: BLE001
+        evidence["exception_type"] = exception_type_name(exc)
+        evidence["error"] = "module_import_failed"
+        return sanitize_evidence(evidence)
+
+    evidence["recovery_stage"] = "POSTGRES_CONNECT"
     url = _postgres_url()
     if not url:
-        evidence = _base_evidence()
         evidence["error"] = "ledger_dsn_missing"
         return sanitize_evidence(evidence)
     from backend.nexus_persistence_pg.pool import PostgresPool
 
     pool = PostgresPool(url)
-    pool.open()
     try:
-        client = ReadOnlyExchangeClient(DemoWriteClient())
-        ledger = DurableOrderLedger(pool)
+        pool.open()
+    except Exception as exc:  # noqa: BLE001
+        evidence["exception_type"] = exception_type_name(exc)
+        evidence["error"] = "postgres_connect_failed"
+        return sanitize_evidence(evidence)
+
+    try:
+        evidence["recovery_stage"] = "POSTGRES_SELECT_1"
+        try:
+            probe = pool.fetchval("SELECT 1")
+            if int(probe or 0) != 1:
+                evidence["error"] = "postgres_select_1_failed"
+                return sanitize_evidence(evidence)
+        except Exception as exc:  # noqa: BLE001
+            evidence["exception_type"] = exception_type_name(exc)
+            evidence["error"] = "postgres_select_1_failed"
+            return sanitize_evidence(evidence)
+
+        evidence["recovery_stage"] = "LEDGER_CONSTRUCT"
+        ledger = _DurableOrderLedger(pool)
+        present = ledger.required_migrations_present()
+        evidence["migration_0005"] = bool(present.get("migration_0005_present"))
+        evidence["migration_0006"] = bool(present.get("migration_0006_present"))
+        if not present.get("migration_0005_present") or not present.get("migration_0006_present"):
+            evidence["error"] = "required_migrations_missing"
+            return sanitize_evidence(evidence)
+
+        evidence["recovery_stage"] = "BYBIT_CLIENT_CONSTRUCT"
+        client = ReadOnlyExchangeClient(_DemoWriteClient())
         return recover_run8_accounting(client=client, ledger=ledger)
     finally:
+        evidence["recovery_stage"] = evidence.get("recovery_stage") or "POOL_CLOSE"
         pool.close()
 
 
 def main() -> int:
-    evidence = redact_secrets(run_recovery())
-    for key in SECRET_ENV_KEYS:
-        evidence.pop(key, None)
-    _write_evidence(evidence)
-    print(json.dumps(evidence, default=str))
-    return 0 if evidence.get("BYBIT_DEMO_SINGLE_TRADE_E2E_PASS") == "PASS" else 1
+    from backend.nexus_demo_execution.p1_run8_accounting_recovery_bootstrap import main as bootstrap_main
+
+    return bootstrap_main()
 
 
 if __name__ == "__main__":

@@ -197,6 +197,8 @@ jobs:
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
         run: |
           set -euo pipefail
+          . tools/ci/p1_validation_runtime.sh
+          p1_export_disarmed_flags
           mkdir -p artifacts/bybit_demo_p1
           EVIDENCE_PATH="/tmp/nexus_demo_validation/p1_run2_recovery_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"
           COMMAND="export MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true P1_EVIDENCE_PATH=${EVIDENCE_PATH}; python -m backend.nexus_demo_execution.p1_recovery"

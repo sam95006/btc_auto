@@ -573,10 +573,18 @@ class DemoWriteClient:
         data = self._get("/v5/position/closed-pnl", params)
         return list((data.get("result") or {}).get("list") or [])
 
-    def list_executions(self, *, symbol: str | None = None, limit: int = 50) -> list[dict[str, Any]]:
+    def list_executions(
+        self,
+        *,
+        symbol: str | None = None,
+        limit: int = 50,
+        order_id: str | None = None,
+    ) -> list[dict[str, Any]]:
         params: dict[str, Any] = {"category": "linear", "limit": str(max(1, min(100, int(limit))))}
         if symbol:
             params["symbol"] = symbol.upper()
+        if order_id:
+            params["orderId"] = str(order_id)
         data = self._get("/v5/execution/list", params)
         return list((data.get("result") or {}).get("list") or [])
 
@@ -647,10 +655,13 @@ class DemoWriteClient:
         max_pages: int = 10,
         start_time_ms: int | None = None,
         end_time_ms: int | None = None,
+        order_id: str | None = None,
     ) -> list[dict[str, Any]]:
         params: dict[str, Any] = {"category": "linear", "limit": str(max(1, min(100, int(limit))))}
         if symbol:
             params["symbol"] = symbol.upper()
+        if order_id:
+            params["orderId"] = str(order_id)
         return self._paginate_get(
             "/v5/execution/list",
             params,

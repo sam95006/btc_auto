@@ -340,6 +340,8 @@ jobs:
           NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
         run: |
           set -euo pipefail
+          . tools/ci/p1_validation_runtime.sh
+          p1_export_disarmed_flags
           python tools/ci/p1_mask_dsn.py
           mkdir -p artifacts/bybit_demo_p1
           EVIDENCE_PATH="/tmp/nexus_demo_validation/p1_qualification_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"

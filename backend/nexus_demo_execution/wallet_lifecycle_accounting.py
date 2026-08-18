@@ -12,6 +12,8 @@ PNL_PROVENANCE = (
     "INTERNAL_SIMULATION_PNL",
     "STRATEGY_OUTCOME_MODEL",
     "MIXED",
+    "PENDING",
+    "UNAVAILABLE",
 )
 
 ACCOUNTING_STATUS = (
@@ -76,7 +78,7 @@ def classify_pnl_provenance(
     elif sources:
         provenance = sources[0]
     else:
-        provenance = "STRATEGY_OUTCOME_MODEL"
+        provenance = "UNAVAILABLE"
 
     real_win = None
     real_loss = None

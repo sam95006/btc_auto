@@ -192,6 +192,18 @@ def test_recovery_workflow_uses_unique_probe_and_stdout_is_diagnostic_only():
     assert source.index("p1_parse_recovery_stdout.py") < source.index("p1_parse_recovery_json.py")
 
 
+def test_run8_workflow_uses_bootstrap_and_run8_parser():
+    source = Path(".github/workflows/founder_approved_bybit_demo_p1_run8_accounting_recovery.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "p1_run8_accounting_recovery_bootstrap" in source
+    assert "p1_parse_run8_stdout.py" in source
+    assert "p1_parse_recovery_stdout.py" not in source
+    assert "p1_run8_bootstrap_failure.json" in source
+    assert "p1_reject_empty_json" in source
+    assert "PYTHONPATH=/app" in source
+
+
 def test_recovery_module_contains_no_exchange_write_methods():
     for rel in (
         "backend/nexus_demo_execution/p1_recovery.py",

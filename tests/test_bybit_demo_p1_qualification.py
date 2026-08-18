@@ -213,11 +213,26 @@ class FakeBybit:
     def list_positions(self, symbol: str | None = None) -> list[dict]:
         return list(self.positions)
 
-    def list_executions(self, *, symbol: str | None = None, limit: int = 50) -> list[dict]:
-        return list(self.executions)
+    def list_executions(self, *, symbol: str | None = None, limit: int = 50, order_id: str | None = None) -> list[dict]:
+        rows = list(self.executions)
+        if order_id:
+            rows = [row for row in rows if str(row.get("orderId") or "") == str(order_id)]
+        return rows[:limit]
 
     def list_closed_pnl(self, *, symbol: str | None = None, limit: int = 50) -> list[dict]:
         return list(self.closed_pnls)
+
+    def list_closed_pnl_paginated(
+        self,
+        *,
+        symbol: str | None = None,
+        limit: int = 100,
+        max_pages: int = 10,
+        start_time_ms: int | None = None,
+        end_time_ms: int | None = None,
+    ) -> list[dict]:
+        del max_pages, start_time_ms, end_time_ms
+        return list(self.closed_pnls)[:limit]
 
     def find_order(self, *, symbol: str, order_id: str = "", order_link_id: str = "") -> dict | None:
         if order_link_id and order_link_id in self.orders:

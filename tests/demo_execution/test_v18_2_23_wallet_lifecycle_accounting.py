@@ -71,6 +71,11 @@ def test_historical_not_reconstructable():
     assert rec["fabricated_accounting"] is False
 
 
+def test_pnl_provenance_unavailable_when_no_sources():
+    p = classify_pnl_provenance()
+    assert p["pnl_provenance"] == "UNAVAILABLE"
+
+
 def test_pnl_provenance_exchange_authoritative():
     p = classify_pnl_provenance(
         exchange_closed_pnl="-1.25",

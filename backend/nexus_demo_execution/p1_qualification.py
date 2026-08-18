@@ -23,6 +23,12 @@ from backend.nexus_demo_execution.kill_switch import KillSwitch
 from backend.nexus_demo_execution.order_reconciliation import BybitDemoReconciler, exchange_state
 from backend.nexus_demo_execution.safety_gate import DemoExecutionSafetyGate
 from backend.nexus_demo_execution.session_limits import FIXED_LEVERAGE, MARGIN_PER_TRADE_CAP
+from backend.nexus_demo_execution.p1_exchange_accounting import (
+    aggregate_executions,
+    bounded_window_ms,
+    list_executions_for_order,
+    poll_exact_closed_pnl,
+)
 from backend.nexus_demo_execution.wallet_lifecycle_accounting import (
     build_lifecycle_accounting_record,
     classify_pnl_provenance,
@@ -572,14 +578,10 @@ class P1QualificationRunner:
             self.evidence["orphan_or_unresolved"] = True
             return self._finalize(hold_reason=self.evidence["error"])
 
-        self.ledger.transition(entry_intent_id, "CLOSED", source="p1_position_flat")
+        # Position flat is not a full CLOSED. Accounting remains pending on CLOSE_PENDING.
         if close_state == "FILLED":
             try:
                 self.ledger.transition(close_intent_id, "FILLED", source="bybit_close_fill", exchange=exchange_state(close_order)[1])
-            except ValueError:
-                pass
-            try:
-                self.ledger.transition(close_intent_id, "CLOSED", source="p1_close_complete")
             except ValueError:
                 pass
 
@@ -602,7 +604,7 @@ class P1QualificationRunner:
             realized_demo_pnl=accounting.get("realized_demo_pnl") if accounting.get("exchange_realized") else None,
             wallet_delta=accounting.get("wallet_delta"),
             closed_at=accounting.get("closed_at"),
-            pnl_provenance=accounting.get("pnl_provenance"),
+            pnl_provenance=accounting.get("pnl_provenance") if accounting.get("exchange_realized") else None,
             accounting={"exchange_realized": bool(accounting.get("exchange_realized"))},
         )
         self.evidence["exit"] = accounting.get("actual_exit_price")
@@ -614,6 +616,12 @@ class P1QualificationRunner:
         if not accounting.get("exchange_realized"):
             self.evidence["error"] = "realized_pnl_not_exchange_sourced"
             return self._finalize(hold_reason=self.evidence["error"])
+
+        self.ledger.transition(entry_intent_id, "CLOSED", source="p1_exchange_accounting")
+        try:
+            self.ledger.transition(close_intent_id, "CLOSED", source="p1_close_complete")
+        except ValueError:
+            pass
 
         history = self.ledger.history(entry_intent_id)
         states = _history_states(history)
@@ -678,19 +686,35 @@ class P1QualificationRunner:
         entry_order_id: str,
         close_order_id: str,
     ) -> dict[str, Any]:
-        executions = list(self.client.list_executions(symbol=symbol, limit=50) or [])
-        closed_rows = list(self.client.list_closed_pnl(symbol=symbol, limit=50) or [])
+        entry_execs = list_executions_for_order(self.client, symbol=symbol, order_id=str(entry_order_id))
+        close_execs = list_executions_for_order(self.client, symbol=symbol, order_id=str(close_order_id))
         wallet_after = self.client.fetch_wallet_snapshot()
-        entry_fills = [row for row in executions if str(row.get("orderId") or "") == str(entry_order_id)]
-        close_fills = [row for row in executions if str(row.get("orderId") or "") == str(close_order_id)]
-        fee_total = Decimal("0")
-        for row in entry_fills + close_fills:
-            fee_total += abs(_d(row.get("execFee")))
-        close_pnl_row = _match_closed_pnl(
-            closed_rows,
-            close_order_id=close_order_id,
-            entry_order_id=entry_order_id,
-            close_link_id=str(close_order.get("orderLinkId") or ""),
+        entry_agg = aggregate_executions(entry_execs, str(entry_order_id))
+        close_agg = aggregate_executions(close_execs, str(close_order_id))
+        entry_fills = entry_execs
+        close_fills = close_execs
+        fee_total = abs(entry_agg["fee"]) + abs(close_agg["fee"])
+        now_ms = int(self.time_fn() * 1000)
+        close_anchor = None
+        for key in ("updatedTime", "createdTime"):
+            raw = close_order.get(key)
+            if raw not in (None, ""):
+                try:
+                    close_anchor = int(float(raw))
+                    if close_anchor < 10_000_000_000:
+                        close_anchor *= 1000
+                    break
+                except (TypeError, ValueError):
+                    close_anchor = None
+        start_ms, end_ms = bounded_window_ms(close_anchor, now_ms=now_ms)
+        close_pnl_row, _attempts = poll_exact_closed_pnl(
+            self.client,
+            symbol=symbol,
+            close_order_id=str(close_order_id),
+            start_time_ms=start_ms,
+            end_time_ms=end_ms,
+            sleep=self.sleep,
+            time_fn=self.time_fn,
         )
         closed_pnl = None if close_pnl_row is None else close_pnl_row.get("closedPnl")
         exit_price = (

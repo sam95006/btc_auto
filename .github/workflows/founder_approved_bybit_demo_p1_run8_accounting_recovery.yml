@@ -50,6 +50,7 @@ jobs:
             tests/test_p1_zeabur_transport.py \
             tests/test_bybit_demo_validation_boot_boundary.py \
             tests/test_bybit_demo_p1_run8_accounting_recovery.py \
+            tests/test_p1_validation_runtime.py \
             -q --tb=line
       - uses: actions/setup-node@v4
         with:
@@ -199,9 +200,12 @@ jobs:
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
         run: |
           set -euo pipefail
+          . tools/ci/p1_validation_runtime.sh
+          p1_export_disarmed_flags
           mkdir -p artifacts/bybit_demo_p1
           EVIDENCE_PATH="/tmp/nexus_demo_validation/p1_run8_accounting_recovery_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"
-          COMMAND="export MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true P1_EVIDENCE_PATH=${EVIDENCE_PATH}; python -m backend.nexus_demo_execution.p1_run8_accounting_recovery"
+          BOOTSTRAP_PATH="/tmp/nexus_demo_validation/p1_run8_bootstrap_failure_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"
+          COMMAND="export PYTHONPATH=/app MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true NEXUS_EXPECTED_SHA=${GITHUB_SHA} P1_EVIDENCE_PATH=${EVIDENCE_PATH} P1_BOOTSTRAP_FAILURE_PATH=${BOOTSTRAP_PATH}; python -m backend.nexus_demo_execution.p1_run8_accounting_recovery_bootstrap"
           echo "remote_trigger=zeabur_service_exec"
           set +e
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
@@ -212,7 +216,7 @@ jobs:
           echo "service_exec_transport_exit=$EXEC_CODE"
           echo "service_exec_output_present=$([ -s /tmp/recovery_service_exec.out ] && echo true || echo false)"
           echo "service_exec_output_bytes=$(wc -c </tmp/recovery_service_exec.out)"
-          python tools/ci/p1_parse_recovery_stdout.py < /tmp/recovery_service_exec.out
+          python tools/ci/p1_parse_run8_stdout.py < /tmp/recovery_service_exec.out
           ENCODED_PATH=$(jq -rn --arg value "$EVIDENCE_PATH" '$value|@uri')
           FOUND=false
           for attempt in 1 2 3 4 5 6; do
@@ -226,7 +230,17 @@ jobs:
             sleep 2
           done
           echo "remote_result_channel=zeabur_service_file_download_unique_path"
-          test "$FOUND" = true
+          if [ "$FOUND" != true ] || ! p1_reject_empty_json artifacts/bybit_demo_p1/p1_run8_accounting_recovery_evidence.json; then
+            rm -f artifacts/bybit_demo_p1/p1_run8_accounting_recovery_evidence.json
+            ENCODED_BOOTSTRAP=$(jq -rn --arg value "$BOOTSTRAP_PATH" '$value|@uri')
+            curl --silent --show-error --output artifacts/bybit_demo_p1/p1_run8_bootstrap_failure.json \
+              --write-out '%{http_code}' -H "Authorization: Bearer $ZEABUR_TOKEN" \
+              "https://api.zeabur.com/projects/${ZEABUR_PROJECT_ID}/services/${SERVICE_ID}/files?path=${ENCODED_BOOTSTRAP}&environment=${ZEABUR_ENV_ID}" || true
+            echo "authoritative_evidence_missing=true"
+            test -s artifacts/bybit_demo_p1/p1_run8_bootstrap_failure.json
+            python tools/ci/p1_parse_run8_recovery_json.py < artifacts/bybit_demo_p1/p1_run8_bootstrap_failure.json
+            exit 1
+          fi
           set +e
           python tools/ci/p1_parse_run8_recovery_json.py < artifacts/bybit_demo_p1/p1_run8_accounting_recovery_evidence.json
           PARSE_CODE=$?

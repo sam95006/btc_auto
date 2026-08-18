@@ -194,6 +194,8 @@ jobs:
           set -euo pipefail
           mkdir -p artifacts/bybit_demo_p1
           EVIDENCE_PATH="/tmp/nexus_demo_validation/p1_migration_0006_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"
+          . tools/ci/p1_validation_runtime.sh
+          p1_export_disarmed_flags
           COMMAND="export MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true PYTHONPATH=/app P1_MIGRATION_EVIDENCE_PATH=${EVIDENCE_PATH}; python -m tools.ci.p1_staging_migration_0006"
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           set +e
