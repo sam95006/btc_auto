@@ -131,6 +131,10 @@ jobs:
           cp -a backend config "$CTX/"
           cp deploy/zeabur_bybit_demo_validation/entrypoint.sh "$CTX/entrypoint.sh"
           cp deploy/zeabur_bybit_demo_validation/validation_health_server.py "$CTX/validation_health_server.py"
+          printf '%s\n' "$GITHUB_SHA" > "$CTX/DEPLOYMENT_COMMIT"
+          printf '%s\n' "$GITHUB_SHA" > "$CTX/SOURCE_COMMIT"
+          test -s "$CTX/DEPLOYMENT_COMMIT"
+          test -s "$CTX/SOURCE_COMMIT"
           cat > "$CTX/Dockerfile" <<'DOCKER'
           FROM python:3.11-slim-bookworm
           ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 BYBIT_DEMO=true MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_WEB_ONLY=true NEXUS_EMBEDDED_WORKER=false NEXUS_DATA_DIR=/tmp/nexus_demo_validation PORT=8080
@@ -138,6 +142,8 @@ jobs:
           COPY requirements.txt .
           RUN pip install --no-cache-dir -r requirements.txt
           COPY . .
+          COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT
+          COPY SOURCE_COMMIT /app/SOURCE_COMMIT
           RUN chmod +x entrypoint.sh
           CMD ["/bin/sh", "./entrypoint.sh"]
           DOCKER
@@ -198,6 +204,17 @@ jobs:
           test "$FOUND" = true
           echo "P1_SERVICE_EXEC_FILE_CHANNEL_PASS=true"
 
+      - name: Probe baked container code identity
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          EXPECTED="${GITHUB_SHA}"
+          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            /bin/sh -lc "set -e; BAKED=\$(tr -d '\\r\\n' < /app/DEPLOYMENT_COMMIT); SOURCE=\$(tr -d '\\r\\n' < /app/SOURCE_COMMIT); echo expected_sha_prefix=${EXPECTED:0:12}; echo baked_sha_prefix=\${BAKED:0:12}; echo source_sha_prefix=\${SOURCE:0:12}; test -n \"\$BAKED\"; test -n \"\$SOURCE\"; test \"\${BAKED:0:12}\" = \"${EXPECTED:0:12}\"; test \"\${SOURCE:0:12}\" = \"${EXPECTED:0:12}\"; echo P1_RUN8_BAKED_IDENTITY_PASS=true"
+
       - name: Perform read-only exchange and ledger recovery
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
@@ -210,7 +227,7 @@ jobs:
           mkdir -p artifacts/bybit_demo_p1
           EVIDENCE_PATH="/tmp/nexus_demo_validation/p1_run8_accounting_recovery_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"
           BOOTSTRAP_PATH="/tmp/nexus_demo_validation/p1_run8_bootstrap_failure_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"
-          COMMAND="export PYTHONPATH=/app MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true GITHUB_SHA=${GITHUB_SHA} NEXUS_EXPECTED_SHA=${GITHUB_SHA} NEXUS_DEPLOYMENT_SHA=${GITHUB_SHA} NEXUS_DEPLOYMENT_ID=${GITHUB_SHA} P1_EVIDENCE_PATH=${EVIDENCE_PATH} P1_BOOTSTRAP_FAILURE_PATH=${BOOTSTRAP_PATH}; python -m backend.nexus_demo_execution.p1_run8_accounting_recovery_bootstrap"
+          COMMAND="export PYTHONPATH=/app MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true NEXUS_EXPECTED_SHA=${GITHUB_SHA} P1_EVIDENCE_PATH=${EVIDENCE_PATH} P1_BOOTSTRAP_FAILURE_PATH=${BOOTSTRAP_PATH}; python -m backend.nexus_demo_execution.p1_run8_accounting_recovery_bootstrap"
           echo "remote_trigger=zeabur_service_exec"
           set +e
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false

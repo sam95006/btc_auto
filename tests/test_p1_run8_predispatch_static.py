@@ -9,8 +9,10 @@ import pytest
 
 import sys
 
-from backend.nexus_demo_execution.p1_run8_accounting_recovery import run_recovery_with_probes
-from backend.nexus_demo_execution.p1_validation_runtime import code_identity_matches
+from backend.nexus_demo_execution.p1_run8_accounting_recovery import (
+    evaluate_run8_baked_code_identity,
+    run_recovery_with_probes,
+)
 
 sys.path.insert(0, str(Path("tools/ci").resolve()))
 from p1_parse_run8_recovery_json import main as parse_run8_main  # noqa: E402
@@ -92,44 +94,107 @@ def test_run8_json_without_run2_keys_accepted():
     assert parsed["candidate_count"] == 1
 
 
-def test_missing_deployment_sha_holds(monkeypatch):
-    monkeypatch.delenv("NEXUS_EXPECTED_SHA", raising=False)
-    monkeypatch.delenv("GITHUB_SHA", raising=False)
-    monkeypatch.delenv("NEXUS_DEPLOYMENT_SHA", raising=False)
-    monkeypatch.delenv("NEXUS_DEPLOYMENT_ID", raising=False)
+CURRENT_SHA = "a6c1ddcab1be6f21f5492cfab308d98d4890bfbf"
+STALE_SHA = "000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+
+
+def _patch_baked(monkeypatch, *, baked: str, source: str, baked_origin: str, source_origin: str) -> None:
+    monkeypatch.setattr(
+        "backend.nexus_demo_execution.p1_run8_accounting_recovery.read_container_baked_commit",
+        lambda: (baked, baked_origin),
+    )
+    monkeypatch.setattr(
+        "backend.nexus_demo_execution.p1_run8_accounting_recovery.read_container_source_commit",
+        lambda: (source, source_origin),
+    )
+
+
+def test_env_current_stale_baked_commit_holds(monkeypatch):
+    monkeypatch.setenv("NEXUS_EXPECTED_SHA", CURRENT_SHA)
+    monkeypatch.setenv("NEXUS_DEPLOYMENT_SHA", CURRENT_SHA)
+    monkeypatch.setenv("GITHUB_SHA", CURRENT_SHA)
+    _patch_baked(
+        monkeypatch,
+        baked=STALE_SHA,
+        source=CURRENT_SHA,
+        baked_origin="file:/app/DEPLOYMENT_COMMIT",
+        source_origin="file:/app/SOURCE_COMMIT",
+    )
     evidence = run_recovery_with_probes()
     assert evidence["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] == "HOLD"
     assert evidence["recovery_stage"] == "CODE_IDENTITY"
+    assert evidence["runtime_code_identity_pass"] is False
     assert evidence["create_order_calls"] == 0
     assert evidence["exchange_write_call_count"] == 0
-    assert code_identity_matches(expected_sha="", loaded_sha="abc", require_both=True) is False
 
 
-def test_stale_deployment_sha_holds(monkeypatch):
-    monkeypatch.setenv("NEXUS_EXPECTED_SHA", "aaaaaaaaaaaaaaaa")
-    monkeypatch.setenv("GITHUB_SHA", "aaaaaaaaaaaaaaaa")
-    monkeypatch.setenv("NEXUS_DEPLOYMENT_SHA", "bbbbbbbbbbbbbbbb")
-    monkeypatch.setenv("NEXUS_DEPLOYMENT_ID", "bbbbbbbbbbbbbbbb")
+def test_env_current_stale_source_commit_holds(monkeypatch):
+    monkeypatch.setenv("NEXUS_EXPECTED_SHA", CURRENT_SHA)
+    monkeypatch.setenv("NEXUS_DEPLOYMENT_SHA", CURRENT_SHA)
+    _patch_baked(
+        monkeypatch,
+        baked=CURRENT_SHA,
+        source=STALE_SHA,
+        baked_origin="file:/app/DEPLOYMENT_COMMIT",
+        source_origin="file:/app/SOURCE_COMMIT",
+    )
     evidence = run_recovery_with_probes()
     assert evidence["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] == "HOLD"
-    assert evidence["recovery_stage"] == "CODE_IDENTITY"
-    assert evidence["error"] == "code_identity_mismatch"
+    assert evidence["error"] == "baked_source_mismatch"
     assert evidence["create_order_calls"] == 0
     assert evidence["exchange_write_call_count"] == 0
 
 
-def test_exact_deployment_sha_passes_identity_gate(monkeypatch):
-    sha = "87329d24c741d2172b795c6eb5f5b96a0f7af3bf"
-    monkeypatch.setenv("NEXUS_EXPECTED_SHA", sha)
-    monkeypatch.setenv("GITHUB_SHA", sha)
-    monkeypatch.setenv("NEXUS_DEPLOYMENT_SHA", sha)
-    monkeypatch.setenv("NEXUS_DEPLOYMENT_ID", sha)
+def test_missing_bake_files_hold(monkeypatch):
+    monkeypatch.setenv("NEXUS_EXPECTED_SHA", CURRENT_SHA)
+    _patch_baked(monkeypatch, baked="", source="", baked_origin="missing", source_origin="missing")
+    evidence = run_recovery_with_probes()
+    assert evidence["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] == "HOLD"
+    assert evidence["error"] == "baked_commit_missing"
+    assert evidence["create_order_calls"] == 0
+    assert evidence["exchange_write_call_count"] == 0
+
+
+def test_baked_source_expected_match_passes_identity_gate(monkeypatch):
+    monkeypatch.setenv("NEXUS_EXPECTED_SHA", CURRENT_SHA)
     monkeypatch.delenv("NEXUS_POSTGRES_URL", raising=False)
     monkeypatch.delenv("DATABASE_URL", raising=False)
+    _patch_baked(
+        monkeypatch,
+        baked=CURRENT_SHA,
+        source=CURRENT_SHA,
+        baked_origin="file:/app/DEPLOYMENT_COMMIT",
+        source_origin="file:/app/SOURCE_COMMIT",
+    )
+    identity = evaluate_run8_baked_code_identity()
+    assert identity["runtime_code_identity_pass"] is True
     evidence = run_recovery_with_probes()
-    assert evidence["code_identity_pass"] is True
+    assert evidence["runtime_code_identity_pass"] is True
     assert evidence["recovery_stage"] != "CODE_IDENTITY"
     assert evidence["error"] == "ledger_dsn_missing"
+    assert evidence["create_order_calls"] == 0
+    assert evidence["exchange_write_call_count"] == 0
+
+
+def test_env_current_but_actual_baked_file_old_must_hold(monkeypatch):
+    """NEXUS_DEPLOYMENT_SHA=current must not prove identity if baked file is stale."""
+    monkeypatch.setenv("NEXUS_EXPECTED_SHA", CURRENT_SHA)
+    monkeypatch.setenv("NEXUS_DEPLOYMENT_SHA", CURRENT_SHA)
+    monkeypatch.setenv("NEXUS_DEPLOYMENT_ID", CURRENT_SHA)
+    monkeypatch.setenv("GITHUB_SHA", CURRENT_SHA)
+    _patch_baked(
+        monkeypatch,
+        baked=STALE_SHA,
+        source=STALE_SHA,
+        baked_origin="file:/app/DEPLOYMENT_COMMIT",
+        source_origin="file:/app/SOURCE_COMMIT",
+    )
+    evidence = run_recovery_with_probes()
+    assert evidence["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] == "HOLD"
+    assert evidence["recovery_stage"] == "CODE_IDENTITY"
+    assert evidence["error"] == "baked_expected_mismatch"
+    assert evidence["baked_sha_prefix"] == STALE_SHA[:12]
+    assert evidence["expected_sha_prefix"] == CURRENT_SHA[:12]
     assert evidence["create_order_calls"] == 0
     assert evidence["exchange_write_call_count"] == 0
 
@@ -162,6 +227,15 @@ def test_bootstrap_import_failure_writes_only_bootstrap_evidence(tmp_path, monke
 
 
 def test_pool_close_failure_stage_is_pool_close(monkeypatch):
+    monkeypatch.setenv("NEXUS_EXPECTED_SHA", CURRENT_SHA)
+    _patch_baked(
+        monkeypatch,
+        baked=CURRENT_SHA,
+        source=CURRENT_SHA,
+        baked_origin="file:/app/DEPLOYMENT_COMMIT",
+        source_origin="file:/app/SOURCE_COMMIT",
+    )
+
     class FakePool:
         def open(self):
             return None
@@ -179,9 +253,6 @@ def test_pool_close_failure_stage_is_pool_close(monkeypatch):
         def required_migrations_present(self):
             return {"migration_0005_present": True, "migration_0006_present": True}
 
-    monkeypatch.setenv("NEXUS_EXPECTED_SHA", "deadbeefcafebabe")
-    monkeypatch.setenv("NEXUS_DEPLOYMENT_SHA", "deadbeefcafebabe")
-    monkeypatch.setenv("NEXUS_DEPLOYMENT_ID", "deadbeefcafebabe")
     monkeypatch.setenv("NEXUS_POSTGRES_URL", "postgresql://unused")
     monkeypatch.setattr(
         "backend.nexus_persistence_pg.pool.PostgresPool",
@@ -223,9 +294,11 @@ def test_workflow_sets_deployment_sha_identity():
     source = Path(".github/workflows/founder_approved_bybit_demo_p1_run8_accounting_recovery.yml").read_text(
         encoding="utf-8"
     )
-    assert 'set_var NEXUS_DEPLOYMENT_SHA "$GITHUB_SHA"' in source
-    assert 'set_var NEXUS_DEPLOYMENT_ID "$GITHUB_SHA"' in source
-    assert 'set_var GITHUB_SHA "$GITHUB_SHA"' in source
-    assert "NEXUS_DEPLOYMENT_SHA=${GITHUB_SHA}" in source
+    assert "$CTX/DEPLOYMENT_COMMIT" in source
+    assert "$CTX/SOURCE_COMMIT" in source
+    assert "COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT" in source
+    assert "COPY SOURCE_COMMIT /app/SOURCE_COMMIT" in source
+    assert "P1_RUN8_BAKED_IDENTITY_PASS=true" in source
+    assert 'set_var NEXUS_EXPECTED_SHA "$GITHUB_SHA"' in source
     assert "p1_parse_run8_recovery_json.py --bootstrap" in source
     assert "parse_recovery_evidence" not in source

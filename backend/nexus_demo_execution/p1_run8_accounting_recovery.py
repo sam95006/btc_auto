@@ -29,14 +29,18 @@ from backend.nexus_demo_execution.p1_exchange_accounting import (
 from backend.nexus_demo_execution.p1_qualification import P1_CAMPAIGN_ID, sanitize_evidence
 from backend.nexus_demo_execution.p1_validation_runtime import (
     apply_disarmed_flags,
-    code_identity_matches,
     exception_type_name,
     write_json_file,
+)
+from backend.nexus_demo_execution.runtime_identity import (
+    read_container_baked_commit,
+    read_container_source_commit,
 )
 
 
 CONFIRM_PHRASE = "RECOVER_BYBIT_DEMO_P1_RUN8_ACCOUNTING"
 PNL_PROVENANCE = "BYBIT_V5_POSITION_CLOSED_PNL"
+IDENTITY_PREFIX_LEN = 12
 POLL_INTERVAL_SEC = 2.0
 POLL_TIMEOUT_SEC = 60.0
 WRITE_METHODS = frozenset(
@@ -286,6 +290,10 @@ def _base_evidence() -> dict[str, Any]:
         "pnl_provenance": None,
         "ledger_final_state": None,
         "recovery_stage": "TARGET_RESOLUTION",
+        "runtime_code_identity_pass": False,
+        "expected_sha_prefix": "",
+        "baked_sha_prefix": "",
+        "source_sha_prefix": "",
         "candidate_count": 0,
         "entry_read_pass": False,
         "close_read_pass": False,
@@ -580,6 +588,53 @@ def _write_evidence(payload: dict[str, Any]) -> None:
         return
 
 
+def _sha_prefix(value: str, length: int = IDENTITY_PREFIX_LEN) -> str:
+    text = "".join(ch for ch in (value or "").strip() if ch.isalnum())
+    return text[:length]
+
+
+def evaluate_run8_baked_code_identity(*, expected_sha: str | None = None) -> dict[str, Any]:
+    """Authority is baked /app commit files, not workflow-injected env labels."""
+    expected = (
+        expected_sha
+        or os.environ.get("NEXUS_EXPECTED_SHA")
+        or os.environ.get("GITHUB_SHA")
+        or ""
+    ).strip()
+    baked, baked_origin = read_container_baked_commit()
+    source, source_origin = read_container_source_commit()
+    expected_prefix = _sha_prefix(expected)
+    baked_prefix = _sha_prefix(baked)
+    source_prefix = _sha_prefix(source)
+    baked_file_present = "DEPLOYMENT_COMMIT" in str(baked_origin)
+    source_file_present = "SOURCE_COMMIT" in str(source_origin)
+    if not baked_file_present or not baked_prefix or len(baked_prefix) < IDENTITY_PREFIX_LEN:
+        reason = "baked_commit_missing"
+        passed = False
+    elif not source_file_present or not source_prefix or len(source_prefix) < IDENTITY_PREFIX_LEN:
+        reason = "source_commit_missing"
+        passed = False
+    elif baked_prefix != source_prefix:
+        reason = "baked_source_mismatch"
+        passed = False
+    elif not expected_prefix or len(expected_prefix) < IDENTITY_PREFIX_LEN:
+        reason = "expected_sha_missing"
+        passed = False
+    elif baked_prefix != expected_prefix or source_prefix != expected_prefix:
+        reason = "baked_expected_mismatch"
+        passed = False
+    else:
+        reason = None
+        passed = True
+    return {
+        "runtime_code_identity_pass": passed,
+        "expected_sha_prefix": expected_prefix,
+        "baked_sha_prefix": baked_prefix,
+        "source_sha_prefix": source_prefix,
+        "error": reason,
+    }
+
+
 def run_recovery() -> dict[str, Any]:
     return run_recovery_with_probes()
 
@@ -588,15 +643,14 @@ def run_recovery_with_probes() -> dict[str, Any]:
     apply_disarmed_flags()
     evidence = _base_evidence()
     evidence["recovery_stage"] = "CODE_IDENTITY"
-    expected_sha = (os.environ.get("NEXUS_EXPECTED_SHA") or os.environ.get("GITHUB_SHA") or "").strip()
-    loaded_sha = (os.environ.get("NEXUS_DEPLOYMENT_SHA") or os.environ.get("NEXUS_DEPLOYMENT_ID") or "").strip()
-    evidence["code_identity_pass"] = code_identity_matches(
-        expected_sha=expected_sha,
-        loaded_sha=loaded_sha,
-        require_both=True,
-    )
-    if not evidence["code_identity_pass"]:
-        evidence["error"] = "code_identity_missing" if not expected_sha or not loaded_sha else "code_identity_mismatch"
+    identity = evaluate_run8_baked_code_identity()
+    evidence["runtime_code_identity_pass"] = bool(identity.get("runtime_code_identity_pass"))
+    evidence["expected_sha_prefix"] = identity.get("expected_sha_prefix") or ""
+    evidence["baked_sha_prefix"] = identity.get("baked_sha_prefix") or ""
+    evidence["source_sha_prefix"] = identity.get("source_sha_prefix") or ""
+    evidence["code_identity_pass"] = evidence["runtime_code_identity_pass"]
+    if not evidence["runtime_code_identity_pass"]:
+        evidence["error"] = str(identity.get("error") or "code_identity_mismatch")
         evidence["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] = "HOLD"
         evidence["create_order_calls"] = 0
         evidence["exchange_write_call_count"] = 0

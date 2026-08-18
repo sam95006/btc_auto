@@ -202,9 +202,10 @@ def test_run8_workflow_uses_bootstrap_and_run8_parser():
     assert "p1_run8_bootstrap_failure.json" in source
     assert "p1_reject_empty_json" in source
     assert "PYTHONPATH=/app" in source
-    assert 'set_var NEXUS_DEPLOYMENT_SHA "$GITHUB_SHA"' in source
-    assert 'set_var NEXUS_DEPLOYMENT_ID "$GITHUB_SHA"' in source
-    assert 'set_var GITHUB_SHA "$GITHUB_SHA"' in source
+    assert 'set_var NEXUS_EXPECTED_SHA "$GITHUB_SHA"' in source
+    assert "COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT" in source
+    assert "COPY SOURCE_COMMIT /app/SOURCE_COMMIT" in source
+    assert "P1_RUN8_BAKED_IDENTITY_PASS=true" in source
 
 
 def test_recovery_module_contains_no_exchange_write_methods():
