@@ -5,7 +5,13 @@ import io
 import sys
 from pathlib import Path
 
-from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
+import pytest
+
+from backend.nexus_demo_execution.demo_write_client import (
+    DemoWriteClient,
+    DemoWriteError,
+    official_server_time_ms,
+)
 from tools.ci import p1_parse_exec_json
 from tools.ci.p1_parse_exec_json import _load
 
@@ -52,6 +58,42 @@ def test_fetch_server_time_uses_only_official_bybit_response_fields(monkeypatch)
     )
 
     assert client.fetch_server_time() == 1234567890000
+
+
+def test_official_server_time_prefers_time_nano() -> None:
+    payload = {
+        "retCode": 0,
+        "time": 1_234_567_890_000,
+        "result": {"timeSecond": "1234567890", "timeNano": "1234567890123456789"},
+    }
+    assert official_server_time_ms(payload) == 1_234_567_890_123
+
+
+def test_official_server_time_uses_top_level_time_when_nano_missing() -> None:
+    payload = {"retCode": 0, "time": 1_234_567_890_000, "result": {"timeSecond": "1234567890"}}
+    assert official_server_time_ms(payload) == 1_234_567_890_000
+
+
+def test_fetch_server_time_prefers_official_time_nano(monkeypatch) -> None:
+    client = DemoWriteClient(api_key="demo-key", api_secret="demo-secret")
+    monkeypatch.setattr(
+        client,
+        "public_get",
+        lambda *_args, **_kwargs: {
+            "retCode": 0,
+            "time": 1_234_567_890_000,
+            "result": {"timeSecond": "1234567890", "timeNano": "1234567890123456789"},
+        },
+    )
+    assert client.fetch_server_time() == 1_234_567_890_123
+
+
+def test_fetch_server_time_missing_official_fields_does_not_use_local_clock(monkeypatch) -> None:
+    client = DemoWriteClient(api_key="demo-key", api_secret="demo-secret")
+    monkeypatch.setattr(client, "public_get", lambda *_args, **_kwargs: {"retCode": 0, "result": {}})
+    with pytest.raises(DemoWriteError) as exc:
+        client.fetch_server_time()
+    assert exc.value.code == "server_time_missing"
 
 
 def test_pretty_nested_p1_evidence_document_loads() -> None:

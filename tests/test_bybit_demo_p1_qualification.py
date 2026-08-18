@@ -423,10 +423,14 @@ def test_fresh_ticker_envelope_time_uses_preferred_official_mode(monkeypatch: py
     assert market["server_time_before_present"] is True
     assert market["server_time_after_present"] is True
     assert market["server_time_bracket_ms"] == 80
-    assert market["exchange_age_ms"] == 80
+    assert market["signed_exchange_age_ms"] == 80
+    assert market["future_clock_skew_ms"] == 0
+    assert market["stale_age_ms"] == 80
+    assert market["official_clock_skew_tolerance_ms"] == 1_000
     assert market["LOCAL_WALL_CLOCK_NOT_MARKET_FRESHNESS_AUTHORITY"] is True
     assert "ticker_time" not in market
     assert "age_ms" not in market
+    assert "exchange_age_ms" not in market
 
 
 def test_missing_ticker_time_uses_valid_official_server_time_bracket(monkeypatch: pytest.MonkeyPatch):
@@ -443,6 +447,7 @@ def test_missing_ticker_time_uses_valid_official_server_time_bracket(monkeypatch
     assert market["ticker_envelope_time_present"] is False
     assert market["server_time_bracket_ms"] == 100
     assert market["LOCAL_WALL_CLOCK_NOT_MARKET_FRESHNESS_AUTHORITY"] is True
+    assert "signed_exchange_age_ms" not in market
     assert "exchange_age_ms" not in market
 
 
@@ -459,7 +464,9 @@ def test_run6_negative_196ms_local_skew_is_not_stale(monkeypatch: pytest.MonkeyP
     local_age = clock.now_ms() - 1_000_196
     assert local_age == -196
     assert market["fresh"] is True
-    assert market["exchange_age_ms"] == 54
+    assert market["signed_exchange_age_ms"] == 54
+    assert market["future_clock_skew_ms"] == 0
+    assert market["stale_age_ms"] == 54
     assert market["server_time_bracket_ms"] == 100
     assert market["market_freshness_source"] == "BYBIT_TICKER_ENVELOPE_TIME"
     assert market["ticker_envelope_time_present"] is True
@@ -478,7 +485,7 @@ def test_local_clock_behind_bybit_500ms_official_bracket_passes(monkeypatch: pyt
     market = runner._fresh_market()
     assert clock.now_ms() == 1_000_000
     assert market["fresh"] is True
-    assert market["exchange_age_ms"] == 30
+    assert market["signed_exchange_age_ms"] == 30
     assert market["server_time_bracket_ms"] == 50
     assert market["market_freshness_source"] == "BYBIT_TICKER_ENVELOPE_TIME"
 
@@ -494,7 +501,7 @@ def test_local_clock_ahead_bybit_500ms_official_bracket_passes(monkeypatch: pyte
     market = runner._fresh_market()
     assert clock.now_ms() == 1_000_500
     assert market["fresh"] is True
-    assert market["exchange_age_ms"] == 30
+    assert market["signed_exchange_age_ms"] == 30
     assert market["server_time_bracket_ms"] == 50
     assert market["market_freshness_source"] == "BYBIT_TICKER_ENVELOPE_TIME"
 
@@ -513,6 +520,61 @@ def test_ticker_20s_old_vs_official_server_after_holds(monkeypatch: pytest.Monke
     assert evidence["create_order_calls"] == 0
     assert client.write_call_count == 0
     assert "stale_ticker:20100" in str(evidence.get("error") or "")
+
+
+def test_run7_ticker_185ms_ahead_of_official_server_after_passes(monkeypatch: pytest.MonkeyPatch):
+    """Run #7: server_before=1_000_000, ticker=1_000_285, server_after=1_000_100 → age=-185."""
+    _auth_env(monkeypatch)
+    clock = FakeClock()
+    ledger = MemoryLedger()
+    client = FakeBybit(ledger, now_ms=clock.now_ms())
+    client.ticker_time = 1_000_285
+    client.server_times = [1_000_000, 1_000_100]
+    runner = P1QualificationRunner(client=client, ledger=ledger, now_ms=clock.now_ms, time_fn=clock.time)
+    market = runner._fresh_market()
+    assert market["fresh"] is True
+    assert market["signed_exchange_age_ms"] == -185
+    assert market["future_clock_skew_ms"] == 185
+    assert market["stale_age_ms"] == 0
+    assert market["official_clock_skew_tolerance_ms"] == 1_000
+    assert market["server_time_bracket_ms"] == 100
+    assert market["market_freshness_source"] == "BYBIT_TICKER_ENVELOPE_TIME"
+    assert market["LOCAL_WALL_CLOCK_NOT_MARKET_FRESHNESS_AUTHORITY"] is True
+    assert runner.create_order_calls == 0
+
+
+def test_ticker_999ms_ahead_of_official_server_after_passes(monkeypatch: pytest.MonkeyPatch):
+    _auth_env(monkeypatch)
+    clock = FakeClock()
+    ledger = MemoryLedger()
+    client = FakeBybit(ledger, now_ms=clock.now_ms())
+    client.ticker_time = 1_001_099
+    client.server_times = [1_000_000, 1_000_100]
+    runner = P1QualificationRunner(client=client, ledger=ledger, now_ms=clock.now_ms, time_fn=clock.time)
+    market = runner._fresh_market()
+    assert market["fresh"] is True
+    assert market["signed_exchange_age_ms"] == -999
+    assert market["future_clock_skew_ms"] == 999
+    assert market["stale_age_ms"] == 0
+    assert runner.create_order_calls == 0
+
+
+def test_ticker_1001ms_ahead_of_official_server_after_holds(monkeypatch: pytest.MonkeyPatch):
+    _auth_env(monkeypatch)
+    clock = FakeClock()
+    ledger = MemoryLedger()
+    client = FakeBybit(ledger, now_ms=clock.now_ms())
+    client.ticker_time = 1_001_101
+    client.server_times = [1_000_000, 1_000_100, 1_000_000, 1_000_100]
+    client.fail_create = True
+    evidence = _run(monkeypatch, client, ledger, clock)
+    assert evidence["FRESH_OFFICIAL_EXECUTION_DATA_PASS"] is False
+    assert evidence["NO_MOCK_EXECUTION_PRICE_PASS"] is False
+    assert evidence["create_order_calls"] == 0
+    assert client.write_call_count == 0
+    assert "ticker_clock_skew_exceeded:-1001" in str(evidence.get("error") or "")
+    assert evidence["LOCAL_WALL_CLOCK_NOT_MARKET_FRESHNESS_AUTHORITY"] is True
+    assert evidence["AUTONOMOUS_BYBIT_DEMO_ARM_READY"] == "HOLD"
 
 
 def test_reversed_official_server_times_hold_even_with_envelope_time(monkeypatch: pytest.MonkeyPatch):

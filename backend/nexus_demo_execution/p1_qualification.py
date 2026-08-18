@@ -34,6 +34,7 @@ P1_CAMPAIGN_ID = "bybit-demo-p1-qualification"
 P1_SYMBOLS = ("BTCUSDT", "ETHUSDT")
 TICKER_MAX_AGE_MS = 15_000
 SERVER_TIME_BRACKET_MAX_MS = 5_000
+MAX_OFFICIAL_BYBIT_CLOCK_SKEW_MS = 1_000
 FILL_TIMEOUT_SEC = 45
 CLOSE_TIMEOUT_SEC = 45
 POLL_INTERVAL_SEC = 1.0
@@ -299,7 +300,10 @@ class P1QualificationRunner:
             "server_time_before_present",
             "server_time_after_present",
             "server_time_bracket_ms",
-            "exchange_age_ms",
+            "signed_exchange_age_ms",
+            "future_clock_skew_ms",
+            "stale_age_ms",
+            "official_clock_skew_tolerance_ms",
             "LOCAL_WALL_CLOCK_NOT_MARKET_FRESHNESS_AUTHORITY",
         ):
             if key in market:
@@ -347,8 +351,17 @@ class P1QualificationRunner:
         ticker is fresh. Sequence is always:
 
         server_before → ticker → server_after
+
+        A ticker slightly ahead of ``server_after`` is official cross-request
+        skew, not local wall-clock error. Allow up to
+        ``MAX_OFFICIAL_BYBIT_CLOCK_SKEW_MS``. Do not use ``abs(age)``: a
+        ticker older than ``TICKER_MAX_AGE_MS`` still fails closed.
         """
         last_error = "ticker_unavailable"
+        last_diag: dict[str, Any] = {
+            "LOCAL_WALL_CLOCK_NOT_MARKET_FRESHNESS_AUTHORITY": True,
+            "official_clock_skew_tolerance_ms": MAX_OFFICIAL_BYBIT_CLOCK_SKEW_MS,
+        }
         for symbol in P1_SYMBOLS:
             try:
                 server_before = self._read_official_server_time()
@@ -369,19 +382,30 @@ class P1QualificationRunner:
                     last_error = f"{symbol}:server_time_bracket_invalid:{bracket}"
                     continue
                 if ticker_time > 0:
-                    exchange_age_ms = server_after - ticker_time
-                    if exchange_age_ms < 0 or exchange_age_ms > TICKER_MAX_AGE_MS:
-                        last_error = f"{symbol}:stale_ticker:{exchange_age_ms}"
+                    signed_exchange_age_ms = server_after - ticker_time
+                    future_clock_skew_ms = max(0, ticker_time - server_after)
+                    stale_age_ms = max(0, server_after - ticker_time)
+                    last_diag.update(
+                        {
+                            "market_freshness_source": "BYBIT_TICKER_ENVELOPE_TIME",
+                            "ticker_envelope_time_present": True,
+                            "server_time_before_present": True,
+                            "server_time_after_present": True,
+                            "server_time_bracket_ms": bracket,
+                            "signed_exchange_age_ms": signed_exchange_age_ms,
+                            "future_clock_skew_ms": future_clock_skew_ms,
+                            "stale_age_ms": stale_age_ms,
+                            "official_clock_skew_tolerance_ms": MAX_OFFICIAL_BYBIT_CLOCK_SKEW_MS,
+                            "LOCAL_WALL_CLOCK_NOT_MARKET_FRESHNESS_AUTHORITY": True,
+                        }
+                    )
+                    if signed_exchange_age_ms < -MAX_OFFICIAL_BYBIT_CLOCK_SKEW_MS:
+                        last_error = f"{symbol}:ticker_clock_skew_exceeded:{signed_exchange_age_ms}"
                         continue
-                    freshness = {
-                        "market_freshness_source": "BYBIT_TICKER_ENVELOPE_TIME",
-                        "ticker_envelope_time_present": True,
-                        "server_time_before_present": True,
-                        "server_time_after_present": True,
-                        "server_time_bracket_ms": bracket,
-                        "exchange_age_ms": exchange_age_ms,
-                        "LOCAL_WALL_CLOCK_NOT_MARKET_FRESHNESS_AUTHORITY": True,
-                    }
+                    if signed_exchange_age_ms > TICKER_MAX_AGE_MS:
+                        last_error = f"{symbol}:stale_ticker:{signed_exchange_age_ms}"
+                        continue
+                    freshness = dict(last_diag)
                 else:
                     freshness = {
                         "market_freshness_source": "BYBIT_SERVER_TIME_BRACKET",
@@ -389,6 +413,7 @@ class P1QualificationRunner:
                         "server_time_before_present": True,
                         "server_time_after_present": True,
                         "server_time_bracket_ms": bracket,
+                        "official_clock_skew_tolerance_ms": MAX_OFFICIAL_BYBIT_CLOCK_SKEW_MS,
                         "LOCAL_WALL_CLOCK_NOT_MARKET_FRESHNESS_AUTHORITY": True,
                     }
                 info = self.client.fetch_instrument(symbol)
@@ -403,7 +428,7 @@ class P1QualificationRunner:
                 last_error = f"{symbol}:{exc.code}"
             except Exception as exc:  # noqa: BLE001
                 last_error = f"{symbol}:{type(exc).__name__}"
-        return {"fresh": False, "reason": last_error}
+        return {"fresh": False, "reason": last_error, **last_diag}
 
     def _execute_lifecycle(self, preflight: dict[str, Any]) -> dict[str, Any]:
         symbol = str(preflight["symbol"])

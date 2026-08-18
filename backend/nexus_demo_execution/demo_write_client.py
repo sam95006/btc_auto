@@ -53,6 +53,38 @@ def _float(v: Any) -> float:
         return 0.0
 
 
+def _official_int(value: Any) -> int:
+    if value in (None, "") or isinstance(value, bool):
+        return 0
+    try:
+        if isinstance(value, int):
+            return value if value > 0 else 0
+        text = str(value).strip()
+        if not text:
+            return 0
+        parsed = int(text, 10) if text.lstrip("+-").isdigit() else int(float(text))
+        return parsed if parsed > 0 else 0
+    except (TypeError, ValueError):
+        return 0
+
+
+def official_server_time_ms(payload: dict[str, Any]) -> int:
+    """Parse official Bybit /v5/market/time into milliseconds. No local clock."""
+    result = payload.get("result") if isinstance(payload.get("result"), dict) else {}
+    nano = _official_int(result.get("timeNano"))
+    if nano > 0:
+        ms = nano // 1_000_000
+        if ms > 0:
+            return ms
+    top = _official_int(payload.get("time"))
+    if top > 0:
+        return top
+    seconds = _official_int(result.get("timeSecond"))
+    if seconds > 0:
+        return seconds * 1000
+    return 0
+
+
 def _step_decimals(step: float) -> int:
     """Deterministic decimal places for qty/price steps (handles non-power-of-10 ticks)."""
     if step <= 0:
@@ -193,23 +225,15 @@ class DemoWriteClient:
         return ticker
 
     def fetch_server_time(self) -> int:
-        """Return only official Demo server time in milliseconds."""
+        """Return only official Demo server time in milliseconds.
+
+        Preference: ``result.timeNano`` → top-level ``time`` → ``result.timeSecond``.
+        Local wall clock is never a fallback.
+        """
         data = self.public_get("/v5/market/time", {})
-        top_level_time = data.get("time")
-        if top_level_time not in (None, ""):
-            try:
-                value = int(float(top_level_time))
-            except (TypeError, ValueError):
-                value = 0
-            if value > 0:
-                return value
-        result = data.get("result") or {}
-        try:
-            seconds = int(float(result.get("timeSecond") or 0))
-        except (TypeError, ValueError):
-            seconds = 0
-        if seconds > 0:
-            return seconds * 1000
+        value = official_server_time_ms(data if isinstance(data, dict) else {})
+        if value > 0:
+            return value
         raise DemoWriteError("server_time_missing")
 
     def fetch_klines(self, symbol: str, *, interval: str = "15", limit: int = 20) -> list[dict[str, Any]]:
