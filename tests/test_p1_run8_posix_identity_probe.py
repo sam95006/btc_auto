@@ -79,7 +79,8 @@ def test_workflow_and_script_have_no_bash_substring():
         assert "${SOURCE:0:12}" not in blob
         assert "${EXPECTED:0:12}" not in blob
         assert "${VAR:0:12}" not in blob
-    assert "/bin/sh /app/p1_run8_baked_identity_probe.sh" in workflow
+    assert "COPY p1_run8_baked_identity_probe.sh /app/p1_run8_baked_identity_probe.sh" in workflow
+    assert "/bin/sh /app/p1_run8_baked_identity_probe.sh" not in workflow
     assert "cut -c1-12" in script
 
 

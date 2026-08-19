@@ -54,6 +54,7 @@ jobs:
             tests/test_p1_run8_predispatch_static.py \
             tests/test_p1_run8_posix_identity_probe.py \
             tests/test_p1_run8_rollout_convergence.py \
+            tests/test_p1_run8_atomic_recovery.py \
             -q --tb=line
       - uses: actions/setup-node@v4
         with:
@@ -187,6 +188,7 @@ jobs:
               echo "current_image_streak=${streak}"
               if [ "$streak" -ge "$STREAK_NEEDED" ]; then
                 echo "P1_RUN8_DEPLOYMENT_CONVERGED=true"
+                echo "rollout_convergence_is_advisory=true"
                 exit 0
               fi
               sleep "$STREAK_GAP"
@@ -249,16 +251,6 @@ jobs:
           test "$FOUND" = true
           echo "P1_SERVICE_EXEC_FILE_CHANNEL_PASS=true"
 
-      - name: Probe baked container code identity
-        env:
-          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
-          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
-        run: |
-          set -euo pipefail
-          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
-            /bin/sh -lc "export EXPECTED='${GITHUB_SHA}'; export APP_ROOT=/app; /bin/sh /app/p1_run8_baked_identity_probe.sh"
-
       - name: Perform read-only exchange and ledger recovery
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
@@ -269,50 +261,88 @@ jobs:
           . tools/ci/p1_validation_runtime.sh
           p1_export_disarmed_flags
           mkdir -p artifacts/bybit_demo_p1
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           EVIDENCE_PATH="/tmp/nexus_demo_validation/p1_run8_accounting_recovery_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"
           BOOTSTRAP_PATH="/tmp/nexus_demo_validation/p1_run8_bootstrap_failure_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"
-          COMMAND="export PYTHONPATH=/app MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true NEXUS_EXPECTED_SHA=${GITHUB_SHA} P1_EVIDENCE_PATH=${EVIDENCE_PATH} P1_BOOTSTRAP_FAILURE_PATH=${BOOTSTRAP_PATH}; python -m backend.nexus_demo_execution.p1_run8_accounting_recovery_bootstrap"
-          echo "remote_trigger=zeabur_service_exec"
-          set +e
-          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
-            /bin/sh -lc "$COMMAND" >/tmp/recovery_service_exec.out 2>&1
-          EXEC_CODE=$?
-          set -e
-          echo "service_exec_transport_exit=$EXEC_CODE"
-          echo "service_exec_output_present=$([ -s /tmp/recovery_service_exec.out ] && echo true || echo false)"
-          echo "service_exec_output_bytes=$(wc -c </tmp/recovery_service_exec.out)"
-          python tools/ci/p1_parse_run8_stdout.py < /tmp/recovery_service_exec.out
-          ENCODED_PATH=$(jq -rn --arg value "$EVIDENCE_PATH" '$value|@uri')
-          FOUND=false
-          for attempt in 1 2 3 4 5 6; do
-            rm -f artifacts/bybit_demo_p1/p1_run8_accounting_recovery_evidence.json
-            HTTP_CODE=$(curl --silent --show-error --output artifacts/bybit_demo_p1/p1_run8_accounting_recovery_evidence.json \
-              --write-out '%{http_code}' -H "Authorization: Bearer $ZEABUR_TOKEN" \
-              "https://api.zeabur.com/projects/${ZEABUR_PROJECT_ID}/services/${SERVICE_ID}/files?path=${ENCODED_PATH}&environment=${ZEABUR_ENV_ID}" || true)
-            BYTES=$(wc -c < artifacts/bybit_demo_p1/p1_run8_accounting_recovery_evidence.json 2>/dev/null || echo 0)
-            echo "evidence_download_attempt=${attempt} http_status=${HTTP_CODE} bytes=${BYTES}"
-            if [ "$HTTP_CODE" = "200" ] && [ "$BYTES" -gt 0 ]; then FOUND=true; break; fi
-            sleep 2
+          python tools/ci/p1_run8_atomic_recovery.py --print-remote-script > /tmp/p1_run8_atomic_remote.sh
+          SCRIPT_B64=$(base64 -w0 /tmp/p1_run8_atomic_remote.sh)
+          MAX_ATTEMPTS=36
+          RETRY_INTERVAL=5
+          attempt=1
+          BOOTSTRAP_STARTED=false
+          : > /tmp/recovery_service_exec.out
+          echo "remote_trigger=zeabur_service_exec_atomic_identity_recovery"
+          echo "file_channel_authoritative=false"
+          echo "python -m backend.nexus_demo_execution.p1_run8_accounting_recovery_bootstrap"
+          while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
+            : > /tmp/atomic_attempt.out
+            set +e
+            zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+              /bin/sh -lc "EXPECTED='${GITHUB_SHA}'; export EXPECTED; APP_ROOT=/app; export APP_ROOT; P1_EVIDENCE_PATH='$EVIDENCE_PATH'; export P1_EVIDENCE_PATH; P1_BOOTSTRAP_FAILURE_PATH='$BOOTSTRAP_PATH'; export P1_BOOTSTRAP_FAILURE_PATH; NEXUS_EXPECTED_SHA='${GITHUB_SHA}'; export NEXUS_EXPECTED_SHA; PYTHONPATH=/app; export PYTHONPATH; printf '%s' '$SCRIPT_B64' | base64 -d | /bin/sh" >/tmp/atomic_attempt.out 2>&1
+            EXEC_CODE=$?
+            set -e
+            echo "atomic_exec_attempt=${attempt} transport_exit=${EXEC_CODE}"
+            cat /tmp/atomic_attempt.out >> /tmp/recovery_service_exec.out
+            printf '%s\n' "$(grep -E '^(P1_RUN8_|expected_sha_prefix|baked_sha_prefix|source_sha_prefix|probe_script_present)=' /tmp/atomic_attempt.out || true)"
+            if grep -q 'P1_RUN8_PYTHON_BOOTSTRAP_STARTED=true' /tmp/atomic_attempt.out; then
+              BOOTSTRAP_STARTED=true
+              echo "P1_RUN8_PYTHON_BOOTSTRAP_STARTED=true"
+              echo "atomic_recovery_retry_after_bootstrap=false"
+              break
+            fi
+            if grep -q 'P1_RUN8_EXEC_POD_NOT_CURRENT=true' /tmp/atomic_attempt.out; then
+              echo "P1_RUN8_EXEC_POD_NOT_CURRENT=true"
+              echo "stale_pod_pre_bootstrap_retry_allowed=true"
+              sleep "$RETRY_INTERVAL"
+              attempt=$((attempt + 1))
+              continue
+            fi
+            echo "pre_bootstrap_non_stale_failure=true"
+            break
           done
-          echo "remote_result_channel=zeabur_service_file_download_unique_path"
-          if [ "$FOUND" != true ] || ! p1_reject_empty_json artifacts/bybit_demo_p1/p1_run8_accounting_recovery_evidence.json; then
-            rm -f artifacts/bybit_demo_p1/p1_run8_accounting_recovery_evidence.json
-            ENCODED_BOOTSTRAP=$(jq -rn --arg value "$BOOTSTRAP_PATH" '$value|@uri')
-            curl --silent --show-error --output artifacts/bybit_demo_p1/p1_run8_bootstrap_failure.json \
-              --write-out '%{http_code}' -H "Authorization: Bearer $ZEABUR_TOKEN" \
-              "https://api.zeabur.com/projects/${ZEABUR_PROJECT_ID}/services/${SERVICE_ID}/files?path=${ENCODED_BOOTSTRAP}&environment=${ZEABUR_ENV_ID}" || true
-            echo "authoritative_evidence_missing=true"
-            test -s artifacts/bybit_demo_p1/p1_run8_bootstrap_failure.json
-            python tools/ci/p1_parse_run8_recovery_json.py --bootstrap < artifacts/bybit_demo_p1/p1_run8_bootstrap_failure.json
+          echo "bootstrap_started=${BOOTSTRAP_STARTED}"
+          echo "service_exec_output_bytes=$(wc -c </tmp/recovery_service_exec.out)"
+          python tools/ci/p1_parse_run8_stdout.py < /tmp/recovery_service_exec.out || true
+          set +e
+          python tools/ci/p1_extract_run8_authoritative_stdout.py \
+            --input /tmp/recovery_service_exec.out \
+            --out artifacts/bybit_demo_p1/p1_run8_accounting_recovery_evidence.json
+          AUTH_CODE=$?
+          set -e
+          echo "authoritative_stdout_extractor_exit=${AUTH_CODE}"
+          ENCODED_PATH=$(jq -rn --arg value "$EVIDENCE_PATH" '$value|@uri')
+          rm -f artifacts/bybit_demo_p1/p1_run8_file_channel_copy.json
+          HTTP_CODE=$(curl --silent --show-error --output artifacts/bybit_demo_p1/p1_run8_file_channel_copy.json \
+            --write-out '%{http_code}' -H "Authorization: Bearer $ZEABUR_TOKEN" \
+            "https://api.zeabur.com/projects/${ZEABUR_PROJECT_ID}/services/${SERVICE_ID}/files?path=${ENCODED_PATH}&environment=${ZEABUR_ENV_ID}" || true)
+          BYTES=$(wc -c < artifacts/bybit_demo_p1/p1_run8_file_channel_copy.json 2>/dev/null || echo 0)
+          echo "file_channel_http_status=${HTTP_CODE} file_channel_bytes=${BYTES}"
+          if [ ! -s artifacts/bybit_demo_p1/p1_run8_file_channel_copy.json ]; then
+            rm -f artifacts/bybit_demo_p1/p1_run8_file_channel_copy.json
+          elif p1_reject_empty_json artifacts/bybit_demo_p1/p1_run8_file_channel_copy.json; then
+            echo "file_channel_copy_present=true"
+          fi
+          ENCODED_BOOTSTRAP=$(jq -rn --arg value "$BOOTSTRAP_PATH" '$value|@uri')
+          curl --silent --show-error --output artifacts/bybit_demo_p1/p1_run8_bootstrap_failure.json \
+            --write-out '%{http_code}' -H "Authorization: Bearer $ZEABUR_TOKEN" \
+            "https://api.zeabur.com/projects/${ZEABUR_PROJECT_ID}/services/${SERVICE_ID}/files?path=${ENCODED_BOOTSTRAP}&environment=${ZEABUR_ENV_ID}" || true
+          if [ -s artifacts/bybit_demo_p1/p1_run8_bootstrap_failure.json ]; then
+            python tools/ci/p1_parse_run8_recovery_json.py --bootstrap < artifacts/bybit_demo_p1/p1_run8_bootstrap_failure.json || true
+          else
+            rm -f artifacts/bybit_demo_p1/p1_run8_bootstrap_failure.json
+          fi
+          echo "remote_result_channel=atomic_service_exec_stdout"
+          if [ "$BOOTSTRAP_STARTED" != true ]; then
+            echo "P1_RUN8_RECOVERY_NOT_STARTED=true"
+            echo "BYBIT_DEMO_SINGLE_TRADE_E2E_PASS=HOLD"
             exit 1
           fi
-          set +e
-          python tools/ci/p1_parse_run8_recovery_json.py < artifacts/bybit_demo_p1/p1_run8_accounting_recovery_evidence.json
-          PARSE_CODE=$?
-          set -e
-          echo "json_evidence_detected=$([ "$PARSE_CODE" != "2" ] && echo true || echo false)"
-          exit "$PARSE_CODE"
+          if [ "$AUTH_CODE" = 0 ]; then
+            echo "authoritative_stdout_control=PASS"
+            exit 0
+          fi
+          echo "authoritative_stdout_control=HOLD"
+          exit 1
 
       - name: Upload sanitized recovery evidence
         if: always()

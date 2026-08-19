@@ -103,9 +103,9 @@ def test_workflow_order_converges_before_readiness_and_recovery():
     converge = source.index("Wait for current-image rollout convergence")
     ready = source.index("Require final validation runtime readiness")
     transport = source.index("Prove service-exec and file-download share the current filesystem")
-    identity = source.index("Probe baked container code identity")
     recovery = source.index("Perform read-only exchange and ledger recovery")
-    assert deploy < converge < ready < transport < identity < recovery
+    assert deploy < converge < ready < transport < recovery
+    assert "Probe baked container code identity" not in source
     assert "P1_RUN8_DEPLOYMENT_CONVERGED=true" in source
     assert "ROLLOUT_NOT_CONVERGED_YET" in source
     assert source.index("P1_RUN8_DEPLOYMENT_CONVERGED=true") < source.index("P1_VALIDATION_SERVICE_RUNTIME_READY=true")
