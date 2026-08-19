@@ -53,6 +53,7 @@ jobs:
             tests/test_p1_validation_runtime.py \
             tests/test_p1_run8_predispatch_static.py \
             tests/test_p1_run8_posix_identity_probe.py \
+            tests/test_p1_run8_rollout_convergence.py \
             -q --tb=line
       - uses: actions/setup-node@v4
         with:
@@ -158,6 +159,46 @@ jobs:
           PY
           (cd "$CTX" && zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json) >/tmp/deploy.out 2>&1
           echo "recovery_deploy_pass=true"
+
+      - name: Wait for current-image rollout convergence
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          EXPECTED="${GITHUB_SHA}"
+          MAX_ATTEMPTS=36
+          RETRY_INTERVAL=5
+          STREAK_NEEDED=3
+          STREAK_GAP=2
+          streak=0
+          attempt=1
+          while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
+            set +e
+            OUT=$(zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+              /bin/sh -lc "EXPECTED='$EXPECTED'; APP_ROOT=/app; BAKED=''; SOURCE=''; SCRIPT_PRESENT=false; if [ -f /app/DEPLOYMENT_COMMIT ]; then BAKED=\$(tr -d '\\r\\n' < /app/DEPLOYMENT_COMMIT); fi; if [ -f /app/SOURCE_COMMIT ]; then SOURCE=\$(tr -d '\\r\\n' < /app/SOURCE_COMMIT); fi; if [ -f /app/p1_run8_baked_identity_probe.sh ]; then SCRIPT_PRESENT=true; fi; echo expected_sha_prefix=\$(printf '%s' \"\$EXPECTED\" | cut -c1-12); echo baked_sha_prefix=\$(printf '%s' \"\$BAKED\" | cut -c1-12); echo source_sha_prefix=\$(printf '%s' \"\$SOURCE\" | cut -c1-12); echo probe_script_present=\$SCRIPT_PRESENT; test -n \"\$EXPECTED\"; test -n \"\$BAKED\"; test -n \"\$SOURCE\"; test \"\$BAKED\" = \"\$EXPECTED\"; test \"\$SOURCE\" = \"\$EXPECTED\"; test \"\$BAKED\" = \"\$SOURCE\"; test \"\$SCRIPT_PRESENT\" = true")
+            CODE=$?
+            set -e
+            echo "attempt=${attempt}"
+            printf '%s\n' "$OUT" | grep -E '^(expected_sha_prefix|baked_sha_prefix|source_sha_prefix|probe_script_present)=' || true
+            if [ "$CODE" = 0 ]; then
+              streak=$((streak + 1))
+              echo "current_image_streak=${streak}"
+              if [ "$streak" -ge "$STREAK_NEEDED" ]; then
+                echo "P1_RUN8_DEPLOYMENT_CONVERGED=true"
+                exit 0
+              fi
+              sleep "$STREAK_GAP"
+            else
+              streak=0
+              echo "ROLLOUT_NOT_CONVERGED_YET"
+              sleep "$RETRY_INTERVAL"
+            fi
+            attempt=$((attempt + 1))
+          done
+          echo "P1_RUN8_DEPLOYMENT_CONVERGED=false"
+          exit 1
 
       - name: Require final validation runtime readiness
         env:
