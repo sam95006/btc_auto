@@ -24,8 +24,10 @@ from backend.nexus_demo_execution.order_reconciliation import BybitDemoReconcile
 from backend.nexus_demo_execution.safety_gate import DemoExecutionSafetyGate
 from backend.nexus_demo_execution.session_limits import FIXED_LEVERAGE, MARGIN_PER_TRADE_CAP
 from backend.nexus_demo_execution.p1_exchange_accounting import (
+    ClosedAtError,
     aggregate_executions,
     bounded_window_ms,
+    closed_at_from_closed_pnl_row,
     list_executions_for_order,
     poll_exact_closed_pnl,
 )
@@ -733,6 +735,12 @@ class P1QualificationRunner:
             has_exchange_fill=bool(entry_fills and close_fills and closed_pnl is not None),
         )
         exchange_realized = provenance.get("pnl_provenance") == "EXCHANGE_REALIZED_PNL" and closed_pnl is not None
+        closed_at_value = None
+        if close_pnl_row:
+            try:
+                closed_at_value, _closed_at_source, _closed_at_ms = closed_at_from_closed_pnl_row(close_pnl_row)
+            except ClosedAtError:
+                closed_at_value = None
         before = _d(wallet_before.get("wallet_balance") or wallet_before.get("coin_balance"))
         after = _d(wallet_after.get("wallet_balance") or wallet_after.get("coin_balance"))
         record = build_lifecycle_accounting_record(
@@ -758,7 +766,7 @@ class P1QualificationRunner:
             "fees": _full(fee_total),
             "realized_demo_pnl": _full(_d(closed_pnl)) if closed_pnl is not None else None,
             "wallet_delta": _full(after - before),
-            "closed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "closed_at": closed_at_value,
             "pnl_provenance": provenance.get("pnl_provenance"),
             "exchange_realized": exchange_realized,
             "accounting_status": record.get("accounting_status"),

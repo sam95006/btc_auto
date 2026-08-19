@@ -14,6 +14,7 @@ from decimal import Decimal
 from typing import Any
 
 from backend.nexus_persistence_pg.pool import PostgresPool
+from backend.nexus_demo_execution.p1_exchange_accounting import coerce_closed_at_for_timestamptz
 
 
 FINAL_STATES = frozenset({"CLOSED", "CANCELLED", "REJECTED"})
@@ -281,6 +282,7 @@ class DurableOrderLedger:
         accounting: dict[str, Any] | None = None,
     ) -> None:
         """Persist exchange-sourced accounting without inventing a state transition."""
+        closed_at = coerce_closed_at_for_timestamptz(closed_at)
         with self.pool.connection() as conn:
             with conn.transaction():
                 with conn.cursor() as cur:

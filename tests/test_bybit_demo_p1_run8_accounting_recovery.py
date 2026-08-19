@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 
 import pytest
 
@@ -51,6 +52,10 @@ class FakeLedger:
         self.transitions.append((order_intent_id, state))
 
     def record_accounting(self, order_intent_id: str, **kwargs) -> None:
+        from backend.nexus_demo_execution.p1_exchange_accounting import coerce_closed_at_for_timestamptz
+
+        if "closed_at" in kwargs:
+            kwargs["closed_at"] = coerce_closed_at_for_timestamptz(kwargs.get("closed_at"))
         self.accounting_writes += 1
         record = self.intents[order_intent_id]
         for key, value in kwargs.items():
@@ -410,3 +415,61 @@ def test_bootstrap_exception_writes_nonempty_sanitized_evidence(tmp_path, monkey
     assert "postgres://" not in json.dumps(fail)
     assert fail["create_order_calls"] == 0
     assert fail["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] == "HOLD"
+
+
+def test_run8_fixture_updated_time_reaches_ledger_finalization_with_typed_closed_at():
+    ledger = FakeLedger()
+    client = FakeClient()
+    _seed_run8(ledger)
+    _seed_exchange(client)
+    evidence = _run(ledger, client)
+    assert evidence["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] == "PASS"
+    assert evidence["P1_DURABLE_LEDGER_LIFECYCLE_PASS"] is True
+    assert evidence["closed_at_source"] == "BYBIT_CLOSED_PNL_UPDATED_TIME"
+    assert evidence["closed_at_utc"].startswith("2024-03-09T16:01:00")
+    stored = ledger.intents["p1ent_run8"]["closed_at"]
+    assert isinstance(stored, datetime)
+    assert stored.tzinfo is not None
+    assert stored.year == 2024
+    assert stored.utcoffset() == timezone.utc.utcoffset(stored)
+    assert evidence["create_order_calls"] == 0
+    assert evidence["exchange_write_call_count"] == 0
+    assert ledger.accounting_writes == 1
+
+
+def test_invalid_closed_at_holds_without_ledger_accounting_write():
+    ledger = FakeLedger()
+    client = FakeClient()
+    _seed_run8(ledger)
+    _seed_exchange(client)
+    client.closed_pnl_pages[0][-1]["updatedTime"] = "9999999999999999999"
+    client.closed_pnl_pages[0][-1]["createdTime"] = "not-a-time"
+    evidence = _run(ledger, client)
+    assert evidence["BYBIT_DEMO_SINGLE_TRADE_E2E_PASS"] == "HOLD"
+    assert evidence["error"] == "closed_at_invalid"
+    assert evidence["recovery_stage"] == "LEDGER_FINALIZATION"
+    assert ledger.accounting_writes == 0
+    assert evidence["create_order_calls"] == 0
+
+
+def test_proven_identity_is_not_overwritten_by_base_evidence():
+    ledger = FakeLedger()
+    client = FakeClient()
+    _seed_run8(ledger)
+    _seed_exchange(client)
+    current = "0f266ed878f1d8c1acdc0cd36543002c5fb31f5b"
+    evidence = recover_run8_accounting(
+        client=client,
+        ledger=ledger,
+        proven_identity={
+            "runtime_code_identity_pass": True,
+            "expected_sha_prefix": current[:12],
+            "baked_sha_prefix": current[:12],
+            "source_sha_prefix": current[:12],
+        },
+    )
+    assert evidence["runtime_code_identity_pass"] is True
+    assert evidence["expected_sha_prefix"] == current[:12]
+    assert evidence["baked_sha_prefix"] == current[:12]
+    assert evidence["source_sha_prefix"] == current[:12]
+    assert evidence["create_order_calls"] == 0

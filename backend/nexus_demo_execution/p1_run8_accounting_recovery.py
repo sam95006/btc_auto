@@ -17,8 +17,10 @@ from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
 from backend.nexus_demo_execution.durable_order_ledger import DurableOrderLedger
 from backend.nexus_demo_execution.http_demo_reader import redact_secrets
 from backend.nexus_demo_execution.p1_exchange_accounting import (
+    ClosedAtError,
     aggregate_executions,
     bounded_window_ms,
+    closed_at_from_closed_pnl_row,
     is_exchange_backed_provenance,
     is_provisional_provenance,
     list_executions_for_order,
@@ -294,6 +296,10 @@ def _base_evidence() -> dict[str, Any]:
         "expected_sha_prefix": "",
         "baked_sha_prefix": "",
         "source_sha_prefix": "",
+        "runtime_code_identity_pass": False,
+        "expected_sha_prefix": "",
+        "baked_sha_prefix": "",
+        "source_sha_prefix": "",
         "candidate_count": 0,
         "entry_read_pass": False,
         "close_read_pass": False,
@@ -319,6 +325,33 @@ def _close_intent(ledger: Any, intent_id: str, current_state: str) -> None:
         ledger.transition(intent_id, "CLOSED", source="p1_run8_accounting_recovery")
 
 
+def _merge_proven_identity(evidence: dict[str, Any], proven: dict[str, Any] | None) -> dict[str, Any]:
+    if not proven:
+        return evidence
+    passed = bool(
+        proven.get("runtime_code_identity_pass")
+        or proven.get("runtime_code_identity_pass")
+        or proven.get("code_identity_pass")
+    )
+    if passed:
+        evidence["runtime_code_identity_pass"] = True
+        evidence["runtime_code_identity_pass"] = True
+        evidence["code_identity_pass"] = True
+    expected = proven.get("expected_sha_prefix") or proven.get("expected_sha_prefix") or ""
+    baked = proven.get("baked_sha_prefix") or proven.get("baked_sha_prefix") or ""
+    source = proven.get("source_sha_prefix") or proven.get("source_sha_prefix") or ""
+    if expected:
+        evidence["expected_sha_prefix"] = expected
+        evidence["expected_sha_prefix"] = expected
+    if baked:
+        evidence["baked_sha_prefix"] = baked
+        evidence["baked_sha_prefix"] = baked
+    if source:
+        evidence["source_sha_prefix"] = source
+        evidence["source_sha_prefix"] = source
+    return evidence
+
+
 def recover_run8_accounting(
     *,
     client: Any,
@@ -327,8 +360,9 @@ def recover_run8_accounting(
     time_fn: Callable[[], float] = time.time,
     poll_interval_sec: float = POLL_INTERVAL_SEC,
     poll_timeout_sec: float = POLL_TIMEOUT_SEC,
+    proven_identity: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    evidence = _base_evidence()
+    evidence = _merge_proven_identity(_base_evidence(), proven_identity)
     guarded = client if isinstance(client, ReadOnlyExchangeClient) else ReadOnlyExchangeClient(client)
 
     def _hold(reason: str, *, stage: str | None = None) -> dict[str, Any]:
@@ -472,12 +506,10 @@ def recover_run8_accounting(
         if close_fee in (None, ""):
             close_fee = close_fills["fee"]
         realized = pnl_row.get("closedPnl")
-        closed_at = (
-            pnl_row.get("updatedTime")
-            or pnl_row.get("updatedTime")
-            or pnl_row.get("createdTime")
-            or pnl_row.get("createdTime")
-        )
+        try:
+            closed_at_dt, closed_at_source, closed_at_ms = closed_at_from_closed_pnl_row(pnl_row)
+        except ClosedAtError:
+            return _hold("closed_at_invalid", stage="LEDGER_FINALIZATION")
         recovered = {
             "actual_entry_price": _full(_d(actual_entry)) if actual_entry not in (None, "") else None,
             "actual_exit_price": _full(_d(actual_exit)) if actual_exit not in (None, "") else None,
@@ -485,7 +517,10 @@ def recover_run8_accounting(
             "open_fee": _full(_d(open_fee)),
             "close_fee": _full(_d(close_fee)),
             "realized_demo_pnl": _full(_d(realized)) if realized not in (None, "") else None,
-            "closed_at": str(closed_at) if closed_at not in (None, "") else None,
+            "closed_at": closed_at_dt,
+            "closed_at_utc": closed_at_dt.isoformat(),
+            "closed_at_source": closed_at_source,
+            "closed_at_exchange_ms": closed_at_ms,
             "pnl_provenance": PNL_PROVENANCE,
         }
         if recovered["realized_demo_pnl"] is None:
@@ -500,6 +535,8 @@ def recover_run8_accounting(
                 "close_fee": recovered["close_fee"],
                 "realized_demo_pnl": recovered["realized_demo_pnl"],
                 "pnl_provenance": PNL_PROVENANCE,
+                "closed_at_utc": recovered["closed_at_utc"],
+                "closed_at_source": recovered["closed_at_source"],
             }
         )
 
@@ -516,23 +553,29 @@ def recover_run8_accounting(
             and _num_eq(latest_entry.get("realized_demo_pnl"), recovered["realized_demo_pnl"])
         )
         if not already_final:
-            ledger.record_accounting(
-                str(entry.get("order_intent_id")),
-                actual_entry_price=recovered["actual_entry_price"],
-                actual_exit_price=recovered["actual_exit_price"],
-                fees=_full(_d(recovered["open_fee"]) + _d(recovered["close_fee"])),
-                realized_demo_pnl=recovered["realized_demo_pnl"],
-                closed_at=recovered["closed_at"],
-                pnl_provenance=PNL_PROVENANCE,
-                accounting={
-                    "actual_qty": recovered["actual_qty"],
-                    "open_fee": recovered["open_fee"],
-                    "close_fee": recovered["close_fee"],
-                    "pnl_provenance": PNL_PROVENANCE,
-                    "close_bybit_order_id_prefix": _prefix(close_order_id),
-                    "exchange_realized": True,
-                },
-            )
+            try:
+                ledger.record_accounting(
+                    str(entry.get("order_intent_id")),
+                    actual_entry_price=recovered["actual_entry_price"],
+                    actual_exit_price=recovered["actual_exit_price"],
+                    fees=_full(_d(recovered["open_fee"]) + _d(recovered["close_fee"])),
+                    realized_demo_pnl=recovered["realized_demo_pnl"],
+                    closed_at=recovered["closed_at"],
+                    pnl_provenance=PNL_PROVENANCE,
+                    accounting={
+                        "actual_qty": recovered["actual_qty"],
+                        "open_fee": recovered["open_fee"],
+                        "close_fee": recovered["close_fee"],
+                        "pnl_provenance": PNL_PROVENANCE,
+                        "close_bybit_order_id_prefix": _prefix(close_order_id),
+                        "exchange_realized": True,
+                        "closed_at_exchange_ms": recovered["closed_at_exchange_ms"],
+                        "closed_at_source": recovered["closed_at_source"],
+                        "closed_at_utc": recovered["closed_at_utc"],
+                    },
+                )
+            except ClosedAtError:
+                return _hold("closed_at_invalid", stage="LEDGER_FINALIZATION")
             _close_intent(ledger, str(entry.get("order_intent_id")), str(latest_entry.get("state") or ""))
             close_state = str((ledger.get_intent(str(close.get("order_intent_id"))) or close).get("state") or "")
             _close_intent(ledger, str(close.get("order_intent_id")), close_state)
@@ -713,7 +756,18 @@ def run_recovery_with_probes() -> dict[str, Any]:
             else:
                 evidence["recovery_stage"] = "BYBIT_CLIENT_CONSTRUCT"
                 client = ReadOnlyExchangeClient(_DemoWriteClient())
-                result = recover_run8_accounting(client=client, ledger=ledger)
+                proven = {
+                    "runtime_code_identity_pass": bool(
+                        evidence.get("runtime_code_identity_pass") or evidence.get("runtime_code_identity_pass")
+                    ),
+                    "code_identity_pass": bool(evidence.get("code_identity_pass")),
+                    "expected_sha_prefix": evidence.get("expected_sha_prefix") or evidence.get("expected_sha_prefix") or "",
+                    "baked_sha_prefix": evidence.get("baked_sha_prefix") or evidence.get("baked_sha_prefix") or "",
+                    "source_sha_prefix": evidence.get("source_sha_prefix") or evidence.get("source_sha_prefix") or "",
+                }
+                result = recover_run8_accounting(client=client, ledger=ledger, proven_identity=proven)
+                result = _merge_proven_identity(result, proven)
+                result = _merge_proven_identity(result, evidence)
     except Exception as exc:  # noqa: BLE001
         evidence["exception_type"] = exception_type_name(exc)
         evidence["error"] = (
