@@ -298,7 +298,8 @@ def test_workflow_sets_deployment_sha_identity():
     assert "$CTX/SOURCE_COMMIT" in source
     assert "COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT" in source
     assert "COPY SOURCE_COMMIT /app/SOURCE_COMMIT" in source
-    assert "P1_RUN8_BAKED_IDENTITY_PASS=true" in source
+    assert "p1_run8_baked_identity_probe.sh" in source
+    assert "P1_RUN8_BAKED_IDENTITY_PASS=true" in Path("tools/ci/p1_run8_baked_identity_probe.sh").read_text(encoding="utf-8")
     assert 'set_var NEXUS_EXPECTED_SHA "$GITHUB_SHA"' in source
     assert "p1_parse_run8_recovery_json.py --bootstrap" in source
     assert "parse_recovery_evidence" not in source

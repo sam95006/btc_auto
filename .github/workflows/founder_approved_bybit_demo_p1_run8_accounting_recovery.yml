@@ -52,6 +52,7 @@ jobs:
             tests/test_bybit_demo_p1_run8_accounting_recovery.py \
             tests/test_p1_validation_runtime.py \
             tests/test_p1_run8_predispatch_static.py \
+            tests/test_p1_run8_posix_identity_probe.py \
             -q --tb=line
       - uses: actions/setup-node@v4
         with:
@@ -133,8 +134,10 @@ jobs:
           cp deploy/zeabur_bybit_demo_validation/validation_health_server.py "$CTX/validation_health_server.py"
           printf '%s\n' "$GITHUB_SHA" > "$CTX/DEPLOYMENT_COMMIT"
           printf '%s\n' "$GITHUB_SHA" > "$CTX/SOURCE_COMMIT"
+          cp tools/ci/p1_run8_baked_identity_probe.sh "$CTX/p1_run8_baked_identity_probe.sh"
           test -s "$CTX/DEPLOYMENT_COMMIT"
           test -s "$CTX/SOURCE_COMMIT"
+          test -s "$CTX/p1_run8_baked_identity_probe.sh"
           cat > "$CTX/Dockerfile" <<'DOCKER'
           FROM python:3.11-slim-bookworm
           ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 BYBIT_DEMO=true MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_WEB_ONLY=true NEXUS_EMBEDDED_WORKER=false NEXUS_DATA_DIR=/tmp/nexus_demo_validation PORT=8080
@@ -144,7 +147,8 @@ jobs:
           COPY . .
           COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT
           COPY SOURCE_COMMIT /app/SOURCE_COMMIT
-          RUN chmod +x entrypoint.sh
+          COPY p1_run8_baked_identity_probe.sh /app/p1_run8_baked_identity_probe.sh
+          RUN chmod +x entrypoint.sh p1_run8_baked_identity_probe.sh
           CMD ["/bin/sh", "./entrypoint.sh"]
           DOCKER
           python - <<'PY'
@@ -211,9 +215,8 @@ jobs:
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          EXPECTED="${GITHUB_SHA}"
           zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
-            /bin/sh -lc "set -e; BAKED=\$(tr -d '\\r\\n' < /app/DEPLOYMENT_COMMIT); SOURCE=\$(tr -d '\\r\\n' < /app/SOURCE_COMMIT); echo expected_sha_prefix=${EXPECTED:0:12}; echo baked_sha_prefix=\${BAKED:0:12}; echo source_sha_prefix=\${SOURCE:0:12}; test -n \"\$BAKED\"; test -n \"\$SOURCE\"; test \"\${BAKED:0:12}\" = \"${EXPECTED:0:12}\"; test \"\${SOURCE:0:12}\" = \"${EXPECTED:0:12}\"; echo P1_RUN8_BAKED_IDENTITY_PASS=true"
+            /bin/sh -lc "export EXPECTED='${GITHUB_SHA}'; export APP_ROOT=/app; /bin/sh /app/p1_run8_baked_identity_probe.sh"
 
       - name: Perform read-only exchange and ledger recovery
         env:

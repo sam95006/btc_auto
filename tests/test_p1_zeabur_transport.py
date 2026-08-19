@@ -205,7 +205,8 @@ def test_run8_workflow_uses_bootstrap_and_run8_parser():
     assert 'set_var NEXUS_EXPECTED_SHA "$GITHUB_SHA"' in source
     assert "COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT" in source
     assert "COPY SOURCE_COMMIT /app/SOURCE_COMMIT" in source
-    assert "P1_RUN8_BAKED_IDENTITY_PASS=true" in source
+    assert "p1_run8_baked_identity_probe.sh" in source
+    assert "P1_RUN8_BAKED_IDENTITY_PASS=true" in Path("tools/ci/p1_run8_baked_identity_probe.sh").read_text(encoding="utf-8")
 
 
 def test_recovery_module_contains_no_exchange_write_methods():

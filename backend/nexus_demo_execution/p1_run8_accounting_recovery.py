@@ -588,13 +588,24 @@ def _write_evidence(payload: dict[str, Any]) -> None:
         return
 
 
+def _normalize_sha(value: str) -> str:
+    return "".join(ch for ch in (value or "").strip().lower() if ch in "0123456789abcdef")
+
+
+def _is_full_sha(value: str) -> bool:
+    return len(value) >= 40 and all(ch in "0123456789abcdef" for ch in value)
+
+
 def _sha_prefix(value: str, length: int = IDENTITY_PREFIX_LEN) -> str:
-    text = "".join(ch for ch in (value or "").strip() if ch.isalnum())
-    return text[:length]
+    return _normalize_sha(value)[:length]
 
 
 def evaluate_run8_baked_code_identity(*, expected_sha: str | None = None) -> dict[str, Any]:
-    """Authority is baked /app commit files, not workflow-injected env labels."""
+    """Authority is baked /app commit files, not workflow-injected env labels.
+
+    When full SHAs exist, pass requires expected == baked == source (full match).
+    12-char prefixes are evidence/display only.
+    """
     expected = (
         expected_sha
         or os.environ.get("NEXUS_EXPECTED_SHA")
@@ -603,24 +614,27 @@ def evaluate_run8_baked_code_identity(*, expected_sha: str | None = None) -> dic
     ).strip()
     baked, baked_origin = read_container_baked_commit()
     source, source_origin = read_container_source_commit()
-    expected_prefix = _sha_prefix(expected)
-    baked_prefix = _sha_prefix(baked)
-    source_prefix = _sha_prefix(source)
+    expected_full = _normalize_sha(expected)
+    baked_full = _normalize_sha(baked)
+    source_full = _normalize_sha(source)
+    expected_prefix = expected_full[:IDENTITY_PREFIX_LEN]
+    baked_prefix = baked_full[:IDENTITY_PREFIX_LEN]
+    source_prefix = source_full[:IDENTITY_PREFIX_LEN]
     baked_file_present = "DEPLOYMENT_COMMIT" in str(baked_origin)
     source_file_present = "SOURCE_COMMIT" in str(source_origin)
-    if not baked_file_present or not baked_prefix or len(baked_prefix) < IDENTITY_PREFIX_LEN:
+    if not baked_file_present or not baked_full:
         reason = "baked_commit_missing"
         passed = False
-    elif not source_file_present or not source_prefix or len(source_prefix) < IDENTITY_PREFIX_LEN:
+    elif not source_file_present or not source_full:
         reason = "source_commit_missing"
         passed = False
-    elif baked_prefix != source_prefix:
+    elif not _is_full_sha(expected_full) or not _is_full_sha(baked_full) or not _is_full_sha(source_full):
+        reason = "malformed_sha"
+        passed = False
+    elif baked_full != source_full:
         reason = "baked_source_mismatch"
         passed = False
-    elif not expected_prefix or len(expected_prefix) < IDENTITY_PREFIX_LEN:
-        reason = "expected_sha_missing"
-        passed = False
-    elif baked_prefix != expected_prefix or source_prefix != expected_prefix:
+    elif baked_full != expected_full or source_full != expected_full:
         reason = "baked_expected_mismatch"
         passed = False
     else:
