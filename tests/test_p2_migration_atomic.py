@@ -23,8 +23,9 @@ from tools.ci.p2_migration_atomic import (
     write_authoritative_artifact,
 )
 
-CURRENT = "708c16ffbead9993eb5e51a8645ab8f2d720b177"
-OLD = "3542d3a51b6ca7f046727c6d9ad8a3d80c8dee93"
+# Fixture-only identities — not bound to repository HEAD / GITHUB_SHA.
+FIXTURE_CURRENT_SHA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+FIXTURE_OLD_SHA = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 WORKFLOW = Path(".github/workflows/founder_approved_staging_postgres_p2_migration.yml")
 SAFE = dict(
     postgres_url="postgresql://ledger",
@@ -67,7 +68,11 @@ def _current_pass_stdout(*, applied: bool = True) -> str:
 
 def test_stale_pod_before_python_allows_retry():
     gate = current_pod_shell_gates_pass(
-        expected=CURRENT, baked=OLD, source=OLD, helper_present=True, **SAFE
+        expected=FIXTURE_CURRENT_SHA,
+        baked=FIXTURE_OLD_SHA,
+        source=FIXTURE_OLD_SHA,
+        helper_present=True,
+        **SAFE,
     )
     assert gate["python_may_start"] is False
     assert gate["stale_pod"] is True
@@ -78,7 +83,11 @@ def test_stale_pod_before_python_allows_retry():
 
 def test_current_pod_starts_python_once_in_same_script():
     gate = current_pod_shell_gates_pass(
-        expected=CURRENT, baked=CURRENT, source=CURRENT, helper_present=True, **SAFE
+        expected=FIXTURE_CURRENT_SHA,
+        baked=FIXTURE_CURRENT_SHA,
+        source=FIXTURE_CURRENT_SHA,
+        helper_present=True,
+        **SAFE,
     )
     assert gate["python_may_start"] is True
     assert MIGRATION_HELPER_PATH.replace("/app/", "$APP_ROOT/") in ATOMIC_REMOTE_SH
@@ -88,7 +97,11 @@ def test_current_pod_starts_python_once_in_same_script():
 
 def test_mismatched_baked_sha_fails_closed():
     gate = current_pod_shell_gates_pass(
-        expected=CURRENT, baked=OLD, source=CURRENT, helper_present=True, **SAFE
+        expected=FIXTURE_CURRENT_SHA,
+        baked=FIXTURE_OLD_SHA,
+        source=FIXTURE_CURRENT_SHA,
+        helper_present=True,
+        **SAFE,
     )
     assert gate["current_pod"] is False
     assert gate["python_may_start"] is False
@@ -96,7 +109,11 @@ def test_mismatched_baked_sha_fails_closed():
 
 def test_helper_missing_on_current_sha_fails_closed():
     gate = current_pod_shell_gates_pass(
-        expected=CURRENT, baked=CURRENT, source=CURRENT, helper_present=False, **SAFE
+        expected=FIXTURE_CURRENT_SHA,
+        baked=FIXTURE_CURRENT_SHA,
+        source=FIXTURE_CURRENT_SHA,
+        helper_present=False,
+        **SAFE,
     )
     assert gate["python_may_start"] is False
     assert gate["stale_pod"] is True
@@ -157,9 +174,9 @@ def test_file_channel_cannot_override_missing_stdout():
 
 def test_prebootstrap_import_failure_is_sanitized(tmp_path: Path):
     raw = (
-        "expected_sha_prefix=708c16ffbead\n"
-        "baked_sha_prefix=708c16ffbead\n"
-        "source_sha_prefix=708c16ffbead\n"
+        f"expected_sha_prefix={FIXTURE_CURRENT_SHA[:12]}\n"
+        f"baked_sha_prefix={FIXTURE_CURRENT_SHA[:12]}\n"
+        f"source_sha_prefix={FIXTURE_CURRENT_SHA[:12]}\n"
         "helper_present=true\n"
         + json.dumps(
             {
@@ -198,13 +215,14 @@ def test_workflow_uses_atomic_same_exec_and_baked_sha():
     assert "python -m tools.ci.p2_staging_migration_0007" in source
 
 
-def test_local_atomic_script_runs_stale_then_current(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_local_atomic_script_runs_stale_then_current(tmp_path: Path):
     if os.name == "nt" and not shutil.which("sh"):
         pytest.skip("posix sh unavailable")
     app = tmp_path / "app"
     app.mkdir()
-    (app / "DEPLOYMENT_COMMIT").write_text(CURRENT + "\n", encoding="ascii")
-    (app / "SOURCE_COMMIT").write_text(CURRENT + "\n", encoding="ascii")
+    # First invocation: stale image identity (baked != expected).
+    (app / "DEPLOYMENT_COMMIT").write_text(FIXTURE_OLD_SHA + "\n", encoding="ascii")
+    (app / "SOURCE_COMMIT").write_text(FIXTURE_OLD_SHA + "\n", encoding="ascii")
     helper_dir = app / "tools" / "ci"
     helper_dir.mkdir(parents=True)
     helper_dir.joinpath("p2_staging_migration_0007.py").write_text("X=1\n", encoding="utf-8")
@@ -213,7 +231,45 @@ def test_local_atomic_script_runs_stale_then_current(tmp_path: Path, monkeypatch
     env = os.environ.copy()
     env.update(
         {
-            "EXPECTED": CURRENT,
+            "EXPECTED": FIXTURE_CURRENT_SHA,
+            "APP_ROOT": str(app),
+            "PYTHONPATH": str(Path(__file__).resolve().parents[1]),
+            "NEXUS_POSTGRES_URL": "postgresql://test",
+            "MAINNET": "false",
+            "REAL_MONEY": "false",
+            "DEMO_AUTONOMOUS_ENABLED": "false",
+            "AUTONOMOUS_SEND": "false",
+            "EXCHANGE_WRITE": "false",
+        }
+    )
+    stale = subprocess.run(["sh", str(script)], capture_output=True, text=True, env=env, check=False)
+    assert STALE_POD_MARKER in stale.stdout
+    assert "P2_MIGRATION_PYTHON_STARTED=false" in stale.stdout
+    assert PYTHON_STARTED_MARKER not in stale.stdout
+    # Simulate rollout: rewrite baked identity to current image.
+    (app / "DEPLOYMENT_COMMIT").write_text(FIXTURE_CURRENT_SHA + "\n", encoding="ascii")
+    (app / "SOURCE_COMMIT").write_text(FIXTURE_CURRENT_SHA + "\n", encoding="ascii")
+    current = subprocess.run(["sh", str(script)], capture_output=True, text=True, env=env, check=False)
+    assert STALE_POD_MARKER not in current.stdout
+    assert PYTHON_STARTED_MARKER in current.stdout or "P2_MIGRATION_PREBOOTSTRAP_FAILURE" in current.stdout
+
+
+def test_local_atomic_script_current_pod_missing_dsn_is_not_stale(tmp_path: Path):
+    if os.name == "nt" and not shutil.which("sh"):
+        pytest.skip("posix sh unavailable")
+    app = tmp_path / "app"
+    app.mkdir()
+    (app / "DEPLOYMENT_COMMIT").write_text(FIXTURE_CURRENT_SHA + "\n", encoding="ascii")
+    (app / "SOURCE_COMMIT").write_text(FIXTURE_CURRENT_SHA + "\n", encoding="ascii")
+    helper_dir = app / "tools" / "ci"
+    helper_dir.mkdir(parents=True)
+    helper_dir.joinpath("p2_staging_migration_0007.py").write_text("X=1\n", encoding="utf-8")
+    script = tmp_path / "atomic.sh"
+    script.write_bytes(ATOMIC_REMOTE_SH.replace("\r\n", "\n").encode("utf-8"))
+    env = os.environ.copy()
+    env.update(
+        {
+            "EXPECTED": FIXTURE_CURRENT_SHA,
             "APP_ROOT": str(app),
             "PYTHONPATH": str(Path(__file__).resolve().parents[1]),
             "NEXUS_POSTGRES_URL": "",
@@ -224,8 +280,8 @@ def test_local_atomic_script_runs_stale_then_current(tmp_path: Path, monkeypatch
             "EXCHANGE_WRITE": "false",
         }
     )
-    stale = subprocess.run(["sh", str(script)], capture_output=True, text=True, env=env, check=False)
-    assert STALE_POD_MARKER in stale.stdout
-    env["NEXUS_POSTGRES_URL"] = "postgresql://test"
-    current = subprocess.run(["sh", str(script)], capture_output=True, text=True, env=env, check=False)
-    assert PYTHON_STARTED_MARKER in current.stdout or "P2_MIGRATION_PREBOOTSTRAP_FAILURE" in current.stdout
+    result = subprocess.run(["sh", str(script)], capture_output=True, text=True, env=env, check=False)
+    assert "P2_MIGRATION_ATOMIC_GATE_FAIL=dsn_missing" in result.stdout
+    assert "P2_MIGRATION_PYTHON_STARTED=false" in result.stdout
+    assert STALE_POD_MARKER not in result.stdout
+    assert PYTHON_STARTED_MARKER not in result.stdout
