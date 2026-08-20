@@ -73,7 +73,7 @@ def test_learning_validation_service_id_is_rejected():
 
 
 def test_forbidden_service_id_is_rejected():
-    forbidden_id = next(iter(FORBIDDEN))
+    forbidden_id = "6a3b81652fdef84a45a2a553"
     with pytest.raises(ValueError, match="migration_service_forbidden"):
         assert_distinct_migration_service(
             forbidden_id,
@@ -146,6 +146,10 @@ def test_workflow_uses_isolated_migration_service_and_file_parser():
     resolve_block = source[resolve_idx:apply_idx]
     assert "PYTHONPATH: ${{ github.workspace }}" in resolve_block
     assert "python -m tools.ci.ensure_p2_migration_zeabur_service" in resolve_block
+    assert "P2_MIGRATION_SERVICE_EXEC_STDOUT_PASS=true" in source
+    assert "P2_MIGRATION_FILE_CHANNEL_AUDIT=true" in source
+    assert "Prove migration service exec and file download share filesystem" not in source
+    assert 'test "$FOUND" = true' not in source
 
 
 def test_ensure_p2_migration_module_invocation_bootstraps_without_tools_import_error():

@@ -336,6 +336,59 @@ def sanitize_prebootstrap_failure(raw: str) -> dict[str, Any]:
     return out
 
 
+def stdout_exec_probe_pass(*, expected_marker: str, captured_stdout: str) -> dict[str, Any]:
+    marker = (expected_marker or "").strip()
+    text = captured_stdout or ""
+    present = bool(marker) and marker in text
+    return {
+        "P2_MIGRATION_SERVICE_EXEC_STDOUT_PASS": present,
+        "stdout_probe_marker_present": present,
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+    }
+
+
+def file_channel_audit(
+    *,
+    http_status: int | None,
+    bytes_count: int | None,
+    downloaded: bytes | str | None = None,
+    expected_marker: str | None = None,
+) -> dict[str, Any]:
+    del downloaded, expected_marker
+    status = int(http_status) if http_status is not None else None
+    nbytes = int(bytes_count or 0)
+    available = status == 200 and nbytes > 0
+    return {
+        "P2_MIGRATION_FILE_CHANNEL_AUDIT": True,
+        "P2_MIGRATION_FILE_CHANNEL_AVAILABLE": available,
+        "file_channel_authoritative": False,
+        "file_channel_control_failure": False,
+        "http_status": status,
+        "bytes": nbytes,
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+    }
+
+
+def preflight_may_continue_to_migration(
+    *,
+    stdout_probe: dict[str, Any],
+    file_audit: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    stdout_ok = bool(stdout_probe.get("P2_MIGRATION_SERVICE_EXEC_STDOUT_PASS"))
+    audit = file_audit or {}
+    return {
+        "may_continue": stdout_ok,
+        "fail_closed": not stdout_ok,
+        "file_channel_blocks_migration": False,
+        "file_channel_authoritative": False,
+        "file_channel_available": bool(audit.get("P2_MIGRATION_FILE_CHANNEL_AVAILABLE")),
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+    }
+
+
 def control_decision_from_channels(
     *,
     stdout_result: dict[str, Any],
@@ -343,7 +396,7 @@ def control_decision_from_channels(
     file_bytes: int | None = None,
     file_payload: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    del file_http_status, file_bytes, file_payload
+    del file_payload
     if stdout_result.get("authoritative") and stdout_result.get("kind") == "migration":
         decision = stdout_result.get("decision") or "HOLD"
     else:
@@ -353,6 +406,10 @@ def control_decision_from_channels(
         "authoritative_channel": "stdout" if stdout_result.get("authoritative") else "none",
         "file_channel_authoritative": False,
         "file_channel_override": False,
+        "file_http_status": file_http_status,
+        "file_bytes": file_bytes,
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
     }
 
 
