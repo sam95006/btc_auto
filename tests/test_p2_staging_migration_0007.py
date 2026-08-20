@@ -47,10 +47,11 @@ def test_migration_workflow_is_dispatch_only_and_disarmed() -> None:
     assert "workflow_dispatch:" in source
     assert "APPLY_NEXUS_STAGING_P2_MIGRATION_0007" in source
     assert "nexus-p2-migration-0007" in source
-    assert "ensure_p2_migration_zeabur_service.py" in source
+    assert "python -m tools.ci.ensure_p2_migration_zeabur_service" in source
+    assert "python tools/ci/ensure_p2_migration_zeabur_service.py" not in source
     assert "p2_migration_atomic.py --print-remote-script" in source
-    assert "p2_extract_migration_authoritative_stdout.py" in source
-    assert "p2_migration_parse_service_exec.py" in source
+    assert "python -m tools.ci.p2_extract_migration_authoritative_stdout" in source
+    assert "python -m tools.ci.p2_migration_parse_service_exec" in source
     assert "P2_MIGRATION_DEPLOYMENT_CONVERGED=true" in source
     assert "COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT" in source
     assert "Require migration helper imports before apply" not in source

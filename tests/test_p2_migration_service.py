@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -129,15 +130,50 @@ def test_service_exec_log_lines_are_parsed_as_data_not_python(tmp_path: Path):
 def test_workflow_uses_isolated_migration_service_and_file_parser():
     source = WORKFLOW.read_text(encoding="utf-8")
     assert 'SERVICE_NAME: nexus-p2-migration-0007' in source
-    assert "ensure_p2_migration_zeabur_service.py" in source
+    assert "python -m tools.ci.ensure_p2_migration_zeabur_service" in source
+    assert "python tools/ci/ensure_p2_migration_zeabur_service.py" not in source
     assert "ensure_demo_validation_zeabur_service.py" not in source
     assert "nexus-bybit-demo-learning-validation" not in source
-    assert "p2_migration_parse_service_exec.py" in source
+    assert "python -m tools.ci.p2_migration_parse_service_exec" in source
+    assert "python -m tools.ci.p2_extract_migration_authoritative_stdout" in source
     assert "python - <<'PY' < /tmp/p2_migration_service_exec.out" not in source
     assert "MAX_ATTEMPTS=3" in source
     assert "MAX_ATTEMPTS=36" not in source
     assert "deploy/zeabur_p2_migration_0007/entrypoint.sh" in source
     assert "/tmp/nexus_p2_migration_0007/" in source
+    resolve_idx = source.index("Resolve dedicated one-shot P2 migration 0007 service")
+    apply_idx = source.index("Apply and verify only migration 0007 through atomic same-exec")
+    resolve_block = source[resolve_idx:apply_idx]
+    assert "PYTHONPATH: ${{ github.workspace }}" in resolve_block
+    assert "python -m tools.ci.ensure_p2_migration_zeabur_service" in resolve_block
+
+
+def test_ensure_p2_migration_module_invocation_bootstraps_without_tools_import_error():
+    """Reproduce GitHub runner: repo-root cwd + module invocation, no secrets."""
+    root = Path(__file__).resolve().parents[1]
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(root)
+    for key in (
+        "ZEABUR_TOKEN",
+        "ZEABUR_PROJECT_ID",
+        "PRESET_SERVICE_ID",
+        "LEARNING_VALIDATION_SERVICE_ID",
+        "ZEABUR_DEMO_VALIDATION_SERVICE_ID",
+    ):
+        env.pop(key, None)
+    proc = subprocess.run(
+        [sys.executable, "-m", "tools.ci.ensure_p2_migration_zeabur_service"],
+        cwd=str(root),
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    combined = (proc.stdout or "") + (proc.stderr or "")
+    assert "ModuleNotFoundError: No module named 'tools'" not in combined
+    assert "No module named 'tools'" not in combined
+    assert proc.returncode == 2
+    assert "missing_ZEABUR_TOKEN_or_PROJECT_ID" in combined
 
 
 def test_migration_stdout_remains_authoritative():
