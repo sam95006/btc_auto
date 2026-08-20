@@ -209,7 +209,7 @@ def test_workflow_uses_atomic_same_exec_and_baked_sha():
     assert "python -m tools.ci.ensure_p2_migration_zeabur_service" in source
     assert "DEPLOYMENT_COMMIT" in source
     assert "SOURCE_COMMIT" in source
-    assert "COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT" in source
+    assert "build_migration_context" in source
     assert "P2_MIGRATION_DEPLOYMENT_CONVERGED=true" in source
     assert "p2_migration_atomic.py --print-remote-script" in source
     assert "python -m tools.ci.p2_extract_migration_authoritative_stdout" in source
@@ -222,6 +222,11 @@ def test_workflow_uses_atomic_same_exec_and_baked_sha():
     assert "python -m tools.ci.p2_staging_migration_0007" in source
     assert "P2_MIGRATION_SERVICE_EXEC_STDOUT_PASS=true" in source
     assert "P2_MIGRATION_FILE_CHANNEL_AUDIT=true" in source
+    assert "P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true" in source
+    from tools.ci.p2_migration_bootstrap import DOCKERFILE_BODY
+
+    assert "COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT" in DOCKERFILE_BODY
+    assert "COPY SOURCE_COMMIT /app/SOURCE_COMMIT" in DOCKERFILE_BODY
 
 
 def test_local_atomic_script_runs_stale_then_current(tmp_path: Path):

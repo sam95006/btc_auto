@@ -1,15 +1,23 @@
 #!/usr/bin/env python3
-"""Create a run-scoped one-shot P2 migration 0007 Zeabur service; print service_id only.
+"""Create a run-scoped P2 migration service with ONE migration-context deploy.
 
-Never reuses the legacy fixed name nexus-p2-migration-0007.
-Never reuses an existing same-name service (fail closed).
+Never calls shared _create_empty_cli() (repo-root / placeholder deploy).
+Never reuses an existing same-name service.
 """
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
+from pathlib import Path
 
 import tools.ci.ensure_demo_validation_zeabur_service as zeabur_svc
+from tools.ci.p2_migration_bootstrap import (
+    extract_service_id_from_create_output,
+    plan_single_create_deploy,
+    sanitize_bootstrap_failure_diagnostics,
+    validate_migration_context,
+)
 from tools.ci.p2_migration_service_identity import (
     MIGRATION_SERVICE_BASE_NAME,
     assert_distinct_migration_service,
@@ -63,10 +71,76 @@ def _exact_name_match(rows: list[dict], service_name: str) -> str:
     return ""
 
 
+def _list_services() -> list[dict]:
+    try:
+        rows = zeabur_svc._list_services_graphql()
+        print(f"listed_services_graphql={len(rows)}", file=sys.stderr)
+        return rows
+    except Exception as exc:  # noqa: BLE001
+        print(f"list_graphql_failed:{zeabur_svc._redact(str(exc))}", file=sys.stderr)
+        rows = zeabur_svc._list_services_cli()
+        print(f"listed_services_cli={len(rows)}", file=sys.stderr)
+        return rows
+
+
+def _create_with_migration_context(*, context_dir: Path, service_name: str, project_id: str) -> tuple[str, int, str]:
+    plan = plan_single_create_deploy(
+        context_dir=context_dir,
+        service_name=service_name,
+        project_id=project_id,
+        repo_root=os.environ.get("GITHUB_WORKSPACE") or None,
+    )
+    print("P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true", file=sys.stderr)
+    print(f"P2_MIGRATION_BOOTSTRAP_DEPLOY_COUNT={plan['P2_MIGRATION_BOOTSTRAP_DEPLOY_COUNT']}", file=sys.stderr)
+    print(f"bootstrap_cwd_prefix={str(plan['cwd'])[:48]}", file=sys.stderr)
+    env = os.environ.copy()
+    env["ZEABUR_TOKEN"] = zeabur_svc.TOKEN
+    subprocess.run(
+        ["zeabur", "auth", "login", "--token", zeabur_svc.TOKEN, "-i=false"],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=60,
+    )
+    proc = subprocess.run(
+        plan["argv"],
+        cwd=plan["cwd"],
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=900,
+    )
+    raw = (proc.stdout or "") + "\n" + (proc.stderr or "")
+    print(f"create_deploy_exit={proc.returncode}", file=sys.stderr)
+    print(f"create_deploy_head={zeabur_svc._redact(raw[:300])}", file=sys.stderr)
+    sid = extract_service_id_from_create_output(raw)
+    if not sid:
+        # Exact-name re-list after create+deploy.
+        try:
+            rows = _list_services()
+        except Exception as exc:  # noqa: BLE001
+            print(f"relist_after_create_failed:{zeabur_svc._redact(str(exc))}", file=sys.stderr)
+            rows = []
+        sid = _exact_name_match(rows, service_name)
+    return sid, proc.returncode, raw
+
+
 def main() -> int:
     if not os.environ.get("ZEABUR_TOKEN") or not os.environ.get("ZEABUR_PROJECT_ID"):
         print("missing_ZEABUR_TOKEN_or_PROJECT_ID", file=sys.stderr)
         return 2
+    context_raw = (os.environ.get("P2_MIGRATION_CONTEXT_DIR") or "").strip()
+    if not context_raw:
+        print("BLOCKED_migration_context_dir_required", file=sys.stderr)
+        return 3
+    context_dir = Path(context_raw)
+    expected_sha = (os.environ.get("GITHUB_SHA") or "").strip() or None
+    try:
+        validate_migration_context(context_dir, expected_sha=expected_sha)
+    except ValueError as exc:
+        print(f"BLOCKED_{exc}", file=sys.stderr)
+        return 3
     try:
         service_name, _run_id, _run_attempt = _resolve_requested_name()
     except ValueError as exc:
@@ -76,7 +150,6 @@ def main() -> int:
         print("BLOCKED_legacy_fixed_migration_service_name_forbidden", file=sys.stderr)
         return 3
 
-    # Bind Zeabur helper globals to this attempt's unique name (never the fixed legacy name).
     zeabur_svc.SERVICE_NAME = service_name
     zeabur_svc.TOKEN = (os.environ.get("ZEABUR_TOKEN") or "").strip()
     zeabur_svc.PROJECT_ID = (os.environ.get("ZEABUR_PROJECT_ID") or "").strip()
@@ -84,21 +157,15 @@ def main() -> int:
     zeabur_svc.FORBIDDEN_IDS = frozenset(forbidden)
     zeabur_svc.PRESET = ""
 
-    print(f"P2_MIGRATION_RUN_SCOPED_SERVICE=true", file=sys.stderr)
+    print("P2_MIGRATION_RUN_SCOPED_SERVICE=true", file=sys.stderr)
     print(f"requested_service_name_prefix={safe_service_name_prefix(service_name)}", file=sys.stderr)
+    print("uses_create_empty_cli=false", file=sys.stderr)
 
-    rows: list[dict] = []
     try:
-        rows = zeabur_svc._list_services_graphql()
-        print(f"listed_services_graphql={len(rows)}", file=sys.stderr)
+        rows = _list_services()
     except Exception as exc:  # noqa: BLE001
-        print(f"list_graphql_failed:{zeabur_svc._redact(str(exc))}", file=sys.stderr)
-        try:
-            rows = zeabur_svc._list_services_cli()
-            print(f"listed_services_cli={len(rows)}", file=sys.stderr)
-        except Exception as exc2:  # noqa: BLE001
-            print(f"list_cli_failed:{zeabur_svc._redact(str(exc2))}", file=sys.stderr)
-            return 4
+        print(f"list_cli_failed:{zeabur_svc._redact(str(exc))}", file=sys.stderr)
+        return 4
 
     existing = _exact_name_match(rows, service_name)
     if existing:
@@ -107,7 +174,6 @@ def main() -> int:
         print("P2_MIGRATION_PREVIOUS_SERVICE_REUSED=false", file=sys.stderr)
         return 6
 
-    # Guard: never accidentally select the legacy fixed-name service.
     legacy = _exact_name_match(rows, MIGRATION_SERVICE_BASE_NAME)
     if legacy:
         print(
@@ -115,22 +181,26 @@ def main() -> int:
             file=sys.stderr,
         )
 
-    try:
-        service_id = zeabur_svc._create_empty()
-        print("created_graphql=true", file=sys.stderr)
-    except Exception as exc:  # noqa: BLE001
-        print(f"create_graphql_note:{zeabur_svc._redact(str(exc))}", file=sys.stderr)
-        try:
-            service_id = zeabur_svc._create_empty_cli()
-            print("created_cli=true", file=sys.stderr)
-        except Exception as exc2:  # noqa: BLE001
-            print(f"create_cli_failed:{zeabur_svc._redact(str(exc2))}", file=sys.stderr)
-            return 5
-
+    # Intentionally never call zeabur_svc._create_empty() or _create_empty_cli().
+    service_id, create_exit, create_raw = _create_with_migration_context(
+        context_dir=context_dir,
+        service_name=service_name,
+        project_id=zeabur_svc.PROJECT_ID,
+    )
     service_id = (service_id or "").strip()
     if not service_id:
+        diag = sanitize_bootstrap_failure_diagnostics(
+            create_deploy_exit=create_exit,
+            create_deploy_output=create_raw,
+            service_id=None,
+            service_name=service_name,
+            readiness_attempts=0,
+            not_running_count=0,
+            current_image_positive_proof_count=0,
+        )
+        print(f"bootstrap_diag={diag}", file=sys.stderr)
         print("BLOCKER_migration_service_id_unresolved", file=sys.stderr)
-        return 1
+        return 5
 
     learning_validation_id = (
         os.environ.get("LEARNING_VALIDATION_SERVICE_ID")
@@ -149,6 +219,8 @@ def main() -> int:
         return 3
 
     print("P2_MIGRATION_PREVIOUS_SERVICE_REUSED=false", file=sys.stderr)
+    print("P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true", file=sys.stderr)
+    print("P2_MIGRATION_BOOTSTRAP_DEPLOY_COUNT=1", file=sys.stderr)
     print(
         f"migration_service_created=true id_prefix={identity['migration_service_id_prefix']} "
         f"name_prefix={safe_service_name_prefix(service_name)}",

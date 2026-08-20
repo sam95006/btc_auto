@@ -48,15 +48,18 @@ def test_migration_workflow_is_dispatch_only_and_disarmed() -> None:
     assert "APPLY_NEXUS_STAGING_P2_MIGRATION_0007" in source
     assert "nexus-p2m7-${{ github.run_id }}-${{ github.run_attempt }}" in source
     assert "P2_MIGRATION_RUN_SCOPED_SERVICE=true" in source
+    assert "P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true" in source
     assert "P2_MIGRATION_PREVIOUS_SERVICE_REUSED=false" in source
     assert 'SERVICE_NAME: nexus-p2-migration-0007' not in source
     assert "python -m tools.ci.ensure_p2_migration_zeabur_service" in source
+    assert "Build migration deployment context before service create" in source
+    assert "P2_MIGRATION_SECOND_DEPLOY=false" in source
+    assert "zeabur deploy --project-id \"$ZEABUR_PROJECT_ID\" --service-id \"$SERVICE_ID\"" not in source
     assert "python tools/ci/ensure_p2_migration_zeabur_service.py" not in source
     assert "p2_migration_atomic.py --print-remote-script" in source
     assert "python -m tools.ci.p2_extract_migration_authoritative_stdout" in source
     assert "python -m tools.ci.p2_migration_parse_service_exec" in source
     assert "P2_MIGRATION_DEPLOYMENT_CONVERGED=true" in source
-    assert "COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT" in source
     assert "Require migration helper imports before apply" not in source
     assert "Apply and verify only migration 0007 through atomic same-exec" in source
     assert "file_channel_authoritative=false" in source
@@ -73,7 +76,9 @@ def test_migration_workflow_is_dispatch_only_and_disarmed() -> None:
     assert "nexus-bybit-demo-learning-validation" not in source
     assert "P2_MIGRATION_SERVICE_EXEC_STDOUT_PASS=true" in source
     assert "P2_MIGRATION_FILE_CHANNEL_AUDIT=true" in source
-
+    assert "P2_MIGRATION_CURRENT_IMAGE_PROBE_PASS=true" in source
+    assert "not_running_count=" in source
+    assert "current_image_positive_proof_count=" in source
 
 class _PostVerifyPool:
     def fetchall(self, statement: str):

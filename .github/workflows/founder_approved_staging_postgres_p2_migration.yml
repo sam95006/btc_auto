@@ -49,7 +49,7 @@ jobs:
           EXCHANGE_WRITE: "false"
         run: |
           pip install -r requirements.txt pytest
-          python -m pytest tests/test_p2_staging_migration_0007.py tests/test_p2_migration_atomic.py tests/test_p2_migration_service.py tests/test_p2_migration_file_channel_audit.py tests/test_p2_migration_rollout_readiness.py tests/test_p2_run8_evidence_truth.py tests/test_p2_durable_learning_closure.py tests/test_p2_1_postgres_qualification.py -q --tb=line
+          python -m pytest tests/test_p2_staging_migration_0007.py tests/test_p2_migration_atomic.py tests/test_p2_migration_service.py tests/test_p2_migration_file_channel_audit.py tests/test_p2_migration_rollout_readiness.py tests/test_p2_migration_bootstrap.py tests/test_p2_run8_evidence_truth.py tests/test_p2_durable_learning_closure.py tests/test_p2_1_postgres_qualification.py -q --tb=line
 
       - name: Verify required secret presence only
         env:
@@ -64,7 +64,33 @@ jobs:
           test -n "${ZEABUR_PROJECT_ID:-}"
           echo "P2_MIGRATION_SECRET_BOUNDARY_PASS=true"
 
-      - name: Resolve dedicated one-shot P2 migration 0007 service
+      - name: Build migration deployment context before service create
+        id: context
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          CTX=/tmp/p2_migration_ctx
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from tools.ci.p2_migration_bootstrap import build_migration_context, validate_migration_context
+          ctx = build_migration_context(
+              repo_root=Path(os.environ["GITHUB_WORKSPACE"]),
+              destination=Path("/tmp/p2_migration_ctx"),
+              github_sha=os.environ["GITHUB_SHA"],
+          )
+          meta = validate_migration_context(ctx, expected_sha=os.environ["GITHUB_SHA"])
+          print(f"migration_context_built=true deployment_commit_prefix={meta['deployment_commit_prefix']}")
+          print(f"dsn_baked_in_image={meta['dsn_baked_in_image']}")
+          PY
+          test -s "$CTX/DEPLOYMENT_COMMIT"
+          test -s "$CTX/SOURCE_COMMIT"
+          test -s "$CTX/tools/ci/p2_staging_migration_0007.py"
+          echo "context_dir=$CTX" >> "$GITHUB_OUTPUT"
+          echo "P2_MIGRATION_CONTEXT_BUILT_BEFORE_SERVICE_CREATE=true"
+
+      - name: Create run-scoped migration service with single migration-context deploy
         id: resolve
         env:
           PYTHONPATH: ${{ github.workspace }}
@@ -74,15 +100,20 @@ jobs:
           FORBIDDEN_SERVICE_IDS: ${{ env.FORBIDDEN_STAGE3 }},${{ env.FORBIDDEN_MEMBER_PREVIEW }},${{ env.FORBIDDEN_MEMBER_PREVIEW_V18 }},${{ secrets.ZEABUR_API_STAGING_SERVICE_ID }},${{ secrets.ZEABUR_DEMO_VALIDATION_SERVICE_ID }}
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
           P2_MIGRATION_SERVICE_NAME: nexus-p2m7-${{ github.run_id }}-${{ github.run_attempt }}
+          P2_MIGRATION_CONTEXT_DIR: ${{ steps.context.outputs.context_dir }}
         run: |
           set -euo pipefail
           echo "P2_MIGRATION_SERVICE_NAME=${P2_MIGRATION_SERVICE_NAME}"
+          echo "P2_MIGRATION_CONTEXT_DIR=${P2_MIGRATION_CONTEXT_DIR}"
           case "${P2_MIGRATION_SERVICE_NAME}" in
             nexus-p2m7-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}) ;;
             *) echo "BLOCKER_service_name_not_run_scoped"; exit 1 ;;
           esac
           test "${P2_MIGRATION_SERVICE_NAME}" != "nexus-p2-migration-0007"
+          test -d "${P2_MIGRATION_CONTEXT_DIR}"
           SID=$(python -m tools.ci.ensure_p2_migration_zeabur_service)
           test -n "$SID"
           echo "service_id=$SID" >> "$GITHUB_OUTPUT"
@@ -90,12 +121,13 @@ jobs:
           echo "P2_MIGRATION_SERVICE_ID_PREFIX=$(printf '%s' "$SID" | cut -c1-6)"
           echo "P2_MIGRATION_RUN_SCOPED_SERVICE=true"
           echo "P2_MIGRATION_PREVIOUS_SERVICE_REUSED=false"
+          echo "P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true"
+          echo "P2_MIGRATION_BOOTSTRAP_DEPLOY_COUNT=1"
           echo "P2_MIGRATION_DEDICATED_SERVICE_RESOLVED=true"
 
-      - name: Configure disarmed migration boundary and deploy fresh migration image
+      - name: Inject disarmed runtime variables after single bootstrap deploy
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
-          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
           NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
         run: |
@@ -115,36 +147,8 @@ jobs:
           set_var NEXUS_ENV STAGING
           set_var NEXUS_DATA_DIR /tmp/nexus_p2_migration_0007
           set_var NEXUS_POSTGRES_URL "$NEXUS_STAGING_POSTGRES_URL"
-          CTX=/tmp/p2_migration_ctx
-          rm -rf "$CTX"; mkdir -p "$CTX/tools"
-          cp -a requirements.txt "$CTX/"
-          cp -a backend config "$CTX/"
-          cp -a tools/ci "$CTX/tools/ci"
-          cp deploy/zeabur_p2_migration_0007/entrypoint.sh "$CTX/entrypoint.sh"
-          cp deploy/zeabur_p2_migration_0007/migration_health_server.py "$CTX/migration_health_server.py"
-          printf '%s\n' "$GITHUB_SHA" > "$CTX/DEPLOYMENT_COMMIT"
-          printf '%s\n' "$GITHUB_SHA" > "$CTX/SOURCE_COMMIT"
-          test -s "$CTX/DEPLOYMENT_COMMIT"
-          test -s "$CTX/SOURCE_COMMIT"
-          test -s "$CTX/tools/ci/p2_staging_migration_0007.py"
-          cat > "$CTX/Dockerfile" <<'DOCKER'
-          FROM python:3.11-slim-bookworm
-          ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONPATH=/app MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_DATA_DIR=/tmp/nexus_p2_migration_0007 PORT=8080
-          WORKDIR /app
-          COPY requirements.txt .
-          RUN pip install --no-cache-dir -r requirements.txt
-          COPY . .
-          COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT
-          COPY SOURCE_COMMIT /app/SOURCE_COMMIT
-          RUN chmod +x entrypoint.sh
-          CMD ["/bin/sh", "./entrypoint.sh"]
-          DOCKER
-          python - <<'PY'
-          from pathlib import Path
-          p = Path("/tmp/p2_migration_ctx/Dockerfile")
-          p.write_text("\n".join(line[10:] if line.startswith("          ") else line for line in p.read_text().splitlines()) + "\n")
-          PY
-          (cd "$CTX" && zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json) >/tmp/p2_migration_deploy.out 2>&1
+          echo "P2_MIGRATION_RUNTIME_VARS_INJECTED_AFTER_SINGLE_DEPLOY=true"
+          echo "P2_MIGRATION_SECOND_DEPLOY=false"
 
       - name: Wait for fresh migration service baked SHA readiness
         env:
@@ -161,6 +165,8 @@ jobs:
           STREAK_GAP=2
           streak=0
           attempt=1
+          not_running_count=0
+          positive_proof_count=0
           python -m tools.ci.p2_migration_rollout_readiness --print-remote-script > /tmp/p2_migration_current_image_probe.sh
           SCRIPT_B64=$(base64 -w0 /tmp/p2_migration_current_image_probe.sh)
           while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
@@ -179,6 +185,7 @@ jobs:
             cat /tmp/p2_migration_readiness_class.json
             if grep -qE 'NOT_RUNNING_SERVICE|Inactive service|This service is not in the running state' /tmp/p2_migration_readiness_probe.out; then
               streak=0
+              not_running_count=$((not_running_count + 1))
               echo "P2_MIGRATION_SERVICE_NOT_RUNNING_YET=true"
               echo "current_image_streak=0"
               sleep "$RETRY_INTERVAL"
@@ -189,6 +196,7 @@ jobs:
               sleep "$RETRY_INTERVAL"
             elif [ "$CLASS_CODE" = 0 ] && grep -q 'P2_MIGRATION_CURRENT_IMAGE_PROBE_PASS=true' /tmp/p2_migration_readiness_probe.out; then
               streak=$((streak + 1))
+              positive_proof_count=$((positive_proof_count + 1))
               echo "current_image_streak=${streak}"
               if [ "$streak" -ge "$STREAK_NEEDED" ]; then
                 echo "P2_MIGRATION_DEPLOYMENT_CONVERGED=true"
@@ -206,6 +214,11 @@ jobs:
           done
           echo "P2_MIGRATION_DEPLOYMENT_CONVERGED=false"
           echo "fresh_migration_service_baked_sha_fail_closed=true"
+          echo "readiness_attempts=${MAX_ATTEMPTS}"
+          echo "not_running_count=${not_running_count}"
+          echo "current_image_positive_proof_count=${positive_proof_count}"
+          echo "service_id_prefix=$(printf '%s' "$SERVICE_ID" | cut -c1-6)"
+          echo "service_name=${{ steps.resolve.outputs.service_name }}"
           exit 1
 
       - name: Require final disarmed runtime with ledger DSN
