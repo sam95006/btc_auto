@@ -127,7 +127,8 @@ def test_missing_historical_decision_fields_remain_unknown():
 def test_process_valid_derived_not_hardcoded():
     case = load_run8_from_intents(_durable_run8_intents())
     assert case["process_assessment"]["process_valid_hardcoded"] is False
-    assert case["process_assessment"]["process_valid"] is True
+    assert case["process_assessment"]["process_valid"] is False
+    assert case["process_assessment"]["process_validation_status"] == "INCOMPLETE_EVIDENCE"
     incomplete = dict(case)
     incomplete["P1_PREFLIGHT_PASS"] = False
     incomplete["process_assessment"] = None

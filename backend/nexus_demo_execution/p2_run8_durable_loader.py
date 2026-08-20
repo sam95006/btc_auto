@@ -27,6 +27,15 @@ PROCESS_GATES = (
     "exact_pnl_identity",
     "ledger_closure",
 )
+GATE_FIELDS: dict[str, tuple[str, ...]] = {
+    "preflight": ("P1_PREFLIGHT_PASS", "preflight"),
+    "risk_authority": ("RISK_ENGINE_FINAL_AUTHORITY_PASS", "risk_authority"),
+    "entry_reconciliation": ("P1_ENTRY_RECONCILIATION_PASS", "entry_read_pass", "entry_reconciliation"),
+    "close_reconciliation": ("P1_CLOSE_RECONCILIATION_PASS", "close_read_pass", "close_reconciliation"),
+    "position_flat": ("P1_RUN8_POSITION_FLAT", "position_flat"),
+    "exact_pnl_identity": ("P1_RUN8_EXACT_CLOSED_PNL_MATCH", "closed_pnl_exact_match", "exact_pnl_identity"),
+    "ledger_closure": ("P1_DURABLE_LEDGER_LIFECYCLE_PASS", "ledger_closure"),
+}
 
 
 def _text(value: Any) -> str:
@@ -40,6 +49,28 @@ def _dec(value: Any) -> Decimal | None:
         return Decimal(str(value))
     except (InvalidOperation, ValueError, TypeError):
         return None
+
+
+def parse_strict_bool(value: Any) -> bool | None:
+    """Parse booleans without treating non-empty strings as True."""
+    if value is True:
+        return True
+    if value is False:
+        return False
+    if value in (None, "", UNKNOWN):
+        return None
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if value == 1:
+            return True
+        if value == 0:
+            return False
+        return None
+    text = str(value).strip().lower()
+    if text in {"true", "1", "yes"}:
+        return True
+    if text in {"false", "0", "no"}:
+        return False
+    return None
 
 
 def reject_placeholder_ids(payload: dict[str, Any]) -> None:
@@ -79,48 +110,97 @@ def reconstruct_original_decision_context(case: dict[str, Any]) -> dict[str, Any
     ai_directional = original.get("ai_directional_decision")
     if ai_directional in (None, ""):
         ai_directional = accounting.get("ai_directional_decision")
-    proven = bool(ai_directional) is True if ai_directional not in (None, "", UNKNOWN) else False
+    parsed_ai = parse_strict_bool(ai_directional)
+    proven = parsed_ai is True
     return {
         "confidence": confidence,
         "expected_gross_move_bps": expected_move,
         "decision_class": _field("decision_class") if _field("decision_class") != UNKNOWN else "P1_QUALIFICATION_EXECUTION",
+        "ai_directional_decision": parsed_ai if parsed_ai is not None else UNKNOWN,
         "ai_direction_quality_proven": proven,
         "qualification_execution_quality": "SEPARATE_FROM_AI_DIRECTION",
         "missing_fields_are_unknown": True,
     }
 
 
+def _unknown_gate() -> dict[str, Any]:
+    return {"value": UNKNOWN, "source": None, "source_field": None}
+
+
+def _gate(value: Any, source: str, source_field: str) -> dict[str, Any]:
+    return {"value": value, "source": source, "source_field": source_field}
+
+
+def _source_layer(key: str, accounting: dict[str, Any], evidence: dict[str, Any], case: dict[str, Any]) -> str:
+    if key in accounting:
+        return "durable_accounting_json"
+    if key in evidence:
+        return "durable_process_evidence"
+    if key in case:
+        return "durable_intent_row"
+    return "durable_evidence"
+
+
 def derive_process_gates(case: dict[str, Any]) -> dict[str, Any]:
     accounting = case.get("accounting_json") if isinstance(case.get("accounting_json"), dict) else {}
     evidence = case.get("process_evidence") if isinstance(case.get("process_evidence"), dict) else {}
-    src = {**accounting, **evidence, **case}
-    mapping = {
-        "preflight": ("P1_PREFLIGHT_PASS", "preflight"),
-        "risk_authority": ("RISK_ENGINE_FINAL_AUTHORITY_PASS", "risk_authority"),
-        "entry_reconciliation": ("P1_ENTRY_RECONCILIATION_PASS", "entry_read_pass", "entry_reconciliation"),
-        "close_reconciliation": ("P1_CLOSE_RECONCILIATION_PASS", "close_read_pass", "close_reconciliation"),
-        "position_flat": ("P1_RUN8_POSITION_FLAT", "position_flat"),
-        "exact_pnl_identity": ("P1_RUN8_EXACT_CLOSED_PNL_MATCH", "closed_pnl_exact_match", "exact_pnl_identity"),
-        "ledger_closure": ("P1_DURABLE_LEDGER_LIFECYCLE_PASS", "ledger_closure"),
-    }
+    layers = (accounting, evidence, case)
     gates: dict[str, Any] = {}
-    for gate, keys in mapping.items():
-        value: Any = UNKNOWN
+    for gate, keys in GATE_FIELDS.items():
+        found = _unknown_gate()
         for key in keys:
-            if key in src and src[key] not in (None, "", UNKNOWN):
-                value = bool(src[key])
+            for layer in layers:
+                if key not in layer:
+                    continue
+                parsed = parse_strict_bool(layer.get(key))
+                if parsed is None:
+                    continue
+                found = _gate(parsed, _source_layer(key, accounting, evidence, case), key)
                 break
-        gates[gate] = value
-    if gates["ledger_closure"] is UNKNOWN and _text(case.get("ledger_final_state")).upper() == "CLOSED":
-        gates["ledger_closure"] = True
-    if gates["exact_pnl_identity"] is UNKNOWN and _text(case.get("pnl_provenance")) == PNL_PROVENANCE:
-        gates["exact_pnl_identity"] = case.get("realized_demo_pnl") not in (None, "")
-    if gates["entry_reconciliation"] is UNKNOWN and _text(case.get("entry_order_id")):
-        gates["entry_reconciliation"] = True
-    if gates["close_reconciliation"] is UNKNOWN and _text(case.get("close_order_id")):
-        gates["close_reconciliation"] = True
-    process_valid = all(gates[name] is True for name in PROCESS_GATES)
-    return {"gates": gates, "process_valid": process_valid, "process_valid_hardcoded": False}
+            if found["value"] is not UNKNOWN:
+                break
+        gates[gate] = found
+    if gates["ledger_closure"]["value"] is UNKNOWN and _text(case.get("ledger_final_state")).upper() == "CLOSED":
+        gates["ledger_closure"] = _gate(True, "durable_ledger_state", "ledger_final_state")
+    unknown = [name for name in PROCESS_GATES if gates[name]["value"] is UNKNOWN]
+    failed = [name for name in PROCESS_GATES if gates[name]["value"] is False]
+    if unknown:
+        status = "INCOMPLETE_EVIDENCE"
+        process_valid = False
+    elif failed:
+        status = "FAILED_GATES"
+        process_valid = False
+    else:
+        status = "COMPLETE"
+        process_valid = True
+    return {
+        "gates": gates,
+        "process_valid": process_valid,
+        "process_valid_hardcoded": False,
+        "process_validation_status": status,
+        "unknown_gates": unknown,
+        "failed_gates": failed,
+    }
+
+
+def resolve_filled_qty(entry: dict[str, Any], accounting: dict[str, Any]) -> tuple[str, str]:
+    if accounting.get("actual_qty") not in (None, ""):
+        return str(accounting["actual_qty"]), "accounting_json.actual_qty"
+    if entry.get("filled_qty") not in (None, ""):
+        return str(entry["filled_qty"]), "filled_qty"
+    if entry.get("requested_qty") not in (None, ""):
+        return str(entry["requested_qty"]), "requested_qty"
+    return "", "MISSING"
+
+
+def _optional_copied_bool(accounting: dict[str, Any], *keys: str) -> Any:
+    for key in keys:
+        if key not in accounting:
+            continue
+        parsed = parse_strict_bool(accounting.get(key))
+        if parsed is not None:
+            return parsed
+    return UNKNOWN
 
 
 def _fees(entry: dict[str, Any], close: dict[str, Any], accounting: dict[str, Any]) -> tuple[str, str]:
@@ -149,6 +229,7 @@ def load_run8_from_intents(intents: list[dict[str, Any]]) -> dict[str, Any]:
         raise ValueError("run8_durable_parent_child_mismatch")
     accounting = entry.get("accounting_json") if isinstance(entry.get("accounting_json"), dict) else {}
     open_fee, close_fee = _fees(entry, close, accounting)
+    filled_qty, filled_qty_source = resolve_filled_qty(entry, accounting)
     case = {
         "source": "DURABLE_POSTGRES_LEDGER",
         "fixture_only": False,
@@ -164,7 +245,8 @@ def load_run8_from_intents(intents: list[dict[str, Any]]) -> dict[str, Any]:
         "side": _text(entry.get("side")),
         "actual_entry_price": str(entry.get("actual_entry_price") or entry.get("avg_fill_price") or ""),
         "actual_exit_price": str(entry.get("actual_exit_price") or close.get("avg_fill_price") or ""),
-        "filled_qty": str(entry.get("filled_qty") or entry.get("requested_qty") or ""),
+        "filled_qty": filled_qty,
+        "filled_qty_source": filled_qty_source,
         "open_fee": open_fee,
         "close_fee": close_fee,
         "realized_demo_pnl": str(entry.get("realized_demo_pnl")),
@@ -175,13 +257,13 @@ def load_run8_from_intents(intents: list[dict[str, Any]]) -> dict[str, Any]:
         "candidate_count": 1,
         "create_order_calls": 0,
         "exchange_write_call_count": 0,
-        "entry_read_pass": True,
-        "close_read_pass": True,
-        "position_flat": bool(accounting.get("position_flat", True)),
-        "execution_identity_pass": True,
-        "closed_pnl_exact_match": True,
-        "P1_EXCHANGE_REALIZED_PNL_PASS": True,
-        "P1_DURABLE_LEDGER_LIFECYCLE_PASS": True,
+        "entry_read_pass": _optional_copied_bool(accounting, "entry_read_pass", "P1_ENTRY_RECONCILIATION_PASS"),
+        "close_read_pass": _optional_copied_bool(accounting, "close_read_pass", "P1_CLOSE_RECONCILIATION_PASS"),
+        "position_flat": _optional_copied_bool(accounting, "position_flat", "P1_RUN8_POSITION_FLAT"),
+        "execution_identity_pass": _optional_copied_bool(accounting, "execution_identity_pass"),
+        "closed_pnl_exact_match": _optional_copied_bool(accounting, "closed_pnl_exact_match", "P1_RUN8_EXACT_CLOSED_PNL_MATCH"),
+        "P1_EXCHANGE_REALIZED_PNL_PASS": _optional_copied_bool(accounting, "P1_EXCHANGE_REALIZED_PNL_PASS"),
+        "P1_DURABLE_LEDGER_LIFECYCLE_PASS": _optional_copied_bool(accounting, "P1_DURABLE_LEDGER_LIFECYCLE_PASS"),
     }
     reject_placeholder_ids(case)
     case["source_evidence_hash"] = source_evidence_hash(case)
