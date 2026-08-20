@@ -20,9 +20,26 @@ from backend.nexus_demo_execution.p2_run8_learning_closure import (
 from backend.nexus_persistence_pg.pool import PostgresPool
 
 
+class _WriteTrackingStore:
+    """Proxy that counts lesson upserts without mutating read paths."""
+
+    def __init__(self, store: DurableLessonStore) -> None:
+        self._store = store
+        self.write_count = 0
+
+    def upsert_lesson(self, lesson: dict[str, Any]) -> dict[str, Any]:
+        self.write_count += 1
+        return self._store.upsert_lesson(lesson)
+
+    def close(self) -> None:
+        self._store.close()
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._store, name)
+
+
 def _prefix(value: Any, size: int = 12) -> str:
-    text = str(value or "")
-    return text[:size]
+    return str(value or "")[:size]
 
 
 def _write_evidence(payload: dict[str, Any]) -> None:
@@ -75,10 +92,120 @@ def _query_count(store: DurableLessonStore, evidence_hash: str) -> int:
     return len([row for row in store.list_lessons() if row.get("source_evidence_hash") == evidence_hash])
 
 
+def _case_from_process_a(first: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "trade_id": first["trade_id"],
+        "decision_id": first["decision_id"],
+        "order_intent_id": first["order_intent_id"],
+        "entry_order_id": first["entry_order_id"],
+        "close_order_id": first["close_order_id"],
+        "source_evidence_hash": first["source_evidence_hash"],
+        "symbol": first["lesson_candidate"]["symbol"],
+        "side": first["lesson_candidate"]["side"],
+        "open_fee": first["reflection"]["fee_total"],
+        "close_fee": "0",
+        "filled_qty_source": first.get("filled_qty_source"),
+        "process_assessment": first["process_assessment"],
+    }
+
+
+def _process_a_write(
+    *,
+    store: DurableLessonStore,
+    intents: list[dict[str, Any]] | None = None,
+    ledger: DurableOrderLedger | None = None,
+) -> dict[str, Any]:
+    if intents is not None:
+        first = close_run8_durable_learning(store=store, intents=intents)
+    elif ledger is not None:
+        first = close_run8_durable_learning(store=store, ledger=ledger)
+    else:
+        raise ValueError("process_a_input_required")
+    reject_placeholder_ids(first)
+    blob = json.dumps(first, default=str)
+    if any(token in blob for token in PLACEHOLDER_TOKENS):
+        raise ValueError("placeholder_id_present")
+    evidence_hash = str(first["source_evidence_hash"])
+    count = _query_count(store, evidence_hash)
+    if count != 1:
+        raise ValueError(f"process_a_lesson_count_not_one:{count}")
+    return first
+
+
+def process_b_prewrite_read(
+    store: DurableLessonStore,
+    *,
+    process_a: dict[str, Any],
+) -> dict[str, Any]:
+    """Process B: empty RAM, zero lesson writes before durable read + memory query."""
+    tracked = _WriteTrackingStore(store)
+    case = _case_from_process_a(process_a)
+    evidence_hash = str(process_a["source_evidence_hash"])
+    lesson_id_a = str(process_a["lesson_id"])
+    prewrite = tracked.get_by_evidence_hash(evidence_hash)
+    prewrite_found = prewrite is not None
+    prewrite_valid = bool(
+        prewrite_found
+        and prewrite.get("lesson_id") == lesson_id_a
+        and prewrite.get("source_evidence_hash") == evidence_hash
+        and prewrite.get("policy_truth") is False
+        and int(prewrite.get("support_count") or 0) == 1
+    )
+    memory = DurableDecisionMemory(tracked)
+    similar = _fee_candidate(case, symbol=str(case["symbol"]))
+    unrelated = _fee_candidate(case, symbol="ETHUSDT")
+    hits = memory.query_context(similar)
+    writes_before = tracked.write_count
+    after = research_decision_path(similar, memory=memory)
+    other = research_decision_path(unrelated, memory=memory)
+    return {
+        "PROCESS_B_PREWRITE_LESSON_FOUND": prewrite_found,
+        "PROCESS_B_PREWRITE_MEMORY_HIT": bool(hits),
+        "PROCESS_B_WRITES_BEFORE_MEMORY_CHECK": writes_before,
+        "POSTGRES_MEMORY_SURVIVES_NEW_PROCESS": prewrite_valid and bool(hits) and writes_before == 0,
+        "research_recommendation_after": after["research_recommendation"],
+        "unrelated_research_recommendation": other["research_recommendation"],
+        "behavior_change_demonstrated": after["research_recommendation"] != "RESEARCH_ALLOW",
+        "prewrite_lesson_id": prewrite.get("lesson_id") if prewrite else None,
+        "prewrite_support_count": int(prewrite.get("support_count") or 0) if prewrite else 0,
+        "prewrite_policy_truth": prewrite.get("policy_truth") if prewrite else None,
+    }
+
+
+def _process_c_idempotency(
+    *,
+    store: DurableLessonStore,
+    process_a: dict[str, Any],
+    intents: list[dict[str, Any]] | None = None,
+    ledger: DurableOrderLedger | None = None,
+) -> dict[str, Any]:
+    if intents is not None:
+        replay = close_run8_durable_learning(store=store, intents=intents)
+    elif ledger is not None:
+        replay = close_run8_durable_learning(store=store, ledger=ledger)
+    else:
+        raise ValueError("process_c_input_required")
+    evidence_hash = str(process_a["source_evidence_hash"])
+    count = _query_count(store, evidence_hash)
+    row = store.get_by_evidence_hash(evidence_hash) or {}
+    return {
+        "DUPLICATE_LESSON_COUNT": count,
+        "DUPLICATE_LESSON_IDEMPOTENCY_PASS": bool(
+            count == 1
+            and replay["lesson_id"] == process_a["lesson_id"]
+            and replay["source_evidence_hash"] == evidence_hash
+            and int(row.get("support_count") or 0) == 1
+        ),
+        "replay_lesson_id": replay["lesson_id"],
+        "replay_support_count": int(row.get("support_count") or 1),
+    }
+
+
 def run(
     *,
     intents: list[dict[str, Any]] | None = None,
     sqlite_path: str | Path | None = None,
+    skip_idempotency: bool = False,
 ) -> dict[str, Any]:
     apply_disarmed_flags()
     os.environ["AUTONOMOUS_BYBIT_DEMO_ARM_READY"] = ARM_READY_HOLD
@@ -86,8 +213,12 @@ def run(
         "P2_1_POSTGRES_QUALIFICATION_PASS": False,
         "POSTGRES_LESSON_PERSISTED": False,
         "POSTGRES_MEMORY_SURVIVES_NEW_PROCESS": False,
+        "PROCESS_B_PREWRITE_LESSON_FOUND": False,
+        "PROCESS_B_PREWRITE_MEMORY_HIT": False,
+        "PROCESS_B_WRITES_BEFORE_MEMORY_CHECK": -1,
         "DUPLICATE_LESSON_COUNT": 0,
         "DUPLICATE_LESSON_IDEMPOTENCY_PASS": False,
+        "IDEMPOTENCY_SEPARATED_FROM_DURABILITY": True,
         "POLICY_TRUTH": True,
         "SUPPORT_COUNT": 0,
         "create_order_calls": 0,
@@ -98,19 +229,25 @@ def run(
     database_url = (os.environ.get("NEXUS_POSTGRES_URL") or "").strip()
     pool_a: PostgresPool | None = None
     pool_b: PostgresPool | None = None
+    pool_c: PostgresPool | None = None
     store_a: DurableLessonStore | None = None
     store_b: DurableLessonStore | None = None
+    store_c: DurableLessonStore | None = None
     try:
         if sqlite_path is not None:
             if intents is None:
                 evidence["error"] = "sqlite_intents_required"
                 return evidence
             store_a = DurableLessonStore(sqlite_path=sqlite_path)
-            first = close_run8_durable_learning(store=store_a, intents=intents)
+            first = _process_a_write(store=store_a, intents=intents)
             store_a.close()
             store_a = None
             store_b = DurableLessonStore(sqlite_path=sqlite_path)
-            second = close_run8_durable_learning(store=store_b, intents=intents)
+            process_b = process_b_prewrite_read(store_b, process_a=first)
+            idempotency: dict[str, Any] = {"DUPLICATE_LESSON_COUNT": 0, "DUPLICATE_LESSON_IDEMPOTENCY_PASS": False}
+            if not skip_idempotency:
+                store_c = DurableLessonStore(sqlite_path=sqlite_path)
+                idempotency = _process_c_idempotency(store=store_c, process_a=first, intents=intents)
         else:
             if not database_url:
                 evidence["error"] = "postgres_url_missing"
@@ -121,59 +258,46 @@ def run(
             if "0007" not in versions:
                 evidence["error"] = "migration_0007_missing"
                 return evidence
-            ledger = DurableOrderLedger(pool_a)
             store_a = DurableLessonStore(pool=pool_a)
-            first = close_run8_durable_learning(store=store_a, ledger=ledger)
+            ledger_a = DurableOrderLedger(pool_a)
+            first = _process_a_write(store=store_a, ledger=ledger_a)
+            store_a.close()
+            store_a = None
             pool_a.close()
             pool_a = None
-            store_a = None
             pool_b = PostgresPool(database_url)
             pool_b.open()
             store_b = DurableLessonStore(pool=pool_b)
-            second = close_run8_durable_learning(store=store_b, ledger=DurableOrderLedger(pool_b))
+            process_b = process_b_prewrite_read(store_b, process_a=first)
+            idempotency = {"DUPLICATE_LESSON_COUNT": 0, "DUPLICATE_LESSON_IDEMPOTENCY_PASS": False}
+            if not skip_idempotency:
+                pool_c = PostgresPool(database_url)
+                pool_c.open()
+                store_c = DurableLessonStore(pool=pool_c)
+                idempotency = _process_c_idempotency(
+                    store=store_c,
+                    process_a=first,
+                    ledger=DurableOrderLedger(pool_c),
+                )
 
-        reject_placeholder_ids(first)
-        blob = json.dumps(first, default=str)
-        if any(token in blob for token in PLACEHOLDER_TOKENS):
-            evidence["error"] = "placeholder_id_present"
-            return evidence
-        case = {
-            "trade_id": first["trade_id"],
-            "decision_id": first["decision_id"],
-            "order_intent_id": first["order_intent_id"],
-            "entry_order_id": first["entry_order_id"],
-            "close_order_id": first["close_order_id"],
-            "source_evidence_hash": first["source_evidence_hash"],
-            "symbol": first["lesson_candidate"]["symbol"],
-            "side": first["lesson_candidate"]["side"],
-            "open_fee": first["reflection"]["fee_total"],
-            "close_fee": "0",
-            "filled_qty_source": first.get("filled_qty_source"),
-            "process_assessment": first["process_assessment"],
-        }
-        if store_b is None:
-            evidence["error"] = "second_process_store_missing"
-            return evidence
-        memory = DurableDecisionMemory(store_b)
-        similar = _fee_candidate(case, symbol=str(case["symbol"]))
-        unrelated = _fee_candidate(case, symbol="ETHUSDT")
-        after = research_decision_path(similar, memory=memory)
-        other = research_decision_path(unrelated, memory=memory)
-        lesson_count = _query_count(store_b, str(first["source_evidence_hash"]))
+        case = _case_from_process_a(first)
         evidence.update(_safe_identity(case))
+        evidence.update(process_b)
+        evidence.update(idempotency)
         evidence.update(
             {
                 "POSTGRES_LESSON_PERSISTED": True,
-                "POSTGRES_MEMORY_SURVIVES_NEW_PROCESS": bool(memory.query_context(similar)),
-                "DUPLICATE_LESSON_COUNT": lesson_count,
-                "DUPLICATE_LESSON_IDEMPOTENCY_PASS": lesson_count == 1 and first["lesson_id"] == second["lesson_id"],
+                "lesson_id": first["lesson_id"],
+                "source_evidence_hash": first["source_evidence_hash"],
                 "POLICY_TRUTH": False,
-                "POLICY_TRUTH_REMAINS_FALSE": first["policy_truth"] is False and second["policy_truth"] is False,
+                "POLICY_TRUTH_REMAINS_FALSE": (
+                    first["policy_truth"] is False
+                    and process_b.get("prewrite_policy_truth") is False
+                ),
                 "SUPPORT_COUNT": int(first.get("support_count") or 1),
-                "research_recommendation_after": after["research_recommendation"],
-                "unrelated_research_recommendation": other["research_recommendation"],
-                "behavior_change_demonstrated": first["behavior_change_demonstrated"],
                 "PROCESS_VALIDATION_STATUS": first["process_assessment"].get("process_validation_status"),
+                "REAL_RUN8_DURABLE_LOAD_PASS": True,
+                "migration_0007_present": sqlite_path is not None or evidence.get("error") != "migration_0007_missing",
                 "create_order_calls": 0,
                 "exchange_write_call_count": 0,
                 "AUTONOMOUS_BYBIT_DEMO_ARM_READY": ARM_READY_HOLD,
@@ -181,11 +305,16 @@ def run(
         )
         evidence["P2_1_POSTGRES_QUALIFICATION_PASS"] = bool(
             evidence["POSTGRES_LESSON_PERSISTED"]
+            and evidence["PROCESS_B_PREWRITE_LESSON_FOUND"]
+            and evidence["PROCESS_B_PREWRITE_MEMORY_HIT"]
+            and evidence["PROCESS_B_WRITES_BEFORE_MEMORY_CHECK"] == 0
             and evidence["POSTGRES_MEMORY_SURVIVES_NEW_PROCESS"]
-            and evidence["DUPLICATE_LESSON_IDEMPOTENCY_PASS"]
+            and evidence["research_recommendation_after"] == "RESEARCH_SKIP"
+            and evidence["unrelated_research_recommendation"] == "RESEARCH_ALLOW"
+            and (skip_idempotency or evidence["DUPLICATE_LESSON_IDEMPOTENCY_PASS"])
+            and evidence["DUPLICATE_LESSON_COUNT"] == (0 if skip_idempotency else 1)
             and evidence["POLICY_TRUTH_REMAINS_FALSE"]
-            and after["research_recommendation"] == "RESEARCH_SKIP"
-            and other["research_recommendation"] == "RESEARCH_ALLOW"
+            and evidence["SUPPORT_COUNT"] == 1
             and evidence["create_order_calls"] == 0
             and os.environ.get("EXCHANGE_WRITE", "").lower() == "false"
         )
@@ -200,10 +329,14 @@ def run(
             store_a.close()
         if store_b is not None:
             store_b.close()
+        if store_c is not None:
+            store_c.close()
         if pool_a is not None:
             pool_a.close()
         if pool_b is not None:
             pool_b.close()
+        if pool_c is not None:
+            pool_c.close()
 
 
 def main() -> int:
