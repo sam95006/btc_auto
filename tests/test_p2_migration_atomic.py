@@ -205,7 +205,7 @@ def test_prebootstrap_import_failure_is_sanitized(tmp_path: Path):
 
 def test_workflow_uses_atomic_same_exec_and_baked_sha():
     source = WORKFLOW.read_text(encoding="utf-8")
-    assert "nexus-p2-migration-0007" in source
+    assert "nexus-p2m7-${{ github.run_id }}-${{ github.run_attempt }}" in source
     assert "python -m tools.ci.ensure_p2_migration_zeabur_service" in source
     assert "DEPLOYMENT_COMMIT" in source
     assert "SOURCE_COMMIT" in source
@@ -220,6 +220,8 @@ def test_workflow_uses_atomic_same_exec_and_baked_sha():
         "Apply and verify only migration 0007 through atomic same-exec"
     )
     assert "python -m tools.ci.p2_staging_migration_0007" in source
+    assert "P2_MIGRATION_SERVICE_EXEC_STDOUT_PASS=true" in source
+    assert "P2_MIGRATION_FILE_CHANNEL_AUDIT=true" in source
 
 
 def test_local_atomic_script_runs_stale_then_current(tmp_path: Path):

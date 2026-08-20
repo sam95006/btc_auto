@@ -17,7 +17,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SERVICE_NAME: nexus-p2-migration-0007
   ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
   FORBIDDEN_STAGE3: 6a3b81652fdef84a45a2a553
   FORBIDDEN_MEMBER_PREVIEW: 69d559cb2696d526abde8cda
@@ -73,12 +72,24 @@ jobs:
           ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
           LEARNING_VALIDATION_SERVICE_ID: ${{ secrets.ZEABUR_DEMO_VALIDATION_SERVICE_ID }}
           FORBIDDEN_SERVICE_IDS: ${{ env.FORBIDDEN_STAGE3 }},${{ env.FORBIDDEN_MEMBER_PREVIEW }},${{ env.FORBIDDEN_MEMBER_PREVIEW_V18 }},${{ secrets.ZEABUR_API_STAGING_SERVICE_ID }},${{ secrets.ZEABUR_DEMO_VALIDATION_SERVICE_ID }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          P2_MIGRATION_SERVICE_NAME: nexus-p2m7-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           set -euo pipefail
+          echo "P2_MIGRATION_SERVICE_NAME=${P2_MIGRATION_SERVICE_NAME}"
+          case "${P2_MIGRATION_SERVICE_NAME}" in
+            nexus-p2m7-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}) ;;
+            *) echo "BLOCKER_service_name_not_run_scoped"; exit 1 ;;
+          esac
+          test "${P2_MIGRATION_SERVICE_NAME}" != "nexus-p2-migration-0007"
           SID=$(python -m tools.ci.ensure_p2_migration_zeabur_service)
           test -n "$SID"
           echo "service_id=$SID" >> "$GITHUB_OUTPUT"
+          echo "service_name=${P2_MIGRATION_SERVICE_NAME}" >> "$GITHUB_OUTPUT"
           echo "P2_MIGRATION_SERVICE_ID_PREFIX=$(printf '%s' "$SID" | cut -c1-6)"
+          echo "P2_MIGRATION_RUN_SCOPED_SERVICE=true"
+          echo "P2_MIGRATION_PREVIOUS_SERVICE_REUSED=false"
           echo "P2_MIGRATION_DEDICATED_SERVICE_RESOLVED=true"
 
       - name: Configure disarmed migration boundary and deploy fresh migration image

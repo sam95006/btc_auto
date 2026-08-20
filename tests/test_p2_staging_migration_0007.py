@@ -46,7 +46,10 @@ def test_migration_workflow_is_dispatch_only_and_disarmed() -> None:
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "workflow_dispatch:" in source
     assert "APPLY_NEXUS_STAGING_P2_MIGRATION_0007" in source
-    assert "nexus-p2-migration-0007" in source
+    assert "nexus-p2m7-${{ github.run_id }}-${{ github.run_attempt }}" in source
+    assert "P2_MIGRATION_RUN_SCOPED_SERVICE=true" in source
+    assert "P2_MIGRATION_PREVIOUS_SERVICE_REUSED=false" in source
+    assert 'SERVICE_NAME: nexus-p2-migration-0007' not in source
     assert "python -m tools.ci.ensure_p2_migration_zeabur_service" in source
     assert "python tools/ci/ensure_p2_migration_zeabur_service.py" not in source
     assert "p2_migration_atomic.py --print-remote-script" in source
@@ -68,6 +71,8 @@ def test_migration_workflow_is_dispatch_only_and_disarmed() -> None:
     assert "p1_qualification" not in source
     assert "RUN_ONE_BYBIT_DEMO_TRADE" not in source
     assert "nexus-bybit-demo-learning-validation" not in source
+    assert "P2_MIGRATION_SERVICE_EXEC_STDOUT_PASS=true" in source
+    assert "P2_MIGRATION_FILE_CHANNEL_AUDIT=true" in source
 
 
 class _PostVerifyPool:
