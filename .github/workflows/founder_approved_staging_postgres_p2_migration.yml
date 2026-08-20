@@ -50,7 +50,7 @@ jobs:
           EXCHANGE_WRITE: "false"
         run: |
           pip install -r requirements.txt pytest
-          python -m pytest tests/test_p2_staging_migration_0007.py tests/test_p2_run8_evidence_truth.py tests/test_p2_durable_learning_closure.py tests/test_p2_1_postgres_qualification.py -q --tb=line
+          python -m pytest tests/test_p2_staging_migration_0007.py tests/test_p2_migration_atomic.py tests/test_p2_run8_evidence_truth.py tests/test_p2_durable_learning_closure.py tests/test_p2_1_postgres_qualification.py -q --tb=line
 
       - name: Verify required secret presence only
         env:
@@ -110,6 +110,11 @@ jobs:
           cp -a tools/ci "$CTX/tools/ci"
           cp deploy/zeabur_bybit_demo_validation/entrypoint.sh "$CTX/entrypoint.sh"
           cp deploy/zeabur_bybit_demo_validation/validation_health_server.py "$CTX/validation_health_server.py"
+          printf '%s\n' "$GITHUB_SHA" > "$CTX/DEPLOYMENT_COMMIT"
+          printf '%s\n' "$GITHUB_SHA" > "$CTX/SOURCE_COMMIT"
+          test -s "$CTX/DEPLOYMENT_COMMIT"
+          test -s "$CTX/SOURCE_COMMIT"
+          test -s "$CTX/tools/ci/p2_staging_migration_0007.py"
           cat > "$CTX/Dockerfile" <<'DOCKER'
           FROM python:3.11-slim-bookworm
           ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONPATH=/app MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_DATA_DIR=/tmp/nexus_demo_validation PORT=8080
@@ -117,6 +122,8 @@ jobs:
           COPY requirements.txt .
           RUN pip install --no-cache-dir -r requirements.txt
           COPY . .
+          COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT
+          COPY SOURCE_COMMIT /app/SOURCE_COMMIT
           RUN chmod +x entrypoint.sh
           CMD ["/bin/sh", "./entrypoint.sh"]
           DOCKER
@@ -126,6 +133,47 @@ jobs:
           p.write_text("\n".join(line[10:] if line.startswith("          ") else line for line in p.read_text().splitlines()) + "\n")
           PY
           (cd "$CTX" && zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json) >/tmp/p2_migration_deploy.out 2>&1
+
+      - name: Wait for current-image rollout convergence
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          EXPECTED="${GITHUB_SHA}"
+          MAX_ATTEMPTS=36
+          RETRY_INTERVAL=5
+          STREAK_NEEDED=3
+          STREAK_GAP=2
+          streak=0
+          attempt=1
+          while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
+            set +e
+            OUT=$(zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+              /bin/sh -lc "EXPECTED='$EXPECTED'; APP_ROOT=/app; BAKED=''; SOURCE=''; HELPER_PRESENT=false; if [ -f /app/DEPLOYMENT_COMMIT ]; then BAKED=\$(tr -d '\\r\\n' < /app/DEPLOYMENT_COMMIT); fi; if [ -f /app/SOURCE_COMMIT ]; then SOURCE=\$(tr -d '\\r\\n' < /app/SOURCE_COMMIT); fi; if [ -f /app/tools/ci/p2_staging_migration_0007.py ]; then HELPER_PRESENT=true; fi; echo expected_sha_prefix=\$(printf '%s' \"\$EXPECTED\" | cut -c1-12); echo baked_sha_prefix=\$(printf '%s' \"\$BAKED\" | cut -c1-12); echo source_sha_prefix=\$(printf '%s' \"\$SOURCE\" | cut -c1-12); echo helper_present=\$HELPER_PRESENT; test -n \"\$EXPECTED\"; test -n \"\$BAKED\"; test -n \"\$SOURCE\"; test \"\$BAKED\" = \"\$EXPECTED\"; test \"\$SOURCE\" = \"\$EXPECTED\"; test \"\$BAKED\" = \"\$SOURCE\"; test \"\$HELPER_PRESENT\" = true")
+            CODE=$?
+            set -e
+            echo "attempt=${attempt}"
+            printf '%s\n' "$OUT" | grep -E '^(expected_sha_prefix|baked_sha_prefix|source_sha_prefix|helper_present)=' || true
+            if [ "$CODE" = 0 ]; then
+              streak=$((streak + 1))
+              echo "current_image_streak=${streak}"
+              if [ "$streak" -ge "$STREAK_NEEDED" ]; then
+                echo "P2_MIGRATION_DEPLOYMENT_CONVERGED=true"
+                echo "rollout_convergence_is_advisory=true"
+                exit 0
+              fi
+              sleep "$STREAK_GAP"
+            else
+              streak=0
+              echo "ROLLOUT_NOT_CONVERGED_YET"
+              sleep "$RETRY_INTERVAL"
+            fi
+            attempt=$((attempt + 1))
+          done
+          echo "P2_MIGRATION_DEPLOYMENT_CONVERGED=false"
+          exit 1
 
       - name: Require final disarmed runtime with ledger DSN
         env:
@@ -174,18 +222,7 @@ jobs:
           test "$FOUND" = true
           echo "P2_MIGRATION_SERVICE_EXEC_FILE_CHANNEL_PASS=true"
 
-      - name: Require migration helper imports before apply
-        env:
-          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
-          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
-        run: |
-          set -euo pipefail
-          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
-            /bin/sh -lc 'export PYTHONPATH=/app; python -c "import backend.nexus_persistence_pg.migrate; import backend.nexus_persistence_pg.pool; import tools.ci.p2_staging_migration_0007; print(\"P2_MIGRATION_IMPORT_PASS=true\")"' >/tmp/p2_migration_import_probe.out 2>&1
-          echo "P2_MIGRATION_IMPORT_PASS=true"
-
-      - name: Apply and verify only migration 0007 through MigrationRunner
+      - name: Apply and verify only migration 0007 through atomic same-exec
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
@@ -196,25 +233,67 @@ jobs:
           EVIDENCE_PATH="/tmp/nexus_demo_validation/p2_migration_0007_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"
           . tools/ci/p1_validation_runtime.sh
           p1_export_disarmed_flags
-          COMMAND="export MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true PYTHONPATH=/app P2_MIGRATION_EVIDENCE_PATH=${EVIDENCE_PATH}; python -m tools.ci.p2_staging_migration_0007"
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          set +e
-          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- /bin/sh -lc "$COMMAND" >/tmp/p2_migration_exec.out 2>&1
-          EXEC_CODE=$?
-          set -e
-          echo "migration_service_exec_transport_exit=$EXEC_CODE"
-          python tools/ci/p2_parse_migration_stdout.py < /tmp/p2_migration_exec.out | tee artifacts/bybit_demo_p1/p2_migration_stdout_diagnostic.txt
-          ENCODED_PATH=$(jq -rn --arg value "$EVIDENCE_PATH" '$value|@uri')
-          FOUND=false
-          for attempt in 1 2 3 4 5 6; do
-            rm -f artifacts/bybit_demo_p1/p2_migration_0007_evidence.json
-            HTTP_CODE=$(curl --silent --show-error --output artifacts/bybit_demo_p1/p2_migration_0007_evidence.json --write-out '%{http_code}' -H "Authorization: Bearer $ZEABUR_TOKEN" "https://api.zeabur.com/projects/${ZEABUR_PROJECT_ID}/services/${SERVICE_ID}/files?path=${ENCODED_PATH}&environment=${ZEABUR_ENV_ID}" || true)
-            BYTES=$(wc -c < artifacts/bybit_demo_p1/p2_migration_0007_evidence.json 2>/dev/null || echo 0)
-            echo "migration_evidence_download_attempt=${attempt} http_status=${HTTP_CODE} bytes=${BYTES}"
-            if [ "$HTTP_CODE" = 200 ] && [ "$BYTES" -gt 0 ]; then FOUND=true; break; fi
-            sleep 2
+          python tools/ci/p2_migration_atomic.py --print-remote-script > /tmp/p2_migration_atomic_remote.sh
+          SCRIPT_B64=$(base64 -w0 /tmp/p2_migration_atomic_remote.sh)
+          MAX_ATTEMPTS=36
+          RETRY_INTERVAL=5
+          attempt=1
+          PYTHON_STARTED=false
+          : > /tmp/p2_migration_service_exec.out
+          echo "remote_trigger=zeabur_service_exec_atomic_p2_migration"
+          echo "file_channel_authoritative=false"
+          echo "python -m tools.ci.p2_staging_migration_0007"
+          while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
+            : > /tmp/p2_atomic_attempt.out
+            set +e
+            zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+              /bin/sh -lc "EXPECTED='${GITHUB_SHA}'; export EXPECTED; APP_ROOT=/app; export APP_ROOT; P2_MIGRATION_EVIDENCE_PATH='$EVIDENCE_PATH'; export P2_MIGRATION_EVIDENCE_PATH; PYTHONPATH=/app; export PYTHONPATH; printf '%s' '$SCRIPT_B64' | base64 -d | /bin/sh" >/tmp/p2_atomic_attempt.out 2>&1
+            EXEC_CODE=$?
+            set -e
+            echo "atomic_exec_attempt=${attempt} transport_exit=${EXEC_CODE}"
+            cat /tmp/p2_atomic_attempt.out >> /tmp/p2_migration_service_exec.out
+            printf '%s\n' "$(grep -E '^(P2_MIGRATION_|expected_sha_prefix|baked_sha_prefix|source_sha_prefix|helper_present)=' /tmp/p2_atomic_attempt.out || true)"
+            if grep -q 'P2_MIGRATION_PYTHON_STARTED=true' /tmp/p2_atomic_attempt.out; then
+              PYTHON_STARTED=true
+              echo "P2_MIGRATION_PYTHON_STARTED=true"
+              echo "atomic_migration_retry_after_python_start=false"
+              break
+            fi
+            if grep -q 'P2_MIGRATION_EXEC_POD_NOT_CURRENT=true' /tmp/p2_atomic_attempt.out; then
+              echo "P2_MIGRATION_EXEC_POD_NOT_CURRENT=true"
+              echo "stale_pod_pre_python_retry_allowed=true"
+              sleep "$RETRY_INTERVAL"
+              attempt=$((attempt + 1))
+              continue
+            fi
+            echo "pre_python_non_stale_failure=true"
+            break
           done
-          test "$FOUND" = true
+          echo "python_started=${PYTHON_STARTED}"
+          echo "service_exec_output_bytes=$(wc -c </tmp/p2_migration_service_exec.out)"
+          python - <<'PY' < /tmp/p2_migration_service_exec.out
+          import json, sys
+          from tools.ci.p2_migration_atomic import sanitize_prebootstrap_failure
+          diag = sanitize_prebootstrap_failure(sys.stdin.read())
+          print(json.dumps(diag, sort_keys=True))
+          PY
+          python tools/ci/p2_parse_migration_stdout.py < /tmp/p2_migration_service_exec.out | tee artifacts/bybit_demo_p1/p2_migration_stdout_diagnostic.txt
+          set +e
+          python tools/ci/p2_extract_migration_authoritative_stdout.py \
+            --input /tmp/p2_migration_service_exec.out \
+            --out artifacts/bybit_demo_p1/p2_migration_0007_evidence.json
+          AUTH_CODE=$?
+          set -e
+          echo "authoritative_stdout_extractor_exit=${AUTH_CODE}"
+          ENCODED_PATH=$(jq -rn --arg value "$EVIDENCE_PATH" '$value|@uri')
+          rm -f artifacts/bybit_demo_p1/p2_migration_0007_file_channel_copy.json
+          HTTP_CODE=$(curl --silent --show-error --output artifacts/bybit_demo_p1/p2_migration_0007_file_channel_copy.json \
+            --write-out '%{http_code}' -H "Authorization: Bearer $ZEABUR_TOKEN" \
+            "https://api.zeabur.com/projects/${ZEABUR_PROJECT_ID}/services/${SERVICE_ID}/files?path=${ENCODED_PATH}&environment=${ZEABUR_ENV_ID}" || true)
+          BYTES=$(wc -c < artifacts/bybit_demo_p1/p2_migration_0007_file_channel_copy.json 2>/dev/null || echo 0)
+          echo "file_channel_http_status=${HTTP_CODE} file_channel_bytes=${BYTES} file_channel_authoritative=false"
+          test "$AUTH_CODE" = 0
           python -c "import json,sys; p=json.load(open(sys.argv[1])); assert p.get('P2_MIGRATION_0007_APPLIED_PASS') is True; assert p.get('exchange_write_call_count') == 0; assert p.get('create_order_calls') == 0; print('P2_MIGRATION_0007_APPLIED_PASS=true')" artifacts/bybit_demo_p1/p2_migration_0007_evidence.json
 
       - name: Upload sanitized migration evidence
