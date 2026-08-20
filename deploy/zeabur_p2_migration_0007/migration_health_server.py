@@ -5,7 +5,14 @@ import json
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-SERVICE_NAME = "nexus-p2-migration-0007"
+
+def _service_name() -> str:
+    # Prefer run-scoped name when injected; never require a fixed legacy name for boot.
+    for key in ("P2_MIGRATION_SERVICE_NAME", "SERVICE_NAME"):
+        value = (os.environ.get(key) or "").strip()
+        if value:
+            return value
+    return "nexus-p2-migration"
 
 
 def _false(name: str) -> bool:
@@ -19,7 +26,7 @@ class MigrationHealthHandler(BaseHTTPRequestHandler):
             return
         payload = {
             "ok": True,
-            "service": SERVICE_NAME,
+            "service": _service_name(),
             "mode": "P2_MIGRATION_0007",
             "mainnet": _false("MAINNET"),
             "real_money": _false("REAL_MONEY"),

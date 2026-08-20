@@ -79,6 +79,18 @@ def test_migration_workflow_is_dispatch_only_and_disarmed() -> None:
     assert "P2_MIGRATION_CURRENT_IMAGE_PROBE_PASS=true" in source
     assert "not_running_count=" in source
     assert "current_image_positive_proof_count=" in source
+    assert "p2_historical_p1_p2_regression_lock" in source
+    assert "Wait for Zeabur deployment RUNNING before service-exec probes" in source
+    assert "zeabur deployment get" in source
+    assert "zeabur deployment log -t=build" in source
+    assert "zeabur deployment log -t=runtime" in source
+    assert "p2_migration_deployment_diagnostics" in source
+    assert "P2_MIGRATION_DEPLOYMENT_STATUS" in source
+    assert "P2_MIGRATION_BUILD_LOG_TAIL" in source
+    assert "P2_MIGRATION_RUNTIME_LOG_TAIL" in source
+    assert source.index("Wait for Zeabur deployment RUNNING before service-exec probes") < source.index(
+        "Wait for fresh migration service baked SHA readiness"
+    )
 
 class _PostVerifyPool:
     def fetchall(self, statement: str):

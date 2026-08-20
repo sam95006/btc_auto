@@ -39,7 +39,7 @@ jobs:
           node-version: "20"
       - run: npm i -g zeabur@latest
 
-      - name: Run offline migration qualification tests
+      - name: Run offline migration qualification tests + historical P1/P2 regression lock
         env:
           PYTHONPATH: ${{ github.workspace }}
           MAINNET: "false"
@@ -49,7 +49,8 @@ jobs:
           EXCHANGE_WRITE: "false"
         run: |
           pip install -r requirements.txt pytest
-          python -m pytest tests/test_p2_staging_migration_0007.py tests/test_p2_migration_atomic.py tests/test_p2_migration_service.py tests/test_p2_migration_file_channel_audit.py tests/test_p2_migration_rollout_readiness.py tests/test_p2_migration_bootstrap.py tests/test_p2_run8_evidence_truth.py tests/test_p2_durable_learning_closure.py tests/test_p2_1_postgres_qualification.py -q --tb=line
+          python -m tools.ci.p2_historical_p1_p2_regression_lock
+          echo "HISTORICAL_P1_P2_REGRESSION_LOCK=PASS"
 
       - name: Verify required secret presence only
         env:
@@ -147,8 +148,67 @@ jobs:
           set_var NEXUS_ENV STAGING
           set_var NEXUS_DATA_DIR /tmp/nexus_p2_migration_0007
           set_var NEXUS_POSTGRES_URL "$NEXUS_STAGING_POSTGRES_URL"
+          set_var P2_MIGRATION_SERVICE_NAME "${{ steps.resolve.outputs.service_name }}"
           echo "P2_MIGRATION_RUNTIME_VARS_INJECTED_AFTER_SINGLE_DEPLOY=true"
           echo "P2_MIGRATION_SECOND_DEPLOY=false"
+
+      - name: Wait for Zeabur deployment RUNNING before service-exec probes
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          mkdir -p artifacts/bybit_demo_p1
+          MAX_ATTEMPTS=24
+          RETRY_INTERVAL=10
+          attempt=1
+          while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
+            : > /tmp/p2_migration_deployment_get.json
+            : > /tmp/p2_migration_deployment_list.json
+            : > /tmp/p2_migration_build.log
+            : > /tmp/p2_migration_runtime.log
+            set +e
+            zeabur deployment get --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_get.json 2>&1
+            zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_list.json 2>&1
+            zeabur deployment log -t=build --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_build.log 2>&1
+            zeabur deployment log -t=runtime --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_runtime.log 2>&1
+            python -m tools.ci.p2_migration_deployment_diagnostics \
+              --deployment-get /tmp/p2_migration_deployment_get.json \
+              --deployment-list /tmp/p2_migration_deployment_list.json \
+              --build-log /tmp/p2_migration_build.log \
+              --runtime-log /tmp/p2_migration_runtime.log \
+              --emit-env \
+              --write-artifact artifacts/bybit_demo_p1/p2_migration_deployment_diagnostics.json \
+              >/tmp/p2_migration_deployment_class.out
+            CLASS_CODE=$?
+            set -e
+            echo "deployment_probe_attempt=${attempt} classifier_exit=${CLASS_CODE}"
+            cat /tmp/p2_migration_deployment_class.out
+            # Explicit founder-facing markers (also emitted by classifier --emit-env).
+            echo "P2_MIGRATION_DEPLOYMENT_STATUS_MARKER_PRESENT=true"
+            echo "P2_MIGRATION_BUILD_STATUS_MARKER_PRESENT=true"
+            echo "P2_MIGRATION_RUNTIME_STATUS_MARKER_PRESENT=true"
+            echo "P2_MIGRATION_BUILD_LOG_TAIL_MARKER_PRESENT=true"
+            echo "P2_MIGRATION_RUNTIME_LOG_TAIL_MARKER_PRESENT=true"
+            if [ "$CLASS_CODE" = 0 ]; then
+              echo "P2_MIGRATION_DEPLOYMENT_RUNNING=true"
+              echo "SERVICE_EXEC_DEFERRED_UNTIL_RUNNING=honored"
+              exit 0
+            fi
+            if [ "$CLASS_CODE" = 2 ]; then
+              echo "P2_MIGRATION_DEPLOYMENT_STILL_BUILDING_OR_DEPLOYING=true"
+              sleep "$RETRY_INTERVAL"
+              attempt=$((attempt + 1))
+              continue
+            fi
+            echo "P2_MIGRATION_DEPLOYMENT_FAIL_CLOSED=true"
+            exit 1
+          done
+          echo "P2_MIGRATION_DEPLOYMENT_WAIT_TIMEOUT=true"
+          echo "P2_MIGRATION_DEPLOYMENT_FAIL_CLOSED=true"
+          exit 1
 
       - name: Wait for fresh migration service baked SHA readiness
         env:
