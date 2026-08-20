@@ -49,7 +49,7 @@ jobs:
           EXCHANGE_WRITE: "false"
         run: |
           pip install -r requirements.txt pytest
-          python -m pytest tests/test_p2_staging_migration_0007.py tests/test_p2_migration_atomic.py tests/test_p2_migration_service.py tests/test_p2_migration_file_channel_audit.py tests/test_p2_run8_evidence_truth.py tests/test_p2_durable_learning_closure.py tests/test_p2_1_postgres_qualification.py -q --tb=line
+          python -m pytest tests/test_p2_staging_migration_0007.py tests/test_p2_migration_atomic.py tests/test_p2_migration_service.py tests/test_p2_migration_file_channel_audit.py tests/test_p2_migration_rollout_readiness.py tests/test_p2_run8_evidence_truth.py tests/test_p2_durable_learning_closure.py tests/test_p2_1_postgres_qualification.py -q --tb=line
 
       - name: Verify required secret presence only
         env:
@@ -148,6 +148,7 @@ jobs:
 
       - name: Wait for fresh migration service baked SHA readiness
         env:
+          PYTHONPATH: ${{ github.workspace }}
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
         run: |
@@ -160,15 +161,33 @@ jobs:
           STREAK_GAP=2
           streak=0
           attempt=1
+          python -m tools.ci.p2_migration_rollout_readiness --print-remote-script > /tmp/p2_migration_current_image_probe.sh
+          SCRIPT_B64=$(base64 -w0 /tmp/p2_migration_current_image_probe.sh)
           while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
+            : > /tmp/p2_migration_readiness_probe.out
             set +e
-            OUT=$(zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
-              /bin/sh -lc "EXPECTED='$EXPECTED'; APP_ROOT=/app; BAKED=''; SOURCE=''; HELPER_PRESENT=false; if [ -f /app/DEPLOYMENT_COMMIT ]; then BAKED=\$(tr -d '\\r\\n' < /app/DEPLOYMENT_COMMIT); fi; if [ -f /app/SOURCE_COMMIT ]; then SOURCE=\$(tr -d '\\r\\n' < /app/SOURCE_COMMIT); fi; if [ -f /app/tools/ci/p2_staging_migration_0007.py ]; then HELPER_PRESENT=true; fi; echo expected_sha_prefix=\$(printf '%s' \"\$EXPECTED\" | cut -c1-12); echo baked_sha_prefix=\$(printf '%s' \"\$BAKED\" | cut -c1-12); echo source_sha_prefix=\$(printf '%s' \"\$SOURCE\" | cut -c1-12); echo helper_present=\$HELPER_PRESENT; test -n \"\$EXPECTED\"; test -n \"\$BAKED\"; test -n \"\$SOURCE\"; test \"\$BAKED\" = \"\$EXPECTED\"; test \"\$SOURCE\" = \"\$EXPECTED\"; test \"\$BAKED\" = \"\$SOURCE\"; test \"\$HELPER_PRESENT\" = true")
+            zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+              /bin/sh -lc "EXPECTED='$EXPECTED'; export EXPECTED; APP_ROOT=/app; export APP_ROOT; printf '%s' '$SCRIPT_B64' | base64 -d | /bin/sh" >/tmp/p2_migration_readiness_probe.out 2>&1
             CODE=$?
             set -e
-            echo "attempt=${attempt}"
-            printf '%s\n' "$OUT" | grep -E '^(expected_sha_prefix|baked_sha_prefix|source_sha_prefix|helper_present)=' || true
-            if [ "$CODE" = 0 ]; then
+            echo "attempt=${attempt} transport_exit=${CODE}"
+            printf '%s\n' "$(grep -E '^(expected_sha_prefix|baked_sha_prefix|source_sha_prefix|helper_present|P2_MIGRATION_CURRENT_IMAGE_PROBE_PASS)=' /tmp/p2_migration_readiness_probe.out || true)"
+            set +e
+            python -m tools.ci.p2_migration_rollout_readiness --classify-file /tmp/p2_migration_readiness_probe.out --expected "$EXPECTED" --exit-code "$CODE" >/tmp/p2_migration_readiness_class.json
+            CLASS_CODE=$?
+            set -e
+            cat /tmp/p2_migration_readiness_class.json
+            if grep -qE 'NOT_RUNNING_SERVICE|Inactive service|This service is not in the running state' /tmp/p2_migration_readiness_probe.out; then
+              streak=0
+              echo "P2_MIGRATION_SERVICE_NOT_RUNNING_YET=true"
+              echo "current_image_streak=0"
+              sleep "$RETRY_INTERVAL"
+            elif grep -q 'execute command failed' /tmp/p2_migration_readiness_probe.out; then
+              streak=0
+              echo "P2_MIGRATION_READINESS_CLI_ERROR=true"
+              echo "current_image_streak=0"
+              sleep "$RETRY_INTERVAL"
+            elif [ "$CLASS_CODE" = 0 ] && grep -q 'P2_MIGRATION_CURRENT_IMAGE_PROBE_PASS=true' /tmp/p2_migration_readiness_probe.out; then
               streak=$((streak + 1))
               echo "current_image_streak=${streak}"
               if [ "$streak" -ge "$STREAK_NEEDED" ]; then
@@ -179,6 +198,7 @@ jobs:
               sleep "$STREAK_GAP"
             else
               streak=0
+              echo "current_image_streak=0"
               echo "FRESH_SERVICE_BAKED_SHA_NOT_READY_YET"
               sleep "$RETRY_INTERVAL"
             fi
