@@ -33,7 +33,7 @@ REQUIRED_MISTAKE_LABELS = {
 
 
 def test_certified_run8_learning_input_is_exchange_and_ledger_grounded():
-    case = load_run8_learning_input()
+    case = load_run8_learning_input(allow_test_fixture=True)
     assert case["ledger_final_state"] == "CLOSED"
     assert case["pnl_provenance"] == PNL_PROVENANCE
     assert case["candidate_count"] == 1
@@ -48,16 +48,19 @@ def test_non_closed_or_write_contaminated_input_is_rejected():
     dirty = certified_run8_snapshot()
     dirty["ledger_final_state"] = "FILLED"
     with pytest.raises(ValueError, match="ledger_not_closed"):
-        load_run8_learning_input(dirty)
+        load_run8_learning_input(dirty, allow_test_fixture=True)
     writes = certified_run8_snapshot()
     writes["create_order_calls"] = 1
     with pytest.raises(ValueError, match="exchange_write_not_zero"):
-        load_run8_learning_input(writes)
+        load_run8_learning_input(writes, allow_test_fixture=True)
 
 
 def test_run8_pipeline_closes_learning_without_exchange_writes(tmp_path):
     artifact = tmp_path / "p2.json"
-    evidence = close_run8_learning(write_artifact=lambda _path, payload: artifact.write_text("ok") or True)
+    evidence = close_run8_learning(
+        write_artifact=lambda _path, payload: artifact.write_text("ok") or True,
+        allow_test_fixture=True,
+    )
     assert evidence["P2_RUN8_LEARNING_CLOSURE"] == "COMPLETE"
     assert evidence["run8_certified_learning_input_ready"] is True
     assert evidence["create_order_calls"] == 0
@@ -71,7 +74,7 @@ def test_run8_pipeline_closes_learning_without_exchange_writes(tmp_path):
 
 
 def test_reflection_separates_bad_outcome_from_valid_decision():
-    evidence = close_run8_learning()
+    evidence = close_run8_learning(allow_test_fixture=True)
     reflection = evidence["reflection"]
     assert reflection["outcome_quality"] == "BAD_NET_PNL"
     assert reflection["decision_quality"] == "VALID_PROCESS_INSUFFICIENT_EDGE_VS_COST"
@@ -79,10 +82,11 @@ def test_reflection_separates_bad_outcome_from_valid_decision():
     assert reflection["price_path"] == "UNCHANGED"
     assert reflection["pnl_is_not_process"] is True
     assert reflection["process_valid"] is True
+    assert reflection["process_valid_hardcoded"] is False
 
 
 def test_mistake_taxonomy_and_fee_drag_classification():
-    evidence = close_run8_learning()
+    evidence = close_run8_learning(allow_test_fixture=True)
     mistakes = evidence["mistakes"]
     assert REQUIRED_MISTAKE_LABELS.issubset(set(mistakes["taxonomy"]))
     assert set(MISTAKE_TAXONOMY) == REQUIRED_MISTAKE_LABELS
@@ -93,7 +97,7 @@ def test_mistake_taxonomy_and_fee_drag_classification():
 
 
 def test_counterfactuals_are_research_only():
-    evidence = close_run8_learning()
+    evidence = close_run8_learning(allow_test_fixture=True)
     kinds = {item["kind"] for item in evidence["counterfactuals"]}
     assert {"SKIP", "delayed_entry", "alternative_threshold", "reduced_confidence_or_size"} <= kinds
     assert all(item["research_only"] is True for item in evidence["counterfactuals"])
@@ -105,7 +109,7 @@ def test_counterfactuals_are_research_only():
 
 
 def test_lesson_candidate_is_linked_and_not_policy_truth():
-    evidence = close_run8_learning()
+    evidence = close_run8_learning(allow_test_fixture=True)
     lesson = evidence["lesson_candidate"]
     assert lesson["lesson_id"] == evidence["lesson_id"]
     assert lesson["trade_id"] == "run8_certified_trade"
@@ -124,7 +128,7 @@ def test_lesson_candidate_is_linked_and_not_policy_truth():
 
 
 def test_decision_memory_is_queryable_by_future_candidate_context():
-    evidence = close_run8_learning()
+    evidence = close_run8_learning(allow_test_fixture=True)
     hits = evidence["decision_memory_hits"]
     assert evidence["decision_memory_queryable"] is True
     assert len(hits) == 1
@@ -135,7 +139,7 @@ def test_decision_memory_is_queryable_by_future_candidate_context():
 
 
 def test_repeat_mistake_guard_changes_similar_candidate_behavior():
-    evidence = close_run8_learning()
+    evidence = close_run8_learning(allow_test_fixture=True)
     assert evidence["decision_before_learning"] == "ALLOW"
     assert evidence["decision_after_learning"] == "SKIP"
     assert evidence["confidence_before"] == 0.62
@@ -148,7 +152,7 @@ def test_repeat_mistake_guard_changes_similar_candidate_behavior():
 
 
 def test_unrelated_candidate_is_not_skipped():
-    first = close_run8_learning()
+    first = close_run8_learning(allow_test_fixture=True)
     memory_hits = first["decision_memory_hits"]
     from backend.nexus_demo_execution.p2_run8_learning_closure import DecisionMemory
 
@@ -171,7 +175,7 @@ def test_unrelated_candidate_is_not_skipped():
 def test_hard_safety_policy_is_not_mutated():
     before_leverage = FIXED_LEVERAGE
     before_cap = MARGIN_PER_TRADE_CAP
-    evidence = close_run8_learning()
+    evidence = close_run8_learning(allow_test_fixture=True)
     assert FIXED_LEVERAGE == before_leverage == 25
     assert MARGIN_PER_TRADE_CAP == before_cap
     assert evidence["hard_leverage"] == 25
@@ -181,7 +185,7 @@ def test_hard_safety_policy_is_not_mutated():
 
 def test_pipeline_does_not_invent_a_new_qualification_trade():
     snapshot = certified_run8_snapshot()
-    evidence = close_run8_learning(deepcopy(snapshot))
+    evidence = close_run8_learning(deepcopy(snapshot), allow_test_fixture=True)
     assert evidence["trade_id"] == snapshot["trade_id"]
     assert evidence["decision_id"] == snapshot["decision_id"]
     assert evidence["run8_evidence_identity"] == snapshot["run8_evidence_identity"]

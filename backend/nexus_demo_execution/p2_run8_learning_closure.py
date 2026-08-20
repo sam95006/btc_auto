@@ -67,9 +67,11 @@ def _text(value: Any) -> str:
 
 
 def certified_run8_snapshot() -> dict[str, Any]:
-    """Founder-certified Run #8 exchange/ledger facts. No new trade is invented."""
+    """TEST FIXTURE ONLY. Not authoritative production input."""
     return {
-        "source": "CERTIFIED_RUN8_EXCHANGE_LEDGER",
+        "source": "TEST_FIXTURE_NOT_AUTHORITATIVE",
+        "fixture_only": True,
+        "authoritative": False,
         "campaign_id": "bybit-demo-p1-qualification",
         "symbol": "BTCUSDT",
         "side": "Buy",
@@ -84,6 +86,12 @@ def certified_run8_snapshot() -> dict[str, Any]:
         "closed_pnl_exact_match": True,
         "P1_EXCHANGE_REALIZED_PNL_PASS": True,
         "P1_DURABLE_LEDGER_LIFECYCLE_PASS": True,
+        "P1_PREFLIGHT_PASS": True,
+        "RISK_ENGINE_FINAL_AUTHORITY_PASS": True,
+        "P1_ENTRY_RECONCILIATION_PASS": True,
+        "P1_CLOSE_RECONCILIATION_PASS": True,
+        "P1_RUN8_POSITION_FLAT": True,
+        "P1_RUN8_EXACT_CLOSED_PNL_MATCH": True,
         "ledger_final_state": "CLOSED",
         "actual_entry_price": "64282.2",
         "actual_exit_price": "64282.2",
@@ -100,15 +108,24 @@ def certified_run8_snapshot() -> dict[str, Any]:
             "symbol": "BTCUSDT",
             "side": "Buy",
             "requested_qty": "0.001",
-            "confidence": 1.0,
-            "expected_gross_move_bps": 0,
             "founder_authorized_qualification": True,
         },
     }
 
 
-def load_run8_learning_input(payload: dict[str, Any] | None = None) -> dict[str, Any]:
-    source = deepcopy(payload) if payload else certified_run8_snapshot()
+def load_run8_learning_input(
+    payload: dict[str, Any] | None = None,
+    *,
+    allow_test_fixture: bool = False,
+) -> dict[str, Any]:
+    if payload is None:
+        if not allow_test_fixture:
+            raise ValueError("durable_run8_input_required")
+        source = certified_run8_snapshot()
+    else:
+        source = deepcopy(payload)
+    if source.get("fixture_only") and not allow_test_fixture:
+        raise ValueError("hardcoded_snapshot_not_authoritative")
     required = (
         "symbol",
         "side",
@@ -132,9 +149,10 @@ def load_run8_learning_input(payload: dict[str, Any] | None = None) -> dict[str,
         raise ValueError("run8_learning_input_exchange_write_not_zero")
     if int(source.get("exchange_write_call_count") or 0) != 0:
         raise ValueError("run8_learning_input_exchange_write_not_zero")
-    source.setdefault("trade_id", "run8_certified_trade")
-    source.setdefault("decision_id", "run8_certified_decision")
-    source.setdefault("run8_evidence_identity", "run8_certified_lifecycle")
+    if not allow_test_fixture:
+        from backend.nexus_demo_execution.p2_run8_durable_loader import reject_placeholder_ids
+
+        reject_placeholder_ids(source)
     source.setdefault("candidate_count", 1)
     return source
 
@@ -157,7 +175,14 @@ def reflect_run8(case: dict[str, Any]) -> dict[str, Any]:
         price_path = "ADVERSE"
     else:
         price_path = "FAVORABLE"
-    if price_path == "UNCHANGED" and fees > 0 and realized < 0:
+    from backend.nexus_demo_execution.p2_run8_durable_loader import derive_process_gates
+
+    assessment = case.get("process_assessment") or derive_process_gates(case)
+    process_valid = bool(assessment.get("process_valid"))
+    if not process_valid:
+        decision_quality = "PROCESS_NOT_PROVEN"
+        distinction = "PROCESS_GATES_INCOMPLETE_OR_FAILED"
+    elif price_path == "UNCHANGED" and fees > 0 and realized < 0:
         decision_quality = "VALID_PROCESS_INSUFFICIENT_EDGE_VS_COST"
         distinction = "BAD_OUTCOME_FROM_FEE_DRAG_NOT_DIRECTIONAL_ERROR"
     elif price_path == "ADVERSE" and abs(gross) > fees:
@@ -174,7 +199,9 @@ def reflect_run8(case: dict[str, Any]) -> dict[str, Any]:
         "gross_pnl": format(gross, "f"),
         "fee_total": format(fees, "f"),
         "realized_demo_pnl": format(realized, "f"),
-        "process_valid": True,
+        "process_valid": process_valid,
+        "process_valid_hardcoded": False,
+        "process_gates": assessment.get("gates"),
         "pnl_is_not_process": True,
         "exchange_grounded": True,
     }
@@ -188,7 +215,7 @@ def classify_mistakes(case: dict[str, Any], reflection: dict[str, Any]) -> dict[
     labels: list[str] = []
     if fees > 0 and realized < 0 and abs(gross) <= fees:
         labels.append("FEE_DRAG")
-    if reflection["price_path"] == "UNCHANGED" and realized < 0:
+    if reflection.get("process_valid") and reflection["price_path"] == "UNCHANGED" and realized < 0:
         labels.append("VALID_DECISION_BAD_OUTCOME")
     if reflection["price_path"] == "ADVERSE" and abs(gross) > fees:
         labels.append("DIRECTION")
@@ -298,6 +325,27 @@ def _context_key(symbol: str, side: str) -> str:
     return f"{_text(symbol).upper()}|{_text(side).upper()}"
 
 
+def fee_dominated_context(candidate: dict[str, Any]) -> bool:
+    expected = candidate.get("expected_gross_pnl")
+    fees = candidate.get("round_trip_fee_estimate")
+    if expected in (None, "", "UNKNOWN") or fees in (None, "", "UNKNOWN"):
+        return False
+    fee_value = _dec(fees)
+    return fee_value > 0 and _dec(expected) <= fee_value
+
+
+def _fee_drag_lesson_matches(candidate: dict[str, Any], row: dict[str, Any]) -> bool:
+    lesson = row.get("payload") or row
+    primary = row.get("primary_mistake") or lesson.get("primary_mistake")
+    if primary != "FEE_DRAG" or not fee_dominated_context(candidate):
+        return False
+    lesson_symbol = _text(row.get("symbol") or lesson.get("symbol"))
+    candidate_symbol = _text(candidate.get("symbol"))
+    if lesson_symbol and candidate_symbol and lesson_symbol.upper() != candidate_symbol.upper():
+        return False
+    return True
+
+
 class DecisionMemory:
     """Queryable research memory. Does not write exchange or live policy."""
 
@@ -325,6 +373,9 @@ class DecisionMemory:
         key = _context_key(symbol, side)
         return [dict(row) for row in self._rows if row.get("context_key") == key]
 
+    def query_context(self, candidate: dict[str, Any]) -> list[dict[str, Any]]:
+        return [dict(row) for row in self._rows if _fee_drag_lesson_matches(candidate, row)]
+
 
 class RepeatMistakeGuard:
     """Research guard: change similar-candidate behavior without mutating hard policy."""
@@ -333,7 +384,10 @@ class RepeatMistakeGuard:
         self.memory = memory
 
     def evaluate(self, candidate: dict[str, Any]) -> dict[str, Any]:
-        matches = self.memory.query(symbol=str(candidate.get("symbol") or ""), side=str(candidate.get("side") or ""))
+        if hasattr(self.memory, "query_context"):
+            matches = self.memory.query_context(candidate)
+        else:
+            matches = self.memory.query(symbol=str(candidate.get("symbol") or ""), side=str(candidate.get("side") or ""))
         expected_gross = _dec(candidate.get("expected_gross_pnl") or 0)
         fee_estimate = _dec(candidate.get("round_trip_fee_estimate") or 0)
         confidence = float(candidate.get("confidence") or 0.0)
@@ -390,12 +444,13 @@ def close_run8_learning(
     *,
     similar_candidate: dict[str, Any] | None = None,
     write_artifact: Callable[[Path, dict[str, Any]], bool] | None = None,
+    allow_test_fixture: bool = False,
 ) -> dict[str, Any]:
     apply_disarmed_flags()
     os.environ["AUTONOMOUS_BYBIT_DEMO_ARM_READY"] = ARM_READY_HOLD
     leverage_before = FIXED_LEVERAGE
     cap_before = float(MARGIN_PER_TRADE_CAP)
-    case = load_run8_learning_input(payload)
+    case = load_run8_learning_input(payload, allow_test_fixture=allow_test_fixture)
     reflection = reflect_run8(case)
     mistakes = classify_mistakes(case, reflection)
     counterfactuals = research_counterfactuals(case, reflection)
@@ -458,3 +513,126 @@ def close_run8_learning(
         except OSError:
             pass
     return evidence
+
+
+class DurableDecisionMemory:
+    """PostgreSQL/SQLite-backed research memory. Empty RAM still sees prior lessons."""
+
+    def __init__(self, store: Any) -> None:
+        self.store = store
+
+    def remember(self, lesson: dict[str, Any], case: dict[str, Any]) -> dict[str, Any]:
+        record = {
+            "lesson_id": lesson["lesson_id"],
+            "source_trade_id": case["trade_id"],
+            "source_decision_id": case["decision_id"],
+            "source_evidence_hash": case.get("source_evidence_hash") or case.get("run8_evidence_identity"),
+            "campaign_id": case.get("campaign_id") or P2_CAMPAIGN_ID,
+            "symbol": case["symbol"],
+            "side": case["side"],
+            "mistake_labels": lesson.get("labels") or lesson.get("mistake_labels") or [],
+            "primary_mistake": lesson["primary_mistake"],
+            "lesson_rule": lesson.get("rule") or lesson.get("lesson_rule"),
+            "support_count": int(lesson.get("support_count") or 1),
+            "confidence": lesson.get("confidence"),
+            "status": lesson.get("status") or LESSON_STATUS_CANDIDATE,
+            "policy_truth": False,
+            "revalidation_required": True,
+            "ttl_trades": lesson.get("ttl_trades"),
+            "payload": {**lesson, "trade_id": case["trade_id"], "decision_id": case["decision_id"]},
+        }
+        stored = self.store.upsert_lesson(record)
+        return stored
+
+    def query_context(self, candidate: dict[str, Any]) -> list[dict[str, Any]]:
+        hits: list[dict[str, Any]] = []
+        for row in self.store.list_lessons():
+            if _fee_drag_lesson_matches(candidate, row):
+                payload = row.get("payload") or row
+                hits.append({"payload": payload, **row})
+        return hits
+
+    def query(self, *, symbol: str, side: str) -> list[dict[str, Any]]:
+        del symbol, side
+        return []
+
+
+def close_run8_durable_learning(
+    *,
+    store: Any,
+    intents: list[dict[str, Any]] | None = None,
+    ledger: Any | None = None,
+    market_input: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    from backend.nexus_demo_execution.p2_research_decision_path import research_decision_path
+    from backend.nexus_demo_execution.p2_run8_durable_loader import load_run8_from_intents, load_run8_from_ledger
+
+    apply_disarmed_flags()
+    os.environ["AUTONOMOUS_BYBIT_DEMO_ARM_READY"] = ARM_READY_HOLD
+    leverage_before = FIXED_LEVERAGE
+    cap_before = float(MARGIN_PER_TRADE_CAP)
+    if intents is not None:
+        case = load_run8_from_intents(intents)
+    else:
+        case = load_run8_from_ledger(ledger)
+    reflection = reflect_run8(case)
+    mistakes = classify_mistakes(case, reflection)
+    counterfactuals = research_counterfactuals(case, reflection)
+    lesson = build_lesson_candidate(case, reflection, mistakes, counterfactuals)
+    lesson["lesson_id"] = f"LC_{case['source_evidence_hash'][:24]}"
+    lesson["source_trade_id"] = case["trade_id"]
+    lesson["source_decision_id"] = case["decision_id"]
+    lesson["source_evidence_hash"] = case["source_evidence_hash"]
+    lesson["policy_truth"] = False
+    memory = DurableDecisionMemory(store)
+    memory.remember(lesson, case)
+    candidate = market_input or {
+        "symbol": case["symbol"],
+        "side": case["side"],
+        "lesson_type": "FEE_DRAG",
+        "expected_gross_pnl": "0",
+        "round_trip_fee_estimate": str(_dec(case["open_fee"]) + _dec(case["close_fee"])),
+        "confidence": 0.62,
+        "signal_family": "UNKNOWN",
+        "market_regime": "UNKNOWN",
+        "horizon": "UNKNOWN",
+    }
+    empty = DurableDecisionMemory(type("Empty", (), {"list_lessons": staticmethod(lambda: []), "upsert_lesson": staticmethod(lambda row: row)})())
+    before = research_decision_path(candidate, memory=empty)
+    after = research_decision_path(candidate, memory=memory)
+    _assert_safety_untouched(leverage_before=leverage_before, cap_before=cap_before)
+    return {
+        "P2_1_DURABLE_LEARNING_CLOSURE": "COMPLETE",
+        "AUTONOMOUS_BYBIT_DEMO_ARM_READY": ARM_READY_HOLD,
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+        "trade_id": case["trade_id"],
+        "decision_id": case["decision_id"],
+        "order_intent_id": case["order_intent_id"],
+        "entry_order_id": case["entry_order_id"],
+        "close_order_id": case["close_order_id"],
+        "source_evidence_hash": case["source_evidence_hash"],
+        "original_decision_context": case["original_decision_context"],
+        "process_assessment": case["process_assessment"],
+        "reflection": reflection,
+        "mistakes": mistakes,
+        "counterfactuals": counterfactuals,
+        "lesson_candidate": lesson,
+        "lesson_id": lesson["lesson_id"],
+        "policy_truth": False,
+        "support_count": 1,
+        "decision_before_learning": before["guard"]["decision_before_learning"],
+        "decision_after_learning": after["guard"]["decision_after_learning"],
+        "confidence_before": before["guard"]["confidence_before"],
+        "confidence_after": after["guard"]["confidence_after"],
+        "guard_before": before["guard"]["guard_before"],
+        "guard_after": after["guard"]["guard_after"],
+        "reason_for_change": after["guard"]["reason_for_change"],
+        "research_recommendation_before": before["research_recommendation"],
+        "research_recommendation_after": after["research_recommendation"],
+        "live_execution_veto": False,
+        "behavior_change_demonstrated": before["research_recommendation"] != after["research_recommendation"],
+        "hard_leverage": FIXED_LEVERAGE,
+        "hard_risk_cap": MARGIN_PER_TRADE_CAP,
+    }
+
