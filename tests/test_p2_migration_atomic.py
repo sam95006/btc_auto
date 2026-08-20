@@ -128,7 +128,11 @@ def test_mixed_pod_sequence_retries_then_starts_once():
         starts["n"] += 1
         return {"stdout": _current_pass_stdout(), "exit_code": 0}
 
-    result = run_atomic_migration_with_stale_retry(exec_attempt=exec_attempt, sleep=lambda _s: None)
+    result = run_atomic_migration_with_stale_retry(
+        exec_attempt=exec_attempt,
+        max_attempts=4,
+        sleep=lambda _s: None,
+    )
     assert result["migration_started"] is True
     assert result["python_starts"] == 1
     assert starts["n"] == 1
@@ -201,15 +205,18 @@ def test_prebootstrap_import_failure_is_sanitized(tmp_path: Path):
 
 def test_workflow_uses_atomic_same_exec_and_baked_sha():
     source = WORKFLOW.read_text(encoding="utf-8")
+    assert "nexus-p2-migration-0007" in source
+    assert "ensure_p2_migration_zeabur_service.py" in source
     assert "DEPLOYMENT_COMMIT" in source
     assert "SOURCE_COMMIT" in source
     assert "COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT" in source
     assert "P2_MIGRATION_DEPLOYMENT_CONVERGED=true" in source
     assert "p2_migration_atomic.py --print-remote-script" in source
     assert "p2_extract_migration_authoritative_stdout.py" in source
+    assert "p2_migration_parse_service_exec.py" in source
     assert "file_channel_authoritative=false" in source
     assert "Require migration helper imports before apply" not in source
-    assert source.index("Wait for current-image rollout convergence") < source.index(
+    assert source.index("Wait for fresh migration service baked SHA readiness") < source.index(
         "Apply and verify only migration 0007 through atomic same-exec"
     )
     assert "python -m tools.ci.p2_staging_migration_0007" in source
