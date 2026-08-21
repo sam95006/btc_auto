@@ -122,6 +122,7 @@ def test_g_migration_cannot_start_before_operational_pass_in_workflow():
     assert op_idx < apply_idx
     assert "P2_MIGRATION_OPERATIONAL_READINESS_PASS=true" in source[op_idx:apply_idx]
     assert source.index("Metadata diagnostic and explicit-negative veto") < op_idx
+    assert source.index("Require deployment record before service-exec") < op_idx
 
 
 def test_h_zero_exchange_writes_in_readiness_surfaces():

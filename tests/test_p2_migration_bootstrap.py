@@ -261,21 +261,23 @@ def test_e_missing_returned_env_is_not_mismatch():
     assert audit["blocks_create"] is False
 
 
-def test_f_g_h_workflow_same_env_vars_and_single_post_var_restart():
+def test_f_g_h_workflow_same_env_vars_and_single_post_var_redeploy():
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf" in source
     assert "ZEABUR_ENV_ID: ${{ env.ZEABUR_ENV_ID }}" in source
     assert 'variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID"' in source
     assert 'variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID"' in source
-    assert "Restart staging service once after runtime variables" in source
-    assert 'zeabur service restart --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -y -i=false' in source
-    assert "P2_MIGRATION_POST_VAR_RESTART=true" in source
-    assert "P2_MIGRATION_POST_VAR_RESTART_COUNT=1" in source
-    assert source.count("zeabur service restart") == 1
+    assert "Redeploy staging service once after runtime variables" in source
+    assert 'zeabur service redeploy --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -y -i=false' in source
+    assert "P2_MIGRATION_POST_VAR_REDEPLOY=true" in source
+    assert "P2_MIGRATION_POST_VAR_REDEPLOY_COMMAND_PASS=true" in source
+    assert "P2_MIGRATION_POST_VAR_REDEPLOY_COUNT=1" in source
+    assert source.count('zeabur service redeploy --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -y -i=false') == 1
+    assert "zeabur service restart --id" not in source
     vars_idx = source.index("Inject disarmed runtime variables after single bootstrap deploy")
-    restart_idx = source.index("Restart staging service once after runtime variables")
+    redeploy_idx = source.index("Redeploy staging service once after runtime variables")
     meta_idx = source.index("Metadata diagnostic and explicit-negative veto")
-    assert vars_idx < restart_idx < meta_idx
+    assert vars_idx < redeploy_idx < meta_idx
 
 
 def test_i_operational_readiness_unchanged_in_ensure_and_workflow():

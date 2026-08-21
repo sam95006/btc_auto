@@ -159,8 +159,9 @@ jobs:
           echo "P2_MIGRATION_RUNTIME_VARS_INJECTED_AFTER_SINGLE_DEPLOY=true"
           echo "P2_MIGRATION_SECOND_DEPLOY=false"
 
-      - name: Restart staging service once after runtime variables
+      - name: Redeploy staging service once after runtime variables
         env:
+          PYTHONPATH: ${{ github.workspace }}
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
         run: |
@@ -168,10 +169,33 @@ jobs:
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           test -n "${SERVICE_ID:-}"
           test -n "${ZEABUR_ENV_ID:-}"
-          # CLI flag is --id (not --service-id). Exactly one restart; fail closed on error.
-          zeabur service restart --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -y -i=false
-          echo "P2_MIGRATION_POST_VAR_RESTART=true"
-          echo "P2_MIGRATION_POST_VAR_RESTART_COUNT=1"
+          # Flags verified via: zeabur service redeploy --help → --id --env-id -y -i
+          # Exactly one redeploy; exit 0 alone is insufficient (semantic errors fail closed).
+          set +e
+          zeabur service redeploy --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -y -i=false >/tmp/p2_migration_redeploy.out 2>&1
+          REDEPLOY_EXIT=$?
+          set -e
+          cat /tmp/p2_migration_redeploy.out
+          echo "post_var_redeploy_exit=${REDEPLOY_EXIT}"
+          set +e
+          python -m tools.ci.p2_migration_lifecycle_command \
+            --classify-lifecycle-file /tmp/p2_migration_redeploy.out \
+            --exit-code "$REDEPLOY_EXIT" \
+            --operation redeploy \
+            --emit-env >/tmp/p2_migration_redeploy_class.json
+          CLASS_EXIT=$?
+          set -e
+          cat /tmp/p2_migration_redeploy_class.json
+          if [ "$CLASS_EXIT" -ne 0 ]; then
+            echo "P2_MIGRATION_POST_VAR_REDEPLOY=false"
+            echo "P2_MIGRATION_POST_VAR_REDEPLOY_COMMAND_PASS=false"
+            echo "P2_MIGRATION_POST_VAR_REDEPLOY_COUNT=0"
+            echo "BLOCKER_post_var_redeploy_semantic_or_exit_failed"
+            exit 1
+          fi
+          echo "P2_MIGRATION_POST_VAR_REDEPLOY=true"
+          echo "P2_MIGRATION_POST_VAR_REDEPLOY_COMMAND_PASS=true"
+          echo "P2_MIGRATION_POST_VAR_REDEPLOY_COUNT=1"
           echo "P2_MIGRATION_SECOND_DEPLOY=false"
 
       - name: Metadata diagnostic and explicit-negative veto
@@ -288,6 +312,46 @@ jobs:
             exit 1
           done
           echo "P2_MIGRATION_METADATA_WAIT_TIMEOUT=true"
+          exit 1
+
+      - name: Require deployment record before service-exec
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          test -n "${SERVICE_ID:-}"
+          test -n "${ZEABUR_ENV_ID:-}"
+          MAX_ATTEMPTS=12
+          RETRY_INTERVAL=10
+          attempt=1
+          while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
+            : > /tmp/p2_migration_deployment_record_get.json
+            : > /tmp/p2_migration_deployment_record_list.json
+            set +e
+            zeabur deployment get --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_record_get.json 2>&1
+            zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_record_list.json 2>&1
+            python -m tools.ci.p2_migration_lifecycle_command \
+              --deployment-record \
+              --deployment-get-file /tmp/p2_migration_deployment_record_get.json \
+              --deployment-list-file /tmp/p2_migration_deployment_record_list.json \
+              --emit-env >/tmp/p2_migration_deployment_record.json
+            RECORD_EXIT=$?
+            set -e
+            echo "deployment_record_attempt=${attempt} classifier_exit=${RECORD_EXIT}"
+            cat /tmp/p2_migration_deployment_record.json
+            if [ "$RECORD_EXIT" = 0 ]; then
+              echo "P2_MIGRATION_DEPLOYMENT_RECORD_PRESENT=true"
+              exit 0
+            fi
+            echo "P2_MIGRATION_DEPLOYMENT_RECORD_PRESENT=false"
+            sleep "$RETRY_INTERVAL"
+            attempt=$((attempt + 1))
+          done
+          echo "P2_MIGRATION_DEPLOYMENT_RECORD_PRESENT=false"
+          echo "BLOCKER_deployment_record_absent_before_service_exec"
           exit 1
 
       - name: Operational service-exec readiness

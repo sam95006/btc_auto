@@ -62,6 +62,11 @@ CLI_SEMANTIC_ERROR_PATTERNS = (
     re.compile(r"execute command failed", re.I),
     re.compile(r"NOT_RUNNING_SERVICE", re.I),
     re.compile(r"Inactiv(?:e|ate)\s+service", re.I),
+    re.compile(r"restart service failed", re.I),
+    re.compile(r"redeploy service failed", re.I),
+    re.compile(r"INTERNAL_SERVER_ERROR", re.I),
+    re.compile(r"Path:\s*\[restartService\]", re.I),
+    re.compile(r"Path:\s*\[redeployService\]", re.I),
 )
 
 CONTAINER_IMAGE_BUILD_LOG_NA = re.compile(

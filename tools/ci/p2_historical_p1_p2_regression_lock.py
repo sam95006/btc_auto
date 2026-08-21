@@ -30,6 +30,7 @@ HISTORICAL_P1_P2_REGRESSION_LOCK_MODULES: tuple[str, ...] = (
     "tests/test_p2_migration_image_contract.py",
     "tests/test_p2_certified_surface_freeze.py",
     "tests/test_p2_migration_operational_readiness_control.py",
+    "tests/test_p2_migration_lifecycle_command.py",
 )
 
 
