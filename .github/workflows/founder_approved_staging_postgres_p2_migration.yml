@@ -152,7 +152,7 @@ jobs:
           echo "P2_MIGRATION_RUNTIME_VARS_INJECTED_AFTER_SINGLE_DEPLOY=true"
           echo "P2_MIGRATION_SECOND_DEPLOY=false"
 
-      - name: Wait for Zeabur deployment RUNNING before service-exec probes
+      - name: Metadata diagnostic and explicit-negative veto
         env:
           PYTHONPATH: ${{ github.workspace }}
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
@@ -190,12 +190,12 @@ jobs:
           echo "zeabur_cli_preferred_selector=${PREFERRED}"
           echo "P2_MIGRATION_DEPLOYMENT_SELECTOR=${PREFERRED}"
           echo "zeabur_cli_supports_deployment_list=${SUPPORTS_LIST}"
-          # Run-scoped SERVICE_ID is the sole deployment diagnostic identity authority.
           if [ "$PREFERRED" != "service-id" ]; then
             echo "BLOCKER_zeabur_deployment_cli_selector_unsupported"
             exit 1
           fi
-          MAX_ATTEMPTS=24
+          # Bounded wait only for BUILDING/DEPLOYING metadata; UNKNOWN must proceed.
+          MAX_ATTEMPTS=12
           RETRY_INTERVAL=10
           attempt=1
           while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
@@ -243,7 +243,7 @@ jobs:
               >/tmp/p2_migration_deployment_class.out
             CLASS_CODE=$?
             set -e
-            echo "deployment_probe_attempt=${attempt} classifier_exit=${CLASS_CODE}"
+            echo "metadata_probe_attempt=${attempt} classifier_exit=${CLASS_CODE}"
             cat /tmp/p2_migration_deployment_class.out
             echo "P2_MIGRATION_DEPLOYMENT_STATUS_MARKER_PRESENT=true"
             echo "P2_MIGRATION_SERVICE_STATUS_MARKER_PRESENT=true"
@@ -252,24 +252,23 @@ jobs:
             echo "P2_MIGRATION_BUILD_LOG_TAIL_MARKER_PRESENT=true"
             echo "P2_MIGRATION_RUNTIME_LOG_TAIL_MARKER_PRESENT=true"
             if [ "$CLASS_CODE" = 0 ]; then
-              echo "P2_MIGRATION_DEPLOYMENT_RUNNING=true"
-              echo "SERVICE_EXEC_DEFERRED_UNTIL_RUNNING=honored"
+              echo "P2_MIGRATION_METADATA_PROCEED_TO_OPERATIONAL=true"
+              echo "DUPLICATE_METADATA_RUNNING_GATE_REMOVED=true"
               exit 0
             fi
             if [ "$CLASS_CODE" = 2 ]; then
-              echo "P2_MIGRATION_DEPLOYMENT_STILL_BUILDING_OR_DEPLOYING=true"
+              echo "P2_MIGRATION_METADATA_STILL_BUILDING_OR_DEPLOYING=true"
               sleep "$RETRY_INTERVAL"
               attempt=$((attempt + 1))
               continue
             fi
-            echo "P2_MIGRATION_DEPLOYMENT_FAIL_CLOSED=true"
+            echo "P2_MIGRATION_METADATA_VETO_FAIL_CLOSED=true"
             exit 1
           done
-          echo "P2_MIGRATION_DEPLOYMENT_WAIT_TIMEOUT=true"
-          echo "P2_MIGRATION_DEPLOYMENT_FAIL_CLOSED=true"
+          echo "P2_MIGRATION_METADATA_WAIT_TIMEOUT=true"
           exit 1
 
-      - name: Wait for fresh migration service baked SHA readiness
+      - name: Operational service-exec readiness
         env:
           PYTHONPATH: ${{ github.workspace }}
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
@@ -296,43 +295,50 @@ jobs:
             CODE=$?
             set -e
             echo "attempt=${attempt} transport_exit=${CODE}"
-            printf '%s\n' "$(grep -E '^(expected_sha_prefix|baked_sha_prefix|source_sha_prefix|helper_present|P2_MIGRATION_CURRENT_IMAGE_PROBE_PASS)=' /tmp/p2_migration_readiness_probe.out || true)"
+            printf '%s\n' "$(grep -E '^(expected_sha_prefix|baked_sha_prefix|source_sha_prefix|helper_present|safety_flags_ok|P2_MIGRATION_CURRENT_IMAGE_PROBE_PASS|P2_MIGRATION_OPERATIONAL_READINESS_PASS)=' /tmp/p2_migration_readiness_probe.out || true)"
             set +e
             python -m tools.ci.p2_migration_rollout_readiness --classify-file /tmp/p2_migration_readiness_probe.out --expected "$EXPECTED" --exit-code "$CODE" >/tmp/p2_migration_readiness_class.json
             CLASS_CODE=$?
             set -e
             cat /tmp/p2_migration_readiness_class.json
+            if [ "$CLASS_CODE" = 3 ]; then
+              echo "P2_MIGRATION_OPERATIONAL_HARD_FAIL=true"
+              echo "current_image_streak=0"
+              exit 1
+            fi
             if grep -qE 'NOT_RUNNING_SERVICE|Inactive service|This service is not in the running state' /tmp/p2_migration_readiness_probe.out; then
               streak=0
               not_running_count=$((not_running_count + 1))
               echo "P2_MIGRATION_SERVICE_NOT_RUNNING_YET=true"
               echo "current_image_streak=0"
               sleep "$RETRY_INTERVAL"
-            elif grep -q 'execute command failed' /tmp/p2_migration_readiness_probe.out; then
-              streak=0
-              echo "P2_MIGRATION_READINESS_CLI_ERROR=true"
-              echo "current_image_streak=0"
-              sleep "$RETRY_INTERVAL"
-            elif [ "$CLASS_CODE" = 0 ] && grep -q 'P2_MIGRATION_CURRENT_IMAGE_PROBE_PASS=true' /tmp/p2_migration_readiness_probe.out; then
+            elif [ "$CLASS_CODE" = 0 ] && grep -q 'P2_MIGRATION_OPERATIONAL_READINESS_PASS=true' /tmp/p2_migration_readiness_probe.out; then
               streak=$((streak + 1))
               positive_proof_count=$((positive_proof_count + 1))
               echo "current_image_streak=${streak}"
               if [ "$streak" -ge "$STREAK_NEEDED" ]; then
+                echo "P2_MIGRATION_OPERATIONAL_READINESS_PASS=true"
                 echo "P2_MIGRATION_DEPLOYMENT_CONVERGED=true"
                 echo "fresh_migration_service_ready=true"
                 exit 0
               fi
               sleep "$STREAK_GAP"
+            elif grep -q 'execute command failed' /tmp/p2_migration_readiness_probe.out; then
+              streak=0
+              echo "P2_MIGRATION_READINESS_CLI_ERROR=true"
+              echo "current_image_streak=0"
+              sleep "$RETRY_INTERVAL"
             else
               streak=0
               echo "current_image_streak=0"
-              echo "FRESH_SERVICE_BAKED_SHA_NOT_READY_YET"
+              echo "FRESH_SERVICE_OPERATIONAL_NOT_READY_YET"
               sleep "$RETRY_INTERVAL"
             fi
             attempt=$((attempt + 1))
           done
           echo "P2_MIGRATION_DEPLOYMENT_CONVERGED=false"
-          echo "fresh_migration_service_baked_sha_fail_closed=true"
+          echo "P2_MIGRATION_OPERATIONAL_READINESS_PASS=false"
+          echo "fresh_migration_service_operational_fail_closed=true"
           echo "readiness_attempts=${MAX_ATTEMPTS}"
           echo "not_running_count=${not_running_count}"
           echo "current_image_positive_proof_count=${positive_proof_count}"

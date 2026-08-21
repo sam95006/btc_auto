@@ -216,7 +216,7 @@ def test_workflow_uses_atomic_same_exec_and_baked_sha():
     assert "python -m tools.ci.p2_migration_parse_service_exec" in source
     assert "file_channel_authoritative=false" in source
     assert "Require migration helper imports before apply" not in source
-    assert source.index("Wait for fresh migration service baked SHA readiness") < source.index(
+    assert source.index("Operational service-exec readiness") < source.index(
         "Apply and verify only migration 0007 through atomic same-exec"
     )
     assert "python -m tools.ci.p2_staging_migration_0007" in source

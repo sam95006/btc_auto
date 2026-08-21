@@ -307,10 +307,12 @@ def classify_deployment_snapshot(
         elif (
             not (deployment_get_raw or "").strip()
             and not (deployment_list_raw or "").strip()
+            and not (service_get_raw or "").strip()
             and get_exit == 0
             and list_exit == 0
             and not semantic_cli_error
         ):
+            # Truly empty initial evidence before any probe output — still provisioning.
             deployment_state = "BUILDING"
         else:
             deployment_state = "UNKNOWN"
@@ -333,75 +335,43 @@ def classify_deployment_snapshot(
         (service_tokens[0] if service_tokens else ""),
     )
 
-    # Deployment structured negatives/failures block even if service looks RUNNING.
-    deployment_blocks = deployment_state in {
-        "FAILED",
-        "RUNNING_THEN_CRASHED",
-        "SUSPENDED",
-        "NOT_RUNNING",
-        "CLI_ERROR",
-    }
+    # Explicit metadata negatives are vetoes. UNKNOWN / empty never authorize RUNNING
+    # and must not permanently block operational service-exec readiness.
+    METADATA_VETO_STATES = frozenset(
+        {
+            "FAILED",
+            "RUNNING_THEN_CRASHED",
+            "SUSPENDED",
+            "CLI_ERROR",
+        }
+    )
+    # Structured INACTIVE/STOPPED map to SUSPENDED via _state_from_tokens.
+    deployment_veto = deployment_state in METADATA_VETO_STATES
+    service_veto = service_state in METADATA_VETO_STATES
+    # NOT_RUNNING metadata is not a hard veto — operational probe waits on NOT_RUNNING_SERVICE.
     deployment_waits = deployment_state in {"BUILDING", "DEPLOYING"}
     service_waits = service_state in {"BUILDING", "DEPLOYING"}
-    service_blocks = service_state in {
-        "FAILED",
-        "RUNNING_THEN_CRASHED",
-        "SUSPENDED",
-        "NOT_RUNNING",
-        "CLI_ERROR",
-    }
 
+    metadata_veto = bool(semantic_cli_error or deployment_veto or service_veto)
+    wait_for_deployment = bool((deployment_waits or service_waits) and not metadata_veto)
+    # Metadata must never authorize migration service-exec; operational probe is authoritative.
     service_authority = False
     service_exec_allowed = False
-    wait_for_deployment = False
-    gate_state = deployment_state
+    proceed_to_operational_probe = (not metadata_veto) and (not wait_for_deployment)
 
     if semantic_cli_error:
         gate_state = "CLI_ERROR"
-    elif deployment_blocks:
+    elif deployment_veto:
         gate_state = deployment_state
-    elif deployment_waits:
-        gate_state = deployment_state
-        wait_for_deployment = True
-    elif (
-        svc_exit == 0
-        and service_payload is not None
-        and service_state == "RUNNING"
-        and not deployment_blocks
-        and not semantic_cli_error
-    ):
-        # Structured service Status is runtime readiness authority when deployment is empty/UNKNOWN.
-        service_authority = True
-        service_exec_allowed = True
-        gate_state = "RUNNING"
-    elif service_waits:
+    elif service_veto:
         gate_state = service_state
-        wait_for_deployment = True
-    elif service_blocks:
-        gate_state = service_state
-    elif deployment_state == "RUNNING" and get_exit == 0 and get_payload is not None and not semantic_cli_error:
-        service_exec_allowed = True
-        gate_state = "RUNNING"
+    elif wait_for_deployment:
+        gate_state = deployment_state if deployment_waits else service_state
     else:
-        # Preserve deployment UNKNOWN (do not rewrite to PASS); fail closed unless waiting.
-        gate_state = deployment_state if deployment_state != "UNKNOWN" else (
-            service_state if service_state != "UNKNOWN" else "UNKNOWN"
-        )
-        if gate_state in {"BUILDING", "DEPLOYING"}:
-            wait_for_deployment = True
+        # Preserve UNKNOWN / RUNNING metadata as diagnostic only — do not promote to PASS.
+        gate_state = deployment_state if deployment_state != "UNKNOWN" else service_state
 
-    # Hard rule: raw text never upgrades to RUNNING.
-    if service_exec_allowed:
-        if service_authority:
-            if service_payload is None or svc_exit != 0 or not service_tokens:
-                service_exec_allowed = False
-                service_authority = False
-                gate_state = "UNKNOWN"
-        elif get_payload is None or get_exit != 0 or not deploy_tokens:
-            service_exec_allowed = False
-            gate_state = "UNKNOWN"
-
-    fail_closed = (not service_exec_allowed) and (not wait_for_deployment)
+    fail_closed = metadata_veto
 
     deploy_meta = json_shape_metadata(deployment_get_raw, get_payload)
     service_meta = json_shape_metadata(service_get_raw, service_payload)
@@ -444,6 +414,8 @@ def classify_deployment_snapshot(
         "cli_command_failed": cli_failed,
         "cli_semantic_error": semantic_cli_error,
         "cli_semantic_error_match": semantic_match or "",
+        "metadata_veto": metadata_veto,
+        "proceed_to_operational_probe": proceed_to_operational_probe,
         "service_exec_allowed": service_exec_allowed,
         "wait_for_deployment": wait_for_deployment,
         "fail_closed": fail_closed,
@@ -484,9 +456,10 @@ def wait_for_deployment_running(
         row = {"attempt": attempt, **classified}
         history.append(row)
         last = classified
-        if classified["service_exec_allowed"]:
+        if classified.get("proceed_to_operational_probe"):
             return {
-                "ready_for_service_exec": True,
+                "ready_for_service_exec": False,
+                "proceed_to_operational_probe": True,
                 "attempts": attempt,
                 "history": history,
                 **classified,
@@ -496,6 +469,7 @@ def wait_for_deployment_running(
             continue
         return {
             "ready_for_service_exec": False,
+            "proceed_to_operational_probe": False,
             "attempts": attempt,
             "history": history,
             **classified,
@@ -669,6 +643,8 @@ def main(argv: list[str] | None = None) -> int:
         print("P2_MIGRATION_RUNTIME_LOG_TAIL=<<BEGIN")
         print(classified.get("P2_MIGRATION_RUNTIME_LOG_TAIL") or "")
         print("P2_MIGRATION_RUNTIME_LOG_TAIL=<<END")
+        print(f"metadata_veto={str(classified['metadata_veto']).lower()}")
+        print(f"proceed_to_operational_probe={str(classified['proceed_to_operational_probe']).lower()}")
         print(f"service_exec_allowed={str(classified['service_exec_allowed']).lower()}")
         print(f"wait_for_deployment={str(classified['wait_for_deployment']).lower()}")
         print(f"fail_closed={str(classified['fail_closed']).lower()}")
@@ -678,7 +654,8 @@ def main(argv: list[str] | None = None) -> int:
         out = Path(args.write_artifact)
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(classified, indent=2), encoding="utf-8")
-    if classified["service_exec_allowed"]:
+    # Exit 0 = proceed to operational probe (metadata did not veto). Never means migration-ready.
+    if classified.get("proceed_to_operational_probe"):
         return 0
     if classified["wait_for_deployment"]:
         return 2
