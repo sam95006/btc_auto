@@ -3,6 +3,7 @@
 
 Never calls shared _create_empty_cli() (repo-root / placeholder deploy).
 Never reuses an existing same-name service.
+Always targets an explicit ZEABUR_ENV_ID (no implicit first-environment fallback).
 """
 from __future__ import annotations
 
@@ -17,6 +18,7 @@ from tools.ci.p2_migration_bootstrap import (
     plan_single_create_deploy,
     sanitize_bootstrap_failure_diagnostics,
     validate_migration_context,
+    verify_create_environment_match,
 )
 from tools.ci.p2_migration_service_identity import (
     MIGRATION_SERVICE_BASE_NAME,
@@ -83,16 +85,25 @@ def _list_services() -> list[dict]:
         return rows
 
 
-def _create_with_migration_context(*, context_dir: Path, service_name: str, project_id: str) -> tuple[str, int, str]:
+def _create_with_migration_context(
+    *,
+    context_dir: Path,
+    service_name: str,
+    project_id: str,
+    environment_id: str,
+) -> tuple[str, int, str, dict]:
     plan = plan_single_create_deploy(
         context_dir=context_dir,
         service_name=service_name,
         project_id=project_id,
+        environment_id=environment_id,
         repo_root=os.environ.get("GITHUB_WORKSPACE") or None,
     )
     print("P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true", file=sys.stderr)
     print(f"P2_MIGRATION_BOOTSTRAP_DEPLOY_COUNT={plan['P2_MIGRATION_BOOTSTRAP_DEPLOY_COUNT']}", file=sys.stderr)
+    print("P2_MIGRATION_CREATE_ENV_EXPLICIT=true", file=sys.stderr)
     print(f"bootstrap_cwd_prefix={str(plan['cwd'])[:48]}", file=sys.stderr)
+    print(f"create_env_id_prefix={environment_id[:6]}", file=sys.stderr)
     env = os.environ.copy()
     env["ZEABUR_TOKEN"] = zeabur_svc.TOKEN
     subprocess.run(
@@ -114,22 +125,31 @@ def _create_with_migration_context(*, context_dir: Path, service_name: str, proj
     raw = (proc.stdout or "") + "\n" + (proc.stderr or "")
     print(f"create_deploy_exit={proc.returncode}", file=sys.stderr)
     print(f"create_deploy_head={zeabur_svc._redact(raw[:300])}", file=sys.stderr)
-    sid = extract_service_id_from_create_output(raw)
+    match = verify_create_environment_match(
+        create_output=raw,
+        expected_environment_id=environment_id,
+    )
+    sid = (match.get("service_id") or "").strip() or extract_service_id_from_create_output(raw)
     if not sid:
-        # Exact-name re-list after create+deploy.
+        # Exact-name re-list after create+deploy (service id only; env match still required).
         try:
             rows = _list_services()
         except Exception as exc:  # noqa: BLE001
             print(f"relist_after_create_failed:{zeabur_svc._redact(str(exc))}", file=sys.stderr)
             rows = []
         sid = _exact_name_match(rows, service_name)
-    return sid, proc.returncode, raw
+    return sid, proc.returncode, raw, match
 
 
 def main() -> int:
     if not os.environ.get("ZEABUR_TOKEN") or not os.environ.get("ZEABUR_PROJECT_ID"):
         print("missing_ZEABUR_TOKEN_or_PROJECT_ID", file=sys.stderr)
         return 2
+    environment_id = (os.environ.get("ZEABUR_ENV_ID") or "").strip()
+    if not environment_id:
+        print("BLOCKED_environment_id_missing", file=sys.stderr)
+        print("P2_MIGRATION_CREATE_ENV_EXPLICIT=false", file=sys.stderr)
+        return 3
     context_raw = (os.environ.get("P2_MIGRATION_CONTEXT_DIR") or "").strip()
     if not context_raw:
         print("BLOCKED_migration_context_dir_required", file=sys.stderr)
@@ -160,6 +180,7 @@ def main() -> int:
     print("P2_MIGRATION_RUN_SCOPED_SERVICE=true", file=sys.stderr)
     print(f"requested_service_name_prefix={safe_service_name_prefix(service_name)}", file=sys.stderr)
     print("uses_create_empty_cli=false", file=sys.stderr)
+    print("P2_MIGRATION_CREATE_ENV_EXPLICIT=true", file=sys.stderr)
 
     try:
         rows = _list_services()
@@ -182,12 +203,35 @@ def main() -> int:
         )
 
     # Intentionally never call zeabur_svc._create_empty() or _create_empty_cli().
-    service_id, create_exit, create_raw = _create_with_migration_context(
+    service_id, create_exit, create_raw, env_match = _create_with_migration_context(
         context_dir=context_dir,
         service_name=service_name,
         project_id=zeabur_svc.PROJECT_ID,
+        environment_id=environment_id,
     )
     service_id = (service_id or "").strip()
+    if not env_match.get("ok"):
+        print("P2_MIGRATION_CREATE_ENV_MATCH=false", file=sys.stderr)
+        print(
+            f"create_env_mismatch expected_prefix={environment_id[:6]} "
+            f"returned_prefix={(env_match.get('environment_id') or 'missing')[:6]}",
+            file=sys.stderr,
+        )
+        diag = sanitize_bootstrap_failure_diagnostics(
+            create_deploy_exit=create_exit,
+            create_deploy_output=create_raw,
+            service_id=service_id or None,
+            service_name=service_name,
+            readiness_attempts=0,
+            not_running_count=0,
+            current_image_positive_proof_count=0,
+        )
+        print(f"bootstrap_diag={diag}", file=sys.stderr)
+        print("BLOCKER_create_environment_mismatch", file=sys.stderr)
+        return 7
+
+    print("P2_MIGRATION_CREATE_ENV_MATCH=true", file=sys.stderr)
+
     if not service_id:
         diag = sanitize_bootstrap_failure_diagnostics(
             create_deploy_exit=create_exit,
@@ -221,6 +265,7 @@ def main() -> int:
     print("P2_MIGRATION_PREVIOUS_SERVICE_REUSED=false", file=sys.stderr)
     print("P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true", file=sys.stderr)
     print("P2_MIGRATION_BOOTSTRAP_DEPLOY_COUNT=1", file=sys.stderr)
+    print("P2_MIGRATION_CREATE_ENV_EXPLICIT=true", file=sys.stderr)
     print(
         f"migration_service_created=true id_prefix={identity['migration_service_id_prefix']} "
         f"name_prefix={safe_service_name_prefix(service_name)}",

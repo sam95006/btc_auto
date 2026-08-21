@@ -78,14 +78,18 @@ def plan_single_create_deploy(
     context_dir: Path | str,
     service_name: str,
     project_id: str,
+    environment_id: str,
     repo_root: Path | str | None = None,
 ) -> dict[str, Any]:
     ctx = str(Path(context_dir).resolve())
     root = str(Path(repo_root).resolve()) if repo_root else ""
+    env_id = (environment_id or "").strip()
     if not service_name.strip():
         raise ValueError("service_name_missing")
     if not project_id.strip():
         raise ValueError("project_id_missing")
+    if not env_id:
+        raise ValueError("environment_id_missing")
     if root and Path(ctx).resolve() == Path(root).resolve():
         raise ValueError("migration_context_must_not_be_repo_root")
     argv = [
@@ -96,30 +100,79 @@ def plan_single_create_deploy(
         service_name,
         "--project-id",
         project_id,
+        "--environment-id",
+        env_id,
         "-i=false",
         "--json",
     ]
     return {
         "cwd": ctx,
         "argv": argv,
+        "environment_id": env_id,
         "P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP": True,
         "P2_MIGRATION_BOOTSTRAP_DEPLOY_COUNT": 1,
+        "P2_MIGRATION_CREATE_ENV_EXPLICIT": True,
         "uses_create_empty_cli": False,
         "second_deploy_planned": False,
+        "implicit_first_environment_fallback": False,
         "create_order_calls": 0,
         "exchange_write_call_count": 0,
     }
 
 
+def _oid24(text: str, *keys: str) -> str:
+    for key in keys:
+        match = re.search(rf'"{re.escape(key)}"\s*:\s*"([0-9a-f]{{24}})"', text, re.I)
+        if match:
+            return match.group(1)
+    return ""
+
+
 def extract_service_id_from_create_output(raw: str) -> str:
     text = raw or ""
-    match = re.search(r'"service_id"\s*:\s*"([0-9a-f]{24})"', text, re.I)
-    if match:
-        return match.group(1)
-    match = re.search(r'"_id"\s*:\s*"([0-9a-f]{24})"', text, re.I)
-    if match:
-        return match.group(1)
-    return ""
+    sid = _oid24(text, "service_id", "serviceId")
+    if sid:
+        return sid
+    return _oid24(text, "_id")
+
+
+def extract_create_deploy_ids(raw: str) -> dict[str, str]:
+    """Parse sanitized create/deploy JSON fields (no secrets)."""
+    text = raw or ""
+    return {
+        "service_id": extract_service_id_from_create_output(text),
+        "project_id": _oid24(text, "project_id", "projectId"),
+        "environment_id": _oid24(
+            text,
+            "environment_id",
+            "environmentId",
+            "env_id",
+            "envId",
+        ),
+    }
+
+
+def verify_create_environment_match(
+    *,
+    create_output: str,
+    expected_environment_id: str,
+) -> dict[str, Any]:
+    expected = (expected_environment_id or "").strip()
+    if not expected:
+        raise ValueError("environment_id_missing")
+    ids = extract_create_deploy_ids(create_output)
+    returned = (ids.get("environment_id") or "").strip()
+    match = bool(returned and returned == expected)
+    return {
+        "service_id": ids.get("service_id") or "",
+        "project_id": ids.get("project_id") or "",
+        "environment_id": returned,
+        "expected_environment_id": expected,
+        "P2_MIGRATION_CREATE_ENV_MATCH": match,
+        "ok": match,
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+    }
 
 
 def sanitize_bootstrap_failure_diagnostics(

@@ -1,4 +1,4 @@
-"""P2 migration single-deploy bootstrap: migration context first, no repo-root deploy."""
+"""P2 migration single-deploy bootstrap: migration context first, explicit env targeting."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -11,12 +11,15 @@ from tools.ci.p2_migration_bootstrap import (
     plan_single_create_deploy,
     sanitize_bootstrap_failure_diagnostics,
     validate_migration_context,
+    verify_create_environment_match,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "founder_approved_staging_postgres_p2_migration.yml"
 SHA = "b2971e8a278655ff298236d80b95bb20faa844e6"
+STAGING_ENV = "69d559b6474db8a99d6dd6bf"
 ENSURE = (ROOT / "tools" / "ci" / "ensure_p2_migration_zeabur_service.py").read_text(encoding="utf-8")
+READINESS = (ROOT / "tools" / "ci" / "p2_migration_rollout_readiness.py").read_text(encoding="utf-8")
 
 
 def test_graphql_unavailable_path_does_not_plan_repo_root_deployment(tmp_path: Path):
@@ -25,6 +28,7 @@ def test_graphql_unavailable_path_does_not_plan_repo_root_deployment(tmp_path: P
         context_dir=ctx,
         service_name="nexus-p2m7-100-1",
         project_id="aaaaaaaaaaaaaaaaaaaaaaaa",
+        environment_id=STAGING_ENV,
         repo_root=ROOT,
     )
     assert plan["cwd"] == str(ctx.resolve())
@@ -70,6 +74,7 @@ def test_cli_create_plan_is_exactly_one_deployment_from_context(tmp_path: Path):
         context_dir=ctx,
         service_name="nexus-p2m7-101-1",
         project_id="bbbbbbbbbbbbbbbbbbbbbbbb",
+        environment_id=STAGING_ENV,
         repo_root=ROOT,
     )
     assert plan["argv"][:3] == ["zeabur", "deploy", "--create"]
@@ -80,8 +85,130 @@ def test_cli_create_plan_is_exactly_one_deployment_from_context(tmp_path: Path):
             context_dir=ROOT,
             service_name="nexus-p2m7-101-1",
             project_id="bbbbbbbbbbbbbbbbbbbbbbbb",
+            environment_id=STAGING_ENV,
             repo_root=ROOT,
         )
+
+
+def test_a_plan_without_environment_id_raises():
+    with pytest.raises(ValueError, match="environment_id_missing"):
+        plan_single_create_deploy(
+            context_dir="/tmp/ctx",
+            service_name="nexus-p2m7-1-1",
+            project_id="cccccccccccccccccccccccc",
+            environment_id="",
+        )
+    with pytest.raises(TypeError):
+        plan_single_create_deploy(  # type: ignore[call-arg]
+            context_dir="/tmp/ctx",
+            service_name="nexus-p2m7-1-1",
+            project_id="cccccccccccccccccccccccc",
+        )
+
+
+def test_b_c_argv_contains_explicit_environment_id_no_implicit_fallback(tmp_path: Path):
+    ctx = tmp_path / "ctx"
+    ctx.mkdir()
+    plan = plan_single_create_deploy(
+        context_dir=ctx,
+        service_name="nexus-p2m7-102-1",
+        project_id="dddddddddddddddddddddddd",
+        environment_id=STAGING_ENV,
+    )
+    argv = plan["argv"]
+    assert "--environment-id" in argv
+    assert argv[argv.index("--environment-id") + 1] == STAGING_ENV
+    assert plan["P2_MIGRATION_CREATE_ENV_EXPLICIT"] is True
+    assert plan["implicit_first_environment_fallback"] is False
+    # Must not omit environment-id (Zeabur would then pick environments[0]).
+    assert argv == [
+        "zeabur",
+        "deploy",
+        "--create",
+        "--name",
+        "nexus-p2m7-102-1",
+        "--project-id",
+        "dddddddddddddddddddddddd",
+        "--environment-id",
+        STAGING_ENV,
+        "-i=false",
+        "--json",
+    ]
+
+
+def test_d_e_create_json_environment_match_fail_closed_and_pass():
+    other = "aaaaaaaaaaaaaaaaaaaaaaaa"
+    mismatch = verify_create_environment_match(
+        create_output=(
+            '{"service_id":"abcdef0123456789abcdef01",'
+            f'"project_id":"bbbbbbbbbbbbbbbbbbbbbbbb","environment_id":"{other}"}}'
+        ),
+        expected_environment_id=STAGING_ENV,
+    )
+    assert mismatch["ok"] is False
+    assert mismatch["P2_MIGRATION_CREATE_ENV_MATCH"] is False
+
+    ok = verify_create_environment_match(
+        create_output=(
+            '{"service_id":"abcdef0123456789abcdef01",'
+            f'"project_id":"bbbbbbbbbbbbbbbbbbbbbbbb","environment_id":"{STAGING_ENV}"}}'
+        ),
+        expected_environment_id=STAGING_ENV,
+    )
+    assert ok["ok"] is True
+    assert ok["P2_MIGRATION_CREATE_ENV_MATCH"] is True
+    assert ok["environment_id"] == STAGING_ENV
+    assert ok["service_id"] == "abcdef0123456789abcdef01"
+    assert ok["exchange_write_call_count"] == 0
+
+    missing = verify_create_environment_match(
+        create_output='{"service_id":"abcdef0123456789abcdef01"}',
+        expected_environment_id=STAGING_ENV,
+    )
+    assert missing["ok"] is False
+
+
+def test_f_g_h_workflow_same_env_vars_and_single_post_var_restart():
+    source = WORKFLOW.read_text(encoding="utf-8")
+    assert "ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf" in source
+    assert "ZEABUR_ENV_ID: ${{ env.ZEABUR_ENV_ID }}" in source
+    assert 'variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID"' in source
+    assert 'variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID"' in source
+    assert "Restart staging service once after runtime variables" in source
+    assert 'zeabur service restart --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -y -i=false' in source
+    assert "P2_MIGRATION_POST_VAR_RESTART=true" in source
+    assert "P2_MIGRATION_POST_VAR_RESTART_COUNT=1" in source
+    assert source.count("zeabur service restart") == 1
+    vars_idx = source.index("Inject disarmed runtime variables after single bootstrap deploy")
+    restart_idx = source.index("Restart staging service once after runtime variables")
+    meta_idx = source.index("Metadata diagnostic and explicit-negative veto")
+    assert vars_idx < restart_idx < meta_idx
+
+
+def test_i_operational_readiness_unchanged_in_ensure_and_workflow():
+    # Ensure does not rewrite readiness classifier.
+    assert "classify_readiness_probe_output" not in ENSURE
+    assert "wait_for_current_image_streak" not in ENSURE
+    # Rollout readiness module markers remain the operational authority.
+    assert "P2_MIGRATION_OPERATIONAL_READINESS_PASS" in READINESS
+    assert "NOT_RUNNING_SERVICE" in READINESS
+    source = WORKFLOW.read_text(encoding="utf-8")
+    assert "Operational service-exec readiness" in source
+    assert "python -m tools.ci.p2_migration_rollout_readiness" in source
+
+
+def test_j_zero_exchange_writes_in_plan_and_workflow():
+    plan = plan_single_create_deploy(
+        context_dir="/tmp/ctx-x",
+        service_name="nexus-p2m7-103-1",
+        project_id="eeeeeeeeeeeeeeeeeeeeeeee",
+        environment_id=STAGING_ENV,
+    )
+    assert plan["exchange_write_call_count"] == 0
+    assert plan["create_order_calls"] == 0
+    source = WORKFLOW.read_text(encoding="utf-8")
+    assert 'set_var EXCHANGE_WRITE false' in source
+    assert "EXCHANGE_WRITE: \"false\"" in source or 'EXCHANGE_WRITE: "false"' in source
 
 
 def test_workflow_builds_context_before_create_and_has_no_second_deploy():
@@ -93,6 +220,7 @@ def test_workflow_builds_context_before_create_and_has_no_second_deploy():
     assert "P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true" in source
     assert "P2_MIGRATION_BOOTSTRAP_DEPLOY_COUNT=1" in source
     assert "P2_MIGRATION_SECOND_DEPLOY=false" in source
+    assert "P2_MIGRATION_CREATE_ENV_EXPLICIT=true" in source
     assert "P2_MIGRATION_CONTEXT_DIR" in source
     build_idx = source.index("Build migration deployment context before service create")
     create_idx = source.index("Create run-scoped migration service with single migration-context deploy")
@@ -101,6 +229,18 @@ def test_workflow_builds_context_before_create_and_has_no_second_deploy():
     # No second deploy-to-existing-service after create for the bootstrap path.
     assert "zeabur deploy --project-id \"$ZEABUR_PROJECT_ID\" --service-id \"$SERVICE_ID\"" not in source
     assert "Configure disarmed migration boundary and deploy fresh migration image" not in source
+
+
+def test_ensure_requires_zeabur_env_id_and_verifies_match():
+    assert "ZEABUR_ENV_ID" in ENSURE
+    assert "BLOCKED_environment_id_missing" in ENSURE
+    assert "verify_create_environment_match" in ENSURE
+    assert "P2_MIGRATION_CREATE_ENV_MATCH=false" in ENSURE
+    assert "P2_MIGRATION_CREATE_ENV_MATCH=true" in ENSURE
+    assert "P2_MIGRATION_CREATE_ENV_EXPLICIT=true" in ENSURE
+    assert "BLOCKER_create_environment_mismatch" in ENSURE
+    assert "plan_single_create_deploy(" in ENSURE
+    assert "environment_id=environment_id," in ENSURE.replace(" ", "")
 
 
 def test_extract_service_id_and_sanitized_diagnostics():
