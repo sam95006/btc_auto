@@ -157,10 +157,25 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+          SERVICE_NAME: ${{ steps.resolve.outputs.service_name }}
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           mkdir -p artifacts/bybit_demo_p1
+          set +e
+          zeabur deployment --help >/tmp/zeabur_deployment_help.txt 2>&1
+          HELP_EXIT=$?
+          set -e
+          echo "zeabur_deployment_help_exit=${HELP_EXIT}"
+          python -m tools.ci.p2_migration_deployment_diagnostics --parse-help-file /tmp/zeabur_deployment_help.txt | tee /tmp/zeabur_deployment_cli_contract.json
+          PREFERRED=$(python -c "import json; print(json.load(open('/tmp/zeabur_deployment_cli_contract.json'))['preferred_selector'])")
+          SUPPORTS_LIST=$(python -c "import json; print('true' if json.load(open('/tmp/zeabur_deployment_cli_contract.json'))['supports_deployment_list'] else 'false')")
+          echo "zeabur_cli_preferred_selector=${PREFERRED}"
+          echo "zeabur_cli_supports_deployment_list=${SUPPORTS_LIST}"
+          if [ "$PREFERRED" = "none" ]; then
+            echo "BLOCKER_zeabur_deployment_cli_selector_unsupported"
+            exit 1
+          fi
           MAX_ATTEMPTS=24
           RETRY_INTERVAL=10
           attempt=1
@@ -170,15 +185,49 @@ jobs:
             : > /tmp/p2_migration_build.log
             : > /tmp/p2_migration_runtime.log
             set +e
-            zeabur deployment get --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_get.json 2>&1
-            zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_list.json 2>&1
-            zeabur deployment log -t=build --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_build.log 2>&1
-            zeabur deployment log -t=runtime --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_runtime.log 2>&1
+            if [ "$PREFERRED" = "service-name" ]; then
+              zeabur deployment get --service-name "$SERVICE_NAME" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_get.json 2>&1
+              GET_EXIT=$?
+              zeabur deployment log -t=build --service-name "$SERVICE_NAME" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_build.log 2>&1
+              BUILD_EXIT=$?
+              zeabur deployment log -t=runtime --service-name "$SERVICE_NAME" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_runtime.log 2>&1
+              RUNTIME_EXIT=$?
+              LIST_EXIT=0
+              if [ "$SUPPORTS_LIST" = "true" ]; then
+                zeabur deployment list --service-name "$SERVICE_NAME" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_list.json 2>&1
+                LIST_EXIT=$?
+              else
+                echo '{"skipped":"deployment_list_undocumented"}' >/tmp/p2_migration_deployment_list.json
+              fi
+            else
+              # Proven by --help only; still capture exits and never treat CLI failure as RUNNING.
+              zeabur deployment get --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_get.json 2>&1
+              GET_EXIT=$?
+              zeabur deployment log -t=build --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_build.log 2>&1
+              BUILD_EXIT=$?
+              zeabur deployment log -t=runtime --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_runtime.log 2>&1
+              RUNTIME_EXIT=$?
+              LIST_EXIT=0
+              if [ "$SUPPORTS_LIST" = "true" ]; then
+                zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_list.json 2>&1
+                LIST_EXIT=$?
+              else
+                echo '{"skipped":"deployment_list_undocumented"}' >/tmp/p2_migration_deployment_list.json
+              fi
+            fi
+            echo "deployment_get_exit=${GET_EXIT}"
+            echo "deployment_list_exit=${LIST_EXIT}"
+            echo "build_log_exit=${BUILD_EXIT}"
+            echo "runtime_log_exit=${RUNTIME_EXIT}"
             python -m tools.ci.p2_migration_deployment_diagnostics \
               --deployment-get /tmp/p2_migration_deployment_get.json \
               --deployment-list /tmp/p2_migration_deployment_list.json \
               --build-log /tmp/p2_migration_build.log \
               --runtime-log /tmp/p2_migration_runtime.log \
+              --deployment-get-exit "$GET_EXIT" \
+              --deployment-list-exit "$LIST_EXIT" \
+              --build-log-exit "$BUILD_EXIT" \
+              --runtime-log-exit "$RUNTIME_EXIT" \
               --emit-env \
               --write-artifact artifacts/bybit_demo_p1/p2_migration_deployment_diagnostics.json \
               >/tmp/p2_migration_deployment_class.out
@@ -186,7 +235,6 @@ jobs:
             set -e
             echo "deployment_probe_attempt=${attempt} classifier_exit=${CLASS_CODE}"
             cat /tmp/p2_migration_deployment_class.out
-            # Explicit founder-facing markers (also emitted by classifier --emit-env).
             echo "P2_MIGRATION_DEPLOYMENT_STATUS_MARKER_PRESENT=true"
             echo "P2_MIGRATION_BUILD_STATUS_MARKER_PRESENT=true"
             echo "P2_MIGRATION_RUNTIME_STATUS_MARKER_PRESENT=true"
