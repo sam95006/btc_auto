@@ -55,6 +55,28 @@ RAW_CRASH_HINTS = (
     re.compile(r"Traceback \(most recent call last\)"),
 )
 
+# Known Zeabur CLI / control-plane signatures (not generic "ERROR" from app logs).
+CLI_SEMANTIC_ERROR_PATTERNS = (
+    re.compile(r"failed to get service", re.I),
+    re.compile(r"either id or ownerName,\s*projectName,\s*and name must be specified", re.I),
+    re.compile(r"execute command failed", re.I),
+    re.compile(r"NOT_RUNNING_SERVICE", re.I),
+    re.compile(r"Inactiv(?:e|ate)\s+service", re.I),
+)
+
+
+def detect_zeabur_cli_semantic_error(*blobs: str) -> str | None:
+    """Return the first matched known CLI semantic-error signature, else None."""
+    for blob in blobs:
+        text = blob or ""
+        if not text.strip():
+            continue
+        for pattern in CLI_SEMANTIC_ERROR_PATTERNS:
+            match = pattern.search(text)
+            if match:
+                return match.group(0)
+    return None
+
 
 def sanitize_log_tail(raw: str, *, max_chars: int = 1200) -> str:
     text = (raw or "")[-max_chars:]
@@ -141,8 +163,21 @@ def classify_deployment_snapshot(
     build_exit = 0 if build_log_exit is None else int(build_log_exit)
     runtime_exit = 0 if runtime_log_exit is None else int(runtime_log_exit)
 
-    get_payload = _parse_json_blob(deployment_get_raw) if get_exit == 0 else None
-    list_payload = _parse_json_blob(deployment_list_raw) if list_exit == 0 else None
+    # Semantic CLI failures are authoritative even when process exit is 0.
+    # Prefer get/log control-plane blobs; list must not hide get failures.
+    semantic_match = detect_zeabur_cli_semantic_error(
+        deployment_get_raw,
+        build_log_raw,
+        runtime_log_raw,
+        deployment_list_raw,
+    )
+    semantic_cli_error = semantic_match is not None
+
+    get_payload = None
+    list_payload = None
+    if not semantic_cli_error:
+        get_payload = _parse_json_blob(deployment_get_raw) if get_exit == 0 else None
+        list_payload = _parse_json_blob(deployment_list_raw) if list_exit == 0 else None
     # Malformed JSON (parse miss) with nonzero-looking content must not authorize RUNNING.
     statuses = _status_strings(get_payload) + _status_strings(list_payload)
     tokens = [normalize_status_token(item) for item in statuses]
@@ -160,9 +195,14 @@ def classify_deployment_snapshot(
         ]
     )
 
-    cli_failed = any(code != 0 for code in (get_exit, list_exit, build_exit, runtime_exit))
+    exit_failed = any(code != 0 for code in (get_exit, list_exit, build_exit, runtime_exit))
+    cli_failed = exit_failed or semantic_cli_error
     # Primary structured get failure with no usable tokens → unknown/fail-closed, never RUNNING.
-    structured_cli_unusable = get_exit != 0 or (get_exit == 0 and get_payload is None and bool((deployment_get_raw or "").strip()) and not tokens)
+    structured_cli_unusable = (
+        semantic_cli_error
+        or get_exit != 0
+        or (get_exit == 0 and get_payload is None and bool((deployment_get_raw or "").strip()) and not tokens)
+    )
 
     negative_hit = next((token for token in tokens if token in NEGATIVE_TOKENS), "")
     positive_hit = next((token for token in tokens if token in POSITIVE_RUNNING_TOKENS), "")
@@ -173,7 +213,10 @@ def classify_deployment_snapshot(
     suspended_hit = next((token for token in tokens if token in SUSPENDED_TOKENS), "")
 
     state: str
-    if structured_cli_unusable and not structured_present:
+    if semantic_cli_error:
+        # Exit 0 + known CLI application error must never wait as BUILDING.
+        state = "CLI_ERROR"
+    elif structured_cli_unusable and not structured_present:
         state = "UNKNOWN"
     elif negative_hit in {"FAILED", "BUILD_FAILED", "DEPLOY_FAILED", "DEPLOYMENT_FAILED", "ERROR", "CRASHED"} or failed_hit or crashed_hit:
         state = "RUNNING_THEN_CRASHED" if crashed_hit or negative_hit == "CRASHED" else "FAILED"
@@ -181,7 +224,7 @@ def classify_deployment_snapshot(
         state = "SUSPENDED"
     elif negative_hit in {"NOT_RUNNING", "NOTRUNNING", "NOT_READY", "NOTREADY", "UNREADY"}:
         state = "NOT_RUNNING"
-    elif positive_hit and structured_present and get_exit == 0 and get_payload is not None:
+    elif positive_hit and structured_present and get_exit == 0 and get_payload is not None and not semantic_cli_error:
         # Exact positive token from parsed structured status only.
         state = "RUNNING"
     elif building_hit:
@@ -194,7 +237,13 @@ def classify_deployment_snapshot(
             state = raw_state
         elif raw_state in {"BUILDING", "DEPLOYING"}:
             state = raw_state
-        elif not (deployment_get_raw or "").strip() and not (deployment_list_raw or "").strip() and get_exit == 0 and list_exit == 0:
+        elif (
+            not semantic_cli_error
+            and not (deployment_get_raw or "").strip()
+            and not (deployment_list_raw or "").strip()
+            and get_exit == 0
+            and list_exit == 0
+        ):
             # Bounded initial empty evidence: still provisioning, never positive RUNNING.
             state = "BUILDING"
         else:
@@ -203,18 +252,31 @@ def classify_deployment_snapshot(
         state = "UNKNOWN"
 
     # Hard rule: raw text / CLI noise containing "running" never upgrades to RUNNING.
-    if state == "RUNNING" and (not structured_present or get_exit != 0 or get_payload is None):
+    if state == "RUNNING" and (not structured_present or get_exit != 0 or get_payload is None or semantic_cli_error):
         state = "UNKNOWN"
 
     service_exec_allowed = state == "RUNNING"
+    wait_for_deployment = state in {"BUILDING", "DEPLOYING"}
+    fail_closed = state in {
+        "FAILED",
+        "RUNNING_THEN_CRASHED",
+        "UNKNOWN",
+        "SUSPENDED",
+        "NOT_RUNNING",
+        "CLI_ERROR",
+    }
     return {
         "P2_MIGRATION_DEPLOYMENT_STATUS": state,
         "P2_MIGRATION_BUILD_STATUS": "FAILED"
-        if state in {"FAILED", "RUNNING_THEN_CRASHED"}
+        if state in {"FAILED", "RUNNING_THEN_CRASHED", "CLI_ERROR"}
         else ("BUILDING" if state == "BUILDING" else ("READY" if state == "RUNNING" else state)),
         "P2_MIGRATION_RUNTIME_STATUS": "CRASHED"
         if state == "RUNNING_THEN_CRASHED"
-        else ("RUNNING" if state == "RUNNING" else ("NOT_RUNNING" if state not in {"UNKNOWN", "BUILDING", "DEPLOYING"} else state)),
+        else (
+            "RUNNING"
+            if state == "RUNNING"
+            else ("NOT_RUNNING" if state not in {"UNKNOWN", "BUILDING", "DEPLOYING"} else state)
+        ),
         "P2_MIGRATION_BUILD_LOG_TAIL": sanitize_log_tail(build_log_raw),
         "P2_MIGRATION_RUNTIME_LOG_TAIL": sanitize_log_tail(runtime_log_raw),
         "structured_status_tokens": tokens,
@@ -223,9 +285,11 @@ def classify_deployment_snapshot(
         "build_log_exit": build_exit,
         "runtime_log_exit": runtime_exit,
         "cli_command_failed": cli_failed,
+        "cli_semantic_error": semantic_cli_error,
+        "cli_semantic_error_match": semantic_match or "",
         "service_exec_allowed": service_exec_allowed,
-        "wait_for_deployment": state in {"BUILDING", "DEPLOYING"},
-        "fail_closed": state in {"FAILED", "RUNNING_THEN_CRASHED", "UNKNOWN", "SUSPENDED", "NOT_RUNNING"},
+        "wait_for_deployment": wait_for_deployment,
+        "fail_closed": fail_closed,
         "create_order_calls": 0,
         "exchange_write_call_count": 0,
     }
@@ -325,26 +389,56 @@ def parse_zeabur_deployment_help(
     list_supports_service_id = list_ok and _help_has_flag(list_help, "--service-id")
     get_supports_env_id = get_ok and _help_has_flag(get_help, "--env-id")
     log_supports_env_id = log_ok and _help_has_flag(log_help, "--env-id")
-
-    if (
+    # service-name alone is incomplete for Zeabur (needs ownerName+projectName+name, or id).
+    get_supports_owner_name = get_ok and (
+        _help_has_flag(get_help, "--owner-name") or _help_has_flag(get_help, "--ownerName")
+    )
+    log_supports_owner_name = log_ok and (
+        _help_has_flag(log_help, "--owner-name") or _help_has_flag(log_help, "--ownerName")
+    )
+    get_supports_project_name = get_ok and (
+        _help_has_flag(get_help, "--project-name") or _help_has_flag(get_help, "--projectName")
+    )
+    log_supports_project_name = log_ok and (
+        _help_has_flag(log_help, "--project-name") or _help_has_flag(log_help, "--projectName")
+    )
+    service_name_scope_complete = (
         get_supports_service_name
         and log_supports_service_name
         and get_supports_env_id
         and log_supports_env_id
-    ):
-        preferred = "service-name"
-    elif (
+        and get_supports_owner_name
+        and log_supports_owner_name
+        and get_supports_project_name
+        and log_supports_project_name
+    )
+
+    # Prefer exact SERVICE_ID whenever get+log both prove --service-id.
+    if (
         get_supports_service_id
         and log_supports_service_id
         and get_supports_env_id
         and log_supports_env_id
     ):
         preferred = "service-id"
+    elif service_name_scope_complete:
+        preferred = "service-name"
     else:
         preferred = "none"
 
     if preferred == "service-name":
-        supports_deployment_list = list_supports_service_name and _help_has_flag(list_help, "--env-id")
+        supports_deployment_list = (
+            list_supports_service_name
+            and _help_has_flag(list_help, "--env-id")
+            and (
+                _help_has_flag(list_help, "--owner-name")
+                or _help_has_flag(list_help, "--ownerName")
+            )
+            and (
+                _help_has_flag(list_help, "--project-name")
+                or _help_has_flag(list_help, "--projectName")
+            )
+        )
     elif preferred == "service-id":
         supports_deployment_list = list_supports_service_id and _help_has_flag(list_help, "--env-id")
     else:
@@ -362,6 +456,11 @@ def parse_zeabur_deployment_help(
         "list_supports_service_id": list_supports_service_id,
         "get_supports_env_id": get_supports_env_id,
         "log_supports_env_id": log_supports_env_id,
+        "get_supports_owner_name": get_supports_owner_name,
+        "log_supports_owner_name": log_supports_owner_name,
+        "get_supports_project_name": get_supports_project_name,
+        "log_supports_project_name": log_supports_project_name,
+        "service_name_scope_complete": service_name_scope_complete,
         "supports_service_name": get_supports_service_name and log_supports_service_name,
         "supports_service_id": get_supports_service_id and log_supports_service_id,
         "supports_deployment_list": supports_deployment_list,
@@ -449,6 +548,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"service_exec_allowed={str(classified['service_exec_allowed']).lower()}")
         print(f"wait_for_deployment={str(classified['wait_for_deployment']).lower()}")
         print(f"fail_closed={str(classified['fail_closed']).lower()}")
+        print(f"cli_command_failed={str(classified['cli_command_failed']).lower()}")
+        print(f"cli_semantic_error={str(classified['cli_semantic_error']).lower()}")
     if args.write_artifact:
         out = Path(args.write_artifact)
         out.parent.mkdir(parents=True, exist_ok=True)

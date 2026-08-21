@@ -140,23 +140,38 @@ def test_parent_help_with_subcommands_only_does_not_select_selector():
     assert parsed["supports_service_id"] is False
 
 
-def test_get_and_log_service_name_intersection_selects_service_name():
-    get_help = "Usage: zeabur deployment get --env-id <id> --service-name <name>"
-    log_help = "Usage: zeabur deployment log -t=build|runtime --env-id <id> --service-name <name>"
-    parsed = parse_zeabur_deployment_help(get_help=get_help, log_help=log_help, list_help="")
-    assert parsed["preferred_selector"] == "service-name"
-    assert parsed["get_supports_service_name"] is True
-    assert parsed["log_supports_service_name"] is True
-    assert parsed["supports_deployment_list"] is False
+def test_service_id_preferred_when_both_id_and_name_supported():
+    get_help = "get --env-id X --service-id Y --service-name Z"
+    log_help = "log --env-id X --service-id Y --service-name Z"
+    parsed = parse_zeabur_deployment_help(get_help=get_help, log_help=log_help)
+    assert parsed["preferred_selector"] == "service-id"
 
 
-def test_get_service_name_without_log_support_is_not_preferred():
+def test_service_id_not_selected_when_only_get_supports_it():
+    parsed = parse_zeabur_deployment_help(
+        get_help="get --env-id X --service-id Y --service-name Z",
+        log_help="log --env-id X --service-name Z",
+    )
+    assert parsed["preferred_selector"] != "service-id"
+    # Incomplete name-only scope (no owner/project) must not fall back to service-name.
+    assert parsed["preferred_selector"] == "none"
+
+
+def test_incomplete_service_name_scope_not_selected():
     parsed = parse_zeabur_deployment_help(
         get_help="get --env-id X --service-name Y",
-        log_help="log --env-id X --service-id Z",
+        log_help="log --env-id X --service-name Y",
     )
-    assert parsed["preferred_selector"] != "service-name"
     assert parsed["preferred_selector"] == "none"
+    assert parsed["service_name_scope_complete"] is False
+
+
+def test_complete_service_name_fallback_when_service_id_unsupported():
+    get_help = "get --env-id X --service-name Y --owner-name O --project-name P"
+    log_help = "log --env-id X --service-name Y --owner-name O --project-name P"
+    parsed = parse_zeabur_deployment_help(get_help=get_help, log_help=log_help, list_help="")
+    assert parsed["preferred_selector"] == "service-name"
+    assert parsed["service_name_scope_complete"] is True
 
 
 def test_service_id_only_when_both_get_and_log_prove_it():
@@ -168,38 +183,84 @@ def test_service_id_only_when_both_get_and_log_prove_it():
     assert parsed["supports_service_id"] is True
 
 
-def test_deployment_list_unsupported_still_allows_control_path():
+def test_deployment_list_unsupported_still_allows_service_id_control_path():
     parsed = parse_zeabur_deployment_help(
-        get_help="get --env-id X --service-name Y",
-        log_help="log --env-id X --service-name Y",
+        get_help="get --env-id X --service-id Y",
+        log_help="log --env-id X --service-id Y",
         list_help="",
         list_help_exit=2,
     )
-    assert parsed["preferred_selector"] == "service-name"
+    assert parsed["preferred_selector"] == "service-id"
     assert parsed["supports_deployment_list"] is False
 
 
-def test_workflow_probes_get_and_log_help_and_prints_blocker():
+def test_exit0_failed_to_get_service_is_cli_error_fail_closed():
+    classified = classify_deployment_snapshot(
+        deployment_get_raw="failed to get service: get service<nexus-p2m7-1> failed",
+        deployment_get_exit=0,
+        deployment_list_exit=0,
+        build_log_exit=0,
+        runtime_log_exit=0,
+    )
+    assert classified["cli_command_failed"] is True
+    assert classified["cli_semantic_error"] is True
+    assert classified["fail_closed"] is True
+    assert classified["wait_for_deployment"] is False
+    assert classified["service_exec_allowed"] is False
+    assert classified["P2_MIGRATION_DEPLOYMENT_STATUS"] == "CLI_ERROR"
+
+
+def test_exit0_owner_project_name_error_never_building():
+    classified = classify_deployment_snapshot(
+        deployment_get_raw=(
+            "failed to get service: either id or ownerName, projectName, and name must be specified"
+        ),
+        deployment_get_exit=0,
+    )
+    assert classified["P2_MIGRATION_DEPLOYMENT_STATUS"] != "BUILDING"
+    assert classified["P2_MIGRATION_DEPLOYMENT_STATUS"] == "CLI_ERROR"
+    assert classified["wait_for_deployment"] is False
+
+
+def test_semantic_cli_error_stops_wait_on_first_attempt():
+    calls = {"n": 0}
+
+    def probe(_attempt: int) -> dict:
+        calls["n"] += 1
+        return {
+            "deployment_get": "failed to get service: either id or ownerName, projectName, and name must be specified",
+            "deployment_get_exit": 0,
+            "deployment_list": "",
+            "deployment_list_exit": 0,
+            "build_log": "",
+            "build_log_exit": 0,
+            "runtime_log": "",
+            "runtime_log_exit": 0,
+        }
+
+    result = wait_for_deployment_running(probe=probe, max_attempts=24, sleep=lambda _s: None)
+    assert result["ready_for_service_exec"] is False
+    assert result["attempts"] == 1
+    assert calls["n"] == 1
+    assert result["P2_MIGRATION_DEPLOYMENT_STATUS"] == "CLI_ERROR"
+
+
+def test_workflow_prefers_service_id_and_emits_selector_marker():
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "zeabur deployment get --help" in source
     assert "zeabur deployment log --help" in source
-    assert "--parse-get-help-file" in source
-    assert "--parse-log-help-file" in source
-    assert ">/tmp/zeabur_deployment_cli_contract.json" in source
-    assert "| tee /tmp/zeabur_deployment_cli_contract.json" not in source
+    assert "P2_MIGRATION_DEPLOYMENT_SELECTOR=" in source
+    assert 'if [ "$PREFERRED" = "service-id" ]' in source
+    assert 'elif [ "$PREFERRED" = "service-name" ]' in source
     assert "BLOCKER_zeabur_deployment_cli_selector_unsupported" in source
     assert "deployment_list_skipped=true" in source
-    assert "--service-name \"$SERVICE_NAME\"" in source
-    assert "deployment_get_exit=" in source
-    assert "--deployment-get-exit" in source
-    # Parent help must not be the selector authority.
+    assert "--service-id \"$SERVICE_ID\"" in source
     wait = source[
         source.index("Wait for Zeabur deployment RUNNING before service-exec probes") : source.index(
             "Wait for fresh migration service baked SHA readiness"
         )
     ]
-    assert "zeabur deployment --help" not in wait or "never use it for selector" in wait
-    assert "zeabur deployment get --help" in wait
+    assert wait.index('if [ "$PREFERRED" = "service-id" ]') < wait.index('elif [ "$PREFERRED" = "service-name" ]')
     readiness = source[
         source.index("Wait for fresh migration service baked SHA readiness") : source.index(
             "Require final disarmed runtime with ledger DSN"
