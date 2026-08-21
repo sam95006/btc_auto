@@ -190,7 +190,8 @@ jobs:
           echo "zeabur_cli_preferred_selector=${PREFERRED}"
           echo "P2_MIGRATION_DEPLOYMENT_SELECTOR=${PREFERRED}"
           echo "zeabur_cli_supports_deployment_list=${SUPPORTS_LIST}"
-          if [ "$PREFERRED" = "none" ]; then
+          # Run-scoped SERVICE_ID is the sole deployment diagnostic identity authority.
+          if [ "$PREFERRED" != "service-id" ]; then
             echo "BLOCKER_zeabur_deployment_cli_selector_unsupported"
             exit 1
           fi
@@ -203,43 +204,20 @@ jobs:
             : > /tmp/p2_migration_build.log
             : > /tmp/p2_migration_runtime.log
             set +e
-            if [ "$PREFERRED" = "service-id" ]; then
-              # Exact run-scoped SERVICE_ID — preferred whenever get+log prove --service-id.
-              zeabur deployment get --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_get.json 2>&1
-              GET_EXIT=$?
-              zeabur deployment log -t=build --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_build.log 2>&1
-              BUILD_EXIT=$?
-              zeabur deployment log -t=runtime --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_runtime.log 2>&1
-              RUNTIME_EXIT=$?
-              LIST_EXIT=0
-              if [ "$SUPPORTS_LIST" = "true" ]; then
-                zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_list.json 2>&1
-                LIST_EXIT=$?
-                echo "deployment_list_skipped=false"
-              else
-                echo '{"skipped":"deployment_list_optional"}' >/tmp/p2_migration_deployment_list.json
-                echo "deployment_list_skipped=true"
-              fi
-            elif [ "$PREFERRED" = "service-name" ]; then
-              # Incomplete name-only scope is never preferred; this branch requires complete help-proven scope.
-              zeabur deployment get --service-name "$SERVICE_NAME" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_get.json 2>&1
-              GET_EXIT=$?
-              zeabur deployment log -t=build --service-name "$SERVICE_NAME" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_build.log 2>&1
-              BUILD_EXIT=$?
-              zeabur deployment log -t=runtime --service-name "$SERVICE_NAME" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_runtime.log 2>&1
-              RUNTIME_EXIT=$?
-              LIST_EXIT=0
-              if [ "$SUPPORTS_LIST" = "true" ]; then
-                zeabur deployment list --service-name "$SERVICE_NAME" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_list.json 2>&1
-                LIST_EXIT=$?
-                echo "deployment_list_skipped=false"
-              else
-                echo '{"skipped":"deployment_list_optional"}' >/tmp/p2_migration_deployment_list.json
-                echo "deployment_list_skipped=true"
-              fi
+            zeabur deployment get --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_get.json 2>&1
+            GET_EXIT=$?
+            zeabur deployment log -t=build --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_build.log 2>&1
+            BUILD_EXIT=$?
+            zeabur deployment log -t=runtime --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_runtime.log 2>&1
+            RUNTIME_EXIT=$?
+            LIST_EXIT=0
+            if [ "$SUPPORTS_LIST" = "true" ]; then
+              zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_list.json 2>&1
+              LIST_EXIT=$?
+              echo "deployment_list_skipped=false"
             else
-              echo "BLOCKER_zeabur_deployment_cli_selector_unsupported"
-              exit 1
+              echo '{"skipped":"deployment_list_optional"}' >/tmp/p2_migration_deployment_list.json
+              echo "deployment_list_skipped=true"
             fi
             echo "deployment_get_exit=${GET_EXIT}"
             echo "deployment_list_exit=${LIST_EXIT}"

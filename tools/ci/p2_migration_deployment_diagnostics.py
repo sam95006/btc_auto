@@ -389,31 +389,8 @@ def parse_zeabur_deployment_help(
     list_supports_service_id = list_ok and _help_has_flag(list_help, "--service-id")
     get_supports_env_id = get_ok and _help_has_flag(get_help, "--env-id")
     log_supports_env_id = log_ok and _help_has_flag(log_help, "--env-id")
-    # service-name alone is incomplete for Zeabur (needs ownerName+projectName+name, or id).
-    get_supports_owner_name = get_ok and (
-        _help_has_flag(get_help, "--owner-name") or _help_has_flag(get_help, "--ownerName")
-    )
-    log_supports_owner_name = log_ok and (
-        _help_has_flag(log_help, "--owner-name") or _help_has_flag(log_help, "--ownerName")
-    )
-    get_supports_project_name = get_ok and (
-        _help_has_flag(get_help, "--project-name") or _help_has_flag(get_help, "--projectName")
-    )
-    log_supports_project_name = log_ok and (
-        _help_has_flag(log_help, "--project-name") or _help_has_flag(log_help, "--projectName")
-    )
-    service_name_scope_complete = (
-        get_supports_service_name
-        and log_supports_service_name
-        and get_supports_env_id
-        and log_supports_env_id
-        and get_supports_owner_name
-        and log_supports_owner_name
-        and get_supports_project_name
-        and log_supports_project_name
-    )
 
-    # Prefer exact SERVICE_ID whenever get+log both prove --service-id.
+    # Migration diagnostics: SERVICE_ID only. Never select service-name / owner / project.
     if (
         get_supports_service_id
         and log_supports_service_id
@@ -421,28 +398,14 @@ def parse_zeabur_deployment_help(
         and log_supports_env_id
     ):
         preferred = "service-id"
-    elif service_name_scope_complete:
-        preferred = "service-name"
     else:
         preferred = "none"
 
-    if preferred == "service-name":
-        supports_deployment_list = (
-            list_supports_service_name
-            and _help_has_flag(list_help, "--env-id")
-            and (
-                _help_has_flag(list_help, "--owner-name")
-                or _help_has_flag(list_help, "--ownerName")
-            )
-            and (
-                _help_has_flag(list_help, "--project-name")
-                or _help_has_flag(list_help, "--projectName")
-            )
-        )
-    elif preferred == "service-id":
-        supports_deployment_list = list_supports_service_id and _help_has_flag(list_help, "--env-id")
-    else:
-        supports_deployment_list = False
+    supports_deployment_list = (
+        preferred == "service-id"
+        and list_supports_service_id
+        and _help_has_flag(list_help, "--env-id")
+    )
 
     return {
         "get_help_exit": int(get_help_exit),
@@ -456,12 +419,7 @@ def parse_zeabur_deployment_help(
         "list_supports_service_id": list_supports_service_id,
         "get_supports_env_id": get_supports_env_id,
         "log_supports_env_id": log_supports_env_id,
-        "get_supports_owner_name": get_supports_owner_name,
-        "log_supports_owner_name": log_supports_owner_name,
-        "get_supports_project_name": get_supports_project_name,
-        "log_supports_project_name": log_supports_project_name,
-        "service_name_scope_complete": service_name_scope_complete,
-        "supports_service_name": get_supports_service_name and log_supports_service_name,
+        "supports_service_name": False,
         "supports_service_id": get_supports_service_id and log_supports_service_id,
         "supports_deployment_list": supports_deployment_list,
         "preferred_selector": preferred,
