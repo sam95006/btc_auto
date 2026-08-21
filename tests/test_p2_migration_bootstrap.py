@@ -6,12 +6,14 @@ from pathlib import Path
 import pytest
 
 from tools.ci.p2_migration_bootstrap import (
+    assert_create_env_argv_match,
+    audit_create_environment_output,
     build_migration_context,
+    evaluate_create_command_pass,
     extract_service_id_from_create_output,
     plan_single_create_deploy,
     sanitize_bootstrap_failure_diagnostics,
     validate_migration_context,
-    verify_create_environment_match,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -136,9 +138,9 @@ def test_b_c_argv_contains_explicit_environment_id_no_implicit_fallback(tmp_path
     ]
 
 
-def test_d_e_create_json_environment_match_fail_closed_and_pass():
+def test_d_e_create_output_env_audit_match_mismatch_not_returned():
     other = "aaaaaaaaaaaaaaaaaaaaaaaa"
-    mismatch = verify_create_environment_match(
+    mismatch = audit_create_environment_output(
         create_output=(
             '{"service_id":"abcdef0123456789abcdef01",'
             f'"project_id":"bbbbbbbbbbbbbbbbbbbbbbbb","environment_id":"{other}"}}'
@@ -146,9 +148,11 @@ def test_d_e_create_json_environment_match_fail_closed_and_pass():
         expected_environment_id=STAGING_ENV,
     )
     assert mismatch["ok"] is False
+    assert mismatch["blocks_create"] is True
+    assert mismatch["P2_MIGRATION_CREATE_ENV_OUTPUT_STATUS"] == "MISMATCH"
     assert mismatch["P2_MIGRATION_CREATE_ENV_MATCH"] is False
 
-    ok = verify_create_environment_match(
+    ok = audit_create_environment_output(
         create_output=(
             '{"service_id":"abcdef0123456789abcdef01",'
             f'"project_id":"bbbbbbbbbbbbbbbbbbbbbbbb","environment_id":"{STAGING_ENV}"}}'
@@ -156,16 +160,105 @@ def test_d_e_create_json_environment_match_fail_closed_and_pass():
         expected_environment_id=STAGING_ENV,
     )
     assert ok["ok"] is True
+    assert ok["blocks_create"] is False
+    assert ok["P2_MIGRATION_CREATE_ENV_OUTPUT_STATUS"] == "MATCH"
     assert ok["P2_MIGRATION_CREATE_ENV_MATCH"] is True
     assert ok["environment_id"] == STAGING_ENV
     assert ok["service_id"] == "abcdef0123456789abcdef01"
     assert ok["exchange_write_call_count"] == 0
 
-    missing = verify_create_environment_match(
+    missing = audit_create_environment_output(
         create_output='{"service_id":"abcdef0123456789abcdef01"}',
         expected_environment_id=STAGING_ENV,
     )
-    assert missing["ok"] is False
+    assert missing["ok"] is True
+    assert missing["blocks_create"] is False
+    assert missing["P2_MIGRATION_CREATE_ENV_OUTPUT_STATUS"] == "NOT_RETURNED"
+    assert missing["P2_MIGRATION_CREATE_ENV_MATCH"] is False
+
+
+def test_a_missing_returned_env_with_argv_match_and_create_pass():
+    plan = plan_single_create_deploy(
+        context_dir="/tmp/ctx-a",
+        service_name="nexus-p2m7-200-1",
+        project_id="ffffffffffffffffffffffff",
+        environment_id=STAGING_ENV,
+    )
+    arg = assert_create_env_argv_match(plan["argv"], expected_environment_id=STAGING_ENV)
+    assert arg["ok"] is True
+    assert arg["P2_MIGRATION_CREATE_ENV_ARG_MATCH"] is True
+    audit = audit_create_environment_output(
+        create_output='{"service_id":"abcdef0123456789abcdef01"}',
+        expected_environment_id=STAGING_ENV,
+    )
+    assert audit["P2_MIGRATION_CREATE_ENV_OUTPUT_STATUS"] == "NOT_RETURNED"
+    assert audit["blocks_create"] is False
+    command = evaluate_create_command_pass(
+        create_exit=0,
+        service_id="abcdef0123456789abcdef01",
+        create_output='{"service_id":"abcdef0123456789abcdef01"}',
+    )
+    assert command["ok"] is True
+    assert command["P2_MIGRATION_CREATE_COMMAND_PASS"] is True
+
+
+def test_b_wrong_argv_env_fails_before_create():
+    bad = [
+        "zeabur",
+        "deploy",
+        "--create",
+        "--name",
+        "nexus-p2m7-201-1",
+        "--project-id",
+        "ffffffffffffffffffffffff",
+        "--environment-id",
+        "aaaaaaaaaaaaaaaaaaaaaaaa",
+        "-i=false",
+        "--json",
+    ]
+    arg = assert_create_env_argv_match(bad, expected_environment_id=STAGING_ENV)
+    assert arg["ok"] is False
+    assert arg["P2_MIGRATION_CREATE_ENV_ARG_MATCH"] is False
+    missing_flag = assert_create_env_argv_match(
+        ["zeabur", "deploy", "--create", "--name", "x", "--project-id", "y", "-i=false", "--json"],
+        expected_environment_id=STAGING_ENV,
+    )
+    assert missing_flag["ok"] is False
+    dup = assert_create_env_argv_match(
+        [
+            "zeabur",
+            "deploy",
+            "--create",
+            "--environment-id",
+            STAGING_ENV,
+            "--environment-id",
+            STAGING_ENV,
+            "-i=false",
+            "--json",
+        ],
+        expected_environment_id=STAGING_ENV,
+    )
+    assert dup["ok"] is False
+
+
+def test_c_returned_env_differs_fail_closed():
+    audit = audit_create_environment_output(
+        create_output='{"service_id":"abcdef0123456789abcdef01","environment_id":"aaaaaaaaaaaaaaaaaaaaaaaa"}',
+        expected_environment_id=STAGING_ENV,
+    )
+    assert audit["P2_MIGRATION_CREATE_ENV_OUTPUT_STATUS"] == "MISMATCH"
+    assert audit["blocks_create"] is True
+    assert audit["ok"] is False
+
+
+def test_e_missing_returned_env_is_not_mismatch():
+    audit = audit_create_environment_output(
+        create_output='deploy ok service_id=abcdef0123456789abcdef01',
+        expected_environment_id=STAGING_ENV,
+    )
+    assert audit["P2_MIGRATION_CREATE_ENV_OUTPUT_STATUS"] == "NOT_RETURNED"
+    assert audit["P2_MIGRATION_CREATE_ENV_OUTPUT_STATUS"] != "MISMATCH"
+    assert audit["blocks_create"] is False
 
 
 def test_f_g_h_workflow_same_env_vars_and_single_post_var_restart():
@@ -231,16 +324,21 @@ def test_workflow_builds_context_before_create_and_has_no_second_deploy():
     assert "Configure disarmed migration boundary and deploy fresh migration image" not in source
 
 
-def test_ensure_requires_zeabur_env_id_and_verifies_match():
+def test_ensure_requires_zeabur_env_id_and_verifies_arg_not_output_authority():
     assert "ZEABUR_ENV_ID" in ENSURE
     assert "BLOCKED_environment_id_missing" in ENSURE
-    assert "verify_create_environment_match" in ENSURE
-    assert "P2_MIGRATION_CREATE_ENV_MATCH=false" in ENSURE
-    assert "P2_MIGRATION_CREATE_ENV_MATCH=true" in ENSURE
-    assert "P2_MIGRATION_CREATE_ENV_EXPLICIT=true" in ENSURE
+    assert "assert_create_env_argv_match" in ENSURE
+    assert "audit_create_environment_output" in ENSURE
+    assert "evaluate_create_command_pass" in ENSURE
+    assert "P2_MIGRATION_CREATE_ENV_ARG_MATCH=true" in ENSURE
+    assert "P2_MIGRATION_CREATE_COMMAND_PASS=true" in ENSURE
+    assert "P2_MIGRATION_CREATE_ENV_OUTPUT_STATUS=" in ENSURE
     assert "BLOCKER_create_environment_mismatch" in ENSURE
+    assert "BLOCKER_create_env_arg_mismatch" in ENSURE
     assert "plan_single_create_deploy(" in ENSURE
     assert "environment_id=environment_id," in ENSURE.replace(" ", "")
+    # Missing returned env must not be treated as hard mismatch authority.
+    assert "verify_create_environment_match" not in ENSURE
 
 
 def test_extract_service_id_and_sanitized_diagnostics():

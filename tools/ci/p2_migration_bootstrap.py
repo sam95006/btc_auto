@@ -152,27 +152,100 @@ def extract_create_deploy_ids(raw: str) -> dict[str, str]:
     }
 
 
-def verify_create_environment_match(
+def assert_create_env_argv_match(
+    argv: list[str],
+    *,
+    expected_environment_id: str,
+) -> dict[str, Any]:
+    """Create-target proof: argv must pass --environment-id exactly once with expected value."""
+    expected = (expected_environment_id or "").strip()
+    if not expected:
+        raise ValueError("environment_id_missing")
+    positions = [i for i, part in enumerate(argv) if part == "--environment-id"]
+    value = ""
+    if len(positions) == 1:
+        idx = positions[0]
+        if idx + 1 < len(argv):
+            value = str(argv[idx + 1]).strip()
+    ok = len(positions) == 1 and value == expected
+    return {
+        "ok": ok,
+        "P2_MIGRATION_CREATE_ENV_ARG_MATCH": ok,
+        "expected_environment_id": expected,
+        "argv_environment_id": value,
+        "environment_id_flag_count": len(positions),
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+    }
+
+
+def audit_create_environment_output(
     *,
     create_output: str,
     expected_environment_id: str,
 ) -> dict[str, Any]:
+    """Optional create-output env audit. Missing env id is NOT a mismatch."""
     expected = (expected_environment_id or "").strip()
     if not expected:
         raise ValueError("environment_id_missing")
     ids = extract_create_deploy_ids(create_output)
     returned = (ids.get("environment_id") or "").strip()
-    match = bool(returned and returned == expected)
+    if not returned:
+        status = "NOT_RETURNED"
+        blocks = False
+    elif returned == expected:
+        status = "MATCH"
+        blocks = False
+    else:
+        status = "MISMATCH"
+        blocks = True
     return {
         "service_id": ids.get("service_id") or "",
         "project_id": ids.get("project_id") or "",
         "environment_id": returned,
         "expected_environment_id": expected,
-        "P2_MIGRATION_CREATE_ENV_MATCH": match,
-        "ok": match,
+        "P2_MIGRATION_CREATE_ENV_OUTPUT_STATUS": status,
+        "P2_MIGRATION_CREATE_ENV_MATCH": status == "MATCH",
+        "blocks_create": blocks,
+        "ok": not blocks,
         "create_order_calls": 0,
         "exchange_write_call_count": 0,
     }
+
+
+def evaluate_create_command_pass(
+    *,
+    create_exit: int | None,
+    service_id: str | None,
+    create_output: str,
+) -> dict[str, Any]:
+    """Create-stage pass: exit 0 + resolved service id + no known CLI semantic error."""
+    from tools.ci.p2_migration_deployment_diagnostics import detect_zeabur_cli_semantic_error
+
+    sid = (service_id or "").strip()
+    semantic = detect_zeabur_cli_semantic_error(create_output or "")
+    ok = create_exit == 0 and bool(sid) and semantic is None
+    return {
+        "ok": ok,
+        "P2_MIGRATION_CREATE_COMMAND_PASS": ok,
+        "create_deploy_exit": create_exit,
+        "service_id": sid,
+        "cli_semantic_error": semantic or "",
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+    }
+
+
+# Back-compat name used by older call sites/tests — delegates to output audit.
+def verify_create_environment_match(
+    *,
+    create_output: str,
+    expected_environment_id: str,
+) -> dict[str, Any]:
+    return audit_create_environment_output(
+        create_output=create_output,
+        expected_environment_id=expected_environment_id,
+    )
 
 
 def sanitize_bootstrap_failure_diagnostics(

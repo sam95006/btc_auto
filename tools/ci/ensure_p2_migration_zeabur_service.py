@@ -14,11 +14,13 @@ from pathlib import Path
 
 import tools.ci.ensure_demo_validation_zeabur_service as zeabur_svc
 from tools.ci.p2_migration_bootstrap import (
+    assert_create_env_argv_match,
+    audit_create_environment_output,
+    evaluate_create_command_pass,
     extract_service_id_from_create_output,
     plan_single_create_deploy,
     sanitize_bootstrap_failure_diagnostics,
     validate_migration_context,
-    verify_create_environment_match,
 )
 from tools.ci.p2_migration_service_identity import (
     MIGRATION_SERVICE_BASE_NAME,
@@ -104,6 +106,16 @@ def _create_with_migration_context(
     print("P2_MIGRATION_CREATE_ENV_EXPLICIT=true", file=sys.stderr)
     print(f"bootstrap_cwd_prefix={str(plan['cwd'])[:48]}", file=sys.stderr)
     print(f"create_env_id_prefix={environment_id[:6]}", file=sys.stderr)
+
+    arg_match = assert_create_env_argv_match(
+        plan["argv"],
+        expected_environment_id=environment_id,
+    )
+    if not arg_match["ok"]:
+        print("P2_MIGRATION_CREATE_ENV_ARG_MATCH=false", file=sys.stderr)
+        raise ValueError("create_env_arg_mismatch")
+    print("P2_MIGRATION_CREATE_ENV_ARG_MATCH=true", file=sys.stderr)
+
     env = os.environ.copy()
     env["ZEABUR_TOKEN"] = zeabur_svc.TOKEN
     subprocess.run(
@@ -125,20 +137,24 @@ def _create_with_migration_context(
     raw = (proc.stdout or "") + "\n" + (proc.stderr or "")
     print(f"create_deploy_exit={proc.returncode}", file=sys.stderr)
     print(f"create_deploy_head={zeabur_svc._redact(raw[:300])}", file=sys.stderr)
-    match = verify_create_environment_match(
+    output_audit = audit_create_environment_output(
         create_output=raw,
         expected_environment_id=environment_id,
     )
-    sid = (match.get("service_id") or "").strip() or extract_service_id_from_create_output(raw)
+    print(
+        f"P2_MIGRATION_CREATE_ENV_OUTPUT_STATUS={output_audit['P2_MIGRATION_CREATE_ENV_OUTPUT_STATUS']}",
+        file=sys.stderr,
+    )
+    sid = (output_audit.get("service_id") or "").strip() or extract_service_id_from_create_output(raw)
     if not sid:
-        # Exact-name re-list after create+deploy (service id only; env match still required).
+        # Exact-name re-list after create+deploy (service id only).
         try:
             rows = _list_services()
         except Exception as exc:  # noqa: BLE001
             print(f"relist_after_create_failed:{zeabur_svc._redact(str(exc))}", file=sys.stderr)
             rows = []
         sid = _exact_name_match(rows, service_name)
-    return sid, proc.returncode, raw, match
+    return sid, proc.returncode, raw, output_audit
 
 
 def main() -> int:
@@ -203,18 +219,26 @@ def main() -> int:
         )
 
     # Intentionally never call zeabur_svc._create_empty() or _create_empty_cli().
-    service_id, create_exit, create_raw, env_match = _create_with_migration_context(
-        context_dir=context_dir,
-        service_name=service_name,
-        project_id=zeabur_svc.PROJECT_ID,
-        environment_id=environment_id,
-    )
+    try:
+        service_id, create_exit, create_raw, output_audit = _create_with_migration_context(
+            context_dir=context_dir,
+            service_name=service_name,
+            project_id=zeabur_svc.PROJECT_ID,
+            environment_id=environment_id,
+        )
+    except ValueError as exc:
+        if str(exc) == "create_env_arg_mismatch":
+            print("BLOCKER_create_env_arg_mismatch", file=sys.stderr)
+            return 7
+        print(f"BLOCKED_{exc}", file=sys.stderr)
+        return 3
     service_id = (service_id or "").strip()
-    if not env_match.get("ok"):
-        print("P2_MIGRATION_CREATE_ENV_MATCH=false", file=sys.stderr)
+
+    if output_audit.get("blocks_create"):
+        print("P2_MIGRATION_CREATE_ENV_OUTPUT_STATUS=MISMATCH", file=sys.stderr)
         print(
-            f"create_env_mismatch expected_prefix={environment_id[:6]} "
-            f"returned_prefix={(env_match.get('environment_id') or 'missing')[:6]}",
+            f"create_env_output_mismatch expected_prefix={environment_id[:6]} "
+            f"returned_prefix={(output_audit.get('environment_id') or 'missing')[:6]}",
             file=sys.stderr,
         )
         diag = sanitize_bootstrap_failure_diagnostics(
@@ -230,21 +254,36 @@ def main() -> int:
         print("BLOCKER_create_environment_mismatch", file=sys.stderr)
         return 7
 
-    print("P2_MIGRATION_CREATE_ENV_MATCH=true", file=sys.stderr)
+    print(
+        f"P2_MIGRATION_CREATE_ENV_OUTPUT_STATUS={output_audit.get('P2_MIGRATION_CREATE_ENV_OUTPUT_STATUS')}",
+        file=sys.stderr,
+    )
 
-    if not service_id:
+    command_pass = evaluate_create_command_pass(
+        create_exit=create_exit,
+        service_id=service_id,
+        create_output=create_raw,
+    )
+    if not command_pass["ok"]:
+        print("P2_MIGRATION_CREATE_COMMAND_PASS=false", file=sys.stderr)
         diag = sanitize_bootstrap_failure_diagnostics(
             create_deploy_exit=create_exit,
             create_deploy_output=create_raw,
-            service_id=None,
+            service_id=service_id or None,
             service_name=service_name,
             readiness_attempts=0,
             not_running_count=0,
             current_image_positive_proof_count=0,
         )
         print(f"bootstrap_diag={diag}", file=sys.stderr)
-        print("BLOCKER_migration_service_id_unresolved", file=sys.stderr)
-        return 5
+        if not service_id:
+            print("BLOCKER_migration_service_id_unresolved", file=sys.stderr)
+            return 5
+        print("BLOCKER_create_command_failed", file=sys.stderr)
+        return 8
+
+    print("P2_MIGRATION_CREATE_COMMAND_PASS=true", file=sys.stderr)
+    print("P2_MIGRATION_CREATE_ENV_ARG_MATCH=true", file=sys.stderr)
 
     learning_validation_id = (
         os.environ.get("LEARNING_VALIDATION_SERVICE_ID")
