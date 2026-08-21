@@ -332,15 +332,21 @@ jobs:
             : > /tmp/p2_migration_deployment_record_list.json
             set +e
             zeabur deployment get --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_record_get.json 2>&1
+            DEPLOYMENT_GET_EXIT=$?
             zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_record_list.json 2>&1
+            DEPLOYMENT_LIST_EXIT=$?
             python -m tools.ci.p2_migration_lifecycle_command \
               --deployment-record \
               --deployment-get-file /tmp/p2_migration_deployment_record_get.json \
               --deployment-list-file /tmp/p2_migration_deployment_record_list.json \
+              --deployment-get-exit "$DEPLOYMENT_GET_EXIT" \
+              --deployment-list-exit "$DEPLOYMENT_LIST_EXIT" \
               --emit-env >/tmp/p2_migration_deployment_record.json
             RECORD_EXIT=$?
             set -e
             echo "deployment_record_attempt=${attempt} classifier_exit=${RECORD_EXIT}"
+            echo "DEPLOYMENT_GET_EXIT=${DEPLOYMENT_GET_EXIT}"
+            echo "DEPLOYMENT_LIST_EXIT=${DEPLOYMENT_LIST_EXIT}"
             cat /tmp/p2_migration_deployment_record.json
             if [ "$RECORD_EXIT" = 0 ]; then
               echo "P2_MIGRATION_DEPLOYMENT_RECORD_PRESENT=true"

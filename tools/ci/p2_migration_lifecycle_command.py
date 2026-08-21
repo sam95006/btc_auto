@@ -27,6 +27,17 @@ LIFECYCLE_SEMANTIC_ERROR_PATTERNS = (
     re.compile(r"Path:\s*\[redeployService\]", re.I),
 )
 
+DEPLOYMENT_RECORD_SEMANTIC_ERROR_PATTERNS = (
+    re.compile(r"browser_signature_banned", re.I),
+    re.compile(r"access_denied", re.I),
+    re.compile(r'"status"\s*:\s*403\b'),
+    re.compile(r"\bHTTP\s*403\b", re.I),
+    re.compile(r"\b403\b.*forbidden", re.I),
+    re.compile(r"INTERNAL_SERVER_ERROR", re.I),
+    re.compile(r"failed to get service", re.I),
+    re.compile(r"failed to get deployment", re.I),
+)
+
 
 def detect_lifecycle_semantic_error(*blobs: str) -> str | None:
     for blob in blobs:
@@ -38,6 +49,18 @@ def detect_lifecycle_semantic_error(*blobs: str) -> str | None:
             if match:
                 return match.group(0)
     return detect_zeabur_cli_semantic_error(*blobs)
+
+
+def detect_deployment_record_semantic_error(*blobs: str) -> str | None:
+    for blob in blobs:
+        text = blob or ""
+        if not text.strip():
+            continue
+        for pattern in DEPLOYMENT_RECORD_SEMANTIC_ERROR_PATTERNS:
+            match = pattern.search(text)
+            if match:
+                return match.group(0)
+    return detect_lifecycle_semantic_error(*blobs)
 
 
 def evaluate_lifecycle_command_pass(
@@ -109,17 +132,22 @@ def evaluate_deployment_record_present(
     *,
     deployment_get_raw: str = "",
     deployment_list_raw: str = "",
+    deployment_get_exit: int | None = None,
+    deployment_list_exit: int | None = None,
 ) -> dict[str, Any]:
-    """True when get/list yields at least one real deployment object/id.
+    """True only when get/list yields a positive 24-hex deployment identity.
 
-    Does NOT require RUNNING. Empty/unparsed JSON is absent.
+    Status/state/phase alone never counts. Exit 0 alone never counts.
+    Semantic error envelopes fail closed. Does NOT require RUNNING.
     """
-    get_payload = _parse_json_blob(deployment_get_raw)
-    list_payload = _parse_json_blob(deployment_list_raw)
+    get_raw = deployment_get_raw or ""
+    list_raw = deployment_list_raw or ""
+    semantic = detect_deployment_record_semantic_error(get_raw, list_raw)
+    get_payload = _parse_json_blob(get_raw)
+    list_payload = _parse_json_blob(list_raw)
     ids: list[str] = []
     _collect_oid24(get_payload, into=ids)
     _collect_oid24(list_payload, into=ids)
-    # Deduplicate while preserving order.
     seen: set[str] = set()
     unique_ids: list[str] = []
     for item in ids:
@@ -127,35 +155,15 @@ def evaluate_deployment_record_present(
             seen.add(item)
             unique_ids.append(item)
 
-    object_present = False
-    if isinstance(get_payload, dict) and get_payload and not get_payload.get("skipped"):
-        # Non-empty object that is not an obvious CLI error envelope without id still counts
-        # when it has status/state keys OR any oid.
-        if unique_ids or any(
-            key in get_payload for key in ("status", "Status", "state", "State", "phase", "Phase")
-        ):
-            object_present = True
-        # Nested deployment object
-        for nested_key in ("deployment", "Deployment", "latestDeployment", "data", "result"):
-            nested = get_payload.get(nested_key)
-            if isinstance(nested, dict) and nested:
-                object_present = True
-                break
-    if isinstance(list_payload, list) and len(list_payload) > 0:
-        object_present = True
-    if isinstance(list_payload, dict):
-        for list_key in ("deployments", "Deployments", "edges", "items", "nodes"):
-            items = list_payload.get(list_key)
-            if isinstance(items, list) and len(items) > 0:
-                object_present = True
-                break
-
-    present = bool(unique_ids or object_present)
+    present = bool(unique_ids) and semantic is None
     return {
         "ok": present,
         "P2_MIGRATION_DEPLOYMENT_RECORD_PRESENT": present,
         "deployment_id_count": len(unique_ids),
         "deployment_id_prefix": (unique_ids[0][:6] if unique_ids else ""),
+        "deployment_get_exit": deployment_get_exit,
+        "deployment_list_exit": deployment_list_exit,
+        "cli_semantic_error": semantic or "",
         "create_order_calls": 0,
         "exchange_write_call_count": 0,
     }
@@ -169,6 +177,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--deployment-record", action="store_true")
     parser.add_argument("--deployment-get-file", default="")
     parser.add_argument("--deployment-list-file", default="")
+    parser.add_argument("--deployment-get-exit", type=int, default=-1)
+    parser.add_argument("--deployment-list-exit", type=int, default=-1)
     parser.add_argument("--emit-env", action="store_true")
     args = parser.parse_args(argv)
 
@@ -179,13 +189,21 @@ def main(argv: list[str] | None = None) -> int:
             if args.deployment_list_file
             else ""
         )
+        get_exit = None if args.deployment_get_exit < 0 else args.deployment_get_exit
+        list_exit = None if args.deployment_list_exit < 0 else args.deployment_list_exit
         result = evaluate_deployment_record_present(
             deployment_get_raw=get_raw,
             deployment_list_raw=list_raw,
+            deployment_get_exit=get_exit,
+            deployment_list_exit=list_exit,
         )
         print(json.dumps(result, sort_keys=True))
         if args.emit_env:
             print(f"P2_MIGRATION_DEPLOYMENT_RECORD_PRESENT={str(result['ok']).lower()}")
+            if get_exit is not None:
+                print(f"DEPLOYMENT_GET_EXIT={get_exit}")
+            if list_exit is not None:
+                print(f"DEPLOYMENT_LIST_EXIT={list_exit}")
         return 0 if result["ok"] else 1
 
     if not args.classify_lifecycle_file:

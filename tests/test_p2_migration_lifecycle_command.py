@@ -88,6 +88,73 @@ def test_d_no_deployment_object_fails_before_service_exec():
     op_idx = source.index("Operational service-exec readiness")
     assert record_idx < op_idx
     assert "BLOCKER_deployment_record_absent_before_service_exec" in source
+    assert "--deployment-get-exit" in source
+    assert "--deployment-list-exit" in source
+    assert "DEPLOYMENT_GET_EXIT=" in source
+    assert "DEPLOYMENT_LIST_EXIT=" in source
+
+
+def test_record_a_status_403_error_envelope_is_not_deployment():
+    result = evaluate_deployment_record_present(
+        deployment_get_raw='{"status":403,"error_code":1010,"error_name":"browser_signature_banned"}',
+        deployment_get_exit=0,
+        deployment_list_exit=0,
+    )
+    assert result["ok"] is False
+    assert result["P2_MIGRATION_DEPLOYMENT_RECORD_PRESENT"] is False
+    assert result["cli_semantic_error"]
+
+
+def test_record_b_status_only_unknown_is_not_deployment():
+    result = evaluate_deployment_record_present(
+        deployment_get_raw='{"Status":"UNKNOWN"}',
+        deployment_get_exit=0,
+        deployment_list_exit=0,
+    )
+    assert result["ok"] is False
+    assert result["deployment_id_count"] == 0
+
+
+def test_record_c_valid_id_with_unknown_status_is_present():
+    result = evaluate_deployment_record_present(
+        deployment_get_raw='{"_id":"abcdef0123456789abcdef01","Status":"UNKNOWN"}',
+        deployment_get_exit=0,
+        deployment_list_exit=1,
+    )
+    assert result["ok"] is True
+    assert result["P2_MIGRATION_DEPLOYMENT_RECORD_PRESENT"] is True
+
+
+def test_record_d_list_with_valid_deployment_id_is_present():
+    result = evaluate_deployment_record_present(
+        deployment_get_raw="",
+        deployment_list_raw='[{"deployment_id":"fedcba9876543210fedcba98","status":"DEPLOYING"}]',
+        deployment_get_exit=1,
+        deployment_list_exit=0,
+    )
+    assert result["ok"] is True
+    assert result["deployment_id_prefix"] == "fedcba"
+
+
+def test_record_e_nonzero_exits_without_valid_id_is_false():
+    result = evaluate_deployment_record_present(
+        deployment_get_raw="failed to get deployment",
+        deployment_list_raw="",
+        deployment_get_exit=1,
+        deployment_list_exit=1,
+    )
+    assert result["ok"] is False
+
+
+def test_record_f_exit0_with_semantic_error_text_is_false():
+    result = evaluate_deployment_record_present(
+        deployment_get_raw="INTERNAL_SERVER_ERROR\naccess_denied\n",
+        deployment_list_raw="",
+        deployment_get_exit=0,
+        deployment_list_exit=0,
+    )
+    assert result["ok"] is False
+    assert result["cli_semantic_error"]
 
 
 def test_e_deployment_exists_service_not_running_allows_bounded_operational_wait():
