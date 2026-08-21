@@ -290,17 +290,81 @@ def wait_for_deployment_running(
     }
 
 
-def parse_zeabur_deployment_help(help_text: str) -> dict[str, Any]:
-    text = help_text or ""
-    lower = text.lower()
-    supports_service_name = "--service-name" in lower or "service-name" in lower
-    supports_service_id = "--service-id" in lower or "service-id" in lower
-    supports_list = bool(re.search(r"\blist\b", lower))
-    preferred = "service-name" if supports_service_name else ("service-id" if supports_service_id else "none")
+def _help_has_flag(help_text: str, flag: str) -> bool:
+    """True only when the exact CLI flag appears in this help blob."""
+    needle = flag if flag.startswith("--") else f"--{flag}"
+    return needle.lower() in (help_text or "").lower()
+
+
+def parse_zeabur_deployment_help(
+    *,
+    get_help: str = "",
+    log_help: str = "",
+    list_help: str = "",
+    get_help_exit: int = 0,
+    log_help_exit: int = 0,
+    list_help_exit: int | None = None,
+    parent_help: str = "",
+) -> dict[str, Any]:
+    """Parse get/log/list subcommand help independently.
+
+    Parent ``deployment --help`` must never authorize a selector: it may list
+    subcommand names without exposing ``--service-name`` / ``--service-id``.
+    """
+    _ = parent_help  # intentionally ignored for selector capability
+    get_ok = int(get_help_exit) == 0
+    log_ok = int(log_help_exit) == 0
+    list_exit = 0 if list_help_exit is None else int(list_help_exit)
+    list_ok = list_exit == 0 and bool((list_help or "").strip())
+
+    get_supports_service_name = get_ok and _help_has_flag(get_help, "--service-name")
+    log_supports_service_name = log_ok and _help_has_flag(log_help, "--service-name")
+    list_supports_service_name = list_ok and _help_has_flag(list_help, "--service-name")
+    get_supports_service_id = get_ok and _help_has_flag(get_help, "--service-id")
+    log_supports_service_id = log_ok and _help_has_flag(log_help, "--service-id")
+    list_supports_service_id = list_ok and _help_has_flag(list_help, "--service-id")
+    get_supports_env_id = get_ok and _help_has_flag(get_help, "--env-id")
+    log_supports_env_id = log_ok and _help_has_flag(log_help, "--env-id")
+
+    if (
+        get_supports_service_name
+        and log_supports_service_name
+        and get_supports_env_id
+        and log_supports_env_id
+    ):
+        preferred = "service-name"
+    elif (
+        get_supports_service_id
+        and log_supports_service_id
+        and get_supports_env_id
+        and log_supports_env_id
+    ):
+        preferred = "service-id"
+    else:
+        preferred = "none"
+
+    if preferred == "service-name":
+        supports_deployment_list = list_supports_service_name and _help_has_flag(list_help, "--env-id")
+    elif preferred == "service-id":
+        supports_deployment_list = list_supports_service_id and _help_has_flag(list_help, "--env-id")
+    else:
+        supports_deployment_list = False
+
     return {
-        "supports_service_name": supports_service_name,
-        "supports_service_id": supports_service_id,
-        "supports_deployment_list": supports_list,
+        "get_help_exit": int(get_help_exit),
+        "log_help_exit": int(log_help_exit),
+        "list_help_exit": list_exit,
+        "get_supports_service_name": get_supports_service_name,
+        "log_supports_service_name": log_supports_service_name,
+        "list_supports_service_name": list_supports_service_name,
+        "get_supports_service_id": get_supports_service_id,
+        "log_supports_service_id": log_supports_service_id,
+        "list_supports_service_id": list_supports_service_id,
+        "get_supports_env_id": get_supports_env_id,
+        "log_supports_env_id": log_supports_env_id,
+        "supports_service_name": get_supports_service_name and log_supports_service_name,
+        "supports_service_id": get_supports_service_id and log_supports_service_id,
+        "supports_deployment_list": supports_deployment_list,
         "preferred_selector": preferred,
         "create_order_calls": 0,
         "exchange_write_call_count": 0,
@@ -322,19 +386,37 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--runtime-log-exit", type=int, default=0)
     parser.add_argument("--emit-env", action="store_true")
     parser.add_argument("--write-artifact", default="")
-    parser.add_argument("--parse-help-file", default="")
+    parser.add_argument("--parse-get-help-file", default="")
+    parser.add_argument("--parse-log-help-file", default="")
+    parser.add_argument("--parse-list-help-file", default="")
+    parser.add_argument("--get-help-exit", type=int, default=0)
+    parser.add_argument("--log-help-exit", type=int, default=0)
+    parser.add_argument("--list-help-exit", type=int, default=0)
+    parser.add_argument(
+        "--parse-help-file",
+        default="",
+        help="Deprecated parent-help path; ignored for selector (kept for fail-closed diagnostics).",
+    )
     args = parser.parse_args(argv)
-
-    if args.parse_help_file:
-        help_text = Path(args.parse_help_file).read_text(encoding="utf-8", errors="replace")
-        parsed = parse_zeabur_deployment_help(help_text)
-        print(json.dumps(parsed, sort_keys=True))
-        return 0 if parsed["preferred_selector"] != "none" else 1
 
     def _read(path: str) -> str:
         if not path:
             return ""
         return Path(path).read_text(encoding="utf-8", errors="replace")
+
+    if args.parse_get_help_file or args.parse_log_help_file or args.parse_list_help_file or args.parse_help_file:
+        parsed = parse_zeabur_deployment_help(
+            get_help=_read(args.parse_get_help_file),
+            log_help=_read(args.parse_log_help_file),
+            list_help=_read(args.parse_list_help_file),
+            get_help_exit=args.get_help_exit,
+            log_help_exit=args.log_help_exit,
+            list_help_exit=args.list_help_exit,
+            parent_help=_read(args.parse_help_file),
+        )
+        # Always emit JSON (exit 0). Workflow evaluates preferred_selector explicitly.
+        print(json.dumps(parsed, sort_keys=True))
+        return 0
 
     classified = classify_deployment_snapshot(
         deployment_get_raw=_read(args.deployment_get),

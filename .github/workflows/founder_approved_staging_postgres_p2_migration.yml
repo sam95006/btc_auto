@@ -162,12 +162,29 @@ jobs:
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           mkdir -p artifacts/bybit_demo_p1
+          # Parent deployment --help may list subcommands only; never use it for selector flags.
           set +e
-          zeabur deployment --help >/tmp/zeabur_deployment_help.txt 2>&1
-          HELP_EXIT=$?
+          zeabur deployment get --help >/tmp/zeabur_deployment_get_help.txt 2>&1
+          GET_HELP_EXIT=$?
+          zeabur deployment log --help >/tmp/zeabur_deployment_log_help.txt 2>&1
+          LOG_HELP_EXIT=$?
+          zeabur deployment list --help >/tmp/zeabur_deployment_list_help.txt 2>&1
+          LIST_HELP_EXIT=$?
+          python -m tools.ci.p2_migration_deployment_diagnostics \
+            --parse-get-help-file /tmp/zeabur_deployment_get_help.txt \
+            --parse-log-help-file /tmp/zeabur_deployment_log_help.txt \
+            --parse-list-help-file /tmp/zeabur_deployment_list_help.txt \
+            --get-help-exit "$GET_HELP_EXIT" \
+            --log-help-exit "$LOG_HELP_EXIT" \
+            --list-help-exit "$LIST_HELP_EXIT" \
+            >/tmp/zeabur_deployment_cli_contract.json
+          PARSE_EXIT=$?
           set -e
-          echo "zeabur_deployment_help_exit=${HELP_EXIT}"
-          python -m tools.ci.p2_migration_deployment_diagnostics --parse-help-file /tmp/zeabur_deployment_help.txt | tee /tmp/zeabur_deployment_cli_contract.json
+          echo "zeabur_deployment_get_help_exit=${GET_HELP_EXIT}"
+          echo "zeabur_deployment_log_help_exit=${LOG_HELP_EXIT}"
+          echo "zeabur_deployment_list_help_exit=${LIST_HELP_EXIT}"
+          echo "zeabur_deployment_cli_contract_parse_exit=${PARSE_EXIT}"
+          cat /tmp/zeabur_deployment_cli_contract.json
           PREFERRED=$(python -c "import json; print(json.load(open('/tmp/zeabur_deployment_cli_contract.json'))['preferred_selector'])")
           SUPPORTS_LIST=$(python -c "import json; print('true' if json.load(open('/tmp/zeabur_deployment_cli_contract.json'))['supports_deployment_list'] else 'false')")
           echo "zeabur_cli_preferred_selector=${PREFERRED}"
@@ -196,11 +213,13 @@ jobs:
               if [ "$SUPPORTS_LIST" = "true" ]; then
                 zeabur deployment list --service-name "$SERVICE_NAME" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_list.json 2>&1
                 LIST_EXIT=$?
+                echo "deployment_list_skipped=false"
               else
-                echo '{"skipped":"deployment_list_undocumented"}' >/tmp/p2_migration_deployment_list.json
+                echo '{"skipped":"deployment_list_optional"}' >/tmp/p2_migration_deployment_list.json
+                echo "deployment_list_skipped=true"
               fi
             else
-              # Proven by --help only; still capture exits and never treat CLI failure as RUNNING.
+              # service-id only when BOTH get and log --help prove --service-id.
               zeabur deployment get --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_get.json 2>&1
               GET_EXIT=$?
               zeabur deployment log -t=build --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_build.log 2>&1
@@ -211,8 +230,10 @@ jobs:
               if [ "$SUPPORTS_LIST" = "true" ]; then
                 zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_list.json 2>&1
                 LIST_EXIT=$?
+                echo "deployment_list_skipped=false"
               else
-                echo '{"skipped":"deployment_list_undocumented"}' >/tmp/p2_migration_deployment_list.json
+                echo '{"skipped":"deployment_list_optional"}' >/tmp/p2_migration_deployment_list.json
+                echo "deployment_list_skipped=true"
               fi
             fi
             echo "deployment_get_exit=${GET_EXIT}"

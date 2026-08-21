@@ -126,29 +126,80 @@ def test_sanitize_log_tail_redacts_tokens():
     assert "postgresql://***REDACTED***" in out
 
 
-def test_parse_zeabur_help_prefers_service_name():
-    help_text = """
-    Usage: zeabur deployment get --env-id <id> --service-name <name>
-    Usage: zeabur deployment log -t=build|runtime --env-id <id> --service-name <name>
+def test_parent_help_with_subcommands_only_does_not_select_selector():
+    parent = """
+    Usage: zeabur deployment [command]
+    Available Commands:
+      get   Get deployment
+      log   Show deployment logs
+      list  List deployments
     """
-    parsed = parse_zeabur_deployment_help(help_text)
-    assert parsed["supports_service_name"] is True
+    parsed = parse_zeabur_deployment_help(parent_help=parent, get_help="", log_help="", list_help="")
+    assert parsed["preferred_selector"] == "none"
+    assert parsed["supports_service_name"] is False
+    assert parsed["supports_service_id"] is False
+
+
+def test_get_and_log_service_name_intersection_selects_service_name():
+    get_help = "Usage: zeabur deployment get --env-id <id> --service-name <name>"
+    log_help = "Usage: zeabur deployment log -t=build|runtime --env-id <id> --service-name <name>"
+    parsed = parse_zeabur_deployment_help(get_help=get_help, log_help=log_help, list_help="")
     assert parsed["preferred_selector"] == "service-name"
+    assert parsed["get_supports_service_name"] is True
+    assert parsed["log_supports_service_name"] is True
+    assert parsed["supports_deployment_list"] is False
 
 
-def test_workflow_prefers_service_name_and_captures_cli_exits():
+def test_get_service_name_without_log_support_is_not_preferred():
+    parsed = parse_zeabur_deployment_help(
+        get_help="get --env-id X --service-name Y",
+        log_help="log --env-id X --service-id Z",
+    )
+    assert parsed["preferred_selector"] != "service-name"
+    assert parsed["preferred_selector"] == "none"
+
+
+def test_service_id_only_when_both_get_and_log_prove_it():
+    parsed = parse_zeabur_deployment_help(
+        get_help="get --env-id X --service-id Y",
+        log_help="log --env-id X --service-id Y",
+    )
+    assert parsed["preferred_selector"] == "service-id"
+    assert parsed["supports_service_id"] is True
+
+
+def test_deployment_list_unsupported_still_allows_control_path():
+    parsed = parse_zeabur_deployment_help(
+        get_help="get --env-id X --service-name Y",
+        log_help="log --env-id X --service-name Y",
+        list_help="",
+        list_help_exit=2,
+    )
+    assert parsed["preferred_selector"] == "service-name"
+    assert parsed["supports_deployment_list"] is False
+
+
+def test_workflow_probes_get_and_log_help_and_prints_blocker():
     source = WORKFLOW.read_text(encoding="utf-8")
-    assert "zeabur deployment --help" in source
-    assert "--parse-help-file" in source
+    assert "zeabur deployment get --help" in source
+    assert "zeabur deployment log --help" in source
+    assert "--parse-get-help-file" in source
+    assert "--parse-log-help-file" in source
+    assert ">/tmp/zeabur_deployment_cli_contract.json" in source
+    assert "| tee /tmp/zeabur_deployment_cli_contract.json" not in source
+    assert "BLOCKER_zeabur_deployment_cli_selector_unsupported" in source
+    assert "deployment_list_skipped=true" in source
     assert "--service-name \"$SERVICE_NAME\"" in source
     assert "deployment_get_exit=" in source
-    assert "deployment_list_exit=" in source
-    assert "build_log_exit=" in source
-    assert "runtime_log_exit=" in source
     assert "--deployment-get-exit" in source
-    assert source.index("Wait for Zeabur deployment RUNNING before service-exec probes") < source.index(
-        "Wait for fresh migration service baked SHA readiness"
-    )
+    # Parent help must not be the selector authority.
+    wait = source[
+        source.index("Wait for Zeabur deployment RUNNING before service-exec probes") : source.index(
+            "Wait for fresh migration service baked SHA readiness"
+        )
+    ]
+    assert "zeabur deployment --help" not in wait or "never use it for selector" in wait
+    assert "zeabur deployment get --help" in wait
     readiness = source[
         source.index("Wait for fresh migration service baked SHA readiness") : source.index(
             "Require final disarmed runtime with ledger DSN"
