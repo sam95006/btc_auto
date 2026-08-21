@@ -304,6 +304,9 @@ def main() -> int:
     print("P2_MIGRATION_PREVIOUS_SERVICE_REUSED=false", file=sys.stderr)
     print("P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true", file=sys.stderr)
     print("P2_MIGRATION_BOOTSTRAP_DEPLOY_COUNT=1", file=sys.stderr)
+    print("P2_MIGRATION_SERVICE_CREATE_COUNT=1", file=sys.stderr)
+    print("P2_MIGRATION_BOOTSTRAP_LOCAL_DEPLOY_COUNT=1", file=sys.stderr)
+    print("P2_MIGRATION_SECOND_SERVICE_CREATED=false", file=sys.stderr)
     print("P2_MIGRATION_CREATE_ENV_EXPLICIT=true", file=sys.stderr)
     print(
         f"migration_service_created=true id_prefix={identity['migration_service_id_prefix']} "

@@ -198,7 +198,7 @@ def test_workflow_uses_run_scoped_migration_service_and_file_parser():
     assert "Prove migration service exec and file download share filesystem" not in source
     assert 'test "$FOUND" = true' not in source
     assert source.index("Build migration deployment context before service create") < resolve_idx
-    assert "P2_MIGRATION_SECOND_DEPLOY=false" in source
+    assert "P2_MIGRATION_SECOND_SERVICE_CREATED=false" in source
 
 
 def test_ensure_p2_migration_module_invocation_bootstraps_without_tools_import_error():

@@ -4,9 +4,11 @@ from __future__ import annotations
 from pathlib import Path
 
 from tools.ci.p2_migration_lifecycle_command import (
+    evaluate_activation_local_deploy,
     evaluate_deployment_record_present,
     evaluate_lifecycle_command_pass,
 )
+from tools.ci.p2_migration_bootstrap import verify_context_source_identity
 from tools.ci.p2_migration_rollout_readiness import (
     CURRENT_IMAGE_PROBE_PASS_MARKER,
     OPERATIONAL_READINESS_PASS_MARKER,
@@ -198,18 +200,75 @@ def test_i_zero_exchange_writes_on_lifecycle_surfaces():
     assert record["exchange_write_call_count"] == 0
 
 
-def test_workflow_uses_redeploy_not_restart_after_vars():
+def test_workflow_uses_local_deploy_not_service_redeploy_after_vars():
     source = WORKFLOW.read_text(encoding="utf-8")
-    assert "Redeploy staging service once after runtime variables" in source
-    assert "zeabur service redeploy --id \"$SERVICE_ID\" --env-id \"$ZEABUR_ENV_ID\" -y -i=false" in source
-    assert "P2_MIGRATION_POST_VAR_REDEPLOY=true" in source
-    assert "P2_MIGRATION_POST_VAR_REDEPLOY_COMMAND_PASS=true" in source
+    assert "Activation local deploy to same service after runtime variables" in source
+    assert "zeabur deploy" in source
+    assert '--project-id "$ZEABUR_PROJECT_ID"' in source
+    assert '--service-id "$SERVICE_ID"' in source
+    assert '--environment-id "$ZEABUR_ENV_ID"' in source
+    assert "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY=true" in source
+    assert "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COMMAND_PASS=true" in source
+    assert "P2_MIGRATION_POST_VAR_SOURCE_IDENTITY_PASS" in source
     assert "p2_migration_lifecycle_command" in source
+    assert "zeabur service redeploy" not in source
     assert "Restart staging service once after runtime variables" not in source
     assert "P2_MIGRATION_POST_VAR_RESTART=true" not in source
+    assert "P2_MIGRATION_POST_VAR_REDEPLOY=true" not in source
     vars_idx = source.index("Inject disarmed runtime variables after single bootstrap deploy")
-    redeploy_idx = source.index("Redeploy staging service once after runtime variables")
+    act_idx = source.index("Activation local deploy to same service after runtime variables")
     meta_idx = source.index("Metadata diagnostic and explicit-negative veto")
     record_idx = source.index("Require deployment record before service-exec")
     op_idx = source.index("Operational service-exec readiness")
-    assert vars_idx < redeploy_idx < meta_idx < record_idx < op_idx
+    assert vars_idx < act_idx < meta_idx < record_idx < op_idx
+    activation_block = source[act_idx:meta_idx]
+    cmd = activation_block[activation_block.index("--project-id \"$ZEABUR_PROJECT_ID\"") :]
+    cmd = cmd.split(")", 1)[0]
+    assert "--create" not in cmd
+    assert "--service-id \"$SERVICE_ID\"" in cmd
+    assert "--environment-id \"$ZEABUR_ENV_ID\"" in cmd
+
+
+def test_activation_f_returned_service_id_mismatch_fail_closed():
+    result = evaluate_activation_local_deploy(
+        exit_code=0,
+        output='{"service_id":"aaaaaaaaaaaaaaaaaaaaaaaa","environment_id":"69d559b6474db8a99d6dd6bf"}',
+        expected_service_id="bbbbbbbbbbbbbbbbbbbbbbbb",
+        expected_environment_id="69d559b6474db8a99d6dd6bf",
+    )
+    assert result["ok"] is False
+    assert result["P2_MIGRATION_POST_VAR_SERVICE_MATCH"] is False
+
+
+def test_activation_g_returned_env_id_mismatch_fail_closed():
+    result = evaluate_activation_local_deploy(
+        exit_code=0,
+        output='{"service_id":"bbbbbbbbbbbbbbbbbbbbbbbb","environment_id":"aaaaaaaaaaaaaaaaaaaaaaaa"}',
+        expected_service_id="bbbbbbbbbbbbbbbbbbbbbbbb",
+        expected_environment_id="69d559b6474db8a99d6dd6bf",
+    )
+    assert result["ok"] is False
+    assert result["P2_MIGRATION_POST_VAR_ENV_MATCH"] is False
+
+
+def test_activation_h_wrong_source_sha_fails_before_upload(tmp_path: Path):
+    ctx = tmp_path / "ctx"
+    ctx.mkdir()
+    (ctx / "DEPLOYMENT_COMMIT").write_text("1111111111111111111111111111111111111111\n", encoding="ascii")
+    (ctx / "SOURCE_COMMIT").write_text("1111111111111111111111111111111111111111\n", encoding="ascii")
+    result = verify_context_source_identity(context_dir=ctx, expected_sha=SHA)
+    assert result["ok"] is False
+    assert result["P2_MIGRATION_POST_VAR_SOURCE_IDENTITY_PASS"] is False
+
+
+def test_activation_clean_pass_with_matching_ids():
+    result = evaluate_activation_local_deploy(
+        exit_code=0,
+        output='{"service_id":"bbbbbbbbbbbbbbbbbbbbbbbb","environment_id":"69d559b6474db8a99d6dd6bf"}',
+        expected_service_id="bbbbbbbbbbbbbbbbbbbbbbbb",
+        expected_environment_id="69d559b6474db8a99d6dd6bf",
+    )
+    assert result["ok"] is True
+    assert result["P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COMMAND_PASS"] is True
+    assert result["P2_MIGRATION_SECOND_SERVICE_CREATED"] is False
+    assert result["exchange_write_call_count"] == 0

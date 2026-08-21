@@ -25,6 +25,8 @@ LIFECYCLE_SEMANTIC_ERROR_PATTERNS = (
     re.compile(r"INTERNAL_SERVER_ERROR", re.I),
     re.compile(r"Path:\s*\[restartService\]", re.I),
     re.compile(r"Path:\s*\[redeployService\]", re.I),
+    re.compile(r"Cannot redeploy in-place", re.I),
+    re.compile(r"bind a GitHub Repository", re.I),
 )
 
 DEPLOYMENT_RECORD_SEMANTIC_ERROR_PATTERNS = (
@@ -94,6 +96,73 @@ def evaluate_lifecycle_command_pass(
         result["P2_MIGRATION_POST_VAR_REDEPLOY_COUNT"] = 1 if ok else 0
         result["P2_MIGRATION_POST_VAR_REDEPLOY_COMMAND_PASS"] = ok
     return result
+
+
+def evaluate_activation_local_deploy(
+    *,
+    exit_code: int | None,
+    output: str,
+    expected_service_id: str,
+    expected_environment_id: str,
+) -> dict[str, Any]:
+    """Classify post-var local deploy onto an existing service.
+
+    Returned IDs: present+mismatch → fail; absent → argv was the bind authority
+    (caller must have proven argv before upload). Present+match → match true.
+    """
+    from tools.ci.p2_migration_bootstrap import extract_create_deploy_ids
+
+    expected_sid = (expected_service_id or "").strip()
+    expected_env = (expected_environment_id or "").strip()
+    if not expected_sid:
+        raise ValueError("service_id_missing")
+    if not expected_env:
+        raise ValueError("environment_id_missing")
+    text = output or ""
+    semantic = detect_lifecycle_semantic_error(text)
+    ids = extract_create_deploy_ids(text)
+    returned_sid = (ids.get("service_id") or "").strip()
+    returned_env = (ids.get("environment_id") or "").strip()
+
+    if returned_sid and returned_sid != expected_sid:
+        service_match = False
+        service_status = "MISMATCH"
+    elif returned_sid and returned_sid == expected_sid:
+        service_match = True
+        service_status = "MATCH"
+    else:
+        service_match = True  # not returned; argv bind already required by caller
+        service_status = "NOT_RETURNED"
+
+    if returned_env and returned_env != expected_env:
+        env_match = False
+        env_status = "MISMATCH"
+    elif returned_env and returned_env == expected_env:
+        env_match = True
+        env_status = "MATCH"
+    else:
+        env_match = True
+        env_status = "NOT_RETURNED"
+
+    exit_ok = exit_code == 0
+    command_pass = bool(exit_ok and semantic is None and service_match and env_match)
+    return {
+        "ok": command_pass,
+        "exit_code": exit_code,
+        "cli_semantic_error": semantic or "",
+        "returned_service_id": returned_sid,
+        "returned_environment_id": returned_env,
+        "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY": command_pass,
+        "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COUNT": 1 if command_pass else 0,
+        "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COMMAND_PASS": command_pass,
+        "P2_MIGRATION_POST_VAR_SERVICE_MATCH": service_match,
+        "P2_MIGRATION_POST_VAR_ENV_MATCH": env_match,
+        "P2_MIGRATION_POST_VAR_SERVICE_OUTPUT_STATUS": service_status,
+        "P2_MIGRATION_POST_VAR_ENV_OUTPUT_STATUS": env_status,
+        "P2_MIGRATION_SECOND_SERVICE_CREATED": False,
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+    }
 
 
 def _collect_oid24(payload: Any, *, into: list[str], limit: int = 40) -> None:
@@ -173,7 +242,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="P2 migration lifecycle command classifier")
     parser.add_argument("--classify-lifecycle-file", default="")
     parser.add_argument("--exit-code", type=int, default=0)
-    parser.add_argument("--operation", choices=("restart", "redeploy"), default="redeploy")
+    parser.add_argument("--operation", choices=("restart", "redeploy", "local-deploy"), default="local-deploy")
+    parser.add_argument("--expected-service-id", default="")
+    parser.add_argument("--expected-environment-id", default="")
     parser.add_argument("--deployment-record", action="store_true")
     parser.add_argument("--deployment-get-file", default="")
     parser.add_argument("--deployment-list-file", default="")
@@ -210,6 +281,23 @@ def main(argv: list[str] | None = None) -> int:
         print("missing_classify_lifecycle_file", file=sys.stderr)
         return 2
     output = Path(args.classify_lifecycle_file).read_text(encoding="utf-8", errors="replace")
+    if args.operation == "local-deploy":
+        result = evaluate_activation_local_deploy(
+            exit_code=args.exit_code,
+            output=output,
+            expected_service_id=args.expected_service_id,
+            expected_environment_id=args.expected_environment_id,
+        )
+        print(json.dumps(result, sort_keys=True))
+        if args.emit_env:
+            print(f"P2_MIGRATION_POST_VAR_LOCAL_DEPLOY={str(result['ok']).lower()}")
+            print(f"P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COMMAND_PASS={str(result['ok']).lower()}")
+            print(f"P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COUNT={1 if result['ok'] else 0}")
+            print(f"P2_MIGRATION_POST_VAR_SERVICE_MATCH={str(result['P2_MIGRATION_POST_VAR_SERVICE_MATCH']).lower()}")
+            print(f"P2_MIGRATION_POST_VAR_ENV_MATCH={str(result['P2_MIGRATION_POST_VAR_ENV_MATCH']).lower()}")
+            print("P2_MIGRATION_SECOND_SERVICE_CREATED=false")
+        return 0 if result["ok"] else 1
+
     result = evaluate_lifecycle_command_pass(
         operation=args.operation,
         exit_code=args.exit_code,

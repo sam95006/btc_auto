@@ -53,7 +53,7 @@ def test_migration_workflow_is_dispatch_only_and_disarmed() -> None:
     assert 'SERVICE_NAME: nexus-p2-migration-0007' not in source
     assert "python -m tools.ci.ensure_p2_migration_zeabur_service" in source
     assert "Build migration deployment context before service create" in source
-    assert "P2_MIGRATION_SECOND_DEPLOY=false" in source
+    assert "P2_MIGRATION_SECOND_SERVICE_CREATED=false" in source
     assert "zeabur deploy --project-id \"$ZEABUR_PROJECT_ID\" --service-id \"$SERVICE_ID\"" not in source
     assert "python tools/ci/ensure_p2_migration_zeabur_service.py" not in source
     assert "p2_migration_atomic.py --print-remote-script" in source

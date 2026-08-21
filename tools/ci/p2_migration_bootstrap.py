@@ -109,12 +109,99 @@ def plan_single_create_deploy(
         "cwd": ctx,
         "argv": argv,
         "environment_id": env_id,
+        "P2_MIGRATION_SERVICE_CREATE_COUNT": 1,
+        "P2_MIGRATION_BOOTSTRAP_LOCAL_DEPLOY_COUNT": 1,
+        "P2_MIGRATION_ACTIVATION_LOCAL_DEPLOY_COUNT": 0,
+        "P2_MIGRATION_TOTAL_LOCAL_DEPLOY_COUNT": 1,
         "P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP": True,
         "P2_MIGRATION_BOOTSTRAP_DEPLOY_COUNT": 1,
         "P2_MIGRATION_CREATE_ENV_EXPLICIT": True,
+        "P2_MIGRATION_SECOND_SERVICE_CREATED": False,
         "uses_create_empty_cli": False,
         "second_deploy_planned": False,
         "implicit_first_environment_fallback": False,
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+    }
+
+
+def plan_activation_local_deploy(
+    *,
+    context_dir: Path | str,
+    project_id: str,
+    service_id: str,
+    environment_id: str,
+    repo_root: Path | str | None = None,
+) -> dict[str, Any]:
+    """Post-var local upload onto an EXISTING service (no --create, no service redeploy)."""
+    ctx = str(Path(context_dir).resolve())
+    root = str(Path(repo_root).resolve()) if repo_root else ""
+    project = (project_id or "").strip()
+    sid = (service_id or "").strip()
+    env_id = (environment_id or "").strip()
+    if not project:
+        raise ValueError("project_id_missing")
+    if not sid:
+        raise ValueError("service_id_missing")
+    if not env_id:
+        raise ValueError("environment_id_missing")
+    if root and Path(ctx).resolve() == Path(root).resolve():
+        raise ValueError("migration_context_must_not_be_repo_root")
+    argv = [
+        "zeabur",
+        "deploy",
+        "--project-id",
+        project,
+        "--service-id",
+        sid,
+        "--environment-id",
+        env_id,
+        "-i=false",
+        "--json",
+    ]
+    if "--create" in argv:
+        raise ValueError("activation_deploy_must_not_create")
+    return {
+        "cwd": ctx,
+        "argv": argv,
+        "project_id": project,
+        "service_id": sid,
+        "environment_id": env_id,
+        "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY": True,
+        "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COUNT": 1,
+        "P2_MIGRATION_ACTIVATION_LOCAL_DEPLOY_COUNT": 1,
+        "P2_MIGRATION_BOOTSTRAP_LOCAL_DEPLOY_COUNT": 1,
+        "P2_MIGRATION_SERVICE_CREATE_COUNT": 1,
+        "P2_MIGRATION_TOTAL_LOCAL_DEPLOY_COUNT": 2,
+        "P2_MIGRATION_SECOND_SERVICE_CREATED": False,
+        "uses_create_empty_cli": False,
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+    }
+
+
+def verify_context_source_identity(
+    *,
+    context_dir: Path | str,
+    expected_sha: str,
+) -> dict[str, Any]:
+    ctx = Path(context_dir)
+    expected = (expected_sha or "").strip()
+    if not expected:
+        raise ValueError("expected_sha_missing")
+    deployment = ""
+    source = ""
+    if (ctx / "DEPLOYMENT_COMMIT").is_file():
+        deployment = (ctx / "DEPLOYMENT_COMMIT").read_text(encoding="utf-8").strip()
+    if (ctx / "SOURCE_COMMIT").is_file():
+        source = (ctx / "SOURCE_COMMIT").read_text(encoding="utf-8").strip()
+    ok = bool(deployment and source and deployment == expected and source == expected)
+    return {
+        "ok": ok,
+        "P2_MIGRATION_POST_VAR_SOURCE_IDENTITY_PASS": ok,
+        "deployment_commit_prefix": deployment[:12] if deployment else "",
+        "source_commit_prefix": source[:12] if source else "",
+        "expected_sha_prefix": expected[:12],
         "create_order_calls": 0,
         "exchange_write_call_count": 0,
     }

@@ -126,9 +126,12 @@ jobs:
           echo "P2_MIGRATION_SERVICE_ID_PREFIX=$(printf '%s' "$SID" | cut -c1-6)"
           echo "P2_MIGRATION_RUN_SCOPED_SERVICE=true"
           echo "P2_MIGRATION_PREVIOUS_SERVICE_REUSED=false"
+          echo "P2_MIGRATION_SERVICE_CREATE_COUNT=1"
+          echo "P2_MIGRATION_BOOTSTRAP_LOCAL_DEPLOY_COUNT=1"
           echo "P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true"
           echo "P2_MIGRATION_BOOTSTRAP_DEPLOY_COUNT=1"
           echo "P2_MIGRATION_CREATE_ENV_EXPLICIT=true"
+          echo "P2_MIGRATION_SECOND_SERVICE_CREATED=false"
           echo "P2_MIGRATION_DEDICATED_SERVICE_RESOLVED=true"
 
       - name: Inject disarmed runtime variables after single bootstrap deploy
@@ -157,46 +160,79 @@ jobs:
           set_var NEXUS_POSTGRES_URL "$NEXUS_STAGING_POSTGRES_URL"
           set_var P2_MIGRATION_SERVICE_NAME "${{ steps.resolve.outputs.service_name }}"
           echo "P2_MIGRATION_RUNTIME_VARS_INJECTED_AFTER_SINGLE_DEPLOY=true"
-          echo "P2_MIGRATION_SECOND_DEPLOY=false"
+          echo "P2_MIGRATION_SECOND_SERVICE_CREATED=false"
 
-      - name: Redeploy staging service once after runtime variables
+      - name: Activation local deploy to same service after runtime variables
         env:
           PYTHONPATH: ${{ github.workspace }}
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+          P2_MIGRATION_CONTEXT_DIR: ${{ steps.context.outputs.context_dir }}
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           test -n "${SERVICE_ID:-}"
           test -n "${ZEABUR_ENV_ID:-}"
-          # Flags verified via: zeabur service redeploy --help → --id --env-id -y -i
-          # Exactly one redeploy; exit 0 alone is insufficient (semantic errors fail closed).
+          test -n "${ZEABUR_PROJECT_ID:-}"
+          test -d "${P2_MIGRATION_CONTEXT_DIR}"
+          # Prove baked source identity in the exact upload context before local deploy.
+          python - <<'PY'
+          import os, sys
+          from tools.ci.p2_migration_bootstrap import verify_context_source_identity
+          result = verify_context_source_identity(
+              context_dir=os.environ["P2_MIGRATION_CONTEXT_DIR"],
+              expected_sha=os.environ["GITHUB_SHA"],
+          )
+          print(f"P2_MIGRATION_POST_VAR_SOURCE_IDENTITY_PASS={str(result['ok']).lower()}")
+          print(f"deployment_commit_prefix={result['deployment_commit_prefix']}")
+          print(f"source_commit_prefix={result['source_commit_prefix']}")
+          if not result["ok"]:
+              print("BLOCKER_post_var_source_identity_mismatch")
+              sys.exit(1)
+          PY
+          # Flags verified via: zeabur deploy --help → --project-id --service-id --environment-id
+          # Local-project activation upload onto EXISTING service (never --create, never service redeploy).
           set +e
-          zeabur service redeploy --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -y -i=false >/tmp/p2_migration_redeploy.out 2>&1
-          REDEPLOY_EXIT=$?
+          (
+            cd "${P2_MIGRATION_CONTEXT_DIR}"
+            zeabur deploy \
+              --project-id "$ZEABUR_PROJECT_ID" \
+              --service-id "$SERVICE_ID" \
+              --environment-id "$ZEABUR_ENV_ID" \
+              -i=false \
+              --json
+          ) >/tmp/p2_migration_activation_deploy.out 2>&1
+          DEPLOY_EXIT=$?
           set -e
-          cat /tmp/p2_migration_redeploy.out
-          echo "post_var_redeploy_exit=${REDEPLOY_EXIT}"
+          cat /tmp/p2_migration_activation_deploy.out
+          echo "post_var_local_deploy_exit=${DEPLOY_EXIT}"
           set +e
           python -m tools.ci.p2_migration_lifecycle_command \
-            --classify-lifecycle-file /tmp/p2_migration_redeploy.out \
-            --exit-code "$REDEPLOY_EXIT" \
-            --operation redeploy \
-            --emit-env >/tmp/p2_migration_redeploy_class.json
+            --classify-lifecycle-file /tmp/p2_migration_activation_deploy.out \
+            --exit-code "$DEPLOY_EXIT" \
+            --operation local-deploy \
+            --expected-service-id "$SERVICE_ID" \
+            --expected-environment-id "$ZEABUR_ENV_ID" \
+            --emit-env >/tmp/p2_migration_activation_deploy_class.json
           CLASS_EXIT=$?
           set -e
-          cat /tmp/p2_migration_redeploy_class.json
+          cat /tmp/p2_migration_activation_deploy_class.json
           if [ "$CLASS_EXIT" -ne 0 ]; then
-            echo "P2_MIGRATION_POST_VAR_REDEPLOY=false"
-            echo "P2_MIGRATION_POST_VAR_REDEPLOY_COMMAND_PASS=false"
-            echo "P2_MIGRATION_POST_VAR_REDEPLOY_COUNT=0"
-            echo "BLOCKER_post_var_redeploy_semantic_or_exit_failed"
+            echo "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY=false"
+            echo "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COMMAND_PASS=false"
+            echo "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COUNT=0"
+            echo "BLOCKER_post_var_local_deploy_failed"
             exit 1
           fi
-          echo "P2_MIGRATION_POST_VAR_REDEPLOY=true"
-          echo "P2_MIGRATION_POST_VAR_REDEPLOY_COMMAND_PASS=true"
-          echo "P2_MIGRATION_POST_VAR_REDEPLOY_COUNT=1"
-          echo "P2_MIGRATION_SECOND_DEPLOY=false"
+          echo "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY=true"
+          echo "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COMMAND_PASS=true"
+          echo "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COUNT=1"
+          echo "P2_MIGRATION_ACTIVATION_LOCAL_DEPLOY_COUNT=1"
+          echo "P2_MIGRATION_BOOTSTRAP_LOCAL_DEPLOY_COUNT=1"
+          echo "P2_MIGRATION_SERVICE_CREATE_COUNT=1"
+          echo "P2_MIGRATION_TOTAL_LOCAL_DEPLOY_COUNT=2"
+          echo "P2_MIGRATION_SECOND_SERVICE_CREATED=false"
 
       - name: Metadata diagnostic and explicit-negative veto
         env:
