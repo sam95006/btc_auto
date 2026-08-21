@@ -245,8 +245,11 @@ def test_workflow_service_id_only_no_service_name_fallback():
     assert 'if [ "$PREFERRED" != "service-id" ]' in wait
     assert "BLOCKER_zeabur_deployment_cli_selector_unsupported" in wait
     assert 'zeabur deployment get --service-id "$SERVICE_ID"' in wait
+    assert 'zeabur service get --id "$SERVICE_ID"' in wait
     assert 'zeabur deployment log -t=build --service-id "$SERVICE_ID"' in wait
     assert 'zeabur deployment log -t=runtime --service-id "$SERVICE_ID"' in wait
+    assert "--service-get" in wait
+    assert "service_get_exit=" in wait
     assert "--service-name" not in wait
     assert 'elif [ "$PREFERRED" = "service-name" ]' not in wait
     assert "deployment_list_skipped=true" in wait
@@ -256,3 +259,109 @@ def test_workflow_service_id_only_no_service_name_fallback():
         )
     ]
     assert "MAX_ATTEMPTS=12" in readiness
+
+
+CONTAINER_IMAGE_BUILD_MSG = (
+    "no build logs available: this service was started from a container "
+    "image and was not built on Zeabur"
+)
+
+
+def test_container_image_build_log_na_is_informational_not_failure():
+    classified = classify_deployment_snapshot(
+        deployment_get_raw="{}",
+        deployment_get_exit=0,
+        build_log_raw=CONTAINER_IMAGE_BUILD_MSG,
+        build_log_exit=0,
+    )
+    assert classified["P2_MIGRATION_CONTAINER_IMAGE_SERVICE"] is True
+    assert classified["P2_MIGRATION_BUILD_LOG_NOT_APPLICABLE"] is True
+    assert classified["P2_MIGRATION_DEPLOYMENT_STATUS"] != "FAILED"
+    assert classified["P2_MIGRATION_DEPLOYMENT_STATUS"] != "CLI_ERROR"
+    assert classified["P2_MIGRATION_DEPLOYMENT_STATUS"] != "RUNNING"
+    assert classified["service_exec_allowed"] is False
+    assert classified["cli_semantic_error"] is False
+
+
+def test_deployment_unknown_service_running_authorizes():
+    classified = classify_deployment_snapshot(
+        deployment_get_raw="{}",
+        deployment_get_exit=0,
+        build_log_raw=CONTAINER_IMAGE_BUILD_MSG,
+        service_get_raw='{"status":"RUNNING"}',
+        service_get_exit=0,
+    )
+    assert classified["P2_MIGRATION_DEPLOYMENT_STATUS"] == "UNKNOWN"
+    assert classified["P2_MIGRATION_SERVICE_STATUS"] == "RUNNING"
+    assert classified["P2_MIGRATION_SERVICE_STATUS_AUTHORITY"] is True
+    assert classified["service_exec_allowed"] is True
+    assert classified["wait_for_deployment"] is False
+
+
+def test_deployment_unknown_service_deploying_waits():
+    classified = classify_deployment_snapshot(
+        deployment_get_raw="{}",
+        deployment_get_exit=0,
+        service_get_raw='{"status":"DEPLOYING"}',
+        service_get_exit=0,
+    )
+    assert classified["P2_MIGRATION_DEPLOYMENT_STATUS"] == "UNKNOWN"
+    assert classified["wait_for_deployment"] is True
+    assert classified["service_exec_allowed"] is False
+
+
+def test_deployment_failed_blocks_even_if_service_running():
+    classified = classify_deployment_snapshot(
+        deployment_get_raw='{"status":"FAILED"}',
+        deployment_get_exit=0,
+        service_get_raw='{"status":"RUNNING"}',
+        service_get_exit=0,
+    )
+    assert classified["P2_MIGRATION_DEPLOYMENT_STATUS"] == "FAILED"
+    assert classified["fail_closed"] is True
+    assert classified["service_exec_allowed"] is False
+    assert classified["P2_MIGRATION_SERVICE_STATUS_AUTHORITY"] is False
+
+
+def test_service_malformed_json_with_running_never_authorizes():
+    classified = classify_deployment_snapshot(
+        deployment_get_raw="{}",
+        deployment_get_exit=0,
+        service_get_raw="not-json RUNNING READY ACTIVE",
+        service_get_exit=0,
+    )
+    assert classified["service_exec_allowed"] is False
+    assert classified["P2_MIGRATION_SERVICE_STATUS_AUTHORITY"] is False
+
+
+def test_service_structured_inactive_never_running():
+    classified = classify_deployment_snapshot(
+        deployment_get_raw="{}",
+        service_get_raw='{"status":"INACTIVE"}',
+        service_get_exit=0,
+    )
+    assert classified["service_exec_allowed"] is False
+    assert classified["P2_MIGRATION_SERVICE_STATUS"] == "INACTIVE"
+
+
+def test_service_structured_not_running_never_running():
+    classified = classify_deployment_snapshot(
+        deployment_get_raw="{}",
+        service_get_raw='{"status":"NOT_RUNNING"}',
+        service_get_exit=0,
+    )
+    assert classified["service_exec_allowed"] is False
+    assert classified["P2_MIGRATION_SERVICE_STATUS"] == "NOT_RUNNING"
+
+
+def test_service_running_proceeds_to_baked_sha_gate():
+    classified = classify_deployment_snapshot(
+        deployment_get_raw='{"id":"dep1"}',
+        deployment_get_exit=0,
+        build_log_raw=CONTAINER_IMAGE_BUILD_MSG,
+        service_get_raw='{"Status":"RUNNING"}',
+        service_get_exit=0,
+    )
+    assert classified["service_exec_allowed"] is True
+    assert classified["P2_MIGRATION_SERVICE_STATUS_AUTHORITY"] is True
+    assert classified["gate_status"] == "RUNNING"

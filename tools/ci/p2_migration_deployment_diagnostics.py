@@ -64,6 +64,12 @@ CLI_SEMANTIC_ERROR_PATTERNS = (
     re.compile(r"Inactiv(?:e|ate)\s+service", re.I),
 )
 
+CONTAINER_IMAGE_BUILD_LOG_NA = re.compile(
+    r"no build logs available:\s*this service was started from a container\s+"
+    r"image and was not built on Zeabur",
+    re.I,
+)
+
 
 def detect_zeabur_cli_semantic_error(*blobs: str) -> str | None:
     """Return the first matched known CLI semantic-error signature, else None."""
@@ -71,11 +77,18 @@ def detect_zeabur_cli_semantic_error(*blobs: str) -> str | None:
         text = blob or ""
         if not text.strip():
             continue
+        # Container-image build-log absence is informational, never a CLI error.
+        if CONTAINER_IMAGE_BUILD_LOG_NA.search(text):
+            text = CONTAINER_IMAGE_BUILD_LOG_NA.sub(" ", text)
         for pattern in CLI_SEMANTIC_ERROR_PATTERNS:
             match = pattern.search(text)
             if match:
                 return match.group(0)
     return None
+
+
+def detect_container_image_build_log_na(*blobs: str) -> bool:
+    return any(CONTAINER_IMAGE_BUILD_LOG_NA.search(blob or "") for blob in blobs)
 
 
 def sanitize_log_tail(raw: str, *, max_chars: int = 1200) -> str:
@@ -121,6 +134,11 @@ def _status_strings(payload: Any) -> list[str]:
             value = payload.get(key)
             if value is not None and not isinstance(value, (dict, list)):
                 found.append(str(value))
+            elif isinstance(value, dict):
+                # env-id → status map
+                for nested_val in list(value.values())[:20]:
+                    if nested_val is not None and not isinstance(nested_val, (dict, list)):
+                        found.append(str(nested_val))
         for nested_key in ("deployment", "data", "result", "service"):
             nested = payload.get(nested_key)
             if nested is not None:
@@ -128,14 +146,84 @@ def _status_strings(payload: Any) -> list[str]:
         for item in payload.get("deployments") or payload.get("edges") or []:
             node = item if not isinstance(item, dict) else item.get("node") or item
             found.extend(_status_strings(node))
+        for item in payload.get("environments") or payload.get("Environments") or []:
+            found.extend(_status_strings(item))
     elif isinstance(payload, list):
         for item in payload[:5]:
             found.extend(_status_strings(item))
     return found
 
 
+def _status_paths_found(payload: Any, prefix: str = "") -> list[str]:
+    paths: list[str] = []
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            path = f"{prefix}.{key}" if prefix else str(key)
+            if key in {"status", "state", "Status", "State", "phase", "Phase"}:
+                paths.append(path)
+            if isinstance(value, (dict, list)) and len(paths) < 40:
+                paths.extend(_status_paths_found(value, path))
+    elif isinstance(payload, list):
+        for idx, item in enumerate(payload[:5]):
+            paths.extend(_status_paths_found(item, f"{prefix}[{idx}]"))
+    return paths[:40]
+
+
+def json_shape_metadata(raw: str, payload: Any | None) -> dict[str, Any]:
+    text = (raw or "").strip()
+    if payload is None:
+        return {
+            "json_type": "none" if not text else "unparsed",
+            "top_level_keys": [],
+            "status_paths_found": [],
+        }
+    if isinstance(payload, dict):
+        return {
+            "json_type": "object",
+            "top_level_keys": sorted(str(k) for k in payload.keys())[:40],
+            "status_paths_found": _status_paths_found(payload),
+        }
+    if isinstance(payload, list):
+        return {
+            "json_type": "array",
+            "top_level_keys": [f"len={len(payload)}"],
+            "status_paths_found": _status_paths_found(payload),
+        }
+    return {
+        "json_type": type(payload).__name__,
+        "top_level_keys": [],
+        "status_paths_found": [],
+    }
+
+
+def _state_from_tokens(tokens: list[str]) -> str:
+    negative_hit = next((token for token in tokens if token in NEGATIVE_TOKENS), "")
+    positive_hit = next((token for token in tokens if token in POSITIVE_RUNNING_TOKENS), "")
+    building_hit = next((token for token in tokens if token in BUILDING_TOKENS), "")
+    deploying_hit = next((token for token in tokens if token in DEPLOYING_TOKENS), "")
+    failed_hit = next((token for token in tokens if token in FAILED_TOKENS), "")
+    crashed_hit = next((token for token in tokens if token in CRASHED_TOKENS), "")
+    suspended_hit = next((token for token in tokens if token in SUSPENDED_TOKENS), "")
+    if negative_hit in {"FAILED", "BUILD_FAILED", "DEPLOY_FAILED", "DEPLOYMENT_FAILED", "ERROR", "CRASHED"} or failed_hit or crashed_hit:
+        return "RUNNING_THEN_CRASHED" if crashed_hit or negative_hit == "CRASHED" else "FAILED"
+    if negative_hit in {"SUSPENDED", "INACTIVE", "STOPPED"} or suspended_hit:
+        return "SUSPENDED"
+    if negative_hit in {"NOT_RUNNING", "NOTRUNNING", "NOT_READY", "NOTREADY", "UNREADY"}:
+        return "NOT_RUNNING"
+    if positive_hit:
+        return "RUNNING"
+    if building_hit:
+        return "BUILDING"
+    if deploying_hit:
+        return "DEPLOYING"
+    return "UNKNOWN"
+
+
 def _raw_hint_state(build_text: str, runtime_text: str, combined_text: str) -> str | None:
     """Raw unstructured text may hint BUILDING/DEPLOYING/FAILED/CRASHED only."""
+    # Strip informational container-image NA so it cannot drive BUILDING/FAILED.
+    build_text = CONTAINER_IMAGE_BUILD_LOG_NA.sub(" ", build_text or "")
+    combined_text = CONTAINER_IMAGE_BUILD_LOG_NA.sub(" ", combined_text or "")
     if any(pat.search(runtime_text) for pat in RAW_CRASH_HINTS):
         return "RUNNING_THEN_CRASHED"
     if any(pat.search(build_text) or pat.search(combined_text) for pat in RAW_FAILED_HINTS):
@@ -153,40 +241,50 @@ def classify_deployment_snapshot(
     deployment_list_raw: str = "",
     build_log_raw: str = "",
     runtime_log_raw: str = "",
+    service_get_raw: str = "",
     deployment_get_exit: int | None = None,
     deployment_list_exit: int | None = None,
     build_log_exit: int | None = None,
     runtime_log_exit: int | None = None,
+    service_get_exit: int | None = None,
 ) -> dict[str, Any]:
     get_exit = 0 if deployment_get_exit is None else int(deployment_get_exit)
     list_exit = 0 if deployment_list_exit is None else int(deployment_list_exit)
     build_exit = 0 if build_log_exit is None else int(build_log_exit)
     runtime_exit = 0 if runtime_log_exit is None else int(runtime_log_exit)
+    svc_exit = 0 if service_get_exit is None else int(service_get_exit)
+
+    container_image_service = detect_container_image_build_log_na(build_log_raw, runtime_log_raw)
 
     # Semantic CLI failures are authoritative even when process exit is 0.
-    # Prefer get/log control-plane blobs; list must not hide get failures.
     semantic_match = detect_zeabur_cli_semantic_error(
         deployment_get_raw,
         build_log_raw,
         runtime_log_raw,
         deployment_list_raw,
+        service_get_raw,
     )
     semantic_cli_error = semantic_match is not None
 
     get_payload = None
     list_payload = None
+    service_payload = None
     if not semantic_cli_error:
         get_payload = _parse_json_blob(deployment_get_raw) if get_exit == 0 else None
         list_payload = _parse_json_blob(deployment_list_raw) if list_exit == 0 else None
-    # Malformed JSON (parse miss) with nonzero-looking content must not authorize RUNNING.
-    statuses = _status_strings(get_payload) + _status_strings(list_payload)
-    tokens = [normalize_status_token(item) for item in statuses]
-    tokens = [token for token in tokens if token]
-    structured_present = bool(tokens)
+        service_payload = _parse_json_blob(service_get_raw) if svc_exit == 0 else None
+
+    deploy_statuses = _status_strings(get_payload) + _status_strings(list_payload)
+    deploy_tokens = [normalize_status_token(item) for item in deploy_statuses]
+    deploy_tokens = [token for token in deploy_tokens if token]
+    service_statuses = _status_strings(service_payload)
+    service_tokens = [normalize_status_token(item) for item in service_statuses]
+    service_tokens = [token for token in service_tokens if token]
 
     build_text = build_log_raw or ""
     runtime_text = runtime_log_raw or ""
-    combined_text = "\n".join(
+    # Deployment raw hints must not use service JSON text (service is structured-only).
+    deploy_combined_text = "\n".join(
         [
             deployment_get_raw or "",
             deployment_list_raw or "",
@@ -195,101 +293,161 @@ def classify_deployment_snapshot(
         ]
     )
 
-    exit_failed = any(code != 0 for code in (get_exit, list_exit, build_exit, runtime_exit))
+    exit_failed = any(code != 0 for code in (get_exit, list_exit, build_exit, runtime_exit, svc_exit))
     cli_failed = exit_failed or semantic_cli_error
-    # Primary structured get failure with no usable tokens → unknown/fail-closed, never RUNNING.
-    structured_cli_unusable = (
-        semantic_cli_error
-        or get_exit != 0
-        or (get_exit == 0 and get_payload is None and bool((deployment_get_raw or "").strip()) and not tokens)
-    )
 
-    negative_hit = next((token for token in tokens if token in NEGATIVE_TOKENS), "")
-    positive_hit = next((token for token in tokens if token in POSITIVE_RUNNING_TOKENS), "")
-    building_hit = next((token for token in tokens if token in BUILDING_TOKENS), "")
-    deploying_hit = next((token for token in tokens if token in DEPLOYING_TOKENS), "")
-    failed_hit = next((token for token in tokens if token in FAILED_TOKENS), "")
-    crashed_hit = next((token for token in tokens if token in CRASHED_TOKENS), "")
-    suspended_hit = next((token for token in tokens if token in SUSPENDED_TOKENS), "")
-
-    state: str
+    deployment_state = _state_from_tokens(deploy_tokens)
     if semantic_cli_error:
-        # Exit 0 + known CLI application error must never wait as BUILDING.
-        state = "CLI_ERROR"
-    elif structured_cli_unusable and not structured_present:
-        state = "UNKNOWN"
-    elif negative_hit in {"FAILED", "BUILD_FAILED", "DEPLOY_FAILED", "DEPLOYMENT_FAILED", "ERROR", "CRASHED"} or failed_hit or crashed_hit:
-        state = "RUNNING_THEN_CRASHED" if crashed_hit or negative_hit == "CRASHED" else "FAILED"
-    elif negative_hit in {"SUSPENDED", "INACTIVE", "STOPPED"} or suspended_hit:
-        state = "SUSPENDED"
-    elif negative_hit in {"NOT_RUNNING", "NOTRUNNING", "NOT_READY", "NOTREADY", "UNREADY"}:
-        state = "NOT_RUNNING"
-    elif positive_hit and structured_present and get_exit == 0 and get_payload is not None and not semantic_cli_error:
-        # Exact positive token from parsed structured status only.
-        state = "RUNNING"
-    elif building_hit:
-        state = "BUILDING"
-    elif deploying_hit:
-        state = "DEPLOYING"
-    elif not structured_present:
-        raw_state = _raw_hint_state(build_text, runtime_text, combined_text)
-        if raw_state in {"FAILED", "RUNNING_THEN_CRASHED"}:
-            state = raw_state
-        elif raw_state in {"BUILDING", "DEPLOYING"}:
-            state = raw_state
+        deployment_state = "CLI_ERROR"
+    elif not deploy_tokens:
+        # Empty structured deployment: do not invent RUNNING; raw may only wait/fail.
+        raw_state = _raw_hint_state(build_text, runtime_text, deploy_combined_text)
+        if raw_state in {"FAILED", "RUNNING_THEN_CRASHED", "BUILDING", "DEPLOYING"}:
+            deployment_state = raw_state
         elif (
-            not semantic_cli_error
-            and not (deployment_get_raw or "").strip()
+            not (deployment_get_raw or "").strip()
             and not (deployment_list_raw or "").strip()
             and get_exit == 0
             and list_exit == 0
+            and not semantic_cli_error
         ):
-            # Bounded initial empty evidence: still provisioning, never positive RUNNING.
-            state = "BUILDING"
+            deployment_state = "BUILDING"
         else:
-            state = "UNKNOWN"
-    else:
-        state = "UNKNOWN"
+            deployment_state = "UNKNOWN"
+    elif deployment_state == "RUNNING" and (get_exit != 0 or get_payload is None or semantic_cli_error):
+        deployment_state = "UNKNOWN"
 
-    # Hard rule: raw text / CLI noise containing "running" never upgrades to RUNNING.
-    if state == "RUNNING" and (not structured_present or get_exit != 0 or get_payload is None or semantic_cli_error):
-        state = "UNKNOWN"
+    service_state = _state_from_tokens(service_tokens)
+    if svc_exit != 0 or semantic_cli_error:
+        service_state = "UNKNOWN" if not semantic_cli_error else "CLI_ERROR"
+    elif service_payload is None and bool((service_get_raw or "").strip()):
+        # Malformed JSON containing "RUNNING" must never authorize.
+        service_state = "UNKNOWN"
+    elif not service_tokens and not (service_get_raw or "").strip() and svc_exit == 0:
+        service_state = "UNKNOWN"
+    elif service_state == "RUNNING" and (svc_exit != 0 or service_payload is None):
+        service_state = "UNKNOWN"
 
-    service_exec_allowed = state == "RUNNING"
-    wait_for_deployment = state in {"BUILDING", "DEPLOYING"}
-    fail_closed = state in {
+    service_status_token = next(
+        (token for token in service_tokens if token in POSITIVE_RUNNING_TOKENS | NEGATIVE_TOKENS | BUILDING_TOKENS | DEPLOYING_TOKENS | FAILED_TOKENS | SUSPENDED_TOKENS),
+        (service_tokens[0] if service_tokens else ""),
+    )
+
+    # Deployment structured negatives/failures block even if service looks RUNNING.
+    deployment_blocks = deployment_state in {
         "FAILED",
         "RUNNING_THEN_CRASHED",
-        "UNKNOWN",
         "SUSPENDED",
         "NOT_RUNNING",
         "CLI_ERROR",
     }
+    deployment_waits = deployment_state in {"BUILDING", "DEPLOYING"}
+    service_waits = service_state in {"BUILDING", "DEPLOYING"}
+    service_blocks = service_state in {
+        "FAILED",
+        "RUNNING_THEN_CRASHED",
+        "SUSPENDED",
+        "NOT_RUNNING",
+        "CLI_ERROR",
+    }
+
+    service_authority = False
+    service_exec_allowed = False
+    wait_for_deployment = False
+    gate_state = deployment_state
+
+    if semantic_cli_error:
+        gate_state = "CLI_ERROR"
+    elif deployment_blocks:
+        gate_state = deployment_state
+    elif deployment_waits:
+        gate_state = deployment_state
+        wait_for_deployment = True
+    elif (
+        svc_exit == 0
+        and service_payload is not None
+        and service_state == "RUNNING"
+        and not deployment_blocks
+        and not semantic_cli_error
+    ):
+        # Structured service Status is runtime readiness authority when deployment is empty/UNKNOWN.
+        service_authority = True
+        service_exec_allowed = True
+        gate_state = "RUNNING"
+    elif service_waits:
+        gate_state = service_state
+        wait_for_deployment = True
+    elif service_blocks:
+        gate_state = service_state
+    elif deployment_state == "RUNNING" and get_exit == 0 and get_payload is not None and not semantic_cli_error:
+        service_exec_allowed = True
+        gate_state = "RUNNING"
+    else:
+        # Preserve deployment UNKNOWN (do not rewrite to PASS); fail closed unless waiting.
+        gate_state = deployment_state if deployment_state != "UNKNOWN" else (
+            service_state if service_state != "UNKNOWN" else "UNKNOWN"
+        )
+        if gate_state in {"BUILDING", "DEPLOYING"}:
+            wait_for_deployment = True
+
+    # Hard rule: raw text never upgrades to RUNNING.
+    if service_exec_allowed:
+        if service_authority:
+            if service_payload is None or svc_exit != 0 or not service_tokens:
+                service_exec_allowed = False
+                service_authority = False
+                gate_state = "UNKNOWN"
+        elif get_payload is None or get_exit != 0 or not deploy_tokens:
+            service_exec_allowed = False
+            gate_state = "UNKNOWN"
+
+    fail_closed = (not service_exec_allowed) and (not wait_for_deployment)
+
+    deploy_meta = json_shape_metadata(deployment_get_raw, get_payload)
+    service_meta = json_shape_metadata(service_get_raw, service_payload)
+
     return {
-        "P2_MIGRATION_DEPLOYMENT_STATUS": state,
+        "P2_MIGRATION_DEPLOYMENT_STATUS": deployment_state,
+        "P2_MIGRATION_SERVICE_STATUS": service_status_token or service_state,
+        "P2_MIGRATION_SERVICE_STATUS_AUTHORITY": service_authority,
+        "P2_MIGRATION_CONTAINER_IMAGE_SERVICE": container_image_service,
+        "P2_MIGRATION_BUILD_LOG_NOT_APPLICABLE": container_image_service,
         "P2_MIGRATION_BUILD_STATUS": "FAILED"
-        if state in {"FAILED", "RUNNING_THEN_CRASHED", "CLI_ERROR"}
-        else ("BUILDING" if state == "BUILDING" else ("READY" if state == "RUNNING" else state)),
+        if gate_state in {"FAILED", "RUNNING_THEN_CRASHED", "CLI_ERROR"}
+        else (
+            "NOT_APPLICABLE"
+            if container_image_service and gate_state in {"UNKNOWN", "RUNNING", "BUILDING", "DEPLOYING"}
+            else ("BUILDING" if gate_state == "BUILDING" else ("READY" if gate_state == "RUNNING" else gate_state))
+        ),
         "P2_MIGRATION_RUNTIME_STATUS": "CRASHED"
-        if state == "RUNNING_THEN_CRASHED"
+        if gate_state == "RUNNING_THEN_CRASHED"
         else (
             "RUNNING"
-            if state == "RUNNING"
-            else ("NOT_RUNNING" if state not in {"UNKNOWN", "BUILDING", "DEPLOYING"} else state)
+            if gate_state == "RUNNING"
+            else ("NOT_RUNNING" if gate_state not in {"UNKNOWN", "BUILDING", "DEPLOYING"} else gate_state)
         ),
         "P2_MIGRATION_BUILD_LOG_TAIL": sanitize_log_tail(build_log_raw),
         "P2_MIGRATION_RUNTIME_LOG_TAIL": sanitize_log_tail(runtime_log_raw),
-        "structured_status_tokens": tokens,
+        "structured_status_tokens": deploy_tokens,
+        "service_structured_status_tokens": service_tokens,
         "deployment_get_exit": get_exit,
         "deployment_list_exit": list_exit,
         "build_log_exit": build_exit,
         "runtime_log_exit": runtime_exit,
+        "service_get_exit": svc_exit,
+        "deployment_get_json_type": deploy_meta["json_type"],
+        "deployment_get_top_level_keys": deploy_meta["top_level_keys"],
+        "deployment_get_status_paths_found": deploy_meta["status_paths_found"],
+        "service_get_json_type": service_meta["json_type"],
+        "service_get_top_level_keys": service_meta["top_level_keys"],
+        "service_get_status_paths_found": service_meta["status_paths_found"],
         "cli_command_failed": cli_failed,
         "cli_semantic_error": semantic_cli_error,
         "cli_semantic_error_match": semantic_match or "",
         "service_exec_allowed": service_exec_allowed,
         "wait_for_deployment": wait_for_deployment,
         "fail_closed": fail_closed,
+        "gate_status": gate_state,
         "create_order_calls": 0,
         "exchange_write_call_count": 0,
     }
@@ -302,7 +460,7 @@ def wait_for_deployment_running(
     interval_sec: float = 10.0,
     sleep: Callable[[float], None] | None = None,
 ) -> dict[str, Any]:
-    """Poll deployment diagnostics until RUNNING, or fail closed.
+    """Poll deployment/service diagnostics until exec allowed, or fail closed.
 
     Does not perform service exec. BUILDING/DEPLOYING continue waiting.
     """
@@ -316,10 +474,12 @@ def wait_for_deployment_running(
             deployment_list_raw=str(raw.get("deployment_list") or ""),
             build_log_raw=str(raw.get("build_log") or ""),
             runtime_log_raw=str(raw.get("runtime_log") or ""),
+            service_get_raw=str(raw.get("service_get") or ""),
             deployment_get_exit=raw.get("deployment_get_exit"),  # type: ignore[arg-type]
             deployment_list_exit=raw.get("deployment_list_exit"),  # type: ignore[arg-type]
             build_log_exit=raw.get("build_log_exit"),  # type: ignore[arg-type]
             runtime_log_exit=raw.get("runtime_log_exit"),  # type: ignore[arg-type]
+            service_get_exit=raw.get("service_get_exit"),  # type: ignore[arg-type]
         )
         row = {"attempt": attempt, **classified}
         history.append(row)
@@ -332,9 +492,6 @@ def wait_for_deployment_running(
                 **classified,
             }
         if classified["wait_for_deployment"]:
-            sleeper(interval_sec)
-            continue
-        if classified["P2_MIGRATION_DEPLOYMENT_STATUS"] == "UNKNOWN":
             sleeper(interval_sec)
             continue
         return {
@@ -437,10 +594,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--deployment-list", default="")
     parser.add_argument("--build-log", default="")
     parser.add_argument("--runtime-log", default="")
+    parser.add_argument("--service-get", default="")
     parser.add_argument("--deployment-get-exit", type=int, default=0)
     parser.add_argument("--deployment-list-exit", type=int, default=0)
     parser.add_argument("--build-log-exit", type=int, default=0)
     parser.add_argument("--runtime-log-exit", type=int, default=0)
+    parser.add_argument("--service-get-exit", type=int, default=0)
     parser.add_argument("--emit-env", action="store_true")
     parser.add_argument("--write-artifact", default="")
     parser.add_argument("--parse-get-help-file", default="")
@@ -480,23 +639,30 @@ def main(argv: list[str] | None = None) -> int:
         deployment_list_raw=_read(args.deployment_list),
         build_log_raw=_read(args.build_log),
         runtime_log_raw=_read(args.runtime_log),
+        service_get_raw=_read(args.service_get),
         deployment_get_exit=args.deployment_get_exit,
         deployment_list_exit=args.deployment_list_exit,
         build_log_exit=args.build_log_exit,
         runtime_log_exit=args.runtime_log_exit,
+        service_get_exit=args.service_get_exit,
     )
     print(json.dumps(classified, sort_keys=True))
     if args.emit_env:
         for key in (
             "P2_MIGRATION_DEPLOYMENT_STATUS",
+            "P2_MIGRATION_SERVICE_STATUS",
             "P2_MIGRATION_BUILD_STATUS",
             "P2_MIGRATION_RUNTIME_STATUS",
         ):
             print(f"{key}={classified[key]}")
+        print(f"P2_MIGRATION_SERVICE_STATUS_AUTHORITY={str(classified['P2_MIGRATION_SERVICE_STATUS_AUTHORITY']).lower()}")
+        print(f"P2_MIGRATION_CONTAINER_IMAGE_SERVICE={str(classified['P2_MIGRATION_CONTAINER_IMAGE_SERVICE']).lower()}")
+        print(f"P2_MIGRATION_BUILD_LOG_NOT_APPLICABLE={str(classified['P2_MIGRATION_BUILD_LOG_NOT_APPLICABLE']).lower()}")
         print(f"deployment_get_exit={classified['deployment_get_exit']}")
         print(f"deployment_list_exit={classified['deployment_list_exit']}")
         print(f"build_log_exit={classified['build_log_exit']}")
         print(f"runtime_log_exit={classified['runtime_log_exit']}")
+        print(f"service_get_exit={classified['service_get_exit']}")
         print("P2_MIGRATION_BUILD_LOG_TAIL=<<BEGIN")
         print(classified.get("P2_MIGRATION_BUILD_LOG_TAIL") or "")
         print("P2_MIGRATION_BUILD_LOG_TAIL=<<END")
