@@ -9,14 +9,16 @@ from typing import Any
 DOCKERFILE_BODY = """FROM python:3.11-slim-bookworm
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONPATH=/app MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_DATA_DIR=/tmp/nexus_p2_migration_0007 PORT=8080
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements-migration.txt .
+RUN pip install --no-cache-dir -r requirements-migration.txt
 COPY . .
 COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT
 COPY SOURCE_COMMIT /app/SOURCE_COMMIT
 RUN chmod +x entrypoint.sh
 CMD ["/bin/sh", "./entrypoint.sh"]
 """
+
+MIGRATION_REQUIREMENTS_REL = Path("deploy") / "zeabur_p2_migration_0007" / "requirements-migration.txt"
 
 
 def build_migration_context(*, repo_root: Path, destination: Path, github_sha: str) -> Path:
@@ -29,7 +31,7 @@ def build_migration_context(*, repo_root: Path, destination: Path, github_sha: s
         shutil.rmtree(dest)
     dest.mkdir(parents=True)
     (dest / "tools").mkdir(parents=True)
-    shutil.copy2(root / "requirements.txt", dest / "requirements.txt")
+    shutil.copy2(root / MIGRATION_REQUIREMENTS_REL, dest / "requirements-migration.txt")
     shutil.copytree(root / "backend", dest / "backend")
     shutil.copytree(root / "config", dest / "config")
     shutil.copytree(root / "tools" / "ci", dest / "tools" / "ci")
@@ -51,13 +53,16 @@ def validate_migration_context(context_dir: Path, *, expected_sha: str | None = 
     helper = ctx / "tools" / "ci" / "p2_staging_migration_0007.py"
     dockerfile = ctx / "Dockerfile"
     expected = (expected_sha or "").strip()
+    docker_text = dockerfile.read_text(encoding="utf-8") if dockerfile.is_file() else ""
     ok = bool(
         deployment
         and source
         and deployment == source
         and helper.is_file()
         and dockerfile.is_file()
-        and "NEXUS_POSTGRES_URL" not in dockerfile.read_text(encoding="utf-8")
+        and "requirements-migration.txt" in docker_text
+        and "COPY requirements.txt" not in docker_text
+        and "NEXUS_POSTGRES_URL" not in docker_text
         and (not expected or (deployment == expected and source == expected))
     )
     if not ok:
@@ -236,7 +241,20 @@ def extract_create_deploy_ids(raw: str) -> dict[str, str]:
             "env_id",
             "envId",
         ),
+        "deployment_id": extract_deployment_id_from_output(text),
     }
+
+
+def extract_deployment_id_from_output(raw: str) -> str:
+    text = raw or ""
+    for key in ("deployment_id", "deploymentId", "DeploymentID"):
+        match = re.search(rf'"{re.escape(key)}"\s*:\s*"([0-9a-f]{{24}})"', text, re.I)
+        if match:
+            return match.group(1)
+    match = re.search(r'"deployment"\s*:\s*\{[^}]*"_id"\s*:\s*"([0-9a-f]{24})"', text, re.I | re.S)
+    if match:
+        return match.group(1)
+    return ""
 
 
 def assert_create_env_argv_match(

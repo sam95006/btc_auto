@@ -61,6 +61,9 @@ def test_migration_context_built_with_baked_commits_before_create(tmp_path: Path
     assert (ctx / "SOURCE_COMMIT").read_text(encoding="ascii").strip() == SHA
     assert (ctx / "tools" / "ci" / "p2_staging_migration_0007.py").is_file()
     assert "NEXUS_POSTGRES_URL" not in (ctx / "Dockerfile").read_text(encoding="utf-8")
+    assert (ctx / "requirements-migration.txt").is_file()
+    assert "psycopg" in (ctx / "requirements-migration.txt").read_text(encoding="utf-8")
+    assert not (ctx / "requirements.txt").exists()
     assert meta["dsn_baked_in_image"] is False
     assert meta["exchange_write_call_count"] == 0
 
@@ -269,6 +272,8 @@ def test_f_g_h_workflow_same_env_vars_and_activation_local_deploy():
     assert "ZEABUR_ENV_ID: ${{ env.ZEABUR_ENV_ID }}" in source
     assert 'variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID"' in source
     assert 'variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID"' in source
+    assert "Wait for bootstrap deployment ready before runtime variables" in source
+    assert "Inject disarmed runtime variables after bootstrap deployment ready" in source
     assert "Activation local deploy to same service after runtime variables" in source
     assert "zeabur deploy" in source
     assert '--project-id "$ZEABUR_PROJECT_ID"' in source
@@ -293,8 +298,10 @@ def test_f_g_h_workflow_same_env_vars_and_activation_local_deploy():
     assert "--create" not in cmd
     assert "--service-id \"$SERVICE_ID\"" in cmd
     assert "--environment-id \"$ZEABUR_ENV_ID\"" in cmd
-    vars_idx = source.index("Inject disarmed runtime variables after single bootstrap deploy")
-    assert vars_idx < act_idx < meta_idx
+    vars_idx = source.index("Inject disarmed runtime variables after bootstrap deployment ready")
+    bootstrap_wait_idx = source.index("Wait for bootstrap deployment ready before runtime variables")
+    create_idx = source.index("Create run-scoped migration service with single migration-context deploy")
+    assert create_idx < bootstrap_wait_idx < vars_idx < act_idx < meta_idx
 
 
 def test_i_operational_readiness_unchanged_in_ensure_and_workflow():
@@ -327,7 +334,7 @@ def test_workflow_builds_context_before_create_and_has_no_second_service():
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "Build migration deployment context before service create" in source
     assert "Create run-scoped migration service with single migration-context deploy" in source
-    assert "Inject disarmed runtime variables after single bootstrap deploy" in source
+    assert "Inject disarmed runtime variables after bootstrap deployment ready" in source
     assert "P2_MIGRATION_CONTEXT_BUILT_BEFORE_SERVICE_CREATE=true" in source
     assert "P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true" in source
     assert "P2_MIGRATION_BOOTSTRAP_DEPLOY_COUNT=1" in source
@@ -338,7 +345,7 @@ def test_workflow_builds_context_before_create_and_has_no_second_service():
     assert "P2_MIGRATION_CONTEXT_DIR" in source
     build_idx = source.index("Build migration deployment context before service create")
     create_idx = source.index("Create run-scoped migration service with single migration-context deploy")
-    vars_idx = source.index("Inject disarmed runtime variables after single bootstrap deploy")
+    vars_idx = source.index("Inject disarmed runtime variables after bootstrap deployment ready")
     assert build_idx < create_idx < vars_idx
     # No second deploy-to-existing-service after create for the bootstrap path.
     assert "zeabur deploy --project-id \"$ZEABUR_PROJECT_ID\" --service-id \"$SERVICE_ID\"" not in source.split(
@@ -361,7 +368,8 @@ def test_ensure_requires_zeabur_env_id_and_verifies_arg_not_output_authority():
     assert "plan_single_create_deploy(" in ENSURE
     assert "environment_id=environment_id," in ENSURE.replace(" ", "")
     # Missing returned env must not be treated as hard mismatch authority.
-    assert "verify_create_environment_match" not in ENSURE
+    assert "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID=" in ENSURE
+    assert "extract_deployment_id_from_output" in ENSURE
 
 
 def test_activation_local_deploy_plan_and_source_identity(tmp_path: Path):

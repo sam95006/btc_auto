@@ -17,7 +17,8 @@ from tools.ci.p2_migration_bootstrap import (
     assert_create_env_argv_match,
     audit_create_environment_output,
     evaluate_create_command_pass,
-    extract_service_id_from_create_output,
+    extract_create_deploy_ids,
+    extract_deployment_id_from_output,
     plan_single_create_deploy,
     sanitize_bootstrap_failure_diagnostics,
     validate_migration_context,
@@ -284,6 +285,13 @@ def main() -> int:
 
     print("P2_MIGRATION_CREATE_COMMAND_PASS=true", file=sys.stderr)
     print("P2_MIGRATION_CREATE_ENV_ARG_MATCH=true", file=sys.stderr)
+
+    bootstrap_deployment_id = extract_deployment_id_from_output(create_raw)
+    if bootstrap_deployment_id:
+        print(f"P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID={bootstrap_deployment_id}", file=sys.stderr)
+        print(f"bootstrap_deployment_id_prefix={bootstrap_deployment_id[:6]}", file=sys.stderr)
+    else:
+        print("P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID=missing", file=sys.stderr)
 
     learning_validation_id = (
         os.environ.get("LEARNING_VALIDATION_SERVICE_ID")

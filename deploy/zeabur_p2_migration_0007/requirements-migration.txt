@@ -1,0 +1,3 @@
+# Isolated P2 migration 0007 container deps — NOT global requirements.txt.
+# Health server: stdlib only. Migration helper runtime: Postgres pool only.
+psycopg[binary,pool]>=3.2.0

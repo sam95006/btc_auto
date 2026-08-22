@@ -111,6 +111,7 @@ def evaluate_activation_local_deploy(
     (caller must have proven argv before upload). Present+match → match true.
     """
     from tools.ci.p2_migration_bootstrap import extract_create_deploy_ids
+    from tools.ci.p2_migration_deployment_phase import extract_deployment_id_from_output
 
     expected_sid = (expected_service_id or "").strip()
     expected_env = (expected_environment_id or "").strip()
@@ -123,6 +124,7 @@ def evaluate_activation_local_deploy(
     ids = extract_create_deploy_ids(text)
     returned_sid = (ids.get("service_id") or "").strip()
     returned_env = (ids.get("environment_id") or "").strip()
+    returned_deployment = (ids.get("deployment_id") or "").strip() or extract_deployment_id_from_output(text)
 
     if returned_sid and returned_sid != expected_sid:
         service_match = False
@@ -152,6 +154,8 @@ def evaluate_activation_local_deploy(
         "cli_semantic_error": semantic or "",
         "returned_service_id": returned_sid,
         "returned_environment_id": returned_env,
+        "returned_deployment_id": returned_deployment,
+        "P2_MIGRATION_ACTIVATION_DEPLOYMENT_ID": returned_deployment,
         "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY": command_pass,
         "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COUNT": 1 if command_pass else 0,
         "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COMMAND_PASS": command_pass,
@@ -203,17 +207,42 @@ def evaluate_deployment_record_present(
     deployment_list_raw: str = "",
     deployment_get_exit: int | None = None,
     deployment_list_exit: int | None = None,
+    target_deployment_id: str = "",
 ) -> dict[str, Any]:
     """True only when get/list yields a positive 24-hex deployment identity.
 
+    When target_deployment_id is set, only that exact ID counts — mixed history
+    (e.g. old CANCELED bootstrap) cannot satisfy the gate.
     Status/state/phase alone never counts. Exit 0 alone never counts.
     Semantic error envelopes fail closed. Does NOT require RUNNING.
     """
+    from tools.ci.p2_migration_deployment_phase import find_deployment_by_id
+
     get_raw = deployment_get_raw or ""
     list_raw = deployment_list_raw or ""
     semantic = detect_deployment_record_semantic_error(get_raw, list_raw)
     get_payload = _parse_json_blob(get_raw)
     list_payload = _parse_json_blob(list_raw)
+    target = (target_deployment_id or "").strip()
+
+    if target:
+        obj = find_deployment_by_id(get_payload, target) or find_deployment_by_id(list_payload, target)
+        present = obj is not None and semantic is None
+        return {
+            "ok": present,
+            "P2_MIGRATION_DEPLOYMENT_RECORD_PRESENT": present,
+            "target_deployment_id": target,
+            "target_deployment_id_prefix": target[:6],
+            "P2_MIGRATION_EXACT_DEPLOYMENT_ID_AUTHORITY": True,
+            "deployment_id_count": 1 if present else 0,
+            "deployment_id_prefix": target[:6] if present else "",
+            "deployment_get_exit": deployment_get_exit,
+            "deployment_list_exit": deployment_list_exit,
+            "cli_semantic_error": semantic or "",
+            "create_order_calls": 0,
+            "exchange_write_call_count": 0,
+        }
+
     ids: list[str] = []
     _collect_oid24(get_payload, into=ids)
     _collect_oid24(list_payload, into=ids)
@@ -228,6 +257,9 @@ def evaluate_deployment_record_present(
     return {
         "ok": present,
         "P2_MIGRATION_DEPLOYMENT_RECORD_PRESENT": present,
+        "target_deployment_id": "",
+        "target_deployment_id_prefix": "",
+        "P2_MIGRATION_EXACT_DEPLOYMENT_ID_AUTHORITY": False,
         "deployment_id_count": len(unique_ids),
         "deployment_id_prefix": (unique_ids[0][:6] if unique_ids else ""),
         "deployment_get_exit": deployment_get_exit,
@@ -250,6 +282,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--deployment-list-file", default="")
     parser.add_argument("--deployment-get-exit", type=int, default=-1)
     parser.add_argument("--deployment-list-exit", type=int, default=-1)
+    parser.add_argument("--target-deployment-id", default="")
     parser.add_argument("--emit-env", action="store_true")
     args = parser.parse_args(argv)
 
@@ -267,10 +300,15 @@ def main(argv: list[str] | None = None) -> int:
             deployment_list_raw=list_raw,
             deployment_get_exit=get_exit,
             deployment_list_exit=list_exit,
+            target_deployment_id=args.target_deployment_id,
         )
         print(json.dumps(result, sort_keys=True))
         if args.emit_env:
             print(f"P2_MIGRATION_DEPLOYMENT_RECORD_PRESENT={str(result['ok']).lower()}")
+            if result.get("target_deployment_id"):
+                print(f"activation_deployment_id={result['target_deployment_id']}")
+                print(f"activation_deployment_id_prefix={result['target_deployment_id_prefix']}")
+                print("P2_MIGRATION_EXACT_DEPLOYMENT_ID_AUTHORITY=true")
             if get_exit is not None:
                 print(f"DEPLOYMENT_GET_EXIT={get_exit}")
             if list_exit is not None:
@@ -295,6 +333,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COUNT={1 if result['ok'] else 0}")
             print(f"P2_MIGRATION_POST_VAR_SERVICE_MATCH={str(result['P2_MIGRATION_POST_VAR_SERVICE_MATCH']).lower()}")
             print(f"P2_MIGRATION_POST_VAR_ENV_MATCH={str(result['P2_MIGRATION_POST_VAR_ENV_MATCH']).lower()}")
+            if result.get("returned_deployment_id"):
+                print(f"P2_MIGRATION_ACTIVATION_DEPLOYMENT_ID={result['returned_deployment_id']}")
+                print(f"activation_deployment_id={result['returned_deployment_id']}")
+                print(f"activation_deployment_id_prefix={result['returned_deployment_id'][:6]}")
             print("P2_MIGRATION_SECOND_SERVICE_CREATED=false")
         return 0 if result["ok"] else 1
 

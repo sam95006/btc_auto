@@ -24,15 +24,23 @@ def test_entrypoint_binds_all_interfaces_and_uses_port_env():
     assert "MAINNET" in ENTRY
 
 
-def test_dockerfile_defaults_disarmed_and_does_not_bake_dsn():
+def test_dockerfile_defaults_disarmed_and_uses_isolated_migration_requirements():
     assert "MAINNET=false" in DOCKERFILE_BODY
     assert "REAL_MONEY=false" in DOCKERFILE_BODY
     assert "DEMO_AUTONOMOUS_ENABLED=false" in DOCKERFILE_BODY
     assert "AUTONOMOUS_SEND=false" in DOCKERFILE_BODY
     assert "EXCHANGE_WRITE=false" in DOCKERFILE_BODY
     assert "NEXUS_POSTGRES_URL" not in DOCKERFILE_BODY
+    assert "requirements-migration.txt" in DOCKERFILE_BODY
+    assert "COPY requirements.txt" not in DOCKERFILE_BODY
     assert "COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT" in DOCKERFILE_BODY
     assert "COPY SOURCE_COMMIT /app/SOURCE_COMMIT" in DOCKERFILE_BODY
+    mig_req = (ROOT / "deploy" / "zeabur_p2_migration_0007" / "requirements-migration.txt").read_text(
+        encoding="utf-8"
+    )
+    assert "psycopg" in mig_req
+    global_req = (ROOT / "requirements.txt").read_text(encoding="utf-8")
+    assert "requirements-migration.txt" not in global_req
 
 
 def test_health_metadata_is_run_scoped_or_generic(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
