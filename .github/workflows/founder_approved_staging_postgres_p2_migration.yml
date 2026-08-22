@@ -45,6 +45,7 @@ jobs:
           set -euo pipefail
           bash deploy/zeabur_p2_migration_cli/build_p2_zeabur_cli.sh
           echo "P2_PINNED_ZEABUR_CLI_IMPLEMENTED=true"
+          echo "P2_PINNED_CLI_DIRECT_MARKER_BINARY_PROOF=true"
           echo "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false"
           zeabur version || true
 

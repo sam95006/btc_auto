@@ -297,6 +297,10 @@ def main() -> int:
     if not pinned["ok"]:
         print("P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=true", file=sys.stderr)
         print("P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false", file=sys.stderr)
+        print(
+            f"P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT={str(pinned.get('P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT', False)).lower()}",
+            file=sys.stderr,
+        )
         print("P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD=false", file=sys.stderr)
         diag = sanitize_bootstrap_failure_diagnostics(
             create_deploy_exit=create_exit,
@@ -314,6 +318,10 @@ def main() -> int:
     bootstrap_deployment_id = pinned["deployment_id"]
     print("P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=true", file=sys.stderr)
     print("P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false", file=sys.stderr)
+    print(
+        f"P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT={str(pinned.get('P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT', False)).lower()}",
+        file=sys.stderr,
+    )
     print("P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD=true", file=sys.stderr)
     print(f"P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID={bootstrap_deployment_id}", file=sys.stderr)
     print(f"bootstrap_deployment_id_prefix={bootstrap_deployment_id[:6]}", file=sys.stderr)

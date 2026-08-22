@@ -21,6 +21,18 @@ from tools.ci.p2_migration_deployment_diagnostics import (
 from tools.ci.p2_migration_lifecycle_command import detect_deployment_record_semantic_error
 
 OID24 = re.compile(r"^[0-9a-f]{24}$", re.I)
+DIRECT_UPLOAD_DEPLOYMENT_MARKER = re.compile(
+    r"(?m)^P2_ZEABUR_UPLOAD_DEPLOYMENT_ID=([0-9a-fA-F]{24})\s*$"
+)
+DIRECT_UPLOAD_DEPLOYMENT_MARKER_LINE = re.compile(
+    r"(?m)^P2_ZEABUR_UPLOAD_DEPLOYMENT_ID=(.*)$"
+)
+DIRECT_UPLOAD_SERVICE_MARKER = re.compile(
+    r"(?m)^P2_ZEABUR_UPLOAD_SERVICE_ID=([0-9a-fA-F]{24})\s*$"
+)
+DIRECT_UPLOAD_ENVIRONMENT_MARKER = re.compile(
+    r"(?m)^P2_ZEABUR_UPLOAD_ENVIRONMENT_ID=([0-9a-fA-F]{24})\s*$"
+)
 
 BOOTSTRAP_READY_TOKENS = frozenset({"RUNNING", "READY", "ACTIVE"})
 WAIT_TOKENS = frozenset({"BUILDING", "PENDING", "QUEUED", "WAITING", "DEPLOYING", "STARTING", "RESTARTING"})
@@ -58,6 +70,30 @@ def audit_deploy_output_deployment_id(deploy_output: str, *, pinned_cli: bool = 
     }
 
 
+def extract_direct_upload_marker_deployment_id(raw: str) -> dict[str, Any]:
+    """Parse P2_ZEABUR_UPLOAD_DEPLOYMENT_ID= marker from pinned CLI stderr."""
+    text = raw or ""
+    valid = DIRECT_UPLOAD_DEPLOYMENT_MARKER.search(text)
+    if valid:
+        return {
+            "deployment_id": valid.group(1),
+            "marker_present": True,
+            "malformed": False,
+        }
+    line = DIRECT_UPLOAD_DEPLOYMENT_MARKER_LINE.search(text)
+    if line is not None:
+        return {
+            "deployment_id": "",
+            "marker_present": False,
+            "malformed": True,
+        }
+    return {
+        "deployment_id": "",
+        "marker_present": False,
+        "malformed": False,
+    }
+
+
 def evaluate_pinned_deploy_output(
     *,
     deploy_output: str,
@@ -68,7 +104,7 @@ def evaluate_pinned_deploy_output(
     phase: str = "bootstrap",
     bootstrap_deployment_id: str = "",
 ) -> dict[str, Any]:
-    """Pinned P2 CLI: deployment_id must come directly from deploy --json upload result."""
+    """Pinned P2 CLI: deployment_id from upload marker (primary) or JSON (compat)."""
     from tools.ci.p2_migration_bootstrap import extract_create_deploy_ids
 
     phase_norm = (phase or "").strip().lower()
@@ -84,11 +120,28 @@ def evaluate_pinned_deploy_output(
 
     text = deploy_output or ""
     semantic = detect_deployment_record_semantic_error(text)
+    marker = extract_direct_upload_marker_deployment_id(text)
     ids = extract_create_deploy_ids(text)
-    deployment_id = (ids.get("deployment_id") or "").strip() or extract_deployment_id_from_output(text)
+    json_deployment_id = (ids.get("deployment_id") or "").strip() or extract_deployment_id_from_output(text)
+    marker_id = (marker.get("deployment_id") or "").strip()
+    marker_present = bool(marker.get("marker_present"))
+    marker_malformed = bool(marker.get("malformed"))
+
+    conflict = bool(marker_id and json_deployment_id and marker_id != json_deployment_id)
+    if marker_id:
+        deployment_id = marker_id
+    else:
+        deployment_id = json_deployment_id
+
     returned_sid = (ids.get("service_id") or "").strip()
     returned_env = (ids.get("environment_id") or "").strip()
     returned_project = (ids.get("project_id") or "").strip()
+    marker_sid = DIRECT_UPLOAD_SERVICE_MARKER.search(text)
+    marker_env = DIRECT_UPLOAD_ENVIRONMENT_MARKER.search(text)
+    if marker_sid and not returned_sid:
+        returned_sid = marker_sid.group(1)
+    if marker_env and not returned_env:
+        returned_env = marker_env.group(1)
 
     service_match = (not returned_sid) or returned_sid == expected_sid
     env_match = (not returned_env) or returned_env == expected_env
@@ -100,21 +153,34 @@ def evaluate_pinned_deploy_output(
         bootstrap_id = (bootstrap_deployment_id or "").strip()
         distinct_ok = bool(bootstrap_id) and deployment_id != bootstrap_id
 
-    ok = bool(exit_ok and id_ok and service_match and env_match and project_match and distinct_ok and not semantic)
+    ok = bool(
+        exit_ok
+        and id_ok
+        and service_match
+        and env_match
+        and project_match
+        and distinct_ok
+        and not semantic
+        and not marker_malformed
+        and not conflict
+    )
     return {
         "ok": ok,
         "phase": phase_norm,
-        "deployment_id": deployment_id if id_ok else "",
-        "deployment_id_prefix": deployment_id[:6] if id_ok else "",
+        "deployment_id": deployment_id if id_ok and not conflict and not marker_malformed else "",
+        "deployment_id_prefix": deployment_id[:6] if id_ok and not conflict and not marker_malformed else "",
         "exit_code": deploy_exit,
         "cli_semantic_error": semantic or "",
         "service_match": service_match,
         "environment_match": env_match,
         "project_match": project_match,
         "distinct_from_bootstrap": distinct_ok,
+        "marker_json_conflict": conflict,
+        "marker_malformed": marker_malformed,
         "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY": True,
         "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY": False,
-        "P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD": id_ok,
+        "P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT": marker_present,
+        "P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD": bool(ok and id_ok),
         "create_order_calls": 0,
         "exchange_write_call_count": 0,
     }
@@ -639,6 +705,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.emit_env:
             print("P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=true")
             print("P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false")
+            print(f"P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT={str(result.get('P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT', False)).lower()}")
             print(f"P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD={str(result.get('P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD', False)).lower()}")
             if result.get("deployment_id"):
                 if args.phase == "bootstrap":

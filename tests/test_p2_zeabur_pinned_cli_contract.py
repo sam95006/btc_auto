@@ -56,6 +56,121 @@ def test_upstream_patch_and_pin_present():
     assert "deployment_id" in patch
     assert "UploadZipToService" in patch
     assert "deploymentIDFromPrepareURL" in patch
+    assert "P2_ZEABUR_UPLOAD_DEPLOYMENT_ID" in patch
+    assert 'deployment == nil || deployment.ID == ""' in patch
+    assert "upload returned empty deployment id" in patch
+    assert 'fmt.Fprintf(os.Stderr, "P2_ZEABUR_UPLOAD_DEPLOYMENT_ID=%s\\n", deployment.ID)' in patch
+
+
+def test_a_marker_only_no_json_passes():
+    marker_only = (
+        f"P2_ZEABUR_UPLOAD_DEPLOYMENT_ID={BOOTSTRAP_ID}\n"
+        f"P2_ZEABUR_UPLOAD_SERVICE_ID={SERVICE_ID}\n"
+        f"P2_ZEABUR_UPLOAD_ENVIRONMENT_ID={STAGING_ENV}\n"
+    )
+    result = evaluate_pinned_deploy_output(
+        deploy_output=marker_only,
+        deploy_exit=0,
+        expected_service_id=SERVICE_ID,
+        expected_environment_id=STAGING_ENV,
+        expected_project_id=PROJECT_ID,
+        phase="bootstrap",
+    )
+    assert result["ok"] is True
+    assert result["deployment_id"] == BOOTSTRAP_ID
+    assert result["P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT"] is True
+    assert result["P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD"] is True
+    assert result["P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY"] is False
+
+
+def test_b_json_deployment_id_only_compatibility_pass():
+    result = evaluate_pinned_deploy_output(
+        deploy_output=PINNED_DEPLOY_JSON,
+        deploy_exit=0,
+        expected_service_id=SERVICE_ID,
+        expected_environment_id=STAGING_ENV,
+        expected_project_id=PROJECT_ID,
+        phase="bootstrap",
+    )
+    assert result["ok"] is True
+    assert result["deployment_id"] == BOOTSTRAP_ID
+    assert result["P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT"] is False
+    assert result["P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD"] is True
+
+
+def test_c_marker_and_json_same_id_pass():
+    output = (
+        f"P2_ZEABUR_UPLOAD_DEPLOYMENT_ID={BOOTSTRAP_ID}\n"
+        f"{PINNED_DEPLOY_JSON}\n"
+    )
+    result = evaluate_pinned_deploy_output(
+        deploy_output=output,
+        deploy_exit=0,
+        expected_service_id=SERVICE_ID,
+        expected_environment_id=STAGING_ENV,
+        phase="bootstrap",
+    )
+    assert result["ok"] is True
+    assert result["deployment_id"] == BOOTSTRAP_ID
+    assert result["P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT"] is True
+
+
+def test_d_marker_and_json_conflicting_ids_fail_closed():
+    output = (
+        f"P2_ZEABUR_UPLOAD_DEPLOYMENT_ID={BOOTSTRAP_ID}\n"
+        f"{ACTIVATION_DEPLOY_JSON}\n"
+    )
+    result = evaluate_pinned_deploy_output(
+        deploy_output=output,
+        deploy_exit=0,
+        expected_service_id=SERVICE_ID,
+        expected_environment_id=STAGING_ENV,
+        phase="bootstrap",
+    )
+    assert result["ok"] is False
+    assert result["marker_json_conflict"] is True
+    assert result["deployment_id"] == ""
+
+
+def test_e_missing_marker_and_missing_json_fails():
+    result = evaluate_pinned_deploy_output(
+        deploy_output="\n",
+        deploy_exit=0,
+        expected_service_id=SERVICE_ID,
+        expected_environment_id=STAGING_ENV,
+        phase="bootstrap",
+    )
+    assert result["ok"] is False
+    assert result["P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT"] is False
+    assert result["P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD"] is False
+
+
+def test_f_malformed_marker_fails_closed():
+    result = evaluate_pinned_deploy_output(
+        deploy_output="P2_ZEABUR_UPLOAD_DEPLOYMENT_ID=not-a-valid-oid\n",
+        deploy_exit=0,
+        expected_service_id=SERVICE_ID,
+        expected_environment_id=STAGING_ENV,
+        phase="bootstrap",
+    )
+    assert result["ok"] is False
+    assert result["marker_malformed"] is True
+
+    empty = evaluate_pinned_deploy_output(
+        deploy_output=f"P2_ZEABUR_UPLOAD_DEPLOYMENT_ID=\n{PINNED_DEPLOY_JSON}\n",
+        deploy_exit=0,
+        expected_service_id=SERVICE_ID,
+        expected_environment_id=STAGING_ENV,
+        phase="bootstrap",
+    )
+    assert empty["ok"] is False
+    assert empty["marker_malformed"] is True
+
+
+def test_g_go_patch_fail_closed_on_nil_or_empty_deployment():
+    patch = PATCH.read_text(encoding="utf-8")
+    assert "deployment == nil || deployment.ID == \"\"" in patch
+    assert "upload returned empty deployment id" in patch
 
 
 def test_bootstrap_direct_id_from_pinned_deploy_json():
@@ -229,12 +344,15 @@ def test_pinned_cli_build_uses_upstream_cmd_main_go():
     assert 'go build -o "${OUT_BIN}" ./cmd/main.go' in script
     assert "./cmd/zeabur" not in script
     assert "test -f cmd/main.go" in script
+    assert "P2_ZEABUR_UPLOAD_DEPLOYMENT_ID" in script
+    assert "P2_PINNED_CLI_DIRECT_MARKER_BINARY_PROOF=true" in script
 
 
 def test_workflow_uses_pinned_cli_and_direct_ids():
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "build_p2_zeabur_cli.sh" in source
     assert "P2_PINNED_ZEABUR_CLI_IMPLEMENTED=true" in source
+    assert "P2_PINNED_CLI_DIRECT_MARKER_BINARY_PROOF=true" in source
     assert "P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD=true" in source
     assert "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false" in source
     assert "--discover-bootstrap" not in source
@@ -246,12 +364,14 @@ def test_workflow_uses_pinned_cli_and_direct_ids():
 
 
 def test_zero_exchange_writes():
+    marker_only = f"P2_ZEABUR_UPLOAD_DEPLOYMENT_ID={BOOTSTRAP_ID}\n"
     result = evaluate_pinned_deploy_output(
-        deploy_output=PINNED_DEPLOY_JSON,
+        deploy_output=marker_only,
         deploy_exit=0,
         expected_service_id=SERVICE_ID,
         expected_environment_id=STAGING_ENV,
         phase="bootstrap",
     )
+    assert result["ok"] is True
     assert result["exchange_write_call_count"] == 0
     assert result["create_order_calls"] == 0
