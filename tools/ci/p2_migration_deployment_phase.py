@@ -31,6 +31,187 @@ CRASHED_TOKENS = frozenset({"CRASHED", "CRASH"})
 STALL_OBSERVATIONS_NEEDED = 3
 
 
+def collect_valid_deployment_ids(payload: Any) -> frozenset[str]:
+    """Unique 24-hex deployment IDs from list payload — set semantics, not array order."""
+    ids: set[str] = set()
+    if payload is None:
+        return frozenset()
+    for obj in iter_deployment_objects(payload):
+        did = _deployment_id_from_obj(obj)
+        if did:
+            ids.add(did)
+    return frozenset(ids)
+
+
+def audit_deploy_output_deployment_id(deploy_output: str) -> dict[str, Any]:
+    """Optional audit-only: deploy --json does not authorize deployment_id control."""
+    optional_id = extract_deployment_id_from_output(deploy_output or "")
+    return {
+        "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY": False,
+        "deploy_output_deployment_id_present": bool(optional_id),
+        "deploy_output_deployment_id_prefix": optional_id[:6] if optional_id else "",
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+    }
+
+
+def evaluate_bootstrap_deployment_discovery(
+    *,
+    deployment_list_raw: str = "",
+    deployment_list_exit: int | None = None,
+) -> dict[str, Any]:
+    """Fresh run-scoped service: exactly one list ID is bootstrap; 0 wait; >1 fail closed."""
+    semantic = detect_deployment_record_semantic_error(deployment_list_raw or "")
+    payload = _parse_json_blob(deployment_list_raw or "")
+    ids = collect_valid_deployment_ids(payload)
+    count = len(ids)
+    base: dict[str, Any] = {
+        "deployment_list_exit": deployment_list_exit,
+        "cli_semantic_error": semantic or "",
+        "deployment_id_count": count,
+        "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_COUNT": count,
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+    }
+    if semantic:
+        return {
+            **base,
+            "ok": False,
+            "wait": False,
+            "hard_fail": True,
+            "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_DISCOVERY_PASS": False,
+            "bootstrap_deployment_id": "",
+        }
+    if count == 0:
+        return {
+            **base,
+            "ok": False,
+            "wait": True,
+            "hard_fail": False,
+            "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_DISCOVERY_PASS": False,
+            "bootstrap_deployment_id": "",
+        }
+    if count == 1:
+        bootstrap_id = next(iter(ids))
+        return {
+            **base,
+            "ok": True,
+            "wait": False,
+            "hard_fail": False,
+            "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_DISCOVERY_PASS": True,
+            "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID": bootstrap_id,
+            "bootstrap_deployment_id": bootstrap_id,
+            "bootstrap_deployment_id_prefix": bootstrap_id[:6],
+        }
+    return {
+        **base,
+        "ok": False,
+        "wait": False,
+        "hard_fail": True,
+        "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_DISCOVERY_PASS": False,
+        "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_MULTIPLICITY_FAIL": True,
+        "bootstrap_deployment_id": "",
+    }
+
+
+def evaluate_activation_baseline(
+    *,
+    deployment_list_raw: str,
+    expected_bootstrap_deployment_id: str,
+) -> dict[str, Any]:
+    """Before activation deploy, baseline must be exactly {bootstrap_id}."""
+    expected = (expected_bootstrap_deployment_id or "").strip()
+    if not expected or not OID24.match(expected):
+        raise ValueError("bootstrap_deployment_id_missing")
+    semantic = detect_deployment_record_semantic_error(deployment_list_raw or "")
+    payload = _parse_json_blob(deployment_list_raw or "")
+    ids = collect_valid_deployment_ids(payload)
+    want = frozenset({expected})
+    ok = ids == want and semantic is None
+    return {
+        "ok": ok,
+        "baseline_deployment_ids": sorted(ids),
+        "expected_baseline_ids": sorted(want),
+        "P2_MIGRATION_ACTIVATION_BASELINE_ID_SET_PASS": ok,
+        "cli_semantic_error": semantic or "",
+        "deployment_id_count": len(ids),
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+    }
+
+
+def evaluate_activation_deployment_discovery(
+    *,
+    baseline_deployment_ids: frozenset[str] | set[str] | list[str],
+    deployment_list_raw: str = "",
+    deployment_list_exit: int | None = None,
+) -> dict[str, Any]:
+    """After activation deploy: exactly one new ID in list minus baseline."""
+    semantic = detect_deployment_record_semantic_error(deployment_list_raw or "")
+    payload = _parse_json_blob(deployment_list_raw or "")
+    after_ids = collect_valid_deployment_ids(payload)
+    baseline = frozenset(baseline_deployment_ids or frozenset())
+    new_ids = after_ids - baseline
+    new_count = len(new_ids)
+    base: dict[str, Any] = {
+        "baseline_deployment_ids": sorted(baseline),
+        "after_deployment_ids": sorted(after_ids),
+        "new_deployment_ids": sorted(new_ids),
+        "deployment_list_exit": deployment_list_exit,
+        "cli_semantic_error": semantic or "",
+        "P2_MIGRATION_ACTIVATION_NEW_DEPLOYMENT_COUNT": new_count,
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+    }
+    if semantic:
+        return {
+            **base,
+            "ok": False,
+            "wait": False,
+            "hard_fail": True,
+            "P2_MIGRATION_ACTIVATION_DEPLOYMENT_DISCOVERY_PASS": False,
+            "activation_deployment_id": "",
+        }
+    if new_count == 0:
+        return {
+            **base,
+            "ok": False,
+            "wait": True,
+            "hard_fail": False,
+            "P2_MIGRATION_ACTIVATION_DEPLOYMENT_DISCOVERY_PASS": False,
+            "activation_deployment_id": "",
+        }
+    if new_count == 1:
+        activation_id = next(iter(new_ids))
+        return {
+            **base,
+            "ok": True,
+            "wait": False,
+            "hard_fail": False,
+            "P2_MIGRATION_ACTIVATION_DEPLOYMENT_DISCOVERY_PASS": True,
+            "P2_MIGRATION_ACTIVATION_DEPLOYMENT_ID": activation_id,
+            "activation_deployment_id": activation_id,
+            "activation_deployment_id_prefix": activation_id[:6],
+        }
+    return {
+        **base,
+        "ok": False,
+        "wait": False,
+        "hard_fail": True,
+        "P2_MIGRATION_ACTIVATION_DEPLOYMENT_DISCOVERY_PASS": False,
+        "P2_MIGRATION_ACTIVATION_DEPLOYMENT_MULTIPLICITY_FAIL": True,
+        "activation_deployment_id": "",
+    }
+
+
+def discovery_exit_code(result: dict[str, Any]) -> int:
+    if result.get("ok"):
+        return 0
+    if result.get("wait"):
+        return 2
+    return 1
+
+
 def extract_deployment_id_from_output(raw: str) -> str:
     text = raw or ""
     for key in ("deployment_id", "deploymentId", "DeploymentID"):
@@ -286,7 +467,73 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--can-start-activation", action="store_true")
     parser.add_argument("--bootstrap-phase-json", default="")
     parser.add_argument("--emit-env", action="store_true")
+    parser.add_argument("--discover-bootstrap", action="store_true")
+    parser.add_argument("--discover-activation", action="store_true")
+    parser.add_argument("--evaluate-baseline", action="store_true")
+    parser.add_argument("--expected-bootstrap-deployment-id", default="")
+    parser.add_argument("--baseline-ids", default="")
+    parser.add_argument("--deployment-list-exit", type=int, default=-1)
+    parser.add_argument("--audit-deploy-output-file", default="")
     args = parser.parse_args(argv)
+
+    if args.audit_deploy_output_file:
+        raw = Path(args.audit_deploy_output_file).read_text(encoding="utf-8", errors="replace")
+        result = audit_deploy_output_deployment_id(raw)
+        print(json.dumps(result, sort_keys=True))
+        if args.emit_env:
+            print("P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false")
+            if result.get("deploy_output_deployment_id_present"):
+                print(f"deploy_output_deployment_id_prefix={result['deploy_output_deployment_id_prefix']}")
+        return 0
+
+    list_raw = ""
+    build_raw = ""
+    if args.deployment_list_file:
+        list_raw = Path(args.deployment_list_file).read_text(encoding="utf-8", errors="replace")
+    if args.build_log_file:
+        build_raw = Path(args.build_log_file).read_text(encoding="utf-8", errors="replace")
+    list_exit = None if args.deployment_list_exit < 0 else args.deployment_list_exit
+
+    if args.discover_bootstrap:
+        result = evaluate_bootstrap_deployment_discovery(
+            deployment_list_raw=list_raw,
+            deployment_list_exit=list_exit,
+        )
+        print(json.dumps(result, sort_keys=True))
+        if args.emit_env:
+            print(f"P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_DISCOVERY_PASS={str(result.get('P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_DISCOVERY_PASS', False)).lower()}")
+            print(f"P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_COUNT={result.get('deployment_id_count', 0)}")
+            if result.get("bootstrap_deployment_id"):
+                print(f"P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID={result['bootstrap_deployment_id']}")
+                print(f"bootstrap_deployment_id={result['bootstrap_deployment_id']}")
+        return discovery_exit_code(result)
+
+    if args.evaluate_baseline:
+        result = evaluate_activation_baseline(
+            deployment_list_raw=list_raw,
+            expected_bootstrap_deployment_id=args.expected_bootstrap_deployment_id,
+        )
+        print(json.dumps(result, sort_keys=True))
+        if args.emit_env:
+            print(f"P2_MIGRATION_ACTIVATION_BASELINE_ID_SET_PASS={str(result['ok']).lower()}")
+        return 0 if result["ok"] else 1
+
+    if args.discover_activation:
+        baseline_parts = [p.strip() for p in (args.baseline_ids or "").split(",") if p.strip()]
+        baseline = frozenset(baseline_parts)
+        result = evaluate_activation_deployment_discovery(
+            baseline_deployment_ids=baseline,
+            deployment_list_raw=list_raw,
+            deployment_list_exit=list_exit,
+        )
+        print(json.dumps(result, sort_keys=True))
+        if args.emit_env:
+            print(f"P2_MIGRATION_ACTIVATION_DEPLOYMENT_DISCOVERY_PASS={str(result.get('P2_MIGRATION_ACTIVATION_DEPLOYMENT_DISCOVERY_PASS', False)).lower()}")
+            print(f"P2_MIGRATION_ACTIVATION_NEW_DEPLOYMENT_COUNT={result.get('P2_MIGRATION_ACTIVATION_NEW_DEPLOYMENT_COUNT', 0)}")
+            if result.get("activation_deployment_id"):
+                print(f"P2_MIGRATION_ACTIVATION_DEPLOYMENT_ID={result['activation_deployment_id']}")
+                print(f"activation_deployment_id={result['activation_deployment_id']}")
+        return discovery_exit_code(result)
 
     if args.can_start_activation:
         if args.bootstrap_phase_json:
@@ -298,13 +545,6 @@ def main(argv: list[str] | None = None) -> int:
         if args.emit_env:
             print(f"P2_MIGRATION_ACTIVATION_BEFORE_BOOTSTRAP_READY_BLOCKED={str(result['blocked']).lower()}")
         return 0 if result["ok"] else 1
-
-    list_raw = ""
-    build_raw = ""
-    if args.deployment_list_file:
-        list_raw = Path(args.deployment_list_file).read_text(encoding="utf-8", errors="replace")
-    if args.build_log_file:
-        build_raw = Path(args.build_log_file).read_text(encoding="utf-8", errors="replace")
 
     result = evaluate_exact_deployment_phase(
         target_deployment_id=args.target_deployment_id,

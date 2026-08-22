@@ -353,6 +353,36 @@ def verify_create_environment_match(
     )
 
 
+def sanitize_create_helper_stderr(raw: str) -> str:
+    """Emit sanitized create-helper stderr markers (no secrets)."""
+    safe_prefixes = (
+        "P2_MIGRATION_",
+        "BLOCKER_",
+        "BLOCKED_",
+        "bootstrap_",
+        "create_",
+        "migration_service_",
+        "learning_validation_",
+        "uses_create_empty_cli",
+        "requested_service_name_prefix",
+        "listed_services_",
+        "list_cli_failed",
+        "list_graphql_failed",
+        "legacy_fixed_service",
+    )
+    lines: list[str] = []
+    for line in (raw or "").splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if not any(stripped.startswith(prefix) for prefix in safe_prefixes):
+            continue
+        redacted = re.sub(r"[A-Za-z0-9_\-+/=]{40,}", "***REDACTED***", stripped)
+        redacted = re.sub(r"postgres(?:ql)?://\S+", "postgresql://***", redacted, flags=re.I)
+        lines.append(redacted)
+    return "\n".join(lines)
+
+
 def sanitize_bootstrap_failure_diagnostics(
     *,
     create_deploy_exit: int | None,

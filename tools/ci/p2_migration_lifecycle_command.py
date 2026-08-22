@@ -111,7 +111,10 @@ def evaluate_activation_local_deploy(
     (caller must have proven argv before upload). Present+match → match true.
     """
     from tools.ci.p2_migration_bootstrap import extract_create_deploy_ids
-    from tools.ci.p2_migration_deployment_phase import extract_deployment_id_from_output
+    from tools.ci.p2_migration_deployment_phase import (
+        audit_deploy_output_deployment_id,
+        extract_deployment_id_from_output,
+    )
 
     expected_sid = (expected_service_id or "").strip()
     expected_env = (expected_environment_id or "").strip()
@@ -124,7 +127,6 @@ def evaluate_activation_local_deploy(
     ids = extract_create_deploy_ids(text)
     returned_sid = (ids.get("service_id") or "").strip()
     returned_env = (ids.get("environment_id") or "").strip()
-    returned_deployment = (ids.get("deployment_id") or "").strip() or extract_deployment_id_from_output(text)
 
     if returned_sid and returned_sid != expected_sid:
         service_match = False
@@ -148,14 +150,17 @@ def evaluate_activation_local_deploy(
 
     exit_ok = exit_code == 0
     command_pass = bool(exit_ok and semantic is None and service_match and env_match)
+    deploy_audit = audit_deploy_output_deployment_id(text)
+    optional_deployment = (ids.get("deployment_id") or "").strip() or extract_deployment_id_from_output(text)
     return {
         "ok": command_pass,
         "exit_code": exit_code,
         "cli_semantic_error": semantic or "",
         "returned_service_id": returned_sid,
         "returned_environment_id": returned_env,
-        "returned_deployment_id": returned_deployment,
-        "P2_MIGRATION_ACTIVATION_DEPLOYMENT_ID": returned_deployment,
+        "returned_deployment_id": optional_deployment,
+        "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY": False,
+        "deploy_output_deployment_id_present": deploy_audit.get("deploy_output_deployment_id_present", False),
         "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY": command_pass,
         "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COUNT": 1 if command_pass else 0,
         "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COMMAND_PASS": command_pass,
@@ -333,10 +338,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COUNT={1 if result['ok'] else 0}")
             print(f"P2_MIGRATION_POST_VAR_SERVICE_MATCH={str(result['P2_MIGRATION_POST_VAR_SERVICE_MATCH']).lower()}")
             print(f"P2_MIGRATION_POST_VAR_ENV_MATCH={str(result['P2_MIGRATION_POST_VAR_ENV_MATCH']).lower()}")
-            if result.get("returned_deployment_id"):
-                print(f"P2_MIGRATION_ACTIVATION_DEPLOYMENT_ID={result['returned_deployment_id']}")
-                print(f"activation_deployment_id={result['returned_deployment_id']}")
-                print(f"activation_deployment_id_prefix={result['returned_deployment_id'][:6]}")
+            print("P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false")
             print("P2_MIGRATION_SECOND_SERVICE_CREATED=false")
         return 0 if result["ok"] else 1
 

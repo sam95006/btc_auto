@@ -217,20 +217,20 @@ def test_workflow_uses_local_deploy_not_service_redeploy_after_vars():
     assert "P2_MIGRATION_POST_VAR_REDEPLOY=true" not in source
     vars_idx = source.index("Inject disarmed runtime variables after bootstrap deployment ready")
     act_idx = source.index("Activation local deploy to same service after runtime variables")
+    discover_idx = source.index("Discover activation deployment ID from deployment list")
     act_ready_idx = source.index("Wait for exact activation deployment ready")
     meta_idx = source.index("Metadata diagnostic and explicit-negative veto")
     record_idx = source.index("Require deployment record before service-exec")
     op_idx = source.index("Operational service-exec readiness")
-    assert vars_idx < act_idx < act_ready_idx < meta_idx < record_idx < op_idx
+    assert vars_idx < act_idx < discover_idx < act_ready_idx < meta_idx < record_idx < op_idx
     activation_block = source[act_idx:meta_idx]
     cmd = activation_block[activation_block.index("--project-id \"$ZEABUR_PROJECT_ID\"") :]
     cmd = cmd.split(")", 1)[0]
     assert "--create" not in cmd
     assert "--service-id \"$SERVICE_ID\"" in cmd
     assert "--environment-id \"$ZEABUR_ENV_ID\"" in cmd
-    assert "p2_migration_deployment_phase" in source
-    assert "--target-deployment-id" in source
-    assert "P2_MIGRATION_EXACT_DEPLOYMENT_ID_AUTHORITY=true" in source or "--target-deployment-id" in source
+    assert "--discover-bootstrap" in source
+    assert "--discover-activation" in source
 
 
 def test_activation_f_returned_service_id_mismatch_fail_closed():
@@ -265,19 +265,16 @@ def test_activation_h_wrong_source_sha_fails_before_upload(tmp_path: Path):
     assert result["P2_MIGRATION_POST_VAR_SOURCE_IDENTITY_PASS"] is False
 
 
-def test_activation_clean_pass_with_matching_ids_and_deployment_id():
+def test_activation_clean_pass_with_matching_ids_without_deploy_output_deployment_id():
     result = evaluate_activation_local_deploy(
         exit_code=0,
-        output=(
-            '{"service_id":"bbbbbbbbbbbbbbbbbbbbbbbb","environment_id":"69d559b6474db8a99d6dd6bf",'
-            '"deployment_id":"6a89a6cd29f0931a12bfea72"}'
-        ),
+        output='{"service_id":"bbbbbbbbbbbbbbbbbbbbbbbb","environment_id":"69d559b6474db8a99d6dd6bf","status":"success","message":"ok"}',
         expected_service_id="bbbbbbbbbbbbbbbbbbbbbbbb",
         expected_environment_id="69d559b6474db8a99d6dd6bf",
     )
     assert result["ok"] is True
-    assert result["returned_deployment_id"] == "6a89a6cd29f0931a12bfea72"
-    assert result["P2_MIGRATION_ACTIVATION_DEPLOYMENT_ID"] == "6a89a6cd29f0931a12bfea72"
+    assert result["P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY"] is False
+    assert not result["returned_deployment_id"]
     assert result["P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COMMAND_PASS"] is True
     assert result["P2_MIGRATION_SECOND_SERVICE_CREATED"] is False
     assert result["exchange_write_call_count"] == 0
