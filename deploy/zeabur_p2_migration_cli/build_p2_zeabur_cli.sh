@@ -18,9 +18,10 @@ git clone --filter=blob:none --no-checkout https://github.com/zeabur/cli.git "${
   cd "${WORKDIR}"
   git fetch --depth 1 origin "${PIN}"
   git checkout "${PIN}"
+  test -f cmd/main.go
   git apply --check "${PATCH_FILE}"
   git apply "${PATCH_FILE}"
-  go build -o "${OUT_BIN}" ./cmd/zeabur
+  go build -o "${OUT_BIN}" ./cmd/main.go
 )
 
 echo "P2_PINNED_ZEABUR_CLI_IMPLEMENTED=true"

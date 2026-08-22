@@ -222,6 +222,15 @@ def test_activation_local_deploy_pass_without_list_authority():
     assert result["P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY"] is True
 
 
+def test_pinned_cli_build_uses_upstream_cmd_main_go():
+    script = (ROOT / "deploy" / "zeabur_p2_migration_cli" / "build_p2_zeabur_cli.sh").read_text(
+        encoding="utf-8"
+    )
+    assert 'go build -o "${OUT_BIN}" ./cmd/main.go' in script
+    assert "./cmd/zeabur" not in script
+    assert "test -f cmd/main.go" in script
+
+
 def test_workflow_uses_pinned_cli_and_direct_ids():
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "build_p2_zeabur_cli.sh" in source
