@@ -178,7 +178,6 @@ def test_j_activation_deploy_json_without_deployment_id_passes():
         expected_environment_id=STAGING_ENV,
     )
     assert result["ok"] is True
-    assert result["P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY"] is False
     assert not result["returned_deployment_id"]
 
 
@@ -196,16 +195,12 @@ def test_k_helper_stderr_diagnostics_visible_on_controlled_failure():
     assert "ZEABUR_TOKEN" not in sanitized
 
 
-def test_l_workflow_uses_list_discovery_not_deploy_output():
+def test_l_workflow_uses_pinned_cli_not_list_discovery():
     source = WORKFLOW.read_text(encoding="utf-8")
-    assert "P2_MIGRATION_CREATE_HELPER_EXIT=" in source
-    assert "P2_MIGRATION_CREATE_DIAGNOSTIC_VISIBLE=true" in source
-    assert "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false" in source
-    assert "--discover-bootstrap" in source
-    assert "--discover-activation" in source
-    assert "Discover activation deployment ID from deployment list" in source
-    assert "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID=missing" not in source
-    assert "grep -E '^P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID='" not in source
+    assert "build_p2_zeabur_cli.sh" in source
+    assert "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false" in source
+    assert "--discover-bootstrap" not in source
+    assert "--discover-activation" not in source
 
 
 def test_m_zero_exchange_writes_on_discovery():

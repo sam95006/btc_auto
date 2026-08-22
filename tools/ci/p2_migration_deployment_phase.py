@@ -43,11 +43,14 @@ def collect_valid_deployment_ids(payload: Any) -> frozenset[str]:
     return frozenset(ids)
 
 
-def audit_deploy_output_deployment_id(deploy_output: str) -> dict[str, Any]:
-    """Optional audit-only: deploy --json does not authorize deployment_id control."""
+def audit_deploy_output_deployment_id(deploy_output: str, *, pinned_cli: bool = False) -> dict[str, Any]:
+    """Audit deploy --json; pinned P2 CLI makes deployment_id control authority."""
     optional_id = extract_deployment_id_from_output(deploy_output or "")
+    authority = bool(pinned_cli)
     return {
-        "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY": False,
+        "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY": authority,
+        "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY": False,
+        "P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD": authority and bool(optional_id),
         "deploy_output_deployment_id_present": bool(optional_id),
         "deploy_output_deployment_id_prefix": optional_id[:6] if optional_id else "",
         "create_order_calls": 0,
@@ -55,12 +58,102 @@ def audit_deploy_output_deployment_id(deploy_output: str) -> dict[str, Any]:
     }
 
 
+def evaluate_pinned_deploy_output(
+    *,
+    deploy_output: str,
+    deploy_exit: int | None,
+    expected_service_id: str,
+    expected_environment_id: str,
+    expected_project_id: str = "",
+    phase: str = "bootstrap",
+    bootstrap_deployment_id: str = "",
+) -> dict[str, Any]:
+    """Pinned P2 CLI: deployment_id must come directly from deploy --json upload result."""
+    from tools.ci.p2_migration_bootstrap import extract_create_deploy_ids
+
+    phase_norm = (phase or "").strip().lower()
+    if phase_norm not in {"bootstrap", "activation"}:
+        raise ValueError("deployment_phase_unsupported")
+    expected_sid = (expected_service_id or "").strip()
+    expected_env = (expected_environment_id or "").strip()
+    expected_project = (expected_project_id or "").strip()
+    if not expected_sid:
+        raise ValueError("service_id_missing")
+    if not expected_env:
+        raise ValueError("environment_id_missing")
+
+    text = deploy_output or ""
+    semantic = detect_deployment_record_semantic_error(text)
+    ids = extract_create_deploy_ids(text)
+    deployment_id = (ids.get("deployment_id") or "").strip() or extract_deployment_id_from_output(text)
+    returned_sid = (ids.get("service_id") or "").strip()
+    returned_env = (ids.get("environment_id") or "").strip()
+    returned_project = (ids.get("project_id") or "").strip()
+
+    service_match = (not returned_sid) or returned_sid == expected_sid
+    env_match = (not returned_env) or returned_env == expected_env
+    project_match = (not expected_project) or (not returned_project) or returned_project == expected_project
+    exit_ok = deploy_exit == 0
+    id_ok = bool(deployment_id) and bool(OID24.match(deployment_id))
+    distinct_ok = True
+    if phase_norm == "activation":
+        bootstrap_id = (bootstrap_deployment_id or "").strip()
+        distinct_ok = bool(bootstrap_id) and deployment_id != bootstrap_id
+
+    ok = bool(exit_ok and id_ok and service_match and env_match and project_match and distinct_ok and not semantic)
+    return {
+        "ok": ok,
+        "phase": phase_norm,
+        "deployment_id": deployment_id if id_ok else "",
+        "deployment_id_prefix": deployment_id[:6] if id_ok else "",
+        "exit_code": deploy_exit,
+        "cli_semantic_error": semantic or "",
+        "service_match": service_match,
+        "environment_match": env_match,
+        "project_match": project_match,
+        "distinct_from_bootstrap": distinct_ok,
+        "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY": True,
+        "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY": False,
+        "P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD": id_ok,
+        "create_order_calls": 0,
+        "exchange_write_call_count": 0,
+    }
+
+
+def deployment_obj_from_get_payload(payload: Any, target: str) -> dict[str, Any] | None:
+    want = (target or "").strip()
+    if not want or payload is None:
+        return None
+    if isinstance(payload, dict):
+        if _deployment_id_from_obj(payload) == want:
+            return payload
+        for key in ("deployment", "Deployment", "data", "result", "node"):
+            if key in payload:
+                found = deployment_obj_from_get_payload(payload[key], want)
+                if found:
+                    return found
+    return find_deployment_by_id(payload, want)
+
+
 def evaluate_bootstrap_deployment_discovery(
     *,
     deployment_list_raw: str = "",
     deployment_list_exit: int | None = None,
 ) -> dict[str, Any]:
-    """Fresh run-scoped service: exactly one list ID is bootstrap; 0 wait; >1 fail closed."""
+    """Fresh run-scoped service: exactly one list ID is bootstrap; audit-only, not control authority."""
+    result = _evaluate_bootstrap_deployment_discovery_impl(
+        deployment_list_raw=deployment_list_raw,
+        deployment_list_exit=deployment_list_exit,
+    )
+    result["P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY"] = False
+    return result
+
+
+def _evaluate_bootstrap_deployment_discovery_impl(
+    *,
+    deployment_list_raw: str = "",
+    deployment_list_exit: int | None = None,
+) -> dict[str, Any]:
     semantic = detect_deployment_record_semantic_error(deployment_list_raw or "")
     payload = _parse_json_blob(deployment_list_raw or "")
     ids = collect_valid_deployment_ids(payload)
@@ -146,7 +239,22 @@ def evaluate_activation_deployment_discovery(
     deployment_list_raw: str = "",
     deployment_list_exit: int | None = None,
 ) -> dict[str, Any]:
-    """After activation deploy: exactly one new ID in list minus baseline."""
+    """After activation deploy: list diff audit-only, not control authority."""
+    result = _evaluate_activation_deployment_discovery_impl(
+        baseline_deployment_ids=baseline_deployment_ids,
+        deployment_list_raw=deployment_list_raw,
+        deployment_list_exit=deployment_list_exit,
+    )
+    result["P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY"] = False
+    return result
+
+
+def _evaluate_activation_deployment_discovery_impl(
+    *,
+    baseline_deployment_ids: frozenset[str] | set[str] | list[str],
+    deployment_list_raw: str = "",
+    deployment_list_exit: int | None = None,
+) -> dict[str, Any]:
     semantic = detect_deployment_record_semantic_error(deployment_list_raw or "")
     payload = _parse_json_blob(deployment_list_raw or "")
     after_ids = collect_valid_deployment_ids(payload)
@@ -299,6 +407,7 @@ def build_log_progress_hash(build_log: str) -> str:
 def evaluate_exact_deployment_phase(
     *,
     target_deployment_id: str,
+    deployment_get_raw: str = "",
     deployment_list_raw: str = "",
     build_log_raw: str = "",
     phase: str,
@@ -315,9 +424,16 @@ def evaluate_exact_deployment_phase(
     if phase_norm not in {"bootstrap", "activation"}:
         raise ValueError("deployment_phase_unsupported")
 
+    get_payload = _parse_json_blob(deployment_get_raw or "")
     list_payload = _parse_json_blob(deployment_list_raw or "")
-    semantic = detect_deployment_record_semantic_error(deployment_list_raw or "", build_log_raw or "")
-    obj = find_deployment_by_id(list_payload, target)
+    semantic = detect_deployment_record_semantic_error(
+        deployment_get_raw or deployment_list_raw or "",
+        build_log_raw or "",
+    )
+    if deployment_get_raw:
+        obj = deployment_obj_from_get_payload(get_payload, target)
+    else:
+        obj = find_deployment_by_id(list_payload, target)
     status = deployment_status_token(obj)
     progress_hash = build_log_progress_hash(build_log_raw or "")
 
@@ -331,6 +447,7 @@ def evaluate_exact_deployment_phase(
         "prior_build_log_progress_hash": prior_build_hash or "",
         "stall_count": stall_count,
         "cli_semantic_error": semantic or "",
+        "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY": False,
         "create_order_calls": 0,
         "exchange_write_call_count": 0,
     }
@@ -458,8 +575,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--evaluate-phase", action="store_true")
     parser.add_argument("--target-deployment-id", default="")
     parser.add_argument("--phase", choices=("bootstrap", "activation"), default="bootstrap")
+    parser.add_argument("--deployment-get-file", default="")
     parser.add_argument("--deployment-list-file", default="")
     parser.add_argument("--build-log-file", default="")
+    parser.add_argument("--evaluate-pinned-deploy", action="store_true")
+    parser.add_argument("--deploy-output-file", default="")
+    parser.add_argument("--deploy-exit", type=int, default=-1)
+    parser.add_argument("--expected-service-id", default="")
+    parser.add_argument("--expected-environment-id", default="")
+    parser.add_argument("--expected-project-id", default="")
     parser.add_argument("--bootstrap-deployment-id", default="")
     parser.add_argument("--activation-started", action="store_true")
     parser.add_argument("--prior-build-hash", default="")
@@ -487,12 +611,43 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     list_raw = ""
+    get_raw = ""
     build_raw = ""
+    if args.deployment_get_file:
+        get_raw = Path(args.deployment_get_file).read_text(encoding="utf-8", errors="replace")
     if args.deployment_list_file:
         list_raw = Path(args.deployment_list_file).read_text(encoding="utf-8", errors="replace")
     if args.build_log_file:
         build_raw = Path(args.build_log_file).read_text(encoding="utf-8", errors="replace")
     list_exit = None if args.deployment_list_exit < 0 else args.deployment_list_exit
+
+    if args.evaluate_pinned_deploy:
+        deploy_raw = ""
+        if args.deploy_output_file:
+            deploy_raw = Path(args.deploy_output_file).read_text(encoding="utf-8", errors="replace")
+        deploy_exit = None if args.deploy_exit < 0 else args.deploy_exit
+        result = evaluate_pinned_deploy_output(
+            deploy_output=deploy_raw,
+            deploy_exit=deploy_exit,
+            expected_service_id=args.expected_service_id,
+            expected_environment_id=args.expected_environment_id,
+            expected_project_id=args.expected_project_id,
+            phase=args.phase,
+            bootstrap_deployment_id=args.bootstrap_deployment_id,
+        )
+        print(json.dumps(result, sort_keys=True))
+        if args.emit_env:
+            print("P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=true")
+            print("P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false")
+            print(f"P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD={str(result.get('P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD', False)).lower()}")
+            if result.get("deployment_id"):
+                if args.phase == "bootstrap":
+                    print(f"P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID={result['deployment_id']}")
+                    print(f"bootstrap_deployment_id={result['deployment_id']}")
+                else:
+                    print(f"P2_MIGRATION_ACTIVATION_DEPLOYMENT_ID={result['deployment_id']}")
+                    print(f"activation_deployment_id={result['deployment_id']}")
+        return 0 if result["ok"] else 1
 
     if args.discover_bootstrap:
         result = evaluate_bootstrap_deployment_discovery(
@@ -548,6 +703,7 @@ def main(argv: list[str] | None = None) -> int:
 
     result = evaluate_exact_deployment_phase(
         target_deployment_id=args.target_deployment_id,
+        deployment_get_raw=get_raw,
         deployment_list_raw=list_raw,
         build_log_raw=build_raw,
         phase=args.phase,

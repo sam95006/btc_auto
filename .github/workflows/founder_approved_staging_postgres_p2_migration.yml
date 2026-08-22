@@ -37,7 +37,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - run: npm i -g zeabur@latest
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+      - name: Build pinned P2 migration Zeabur CLI
+        run: |
+          set -euo pipefail
+          bash deploy/zeabur_p2_migration_cli/build_p2_zeabur_cli.sh
+          echo "P2_PINNED_ZEABUR_CLI_IMPLEMENTED=true"
+          echo "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false"
+          zeabur version || true
 
       - name: Run offline migration qualification tests + historical P1/P2 regression lock
         env:
@@ -150,45 +159,15 @@ jobs:
           echo "P2_MIGRATION_CREATE_ENV_EXPLICIT=true"
           echo "P2_MIGRATION_SECOND_SERVICE_CREATED=false"
           echo "P2_MIGRATION_DEDICATED_SERVICE_RESOLVED=true"
-          echo "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false"
-          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          MAX_ATTEMPTS=12
-          RETRY_INTERVAL=10
-          attempt=1
-          BOOTSTRAP_DEPLOYMENT_ID=""
-          while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
-            : > /tmp/p2_migration_bootstrap_discover_list.json
-            set +e
-            zeabur deployment list --service-id "$SID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_bootstrap_discover_list.json 2>&1
-            LIST_EXIT=$?
-            python -m tools.ci.p2_migration_deployment_phase \
-              --discover-bootstrap \
-              --deployment-list-file /tmp/p2_migration_bootstrap_discover_list.json \
-              --deployment-list-exit "$LIST_EXIT" \
-              --emit-env >/tmp/p2_migration_bootstrap_discover.json
-            DISC_EXIT=$?
-            set -e
-            echo "bootstrap_discover_attempt=${attempt} classifier_exit=${DISC_EXIT} list_exit=${LIST_EXIT}"
-            cat /tmp/p2_migration_bootstrap_discover.json
-            if [ "$DISC_EXIT" = 0 ]; then
-              BOOTSTRAP_DEPLOYMENT_ID=$(python -c "import json; print(json.load(open('/tmp/p2_migration_bootstrap_discover.json'))['bootstrap_deployment_id'])")
-              echo "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_DISCOVERY_PASS=true"
-              echo "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_COUNT=1"
-              break
-            fi
-            if [ "$DISC_EXIT" = 2 ]; then
-              sleep "$RETRY_INTERVAL"
-              attempt=$((attempt + 1))
-              continue
-            fi
-            echo "BLOCKER_bootstrap_deployment_discovery_failed"
-            exit 1
-          done
+          BOOTSTRAP_DEPLOYMENT_ID=$(grep -E '^P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID=' /tmp/p2_migration_create.stderr | tail -1 | cut -d= -f2-)
           test -n "${BOOTSTRAP_DEPLOYMENT_ID:-}"
           echo "bootstrap_deployment_id=${BOOTSTRAP_DEPLOYMENT_ID}" >> "$GITHUB_OUTPUT"
           echo "bootstrap_deployment_id=${BOOTSTRAP_DEPLOYMENT_ID}"
           echo "bootstrap_deployment_id_prefix=$(printf '%s' "$BOOTSTRAP_DEPLOYMENT_ID" | cut -c1-6)"
           echo "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID=${BOOTSTRAP_DEPLOYMENT_ID}"
+          echo "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=true"
+          echo "P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD=true"
+          echo "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false"
 
       - name: Wait for bootstrap deployment ready before runtime variables
         id: bootstrap_ready
@@ -211,18 +190,18 @@ jobs:
           STALL_COUNT=0
           PRIOR_HASH=""
           while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
-            : > /tmp/p2_migration_bootstrap_deployment_list.json
+            : > /tmp/p2_migration_bootstrap_deployment_get.json
             : > /tmp/p2_migration_bootstrap_build.log
             set +e
-            zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_bootstrap_deployment_list.json 2>&1
-            LIST_EXIT=$?
-            zeabur deployment log -t=build --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_bootstrap_build.log 2>&1
+            zeabur deployment get --deployment-id "$BOOTSTRAP_DEPLOYMENT_ID" --json -i=false >/tmp/p2_migration_bootstrap_deployment_get.json 2>&1
+            GET_EXIT=$?
+            zeabur deployment log -t=build --deployment-id "$BOOTSTRAP_DEPLOYMENT_ID" -i=false >/tmp/p2_migration_bootstrap_build.log 2>&1
             BUILD_EXIT=$?
             python -m tools.ci.p2_migration_deployment_phase \
               --evaluate-phase \
               --target-deployment-id "$BOOTSTRAP_DEPLOYMENT_ID" \
               --phase bootstrap \
-              --deployment-list-file /tmp/p2_migration_bootstrap_deployment_list.json \
+              --deployment-get-file /tmp/p2_migration_bootstrap_deployment_get.json \
               --build-log-file /tmp/p2_migration_bootstrap_build.log \
               --prior-build-hash "$PRIOR_HASH" \
               --stall-count "$STALL_COUNT" \
@@ -231,7 +210,7 @@ jobs:
             set -e
             PRIOR_HASH=$(python -c "import json; print(json.load(open('/tmp/p2_migration_bootstrap_phase.json'))['build_log_progress_hash'])")
             STALL_COUNT=$(python -c "import json; print(json.load(open('/tmp/p2_migration_bootstrap_phase.json'))['stall_count'])")
-            echo "bootstrap_phase_attempt=${attempt} classifier_exit=${PHASE_EXIT} list_exit=${LIST_EXIT} build_exit=${BUILD_EXIT}"
+            echo "bootstrap_phase_attempt=${attempt} classifier_exit=${PHASE_EXIT} deployment_get_exit=${GET_EXIT} build_exit=${BUILD_EXIT}"
             cat /tmp/p2_migration_bootstrap_phase.json
             if [ "$PHASE_EXIT" = 0 ]; then
               echo "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_READY=true"
@@ -318,20 +297,6 @@ jobs:
           fi
           echo "P2_MIGRATION_ACTIVATION_BEFORE_BOOTSTRAP_READY_BLOCKED=false"
           echo "activation_started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          : > /tmp/p2_migration_activation_baseline_list.json
-          zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_activation_baseline_list.json 2>&1
-          python -m tools.ci.p2_migration_deployment_phase \
-            --evaluate-baseline \
-            --deployment-list-file /tmp/p2_migration_activation_baseline_list.json \
-            --expected-bootstrap-deployment-id "$BOOTSTRAP_DEPLOYMENT_ID" \
-            --emit-env >/tmp/p2_migration_activation_baseline.json
-          BASELINE_EXIT=$?
-          cat /tmp/p2_migration_activation_baseline.json
-          if [ "$BASELINE_EXIT" -ne 0 ]; then
-            echo "BLOCKER_activation_baseline_not_bootstrap_only"
-            exit 1
-          fi
-          echo "P2_MIGRATION_ACTIVATION_BASELINE_ID_SET_PASS=true"
           # Prove baked source identity in the exact upload context before local deploy.
           python - <<'PY'
           import os, sys
@@ -381,7 +346,32 @@ jobs:
             echo "BLOCKER_post_var_local_deploy_failed"
             exit 1
           fi
-          echo "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false"
+          python -m tools.ci.p2_migration_deployment_phase \
+            --evaluate-pinned-deploy \
+            --deploy-output-file /tmp/p2_migration_activation_deploy.out \
+            --deploy-exit "$DEPLOY_EXIT" \
+            --expected-service-id "$SERVICE_ID" \
+            --expected-environment-id "$ZEABUR_ENV_ID" \
+            --expected-project-id "$ZEABUR_PROJECT_ID" \
+            --phase activation \
+            --bootstrap-deployment-id "$BOOTSTRAP_DEPLOYMENT_ID" \
+            --emit-env >/tmp/p2_migration_activation_pinned_deploy.json
+          PINNED_EXIT=$?
+          cat /tmp/p2_migration_activation_pinned_deploy.json
+          if [ "$PINNED_EXIT" -ne 0 ]; then
+            echo "BLOCKER_activation_deploy_missing_direct_deployment_id"
+            exit 1
+          fi
+          ACTIVATION_DEPLOYMENT_ID=$(python -c "import json; print(json.load(open('/tmp/p2_migration_activation_pinned_deploy.json'))['deployment_id'])")
+          test -n "${ACTIVATION_DEPLOYMENT_ID:-}"
+          test "${ACTIVATION_DEPLOYMENT_ID}" != "${BOOTSTRAP_DEPLOYMENT_ID}"
+          echo "activation_deployment_id=${ACTIVATION_DEPLOYMENT_ID}" >> "$GITHUB_OUTPUT"
+          echo "activation_deployment_id=${ACTIVATION_DEPLOYMENT_ID}"
+          echo "activation_deployment_id_prefix=$(printf '%s' "$ACTIVATION_DEPLOYMENT_ID" | cut -c1-6)"
+          echo "P2_MIGRATION_ACTIVATION_DEPLOYMENT_ID=${ACTIVATION_DEPLOYMENT_ID}"
+          echo "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=true"
+          echo "P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD=true"
+          echo "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false"
           echo "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY=true"
           echo "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COMMAND_PASS=true"
           echo "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COUNT=1"
@@ -391,57 +381,6 @@ jobs:
           echo "P2_MIGRATION_TOTAL_LOCAL_DEPLOY_COUNT=2"
           echo "P2_MIGRATION_SECOND_SERVICE_CREATED=false"
 
-      - name: Discover activation deployment ID from deployment list
-        id: activation_discover
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
-          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
-          BOOTSTRAP_DEPLOYMENT_ID: ${{ steps.resolve.outputs.bootstrap_deployment_id }}
-        run: |
-          set -euo pipefail
-          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          test -n "${SERVICE_ID:-}"
-          test -n "${BOOTSTRAP_DEPLOYMENT_ID:-}"
-          MAX_ATTEMPTS=12
-          RETRY_INTERVAL=10
-          attempt=1
-          ACTIVATION_DEPLOYMENT_ID=""
-          while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
-            : > /tmp/p2_migration_activation_discover_list.json
-            set +e
-            zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_activation_discover_list.json 2>&1
-            LIST_EXIT=$?
-            python -m tools.ci.p2_migration_deployment_phase \
-              --discover-activation \
-              --deployment-list-file /tmp/p2_migration_activation_discover_list.json \
-              --deployment-list-exit "$LIST_EXIT" \
-              --baseline-ids "$BOOTSTRAP_DEPLOYMENT_ID" \
-              --emit-env >/tmp/p2_migration_activation_discover.json
-            DISC_EXIT=$?
-            set -e
-            echo "activation_discover_attempt=${attempt} classifier_exit=${DISC_EXIT} list_exit=${LIST_EXIT}"
-            cat /tmp/p2_migration_activation_discover.json
-            if [ "$DISC_EXIT" = 0 ]; then
-              ACTIVATION_DEPLOYMENT_ID=$(python -c "import json; print(json.load(open('/tmp/p2_migration_activation_discover.json'))['activation_deployment_id'])")
-              echo "P2_MIGRATION_ACTIVATION_DEPLOYMENT_DISCOVERY_PASS=true"
-              echo "P2_MIGRATION_ACTIVATION_NEW_DEPLOYMENT_COUNT=1"
-              break
-            fi
-            if [ "$DISC_EXIT" = 2 ]; then
-              sleep "$RETRY_INTERVAL"
-              attempt=$((attempt + 1))
-              continue
-            fi
-            echo "BLOCKER_activation_deployment_discovery_failed"
-            exit 1
-          done
-          test -n "${ACTIVATION_DEPLOYMENT_ID:-}"
-          echo "activation_deployment_id=${ACTIVATION_DEPLOYMENT_ID}" >> "$GITHUB_OUTPUT"
-          echo "activation_deployment_id=${ACTIVATION_DEPLOYMENT_ID}"
-          echo "activation_deployment_id_prefix=$(printf '%s' "$ACTIVATION_DEPLOYMENT_ID" | cut -c1-6)"
-          echo "P2_MIGRATION_ACTIVATION_DEPLOYMENT_ID=${ACTIVATION_DEPLOYMENT_ID}"
-
       - name: Wait for exact activation deployment ready
         id: activation_ready
         env:
@@ -449,7 +388,7 @@ jobs:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
           BOOTSTRAP_DEPLOYMENT_ID: ${{ steps.resolve.outputs.bootstrap_deployment_id }}
-          ACTIVATION_DEPLOYMENT_ID: ${{ steps.activation_discover.outputs.activation_deployment_id }}
+          ACTIVATION_DEPLOYMENT_ID: ${{ steps.activation.outputs.activation_deployment_id }}
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
@@ -464,18 +403,18 @@ jobs:
           STALL_COUNT=0
           PRIOR_HASH=""
           while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
-            : > /tmp/p2_migration_activation_deployment_list.json
+            : > /tmp/p2_migration_activation_deployment_get.json
             : > /tmp/p2_migration_activation_build.log
             set +e
-            zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_activation_deployment_list.json 2>&1
-            LIST_EXIT=$?
-            zeabur deployment log -t=build --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_activation_build.log 2>&1
+            zeabur deployment get --deployment-id "$ACTIVATION_DEPLOYMENT_ID" --json -i=false >/tmp/p2_migration_activation_deployment_get.json 2>&1
+            GET_EXIT=$?
+            zeabur deployment log -t=build --deployment-id "$ACTIVATION_DEPLOYMENT_ID" -i=false >/tmp/p2_migration_activation_build.log 2>&1
             BUILD_EXIT=$?
             python -m tools.ci.p2_migration_deployment_phase \
               --evaluate-phase \
               --target-deployment-id "$ACTIVATION_DEPLOYMENT_ID" \
               --phase activation \
-              --deployment-list-file /tmp/p2_migration_activation_deployment_list.json \
+              --deployment-get-file /tmp/p2_migration_activation_deployment_get.json \
               --build-log-file /tmp/p2_migration_activation_build.log \
               --bootstrap-deployment-id "$BOOTSTRAP_DEPLOYMENT_ID" \
               --activation-started \
@@ -486,7 +425,7 @@ jobs:
             set -e
             PRIOR_HASH=$(python -c "import json; print(json.load(open('/tmp/p2_migration_activation_phase.json'))['build_log_progress_hash'])")
             STALL_COUNT=$(python -c "import json; print(json.load(open('/tmp/p2_migration_activation_phase.json'))['stall_count'])")
-            echo "activation_phase_attempt=${attempt} classifier_exit=${PHASE_EXIT} list_exit=${LIST_EXIT} build_exit=${BUILD_EXIT}"
+            echo "activation_phase_attempt=${attempt} classifier_exit=${PHASE_EXIT} deployment_get_exit=${GET_EXIT} build_exit=${BUILD_EXIT}"
             cat /tmp/p2_migration_activation_phase.json
             if [ "$PHASE_EXIT" = 0 ]; then
               echo "P2_MIGRATION_ACTIVATION_DEPLOYMENT_READY=true"
@@ -518,7 +457,7 @@ jobs:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
           SERVICE_NAME: ${{ steps.resolve.outputs.service_name }}
-          ACTIVATION_DEPLOYMENT_ID: ${{ steps.activation_discover.outputs.activation_deployment_id }}
+          ACTIVATION_DEPLOYMENT_ID: ${{ steps.activation.outputs.activation_deployment_id }}
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
@@ -563,28 +502,31 @@ jobs:
           : > /tmp/p2_migration_runtime.log
           : > /tmp/p2_migration_service_get.json
           set +e
-          zeabur deployment get --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_get.json 2>&1
-          GET_EXIT=$?
+          zeabur deployment get --deployment-id "$ACTIVATION_DEPLOYMENT_ID" --json -i=false >/tmp/p2_migration_activation_exact_get.json 2>&1
+          EXACT_GET_EXIT=$?
           zeabur service get --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_service_get.json 2>&1
           SERVICE_GET_EXIT=$?
-          zeabur deployment log -t=build --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_build.log 2>&1
+          zeabur deployment log -t=build --deployment-id "$ACTIVATION_DEPLOYMENT_ID" -i=false >/tmp/p2_migration_build.log 2>&1
           BUILD_EXIT=$?
-          zeabur deployment log -t=runtime --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false >/tmp/p2_migration_runtime.log 2>&1
+          zeabur deployment log -t=runtime --deployment-id "$ACTIVATION_DEPLOYMENT_ID" -i=false >/tmp/p2_migration_runtime.log 2>&1
           RUNTIME_EXIT=$?
           if [ "$SUPPORTS_LIST" = "true" ]; then
             zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_list.json 2>&1
             LIST_EXIT=$?
             echo "deployment_list_skipped=false"
+            echo "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false"
           else
             echo '{"skipped":"deployment_list_optional"}' >/tmp/p2_migration_deployment_list.json
             LIST_EXIT=0
             echo "deployment_list_skipped=true"
           fi
+          cp /tmp/p2_migration_activation_exact_get.json /tmp/p2_migration_deployment_get.json
+          GET_EXIT=$EXACT_GET_EXIT
           python -m tools.ci.p2_migration_deployment_phase \
             --evaluate-phase \
             --target-deployment-id "$ACTIVATION_DEPLOYMENT_ID" \
             --phase activation \
-            --deployment-list-file /tmp/p2_migration_deployment_list.json \
+            --deployment-get-file /tmp/p2_migration_activation_exact_get.json \
             --build-log-file /tmp/p2_migration_build.log \
             --emit-env >/tmp/p2_migration_metadata_activation_phase.json
           ACTIVATION_PHASE_EXIT=$?
@@ -631,7 +573,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
-          ACTIVATION_DEPLOYMENT_ID: ${{ steps.activation_discover.outputs.activation_deployment_id }}
+          ACTIVATION_DEPLOYMENT_ID: ${{ steps.activation.outputs.activation_deployment_id }}
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
@@ -646,10 +588,10 @@ jobs:
             : > /tmp/p2_migration_deployment_record_get.json
             : > /tmp/p2_migration_deployment_record_list.json
             set +e
-            zeabur deployment get --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_record_get.json 2>&1
+            zeabur deployment get --deployment-id "$ACTIVATION_DEPLOYMENT_ID" --json -i=false >/tmp/p2_migration_deployment_record_get.json 2>&1
             DEPLOYMENT_GET_EXIT=$?
-            zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false >/tmp/p2_migration_deployment_record_list.json 2>&1
-            DEPLOYMENT_LIST_EXIT=$?
+            echo '{"audit_only":"deployment_list_not_authority"}' >/tmp/p2_migration_deployment_record_list.json
+            DEPLOYMENT_LIST_EXIT=0
             python -m tools.ci.p2_migration_lifecycle_command \
               --deployment-record \
               --deployment-get-file /tmp/p2_migration_deployment_record_get.json \

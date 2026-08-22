@@ -180,10 +180,9 @@ def test_j_workflow_uses_list_discovery_for_deployment_ids():
     assert "bootstrap_deployment_id=" in source
     assert "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID=" in source
     assert "activation_deployment_id=" in source
-    assert "--discover-bootstrap" in source
-    assert "--discover-activation" in source
-    assert "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false" in source
-    assert "p2_migration_deployment_phase" in source
+    assert "build_p2_zeabur_cli.sh" in source
+    assert "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false" in source
+    assert "deployment get --deployment-id" in source
 
 
 def test_k_deploy_record_exact_id_isolates_canceled_bootstrap():

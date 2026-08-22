@@ -369,8 +369,9 @@ def test_ensure_requires_zeabur_env_id_and_verifies_arg_not_output_authority():
     assert "environment_id=environment_id," in ENSURE.replace(" ", "")
     # Missing returned env must not be treated as hard mismatch authority.
     assert "verify_create_environment_match" not in ENSURE
-    assert "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false" in ENSURE
-    assert "audit_deploy_output_deployment_id" in ENSURE
+    assert "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=true" in ENSURE
+    assert "evaluate_pinned_deploy_output" in ENSURE
+    assert "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false" in ENSURE
 
 
 def test_activation_local_deploy_plan_and_source_identity(tmp_path: Path):

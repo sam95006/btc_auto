@@ -150,7 +150,7 @@ def evaluate_activation_local_deploy(
 
     exit_ok = exit_code == 0
     command_pass = bool(exit_ok and semantic is None and service_match and env_match)
-    deploy_audit = audit_deploy_output_deployment_id(text)
+    deploy_audit = audit_deploy_output_deployment_id(text, pinned_cli=True)
     optional_deployment = (ids.get("deployment_id") or "").strip() or extract_deployment_id_from_output(text)
     return {
         "ok": command_pass,
@@ -159,8 +159,9 @@ def evaluate_activation_local_deploy(
         "returned_service_id": returned_sid,
         "returned_environment_id": returned_env,
         "returned_deployment_id": optional_deployment,
-        "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY": False,
-        "deploy_output_deployment_id_present": deploy_audit.get("deploy_output_deployment_id_present", False),
+        "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY": bool(optional_deployment),
+        "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY": False,
+        "P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD": bool(optional_deployment),
         "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY": command_pass,
         "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COUNT": 1 if command_pass else 0,
         "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COMMAND_PASS": command_pass,
@@ -338,7 +339,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COUNT={1 if result['ok'] else 0}")
             print(f"P2_MIGRATION_POST_VAR_SERVICE_MATCH={str(result['P2_MIGRATION_POST_VAR_SERVICE_MATCH']).lower()}")
             print(f"P2_MIGRATION_POST_VAR_ENV_MATCH={str(result['P2_MIGRATION_POST_VAR_ENV_MATCH']).lower()}")
-            print("P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false")
+            print("P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=true")
+            print("P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false")
             print("P2_MIGRATION_SECOND_SERVICE_CREATED=false")
         return 0 if result["ok"] else 1
 
