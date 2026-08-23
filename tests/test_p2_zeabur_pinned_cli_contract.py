@@ -21,6 +21,33 @@ PIN = ROOT / "deploy" / "zeabur_p2_migration_cli" / "PINNED_UPSTREAM_COMMIT"
 PATCH = ROOT / "deploy" / "zeabur_p2_migration_cli" / "patches" / "001-deploy-emit-deployment-id.patch"
 BUILD = ROOT / "deploy" / "zeabur_p2_migration_cli" / "build_p2_zeabur_cli.sh"
 STAGING_ENV = "69d559b6474db8a99d6dd6bf"
+
+
+def _patch_result_for_file(filename: str) -> str:
+    patch = PATCH.read_text(encoding="utf-8")
+    in_file = False
+    result: list[str] = []
+    for line in patch.splitlines():
+        if line.startswith("diff --git"):
+            in_file = filename in line
+            continue
+        if not in_file:
+            continue
+        if line.startswith(("+++", "---", "@@", "diff ")):
+            continue
+        if line.startswith("-"):
+            continue
+        if line.startswith("+"):
+            result.append(line[1:])
+        elif line.startswith(" "):
+            result.append(line[1:])
+    return "\n".join(result)
+
+
+def _deploy_go_patch_result() -> str:
+    return _patch_result_for_file("internal/cmd/deploy/deploy.go")
+
+
 SERVICE_ID = "abcdef0123456789abcdef01"
 PROJECT_ID = "bbbbbbbbbbbbbbbbbbbbbbbb"
 BOOTSTRAP_ID = "6a89a69fa158dec40572a046"
@@ -61,16 +88,81 @@ def test_upstream_patch_propagates_execute_error_exit():
     pin = PIN.read_text(encoding="utf-8").strip()
     assert len(pin) == 40
     patch = PATCH.read_text(encoding="utf-8")
+    added = _deploy_go_patch_result()
     assert "cmd/main.go" in patch
     assert "os.Exit(1)" in patch
-    assert "UploadZipToService" not in patch
-    assert "P2_ZEABUR_UPLOAD_DEPLOYMENT_ID" not in patch
+    assert "internal/cmd/deploy/deploy.go" in patch
+    assert "UploadZipToService" in added
+    assert "GetEnvironment" not in added.split("if opts.serviceID != \"\" && opts.environmentID != \"\"")[1].split("UploadZipToService")[0]
+
+
+def test_a_create_path_skips_get_environment_when_env_explicit():
+    added = _deploy_go_patch_result()
+    assert "explicitEnvironment(opts.environmentID, projectID)" in added
+    assert "P2_DEPLOY_GRAPHQL_ENV_LOOKUP_SKIPPED" in added
+    assert "CreateEmptyService" in added
+    create_block = added.split('emitDeployDiagnostic("P2_DEPLOY_STAGE", "create_service")', 1)[1]
+    assert "GetEnvironment" not in create_block.split("UploadZipToService")[0]
+
+
+def test_b_activation_path_skips_get_service_and_get_environment():
+    added = _deploy_go_patch_result()
+    assert "if opts.serviceID != \"\" && opts.environmentID != \"\"" in added
+    assert "P2_DEPLOY_GRAPHQL_SERVICE_LOOKUP_SKIPPED" in added
+    assert "explicitService(opts.serviceID, projectID)" in added
+    activation_block = added.split("if opts.serviceID != \"\" && opts.environmentID != \"\"")[1].split("} else if opts.serviceID")[0]
+    assert "GetService" not in activation_block
+    assert "GetEnvironment" not in activation_block
+
+
+def test_c_upload_zip_to_service_still_called():
+    added = _deploy_go_patch_result()
+    assert "UploadZipToService(context.Background(), projectID, service.ID, environment.ID, bytes)" in added
+    assert "P2_DEPLOY_UPLOAD_STARTED" in added
+    assert "P2_DEPLOY_UPLOAD_PASS" in added
+
+
+def test_d_upload_error_emits_fail_and_propagates():
+    added = _deploy_go_patch_result()
+    assert "P2_DEPLOY_UPLOAD_FAIL" in added
+    assert "return err" in added.split("UploadZipToService", 1)[1]
+
+
+def test_e_missing_explicit_environment_fails_closed():
+    added = _deploy_go_patch_result()
+    assert "environment-id required when project-id is explicit" in added
+    assert "environment-id required when service-id is explicit" in added
+
+
+def test_f_no_first_environment_fallback_when_project_explicit():
+    added = _deploy_go_patch_result()
+    project_branch = added.split('if opts.projectID != ""', 1)[1].split("} else if opts.serviceID")[0]
+    assert "ListEnvironments" not in project_branch
+
+
+def test_deploy_stage_diagnostics_present():
+    patch = PATCH.read_text(encoding="utf-8")
+    for key in (
+        "P2_DEPLOY_PACK_ZIP_PASS",
+        "P2_DEPLOY_CREATE_SERVICE_PASS",
+        "P2_DEPLOY_SERVICE_ID_EXPLICIT",
+        "P2_DEPLOY_ENVIRONMENT_ID_EXPLICIT",
+        "P2_DEPLOY_GRAPHQL_ENV_LOOKUP_SKIPPED",
+        "P2_DEPLOY_GRAPHQL_SERVICE_LOOKUP_SKIPPED",
+        "P2_DEPLOY_UPLOAD_STARTED",
+        "P2_DEPLOY_UPLOAD_PASS",
+        "P2_DEPLOY_UPLOAD_FAIL",
+        "P2_DEPLOY_STAGE",
+    ):
+        assert key in patch
 
 
 def test_build_script_uses_cmd_main_go_and_exit_propagation():
     script = BUILD.read_text(encoding="utf-8")
     assert 'go build -o "${OUT_BIN}" ./cmd/main.go' in script
     assert "grep -q 'os.Exit(1)'" in script
+    assert "grep -q 'P2_DEPLOY_GRAPHQL_ENV_LOOKUP_SKIPPED'" in script
+    assert "EXPLICIT_ID_DIRECT_UPLOAD_IMPLEMENTED=true" in script
     assert "P2_ZEABUR_CLI_EXIT_PROPAGATION_FIXED=true" in script
     assert "OPERATIONAL_RUNTIME_SHA_AUTHORITY=true" in script
     assert "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false" in script
