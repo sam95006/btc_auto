@@ -22,7 +22,6 @@ from tools.ci.p2_migration_bootstrap import (
     sanitize_bootstrap_failure_diagnostics,
     validate_migration_context,
 )
-from tools.ci.p2_migration_deployment_phase import evaluate_pinned_deploy_output
 from tools.ci.p2_migration_service_identity import (
     MIGRATION_SERVICE_BASE_NAME,
     assert_distinct_migration_service,
@@ -86,6 +85,14 @@ def _list_services() -> list[dict]:
         rows = zeabur_svc._list_services_cli()
         print(f"listed_services_cli={len(rows)}", file=sys.stderr)
         return rows
+
+
+def _emit_orphan_cleanup(service_id: str | None, service_name: str) -> None:
+    sid = (service_id or "").strip()
+    if sid:
+        print(f"P2_MIGRATION_ORPHAN_CLEANUP_SERVICE_ID={sid}", file=sys.stderr)
+        print(f"orphan_cleanup_service_id_prefix={safe_service_id_prefix(sid)}", file=sys.stderr)
+    print(f"orphan_cleanup_service_name_prefix={safe_service_name_prefix(service_name)}", file=sys.stderr)
 
 
 def _create_with_migration_context(
@@ -252,6 +259,7 @@ def main() -> int:
             current_image_positive_proof_count=0,
         )
         print(f"bootstrap_diag={diag}", file=sys.stderr)
+        _emit_orphan_cleanup(service_id or None, service_name)
         print("BLOCKER_create_environment_mismatch", file=sys.stderr)
         return 7
 
@@ -277,6 +285,7 @@ def main() -> int:
             current_image_positive_proof_count=0,
         )
         print(f"bootstrap_diag={diag}", file=sys.stderr)
+        _emit_orphan_cleanup(service_id or None, service_name)
         if not service_id:
             print("BLOCKER_migration_service_id_unresolved", file=sys.stderr)
             return 5
@@ -285,46 +294,9 @@ def main() -> int:
 
     print("P2_MIGRATION_CREATE_COMMAND_PASS=true", file=sys.stderr)
     print("P2_MIGRATION_CREATE_ENV_ARG_MATCH=true", file=sys.stderr)
-
-    pinned = evaluate_pinned_deploy_output(
-        deploy_output=create_raw,
-        deploy_exit=create_exit,
-        expected_service_id=service_id,
-        expected_environment_id=environment_id,
-        expected_project_id=zeabur_svc.PROJECT_ID,
-        phase="bootstrap",
-    )
-    if not pinned["ok"]:
-        print("P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=true", file=sys.stderr)
-        print("P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false", file=sys.stderr)
-        print(
-            f"P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT={str(pinned.get('P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT', False)).lower()}",
-            file=sys.stderr,
-        )
-        print("P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD=false", file=sys.stderr)
-        diag = sanitize_bootstrap_failure_diagnostics(
-            create_deploy_exit=create_exit,
-            create_deploy_output=create_raw,
-            service_id=service_id or None,
-            service_name=service_name,
-            readiness_attempts=0,
-            not_running_count=0,
-            current_image_positive_proof_count=0,
-        )
-        print(f"bootstrap_diag={diag}", file=sys.stderr)
-        print("BLOCKER_bootstrap_deploy_missing_direct_deployment_id", file=sys.stderr)
-        return 9
-
-    bootstrap_deployment_id = pinned["deployment_id"]
-    print("P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=true", file=sys.stderr)
+    print("P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false", file=sys.stderr)
     print("P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false", file=sys.stderr)
-    print(
-        f"P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT={str(pinned.get('P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT', False)).lower()}",
-        file=sys.stderr,
-    )
-    print("P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD=true", file=sys.stderr)
-    print(f"P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID={bootstrap_deployment_id}", file=sys.stderr)
-    print(f"bootstrap_deployment_id_prefix={bootstrap_deployment_id[:6]}", file=sys.stderr)
+    print("OPERATIONAL_RUNTIME_SHA_AUTHORITY=true", file=sys.stderr)
 
     learning_validation_id = (
         os.environ.get("LEARNING_VALIDATION_SERVICE_ID")

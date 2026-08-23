@@ -86,14 +86,8 @@ def test_d_no_deployment_object_fails_before_service_exec():
     assert absent["ok"] is False
     assert absent["P2_MIGRATION_DEPLOYMENT_RECORD_PRESENT"] is False
     source = WORKFLOW.read_text(encoding="utf-8")
-    record_idx = source.index("Require deployment record before service-exec")
-    op_idx = source.index("Operational service-exec readiness")
-    assert record_idx < op_idx
-    assert "BLOCKER_deployment_record_absent_before_service_exec" in source
-    assert "--deployment-get-exit" in source
-    assert "--deployment-list-exit" in source
-    assert "DEPLOYMENT_GET_EXIT=" in source
-    assert "DEPLOYMENT_LIST_EXIT=" in source
+    assert "Require deployment record before service-exec" not in source
+    assert "DEPLOYMENT_ID_AUDIT_ONLY=true" in source
 
 
 def test_record_a_status_403_error_envelope_is_not_deployment():
@@ -215,21 +209,20 @@ def test_workflow_uses_local_deploy_not_service_redeploy_after_vars():
     assert "Restart staging service once after runtime variables" not in source
     assert "P2_MIGRATION_POST_VAR_RESTART=true" not in source
     assert "P2_MIGRATION_POST_VAR_REDEPLOY=true" not in source
-    vars_idx = source.index("Inject disarmed runtime variables after bootstrap deployment ready")
+    vars_idx = source.index("Inject disarmed runtime variables after bootstrap operational proof")
     act_idx = source.index("Activation local deploy to same service after runtime variables")
-    act_ready_idx = source.index("Wait for exact activation deployment ready")
-    meta_idx = source.index("Metadata diagnostic and explicit-negative veto")
-    record_idx = source.index("Require deployment record before service-exec")
-    op_idx = source.index("Operational service-exec readiness")
-    assert vars_idx < act_idx < act_ready_idx < meta_idx < record_idx < op_idx
+    act_ready_idx = source.index("Activation operational readiness before migration")
+    meta_idx = source.index("Metadata diagnostic audit-only")
+    migrate_idx = source.index("Apply and verify only migration 0007 through atomic same-exec")
+    assert vars_idx < act_idx < act_ready_idx < meta_idx < migrate_idx
     activation_block = source[act_idx:meta_idx]
     cmd = activation_block[activation_block.index("--project-id \"$ZEABUR_PROJECT_ID\"") :]
     cmd = cmd.split(")", 1)[0]
     assert "--create" not in cmd
     assert "--service-id \"$SERVICE_ID\"" in cmd
     assert "--environment-id \"$ZEABUR_ENV_ID\"" in cmd
-    assert "--evaluate-pinned-deploy" in source
-    assert "deployment get --deployment-id" in source
+    assert "DEPLOYMENT_ID_AUDIT_ONLY=true" in source
+    assert "OPERATIONAL_RUNTIME_SHA_AUTHORITY=true" in source
     assert "build_p2_zeabur_cli.sh" in source
 
 

@@ -56,15 +56,18 @@ def collect_valid_deployment_ids(payload: Any) -> frozenset[str]:
 
 
 def audit_deploy_output_deployment_id(deploy_output: str, *, pinned_cli: bool = False) -> dict[str, Any]:
-    """Audit deploy --json; pinned P2 CLI makes deployment_id control authority."""
+    """Audit deploy output only — deployment IDs are never migration control authority."""
+    del pinned_cli
     optional_id = extract_deployment_id_from_output(deploy_output or "")
-    authority = bool(pinned_cli)
+    marker = extract_direct_upload_marker_deployment_id(deploy_output or "")
     return {
-        "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY": authority,
+        "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY": False,
         "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY": False,
-        "P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD": authority and bool(optional_id),
+        "P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD": False,
+        "DEPLOYMENT_ID_AUDIT_ONLY": True,
         "deploy_output_deployment_id_present": bool(optional_id),
         "deploy_output_deployment_id_prefix": optional_id[:6] if optional_id else "",
+        "marker_deployment_id_present": bool(marker.get("deployment_id")),
         "create_order_calls": 0,
         "exchange_write_call_count": 0,
     }
@@ -104,7 +107,7 @@ def evaluate_pinned_deploy_output(
     phase: str = "bootstrap",
     bootstrap_deployment_id: str = "",
 ) -> dict[str, Any]:
-    """Pinned P2 CLI: deployment_id from upload marker (primary) or JSON (compat)."""
+    """Audit-only parse of optional deploy output markers/JSON — never control authority."""
     from tools.ci.p2_migration_bootstrap import extract_create_deploy_ids
 
     phase_norm = (phase or "").strip().lower()
@@ -124,15 +127,8 @@ def evaluate_pinned_deploy_output(
     ids = extract_create_deploy_ids(text)
     json_deployment_id = (ids.get("deployment_id") or "").strip() or extract_deployment_id_from_output(text)
     marker_id = (marker.get("deployment_id") or "").strip()
-    marker_present = bool(marker.get("marker_present"))
-    marker_malformed = bool(marker.get("malformed"))
-
     conflict = bool(marker_id and json_deployment_id and marker_id != json_deployment_id)
-    if marker_id:
-        deployment_id = marker_id
-    else:
-        deployment_id = json_deployment_id
-
+    deployment_id = marker_id or json_deployment_id
     returned_sid = (ids.get("service_id") or "").strip()
     returned_env = (ids.get("environment_id") or "").strip()
     returned_project = (ids.get("project_id") or "").strip()
@@ -151,24 +147,16 @@ def evaluate_pinned_deploy_output(
     distinct_ok = True
     if phase_norm == "activation":
         bootstrap_id = (bootstrap_deployment_id or "").strip()
-        distinct_ok = bool(bootstrap_id) and deployment_id != bootstrap_id
+        distinct_ok = (not bootstrap_id) or (not deployment_id) or deployment_id != bootstrap_id
 
-    ok = bool(
-        exit_ok
-        and id_ok
-        and service_match
-        and env_match
-        and project_match
-        and distinct_ok
-        and not semantic
-        and not marker_malformed
-        and not conflict
+    audit_parse_ok = bool(
+        exit_ok and not semantic and not marker.get("malformed") and not conflict and service_match and env_match and project_match
     )
     return {
-        "ok": ok,
+        "ok": audit_parse_ok,
         "phase": phase_norm,
-        "deployment_id": deployment_id if id_ok and not conflict and not marker_malformed else "",
-        "deployment_id_prefix": deployment_id[:6] if id_ok and not conflict and not marker_malformed else "",
+        "deployment_id": deployment_id if id_ok and not conflict else "",
+        "deployment_id_prefix": deployment_id[:6] if id_ok and not conflict else "",
         "exit_code": deploy_exit,
         "cli_semantic_error": semantic or "",
         "service_match": service_match,
@@ -176,11 +164,13 @@ def evaluate_pinned_deploy_output(
         "project_match": project_match,
         "distinct_from_bootstrap": distinct_ok,
         "marker_json_conflict": conflict,
-        "marker_malformed": marker_malformed,
-        "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY": True,
+        "marker_malformed": bool(marker.get("malformed")),
+        "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY": False,
         "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY": False,
-        "P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT": marker_present,
-        "P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD": bool(ok and id_ok),
+        "DEPLOYMENT_ID_AUDIT_ONLY": True,
+        "P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT": bool(marker.get("marker_present")),
+        "P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD": False,
+        "OPERATIONAL_RUNTIME_SHA_AUTHORITY": True,
         "create_order_calls": 0,
         "exchange_write_call_count": 0,
     }
@@ -703,10 +693,10 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps(result, sort_keys=True))
         if args.emit_env:
-            print("P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=true")
+            print("P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false")
             print("P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false")
+            print("DEPLOYMENT_ID_AUDIT_ONLY=true")
             print(f"P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT={str(result.get('P2_ZEABUR_DIRECT_UPLOAD_MARKER_PRESENT', False)).lower()}")
-            print(f"P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD={str(result.get('P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD', False)).lower()}")
             if result.get("deployment_id"):
                 if args.phase == "bootstrap":
                     print(f"P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID={result['deployment_id']}")
@@ -714,9 +704,7 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     print(f"P2_MIGRATION_ACTIVATION_DEPLOYMENT_ID={result['deployment_id']}")
                     print(f"activation_deployment_id={result['deployment_id']}")
-        return 0 if result["ok"] else 1
-
-    if args.discover_bootstrap:
+        return 0
         result = evaluate_bootstrap_deployment_discovery(
             deployment_list_raw=list_raw,
             deployment_list_exit=list_exit,

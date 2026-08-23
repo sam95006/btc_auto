@@ -195,10 +195,12 @@ def test_k_helper_stderr_diagnostics_visible_on_controlled_failure():
     assert "ZEABUR_TOKEN" not in sanitized
 
 
-def test_l_workflow_uses_pinned_cli_not_list_discovery():
+def test_l_workflow_uses_runtime_authority_not_deployment_id_control():
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "build_p2_zeabur_cli.sh" in source
     assert "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false" in source
+    assert "DEPLOYMENT_ID_AUDIT_ONLY=true" in source
+    assert "Bootstrap operational readiness before runtime variables" in source
     assert "--discover-bootstrap" not in source
     assert "--discover-activation" not in source
 

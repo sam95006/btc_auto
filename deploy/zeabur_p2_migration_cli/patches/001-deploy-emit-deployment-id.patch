@@ -1,116 +1,12 @@
-diff --git a/internal/cmd/deploy/deploy.go b/internal/cmd/deploy/deploy.go
-index 998c8b5..4e4636e 100644
---- a/internal/cmd/deploy/deploy.go
-+++ b/internal/cmd/deploy/deploy.go
-@@ -3,6 +3,7 @@ package deploy
- import (
- 	"context"
- 	"fmt"
-+	"os"
- 
- 	"github.com/briandowns/spinner"
- 	"github.com/spf13/cobra"
-@@ -138,12 +139,19 @@ func runDeploy(f *cmdutil.Factory, opts *Options) error {
- 	)
- 	s.Start()
- 
--	_, err = f.ApiClient.UploadZipToService(context.Background(), projectID, service.ID, environment.ID, bytes)
-+	deployment, err := f.ApiClient.UploadZipToService(context.Background(), projectID, service.ID, environment.ID, bytes)
- 	if err != nil {
- 		return err
- 	}
-+	if deployment == nil || deployment.ID == "" {
-+		return fmt.Errorf("upload returned empty deployment id")
-+	}
- 	s.Stop()
- 
-+	fmt.Fprintf(os.Stderr, "P2_ZEABUR_UPLOAD_DEPLOYMENT_ID=%s\n", deployment.ID)
-+	fmt.Fprintf(os.Stderr, "P2_ZEABUR_UPLOAD_SERVICE_ID=%s\n", service.ID)
-+	fmt.Fprintf(os.Stderr, "P2_ZEABUR_UPLOAD_ENVIRONMENT_ID=%s\n", environment.ID)
-+
- 	domainName := opts.domainName
- 
- 	if domainName == "" {
-@@ -153,6 +161,7 @@ func runDeploy(f *cmdutil.Factory, opts *Options) error {
- 				"service_id":     service.ID,
- 				"project_id":     projectID,
- 				"environment_id": environment.ID,
-+				"deployment_id":  deployment.ID,
- 				"message":        "Service deployed successfully",
- 			})
+diff --git a/cmd/main.go b/cmd/main.go
+index da5c524..ae24788 100644
+--- a/cmd/main.go
++++ b/cmd/main.go
+@@ -40,6 +40,7 @@ func main() {
+ 			factory.Log = log.NewInfoLevel()
  		}
-@@ -181,6 +190,7 @@ func runDeploy(f *cmdutil.Factory, opts *Options) error {
- 			"project_id":     projectID,
- 			"environment_id": environment.ID,
- 			"domain":         *domain,
-+			"deployment_id":  deployment.ID,
- 			"message":        "Service deployed successfully",
- 		})
+ 		factory.Log.Error(err)
++		os.Exit(1)
  	}
-diff --git a/pkg/api/interface.go b/pkg/api/interface.go
-index 6c0c45a..74a4043 100644
---- a/pkg/api/interface.go
-+++ b/pkg/api/interface.go
-@@ -96,7 +96,7 @@ type (
- 		CreatePrebuiltServiceRaw(ctx context.Context, projectID string, rawSchema string) (*model.Service, error)
- 		CreateService(ctx context.Context, projectID string, name string, repoID int, branchName string) (*model.Service, error)
- 		CreateEmptyService(ctx context.Context, projectID string, name string) (*model.Service, error)
--		UploadZipToService(ctx context.Context, projectID string, serviceID string, environmentID string, zipBytes []byte) (*model.Service, error)
-+		UploadZipToService(ctx context.Context, projectID string, serviceID string, environmentID string, zipBytes []byte) (*model.Deployment, error)
- 		GetDNSName(ctx context.Context, serviceID string) (string, error)
- 		GetPortForwardingMode(ctx context.Context, serviceID string, environmentID string) (model.PortForwardingMode, error)
- 		UpdatePortForwardingMode(ctx context.Context, serviceID string, environmentID string, mode model.PortForwardingMode) error
-diff --git a/pkg/api/service.go b/pkg/api/service.go
-index 2f6dfe5..20fc6a1 100644
---- a/pkg/api/service.go
-+++ b/pkg/api/service.go
-@@ -9,6 +9,7 @@ import (
- 	"errors"
- 	"fmt"
- 	"net/http"
-+	"regexp"
- 	"strconv"
- 	"time"
- 
-@@ -18,6 +19,8 @@ import (
- 	"github.com/zeabur/cli/pkg/util"
- )
- 
-+var deploymentIDFromPrepareURL = regexp.MustCompile(`/deployments/([0-9a-fA-F]{24})`)
-+
- func (c *client) ListServices(ctx context.Context, projectID string, skip, limit int) (*model.Connection[model.Service], error) {
- 	var query struct {
- 		Services *model.Connection[model.Service] `graphql:"services(projectID: $projectID, skip: $skip, limit: $limit)"`
-@@ -352,7 +355,7 @@ func (c *client) CreateEmptyService(ctx context.Context, projectID string, name
- 	return &mutation.CreateService, nil
  }
  
--func (c *client) UploadZipToService(ctx context.Context, projectID string, serviceID string, environmentID string, zipBytes []byte) (*model.Service, error) {
-+func (c *client) UploadZipToService(ctx context.Context, projectID string, serviceID string, environmentID string, zipBytes []byte) (*model.Deployment, error) {
- 	// Step 1: Calculate SHA256 hash of content
- 	h := sha256.New()
- 	if _, err := h.Write(zipBytes); err != nil {
-@@ -469,7 +472,22 @@ func (c *client) UploadZipToService(ctx context.Context, projectID string, servi
- 		return nil, util.FormatHTTPError("failed to prepare upload", resp)
- 	}
- 
--	return nil, nil
-+	var prepareResult struct {
-+		URL string `json:"url"`
-+	}
-+	if err := json.NewDecoder(resp.Body).Decode(&prepareResult); err != nil {
-+		return nil, fmt.Errorf("failed to decode prepare response: %w", err)
-+	}
-+	match := deploymentIDFromPrepareURL.FindStringSubmatch(prepareResult.URL)
-+	if len(match) < 2 {
-+		return nil, fmt.Errorf("deployment id not found in prepare url")
-+	}
-+	return &model.Deployment{
-+		ID:            match[1],
-+		ProjectID:     projectID,
-+		ServiceID:     serviceID,
-+		EnvironmentID: environmentID,
-+	}, nil
- }
- 
- func (c *client) GetDNSName(ctx context.Context, serviceID string) (string, error) {

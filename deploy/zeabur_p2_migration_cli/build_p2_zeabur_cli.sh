@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# P2 migration only — builds pinned upstream zeabur/cli with deployment_id patch.
+# P2 migration only — pinned upstream zeabur/cli with Execute() exit-code propagation.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -11,6 +11,7 @@ WORKDIR="${P2_ZEABUR_CLI_BUILD_DIR:-/tmp/zeabur-cli-p2-build}"
 PIN="$(tr -d ' \r\n' < "${PIN_FILE}")"
 test -n "${PIN}"
 test -f "${PATCH_FILE}"
+grep -q 'os.Exit(1)' "${PATCH_FILE}"
 
 rm -rf "${WORKDIR}"
 git clone --filter=blob:none --no-checkout https://github.com/zeabur/cli.git "${WORKDIR}"
@@ -24,15 +25,10 @@ git clone --filter=blob:none --no-checkout https://github.com/zeabur/cli.git "${
   go build -o "${OUT_BIN}" ./cmd/main.go
 )
 
-# Runtime self-proof: workflow must be using the patched binary, not another CLI.
-if command -v strings >/dev/null 2>&1; then
-  strings "${OUT_BIN}" | grep -q 'P2_ZEABUR_UPLOAD_DEPLOYMENT_ID'
-else
-  grep -aq 'P2_ZEABUR_UPLOAD_DEPLOYMENT_ID' "${OUT_BIN}"
-fi
-
 echo "P2_PINNED_ZEABUR_CLI_IMPLEMENTED=true"
 echo "P2_ZEABUR_PINNED_UPSTREAM_COMMIT=${PIN}"
-echo "P2_ZEABUR_DEPLOYMENT_ID_DIRECT_FROM_UPLOAD=true"
-echo "P2_PINNED_CLI_DIRECT_MARKER_BINARY_PROOF=true"
+echo "P2_ZEABUR_CLI_EXIT_PROPAGATION_FIXED=true"
+echo "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false"
+echo "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false"
+echo "OPERATIONAL_RUNTIME_SHA_AUTHORITY=true"
 "${OUT_BIN}" version 2>/dev/null || true

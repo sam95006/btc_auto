@@ -153,13 +153,12 @@ def test_g_bootstrap_superseded_when_canceled_after_early_activation():
 
 def test_h_migration_cannot_start_before_activation_readiness_in_workflow():
     source = WORKFLOW.read_text(encoding="utf-8")
-    act_ready_idx = source.index("Wait for exact activation deployment ready")
-    op_idx = source.index("Operational service-exec readiness")
+    act_ready_idx = source.index("Activation operational readiness before migration")
     migration_idx = source.index("Apply and verify only migration 0007 through atomic same-exec")
-    assert act_ready_idx < op_idx < migration_idx
-    assert "Wait for bootstrap deployment ready before runtime variables" in source
-    bootstrap_idx = source.index("Wait for bootstrap deployment ready before runtime variables")
-    vars_idx = source.index("Inject disarmed runtime variables after bootstrap deployment ready")
+    assert act_ready_idx < migration_idx
+    assert "Bootstrap operational readiness before runtime variables" in source
+    bootstrap_idx = source.index("Bootstrap operational readiness before runtime variables")
+    vars_idx = source.index("Inject disarmed runtime variables after bootstrap operational proof")
     assert bootstrap_idx < vars_idx
 
 
@@ -175,14 +174,14 @@ def test_i_zero_exchange_writes_on_phase_surfaces():
     assert result["create_order_calls"] == 0
 
 
-def test_j_workflow_uses_list_discovery_for_deployment_ids():
+def test_j_workflow_uses_runtime_authority_not_deployment_id_control():
     source = WORKFLOW.read_text(encoding="utf-8")
-    assert "bootstrap_deployment_id=" in source
-    assert "P2_MIGRATION_BOOTSTRAP_DEPLOYMENT_ID=" in source
-    assert "activation_deployment_id=" in source
+    assert "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false" in source
+    assert "DEPLOYMENT_ID_AUDIT_ONLY=true" in source
     assert "build_p2_zeabur_cli.sh" in source
     assert "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false" in source
-    assert "deployment get --deployment-id" in source
+    assert "BOOTSTRAP_THREE_PASS_RUNTIME_PROOF=true" in source
+    assert "ACTIVATION_THREE_PASS_RUNTIME_PROOF=true" in source
 
 
 def test_k_deploy_record_exact_id_isolates_canceled_bootstrap():
