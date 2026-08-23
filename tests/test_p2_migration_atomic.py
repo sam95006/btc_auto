@@ -27,6 +27,7 @@ from tools.ci.p2_migration_atomic import (
 FIXTURE_CURRENT_SHA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 FIXTURE_OLD_SHA = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 WORKFLOW = Path(".github/workflows/founder_approved_staging_postgres_p2_migration.yml")
+ROOT = Path(__file__).resolve().parents[1]
 SAFE = dict(
     postgres_url="postgresql://ledger",
     mainnet="false",
@@ -203,26 +204,23 @@ def test_prebootstrap_import_failure_is_sanitized(tmp_path: Path):
     assert (tmp_path / "p2_migration_prebootstrap_failure.json").exists()
 
 
-def test_workflow_uses_atomic_same_exec_and_baked_sha():
+def test_workflow_uses_persistent_service_and_atomic_same_exec():
     source = WORKFLOW.read_text(encoding="utf-8")
-    assert "nexus-p2m7-${{ github.run_id }}-${{ github.run_attempt }}" in source
-    assert "python -m tools.ci.ensure_p2_migration_zeabur_service" in source
-    assert "DEPLOYMENT_COMMIT" in source
-    assert "SOURCE_COMMIT" in source
-    assert "build_migration_context" in source
-    assert "P2_MIGRATION_DEPLOYMENT_CONVERGED=true" in source
+    assert "vars.ZEABUR_P2_MIGRATION_CONTROL_SERVICE_ID" in source
+    assert "ensure_p2_migration_zeabur_service" not in source
+    assert "build_migration_context" not in source
+    assert "ZEABUR_GIT_COMMIT_SHA" in (ROOT / "deploy" / "zeabur_p2_migration_0007" / "Dockerfile.git").read_text(encoding="utf-8")
     assert "p2_migration_atomic.py --print-remote-script" in source
     assert "python -m tools.ci.p2_extract_migration_authoritative_stdout" in source
     assert "python -m tools.ci.p2_migration_parse_service_exec" in source
     assert "file_channel_authoritative=false" in source
     assert "Require migration helper imports before apply" not in source
-    assert source.index("Activation operational readiness before migration") < source.index(
+    assert source.index("Operational runtime readiness before migration") < source.index(
         "Apply and verify only migration 0007 through atomic same-exec"
     )
     assert "python -m tools.ci.p2_staging_migration_0007" in source
     assert "P2_MIGRATION_SERVICE_EXEC_STDOUT_PASS=true" in source
     assert "P2_MIGRATION_FILE_CHANNEL_AUDIT=true" in source
-    assert "P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true" in source
     from tools.ci.p2_migration_bootstrap import DOCKERFILE_BODY
 
     assert "COPY DEPLOYMENT_COMMIT /app/DEPLOYMENT_COMMIT" in DOCKERFILE_BODY

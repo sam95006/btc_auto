@@ -4,6 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from tools.ci.p2_migration_rollout_readiness import (
+    ACTIVATION_READINESS_PASS_MARKER,
     BOOTSTRAP_READINESS_PASS_MARKER,
     CURRENT_IMAGE_PROBE_PASS_MARKER,
     INLINE_CURRENT_IMAGE_PROBE_SH,
@@ -191,13 +192,13 @@ def test_workflow_requires_positive_proof_marker_not_exit_code():
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "P2_MIGRATION_OPERATIONAL_READINESS_PASS=true" in source
     assert "P2_MIGRATION_SERVICE_NOT_RUNNING_YET=true" in source
-    assert BOOTSTRAP_READINESS_PASS_MARKER in source
+    assert ACTIVATION_READINESS_PASS_MARKER in source
     assert "safety_flags_ok=" in INLINE_CURRENT_IMAGE_PROBE_SH
     readiness = source[
-        source.index("Bootstrap operational readiness before runtime variables") : source.index(
-            "Inject disarmed runtime variables after bootstrap operational proof"
+        source.index("Operational runtime readiness before migration") : source.index(
+            "Metadata diagnostic audit-only"
         )
     ]
     assert 'if [ "$CODE" = 0 ]; then' not in readiness
-    assert "bootstrap_readiness_streak=" in readiness
-    assert "MAX_ATTEMPTS=12" in readiness
+    assert "runtime_readiness_streak=" in readiness
+    assert "MAX_ATTEMPTS=24" in readiness

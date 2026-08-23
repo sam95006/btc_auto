@@ -166,39 +166,25 @@ def test_service_exec_log_lines_are_parsed_as_data_not_python(tmp_path: Path):
     assert "SyntaxError" not in proc.stderr
 
 
-def test_workflow_uses_run_scoped_migration_service_and_file_parser():
+def test_workflow_uses_persistent_git_bound_migration_service():
     source = WORKFLOW.read_text(encoding="utf-8")
-    assert "P2_MIGRATION_SERVICE_NAME: nexus-p2m7-${{ github.run_id }}-${{ github.run_attempt }}" in source
-    assert 'SERVICE_NAME: nexus-p2-migration-0007' not in source
-    assert "P2_MIGRATION_RUN_SCOPED_SERVICE=true" in source
-    assert "P2_MIGRATION_PREVIOUS_SERVICE_REUSED=false" in source
-    assert "P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true" in source
-    assert "python -m tools.ci.ensure_p2_migration_zeabur_service" in source
-    assert "python tools/ci/ensure_p2_migration_zeabur_service.py" not in source
-    assert "ensure_demo_validation_zeabur_service.py" not in source
-    assert "nexus-bybit-demo-learning-validation" not in source
+    assert "vars.ZEABUR_P2_MIGRATION_CONTROL_SERVICE_ID" in source
+    assert "PERSISTENT_GIT_BOUND_MIGRATION_SERVICE_ARCHITECTURE=true" in source
+    assert "ensure_p2_migration_zeabur_service" not in source
     assert "python -m tools.ci.p2_migration_parse_service_exec" in source
     assert "python -m tools.ci.p2_extract_migration_authoritative_stdout" in source
     assert "python - <<'PY' < /tmp/p2_migration_service_exec.out" not in source
     assert "MAX_ATTEMPTS=3" in source
     assert "MAX_ATTEMPTS=36" not in source
-    assert "build_migration_context" in source
-    assert "zeabur_p2_migration_0007" in (ROOT / "tools" / "ci" / "p2_migration_bootstrap.py").read_text(encoding="utf-8")
+    assert "Operational runtime readiness before migration" in source
     assert "/tmp/nexus_p2_migration_0007/" in source
-    resolve_idx = source.index("Create run-scoped migration service with single migration-context deploy")
+    ready_idx = source.index("Operational runtime readiness before migration")
     apply_idx = source.index("Apply and verify only migration 0007 through atomic same-exec")
-    resolve_block = source[resolve_idx:apply_idx]
-    assert "PYTHONPATH: ${{ github.workspace }}" in resolve_block
-    assert "python -m tools.ci.ensure_p2_migration_zeabur_service" in resolve_block
-    assert "P2_MIGRATION_SERVICE_NAME" in resolve_block
-    assert "P2_MIGRATION_CONTEXT_DIR" in resolve_block
-    assert "github.run_id" in resolve_block
+    assert ready_idx < apply_idx
     assert "P2_MIGRATION_SERVICE_EXEC_STDOUT_PASS=true" in source
     assert "P2_MIGRATION_FILE_CHANNEL_AUDIT=true" in source
     assert "Prove migration service exec and file download share filesystem" not in source
     assert 'test "$FOUND" = true' not in source
-    assert source.index("Build migration deployment context before service create") < resolve_idx
-    assert "P2_MIGRATION_SECOND_SERVICE_CREATED=false" in source
 
 
 def test_ensure_p2_migration_module_invocation_bootstraps_without_tools_import_error():

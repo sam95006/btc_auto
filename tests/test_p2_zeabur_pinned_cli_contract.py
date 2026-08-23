@@ -225,31 +225,22 @@ def test_create_pass_without_deployment_id():
     assert command["ok"] is True
 
 
-def test_workflow_uses_runtime_authority_not_deployment_id_control():
+def test_workflow_no_longer_uses_pinned_cli_build():
     source = WORKFLOW.read_text(encoding="utf-8")
-    assert "build_p2_zeabur_cli.sh" in source
-    assert "P2_ZEABUR_CLI_EXIT_PROPAGATION_FIXED=true" in source
-    assert "Bootstrap operational readiness before runtime variables" in source
-    assert "Activation operational readiness before migration" in source
+    assert "build_p2_zeabur_cli.sh" not in source
+    assert "setup-go" not in source
+    assert "Operational runtime readiness before migration" in source
     assert "OPERATIONAL_RUNTIME_SHA_AUTHORITY=true" in source
     assert "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false" in source
     assert "DEPLOYMENT_ID_AUDIT_ONLY=true" in source
-    assert "P2_MIGRATION_ORPHAN_CLEANUP_SERVICE_ID=" in source
-    assert "BOOTSTRAP_THREE_PASS_RUNTIME_PROOF=true" in source
+    assert "THREE_CONSECUTIVE_RUNTIME_PROOFS_REQUIRED=true" in source
     assert "ACTIVATION_THREE_PASS_RUNTIME_PROOF=true" in source
     assert "ACTIVATION_DSN_PRESENCE_PROOF=true" in source
-    assert "Wait for bootstrap deployment ready before runtime variables" not in source
-    assert "Wait for exact activation deployment ready" not in source
-    assert "Require deployment record before service-exec" not in source
-    assert "Operational service-exec readiness" not in source
-    assert "BLOCKER_bootstrap_deploy_missing_direct_deployment_id" not in source
-    create_idx = source.index("Create run-scoped migration service with single migration-context deploy")
-    bootstrap_idx = source.index("Bootstrap operational readiness before runtime variables")
-    vars_idx = source.index("Inject disarmed runtime variables after bootstrap operational proof")
-    act_idx = source.index("Activation local deploy to same service after runtime variables")
-    act_ready_idx = source.index("Activation operational readiness before migration")
+    assert "vars.ZEABUR_P2_MIGRATION_CONTROL_SERVICE_ID" in source
+    assert "Create run-scoped migration service" not in source
+    ready_idx = source.index("Operational runtime readiness before migration")
     migrate_idx = source.index("Apply and verify only migration 0007 through atomic same-exec")
-    assert create_idx < bootstrap_idx < vars_idx < act_idx < act_ready_idx < migrate_idx
+    assert ready_idx < migrate_idx
 
 
 def test_zero_exchange_writes():

@@ -46,28 +46,24 @@ def test_migration_workflow_is_dispatch_only_and_disarmed() -> None:
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "workflow_dispatch:" in source
     assert "APPLY_NEXUS_STAGING_P2_MIGRATION_0007" in source
-    assert "nexus-p2m7-${{ github.run_id }}-${{ github.run_attempt }}" in source
-    assert "P2_MIGRATION_RUN_SCOPED_SERVICE=true" in source
-    assert "P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true" in source
-    assert "P2_MIGRATION_PREVIOUS_SERVICE_REUSED=false" in source
-    assert 'SERVICE_NAME: nexus-p2-migration-0007' not in source
-    assert "python -m tools.ci.ensure_p2_migration_zeabur_service" in source
-    assert "Build migration deployment context before service create" in source
-    assert "P2_MIGRATION_SECOND_SERVICE_CREATED=false" in source
-    assert "zeabur deploy --project-id \"$ZEABUR_PROJECT_ID\" --service-id \"$SERVICE_ID\"" not in source
-    assert "python tools/ci/ensure_p2_migration_zeabur_service.py" not in source
+    assert "vars.ZEABUR_P2_MIGRATION_CONTROL_SERVICE_ID" in source
+    assert "PERSISTENT_GIT_BOUND_MIGRATION_SERVICE_ARCHITECTURE=true" in source
+    assert "nexus-p2m7-${{ github.run_id }}" not in source
+    assert "python -m tools.ci.ensure_p2_migration_zeabur_service" not in source
+    assert "build_migration_context" not in source
+    assert "zeabur deploy \\\n" not in source
+    assert 'zeabur deploy --project-id' not in source
     assert "p2_migration_atomic.py --print-remote-script" in source
     assert "python -m tools.ci.p2_extract_migration_authoritative_stdout" in source
     assert "python -m tools.ci.p2_migration_parse_service_exec" in source
-    assert "P2_MIGRATION_DEPLOYMENT_CONVERGED=true" in source
     assert "Require migration helper imports before apply" not in source
     assert "Apply and verify only migration 0007 through atomic same-exec" in source
     assert "file_channel_authoritative=false" in source
-    assert "MAINNET false" in source
-    assert "REAL_MONEY false" in source
-    assert "DEMO_AUTONOMOUS_ENABLED false" in source
-    assert "AUTONOMOUS_SEND false" in source
-    assert "EXCHANGE_WRITE false" in source
+    assert "MAINNET false" in source or 'MAINNET: "false"' in source
+    assert "REAL_MONEY false" in source or 'REAL_MONEY: "false"' in source
+    assert "DEMO_AUTONOMOUS_ENABLED false" in source or 'DEMO_AUTONOMOUS_ENABLED: "false"' in source
+    assert "AUTONOMOUS_SEND false" in source or 'AUTONOMOUS_SEND: "false"' in source
+    assert "EXCHANGE_WRITE false" in source or 'EXCHANGE_WRITE: "false"' in source
     assert "NEXUS_POSTGRES_URL" in source
     assert "zeabur variable delete" in source
     assert "p2_parse_migration_stdout.py" in source
@@ -77,16 +73,14 @@ def test_migration_workflow_is_dispatch_only_and_disarmed() -> None:
     assert "P2_MIGRATION_SERVICE_EXEC_STDOUT_PASS=true" in source
     assert "P2_MIGRATION_FILE_CHANNEL_AUDIT=true" in source
     assert "P2_MIGRATION_OPERATIONAL_READINESS_PASS=true" in source
-    assert "not_running_count=" in source
-    assert "bootstrap_positive_proof_count=" in source or "activation_positive_proof_count=" in source
+    assert "not_running_count=" in source or "runtime_not_running_count=" in source
+    assert "runtime_positive_proof_count=" in source or "activation_positive_proof_count=" in source
     assert "p2_historical_p1_p2_regression_lock" in source
     assert "Metadata diagnostic audit-only" in source
-    assert "Activation operational readiness before migration" in source
-    assert "Bootstrap operational readiness before runtime variables" in source
+    assert "Operational runtime readiness before migration" in source
     assert "p2_migration_deployment_diagnostics" in source
-    assert "P2_MIGRATION_OPERATIONAL_READINESS_PASS=true" in source
-    assert source.index("Bootstrap operational readiness before runtime variables") < source.index(
-        "Activation operational readiness before migration"
+    assert source.index("Operational runtime readiness before migration") < source.index(
+        "Apply and verify only migration 0007 through atomic same-exec"
     )
 
 class _PostVerifyPool:

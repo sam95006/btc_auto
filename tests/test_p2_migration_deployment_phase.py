@@ -151,15 +151,12 @@ def test_g_bootstrap_superseded_when_canceled_after_early_activation():
     assert result["hard_fail"] is True
 
 
-def test_h_migration_cannot_start_before_activation_readiness_in_workflow():
+def test_h_migration_cannot_start_before_runtime_readiness_in_workflow():
     source = WORKFLOW.read_text(encoding="utf-8")
-    act_ready_idx = source.index("Activation operational readiness before migration")
+    ready_idx = source.index("Operational runtime readiness before migration")
     migration_idx = source.index("Apply and verify only migration 0007 through atomic same-exec")
-    assert act_ready_idx < migration_idx
-    assert "Bootstrap operational readiness before runtime variables" in source
-    bootstrap_idx = source.index("Bootstrap operational readiness before runtime variables")
-    vars_idx = source.index("Inject disarmed runtime variables after bootstrap operational proof")
-    assert bootstrap_idx < vars_idx
+    assert ready_idx < migration_idx
+    assert "Bootstrap operational readiness before runtime variables" not in source
 
 
 def test_i_zero_exchange_writes_on_phase_surfaces():
@@ -178,9 +175,9 @@ def test_j_workflow_uses_runtime_authority_not_deployment_id_control():
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "P2_MIGRATION_DEPLOY_OUTPUT_DEPLOYMENT_ID_AUTHORITY=false" in source
     assert "DEPLOYMENT_ID_AUDIT_ONLY=true" in source
-    assert "build_p2_zeabur_cli.sh" in source
+    assert "build_p2_zeabur_cli.sh" not in source
     assert "P2_MIGRATION_DEPLOYMENT_LIST_AUTHORITY=false" in source
-    assert "BOOTSTRAP_THREE_PASS_RUNTIME_PROOF=true" in source
+    assert "THREE_CONSECUTIVE_RUNTIME_PROOFS_REQUIRED=true" in source
     assert "ACTIVATION_THREE_PASS_RUNTIME_PROOF=true" in source
 
 

@@ -117,9 +117,9 @@ def test_f_three_consecutive_operational_proofs():
 
 def test_g_migration_cannot_start_before_operational_pass_in_workflow():
     source = WORKFLOW.read_text(encoding="utf-8")
-    act_ready_idx = source.index("Activation operational readiness before migration")
+    ready_idx = source.index("Operational runtime readiness before migration")
     apply_idx = source.index("Apply and verify only migration 0007 through atomic same-exec")
-    assert act_ready_idx < apply_idx
+    assert ready_idx < apply_idx
     assert "P2_MIGRATION_ACTIVATION_OPERATIONAL_READINESS_PASS=true" in source
     assert "Metadata diagnostic audit-only" in source
 

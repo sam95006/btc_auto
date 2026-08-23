@@ -234,9 +234,18 @@ def test_semantic_cli_error_stops_wait_on_first_attempt():
 def test_workflow_metadata_audit_only_then_operational_readiness():
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "Metadata diagnostic audit-only" in source
-    assert "Activation operational readiness before migration" in source
-    assert "Bootstrap operational readiness before runtime variables" in source
+    assert "Operational runtime readiness before migration" in source
+    assert "Bootstrap operational readiness before runtime variables" not in source
     assert "Wait for Zeabur deployment RUNNING before service-exec probes" not in source
+    ready = source[
+        source.index("Operational runtime readiness before migration") : source.index(
+            "Metadata diagnostic audit-only"
+        )
+    ]
+    assert "P2_MIGRATION_OPERATIONAL_READINESS_PASS=true" in ready
+    assert "runtime_readiness_streak=" in ready
+    assert "MAX_ATTEMPTS=24" in ready
+    assert "STREAK_NEEDED=3" in ready
     meta = source[
         source.index("Metadata diagnostic audit-only") : source.index(
             "Prove authoritative service-exec stdout transport"
@@ -244,15 +253,6 @@ def test_workflow_metadata_audit_only_then_operational_readiness():
     ]
     assert 'zeabur service get --id "$SERVICE_ID"' in meta
     assert "P2_MIGRATION_METADATA_AUDIT_ONLY=true" in meta
-    op = source[
-        source.index("Activation operational readiness before migration") : source.index(
-            "Prove authoritative service-exec stdout transport"
-        )
-    ]
-    assert "P2_MIGRATION_OPERATIONAL_READINESS_PASS=true" in op
-    assert "activation_readiness_streak=" in op
-    assert "MAX_ATTEMPTS=12" in op
-    assert "STREAK_NEEDED=3" in op
 
 
 def test_container_image_build_log_na_is_informational_not_failure():

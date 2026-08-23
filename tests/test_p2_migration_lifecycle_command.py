@@ -194,36 +194,21 @@ def test_i_zero_exchange_writes_on_lifecycle_surfaces():
     assert record["exchange_write_call_count"] == 0
 
 
-def test_workflow_uses_local_deploy_not_service_redeploy_after_vars():
+def test_workflow_uses_persistent_service_not_local_deploy():
     source = WORKFLOW.read_text(encoding="utf-8")
-    assert "Activation local deploy to same service after runtime variables" in source
-    assert "zeabur deploy" in source
-    assert '--project-id "$ZEABUR_PROJECT_ID"' in source
-    assert '--service-id "$SERVICE_ID"' in source
-    assert '--environment-id "$ZEABUR_ENV_ID"' in source
-    assert "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY=true" in source
-    assert "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COMMAND_PASS=true" in source
-    assert "P2_MIGRATION_POST_VAR_SOURCE_IDENTITY_PASS" in source
-    assert "p2_migration_lifecycle_command" in source
-    assert "zeabur service redeploy" not in source
-    assert "Restart staging service once after runtime variables" not in source
-    assert "P2_MIGRATION_POST_VAR_RESTART=true" not in source
-    assert "P2_MIGRATION_POST_VAR_REDEPLOY=true" not in source
-    vars_idx = source.index("Inject disarmed runtime variables after bootstrap operational proof")
-    act_idx = source.index("Activation local deploy to same service after runtime variables")
-    act_ready_idx = source.index("Activation operational readiness before migration")
-    meta_idx = source.index("Metadata diagnostic audit-only")
-    migrate_idx = source.index("Apply and verify only migration 0007 through atomic same-exec")
-    assert vars_idx < act_idx < act_ready_idx < meta_idx < migrate_idx
-    activation_block = source[act_idx:meta_idx]
-    cmd = activation_block[activation_block.index("--project-id \"$ZEABUR_PROJECT_ID\"") :]
-    cmd = cmd.split(")", 1)[0]
-    assert "--create" not in cmd
-    assert "--service-id \"$SERVICE_ID\"" in cmd
-    assert "--environment-id \"$ZEABUR_ENV_ID\"" in cmd
+    assert "vars.ZEABUR_P2_MIGRATION_CONTROL_SERVICE_ID" in source
+    assert "zeabur deploy \\\n" not in source
+    assert 'zeabur deploy --project-id' not in source
+    assert "Activation local deploy to same service after runtime variables" not in source
+    assert "Inject disarmed runtime variables after bootstrap operational proof" not in source
+    assert "Operational runtime readiness before migration" in source
     assert "DEPLOYMENT_ID_AUDIT_ONLY=true" in source
     assert "OPERATIONAL_RUNTIME_SHA_AUTHORITY=true" in source
-    assert "build_p2_zeabur_cli.sh" in source
+    assert "build_p2_zeabur_cli.sh" not in source
+    ready_idx = source.index("Operational runtime readiness before migration")
+    meta_idx = source.index("Metadata diagnostic audit-only")
+    migrate_idx = source.index("Apply and verify only migration 0007 through atomic same-exec")
+    assert ready_idx < meta_idx < migrate_idx
 
 
 def test_activation_f_returned_service_id_mismatch_fail_closed():

@@ -1,0 +1,36 @@
+# Git-bound persistent P2 migration 0007 control service.
+# Build context: repository root (btc_bot).
+# Zeabur Git supplies ZEABUR_GIT_COMMIT_SHA at build time.
+FROM python:3.11-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    MAINNET=false \
+    REAL_MONEY=false \
+    DEMO_AUTONOMOUS_ENABLED=false \
+    AUTONOMOUS_SEND=false \
+    EXCHANGE_WRITE=false \
+    NEXUS_DATA_DIR=/tmp/nexus_p2_migration_0007 \
+    PORT=8080
+
+WORKDIR /app
+
+ARG ZEABUR_GIT_COMMIT_SHA
+RUN test -n "${ZEABUR_GIT_COMMIT_SHA}" && \
+    printf '%s\n' "${ZEABUR_GIT_COMMIT_SHA}" > /app/DEPLOYMENT_COMMIT && \
+    printf '%s\n' "${ZEABUR_GIT_COMMIT_SHA}" > /app/SOURCE_COMMIT
+
+COPY deploy/zeabur_p2_migration_0007/requirements-migration.txt ./requirements-migration.txt
+RUN pip install --no-cache-dir -r requirements-migration.txt
+
+COPY backend/ backend/
+COPY config/ config/
+COPY tools/ci/ tools/ci/
+COPY deploy/zeabur_p2_migration_0007/entrypoint.sh ./entrypoint.sh
+COPY deploy/zeabur_p2_migration_0007/migration_health_server.py ./migration_health_server.py
+
+RUN chmod +x ./entrypoint.sh
+
+EXPOSE 8080
+CMD ["/bin/sh", "./entrypoint.sh"]

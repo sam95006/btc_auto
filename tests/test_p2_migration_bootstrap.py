@@ -266,54 +266,31 @@ def test_e_missing_returned_env_is_not_mismatch():
     assert audit["blocks_create"] is False
 
 
-def test_f_g_h_workflow_same_env_vars_and_activation_local_deploy():
+def test_f_g_h_workflow_uses_persistent_service_and_runtime_readiness():
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf" in source
-    assert "ZEABUR_ENV_ID: ${{ env.ZEABUR_ENV_ID }}" in source
-    assert 'variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID"' in source
-    assert 'variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID"' in source
-    assert "Bootstrap operational readiness before runtime variables" in source
-    assert "Inject disarmed runtime variables after bootstrap operational proof" in source
-    assert "Activation local deploy to same service after runtime variables" in source
-    assert "zeabur deploy" in source
-    assert '--project-id "$ZEABUR_PROJECT_ID"' in source
-    assert '--service-id "$SERVICE_ID"' in source
-    assert '--environment-id "$ZEABUR_ENV_ID"' in source
-    assert "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY=true" in source
-    assert "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COMMAND_PASS=true" in source
-    assert "P2_MIGRATION_POST_VAR_LOCAL_DEPLOY_COUNT=1" in source
-    assert "P2_MIGRATION_TOTAL_LOCAL_DEPLOY_COUNT=2" in source
-    assert "P2_MIGRATION_SECOND_SERVICE_CREATED=false" in source
-    assert "zeabur service redeploy" not in source
-    assert "zeabur service restart --id" not in source
-    # Activation deploy must not use --create.
-    act_idx = source.index("Activation local deploy to same service after runtime variables")
-    meta_idx = source.index("Metadata diagnostic audit-only")
-    activation_block = source[act_idx:meta_idx]
-    assert 'zeabur deploy \\\n              --project-id "$ZEABUR_PROJECT_ID"' in activation_block or (
-        'zeabur deploy' in activation_block and '--project-id "$ZEABUR_PROJECT_ID"' in activation_block
-    )
-    cmd = activation_block[activation_block.index("--project-id \"$ZEABUR_PROJECT_ID\"") :]
-    cmd = cmd.split(")", 1)[0]
-    assert "--create" not in cmd
-    assert "--service-id \"$SERVICE_ID\"" in cmd
-    assert "--environment-id \"$ZEABUR_ENV_ID\"" in cmd
-    vars_idx = source.index("Inject disarmed runtime variables after bootstrap operational proof")
-    bootstrap_wait_idx = source.index("Bootstrap operational readiness before runtime variables")
-    create_idx = source.index("Create run-scoped migration service with single migration-context deploy")
-    assert create_idx < bootstrap_wait_idx < vars_idx < act_idx < meta_idx
+    assert "vars.ZEABUR_P2_MIGRATION_CONTROL_SERVICE_ID" in source
+    assert "Operational runtime readiness before migration" in source
+    assert "Apply and verify only migration 0007 through atomic same-exec" in source
+    assert "zeabur deploy \\\n" not in source
+    assert 'zeabur deploy --project-id' not in source
+    assert "ensure_p2_migration_zeabur_service" not in source
+    assert "Inject disarmed runtime variables after bootstrap operational proof" not in source
+    assert "Activation local deploy to same service after runtime variables" not in source
+    assert "Bootstrap operational readiness before runtime variables" not in source
+    assert "Create run-scoped migration service" not in source
+    ready_idx = source.index("Operational runtime readiness before migration")
+    apply_idx = source.index("Apply and verify only migration 0007 through atomic same-exec")
+    assert ready_idx < apply_idx
 
 
-def test_i_operational_readiness_unchanged_in_ensure_and_workflow():
-    # Ensure does not rewrite readiness classifier.
+def test_i_operational_readiness_unchanged_in_workflow():
     assert "classify_readiness_probe_output" not in ENSURE
     assert "wait_for_current_image_streak" not in ENSURE
-    # Rollout readiness module markers remain the operational authority.
     assert "P2_MIGRATION_OPERATIONAL_READINESS_PASS" in READINESS
     assert "NOT_RUNNING_SERVICE" in READINESS
     source = WORKFLOW.read_text(encoding="utf-8")
-    assert "Bootstrap operational readiness before runtime variables" in source
-    assert "Activation operational readiness before migration" in source
+    assert "Operational runtime readiness before migration" in source
     assert "python -m tools.ci.p2_migration_rollout_readiness" in source
 
 
@@ -327,32 +304,19 @@ def test_j_zero_exchange_writes_in_plan_and_workflow():
     assert plan["exchange_write_call_count"] == 0
     assert plan["create_order_calls"] == 0
     source = WORKFLOW.read_text(encoding="utf-8")
-    assert 'set_var EXCHANGE_WRITE false' in source
-    assert "EXCHANGE_WRITE: \"false\"" in source or 'EXCHANGE_WRITE: "false"' in source
+    assert 'EXCHANGE_WRITE: "false"' in source or "EXCHANGE_WRITE=false" in source
 
 
-def test_workflow_builds_context_before_create_and_has_no_second_service():
+def test_workflow_uses_persistent_git_bound_service():
     source = WORKFLOW.read_text(encoding="utf-8")
-    assert "Build migration deployment context before service create" in source
-    assert "Create run-scoped migration service with single migration-context deploy" in source
-    assert "Inject disarmed runtime variables after bootstrap operational proof" in source
-    assert "P2_MIGRATION_CONTEXT_BUILT_BEFORE_SERVICE_CREATE=true" in source
-    assert "P2_MIGRATION_SINGLE_DEPLOY_BOOTSTRAP=true" in source
-    assert "P2_MIGRATION_BOOTSTRAP_DEPLOY_COUNT=1" in source
-    assert "P2_MIGRATION_SERVICE_CREATE_COUNT=1" in source
-    assert "P2_MIGRATION_TOTAL_LOCAL_DEPLOY_COUNT=2" in source
-    assert "P2_MIGRATION_SECOND_SERVICE_CREATED=false" in source
-    assert "P2_MIGRATION_CREATE_ENV_EXPLICIT=true" in source
-    assert "P2_MIGRATION_CONTEXT_DIR" in source
-    build_idx = source.index("Build migration deployment context before service create")
-    create_idx = source.index("Create run-scoped migration service with single migration-context deploy")
-    vars_idx = source.index("Inject disarmed runtime variables after bootstrap operational proof")
-    assert build_idx < create_idx < vars_idx
-    # No second deploy-to-existing-service after create for the bootstrap path.
-    assert "zeabur deploy --project-id \"$ZEABUR_PROJECT_ID\" --service-id \"$SERVICE_ID\"" not in source.split(
-        "Activation local deploy to same service after runtime variables"
-    )[0]
-    assert "Configure disarmed migration boundary and deploy fresh migration image" not in source
+    assert "vars.ZEABUR_P2_MIGRATION_CONTROL_SERVICE_ID" in source
+    assert "PERSISTENT_GIT_BOUND_MIGRATION_SERVICE_ARCHITECTURE=true" in source
+    assert "ensure_p2_migration_zeabur_service" not in source
+    assert "Build migration deployment context before service create" not in source
+    assert "Operational runtime readiness before migration" in source
+    ready_idx = source.index("Operational runtime readiness before migration")
+    apply_idx = source.index("Apply and verify only migration 0007 through atomic same-exec")
+    assert ready_idx < apply_idx
 
 
 def test_ensure_requires_zeabur_env_id_and_verifies_arg_not_output_authority():
