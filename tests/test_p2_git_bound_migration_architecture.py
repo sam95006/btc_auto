@@ -158,3 +158,65 @@ def test_runtime_readiness_classifier_still_authoritative():
     assert op["ready"] is True
     assert op["dsn_present"] is True
     assert op["exchange_write_call_count"] == 0
+
+
+def _first_zeabur_invocation_index(source: str) -> int:
+    for needle in ("zeabur auth", "zeabur service", "zeabur deployment", "zeabur variable"):
+        idx = source.find(needle)
+        if idx >= 0:
+            return idx
+    raise AssertionError("no zeabur command invocation found in workflow")
+
+
+def test_a_official_cli_install_before_first_zeabur_invocation():
+    source = _workflow()
+    first_zeabur = _first_zeabur_invocation_index(source)
+    prefix = source[:first_zeabur]
+    assert "actions/setup-node@v4" in prefix
+    assert "npm install -g zeabur@latest" in prefix
+
+
+def test_b_command_v_zeabur_prerequisite_proof_exists():
+    source = _workflow()
+    assert "command -v zeabur" in source
+    assert "zeabur --version" in source
+    assert "ZEABUR_CLI_INSTALLED_PASS=true" in source
+    proof_idx = source.index("Install official Zeabur CLI and prove prerequisite")
+    first_zeabur = _first_zeabur_invocation_index(source)
+    assert proof_idx < first_zeabur
+
+
+def test_c_cleanup_step_after_cli_install():
+    source = _workflow()
+    install_idx = source.index("Install official Zeabur CLI and prove prerequisite")
+    cleanup_idx = source.index("Always disarm and clear transient migration DSN")
+    assert install_idx < cleanup_idx
+    cleanup_block = source[cleanup_idx:]
+    assert "zeabur auth login" in cleanup_block
+    assert "zeabur variable" in cleanup_block
+
+
+def test_d_pinned_cli_and_local_deploy_not_reintroduced():
+    source = _workflow()
+    assert "setup-go" not in source
+    assert "build_p2_zeabur_cli.sh" not in source
+    assert "ensure_p2_migration_zeabur_service" not in source
+    assert "zeabur deploy \\\n" not in source
+    assert 'zeabur deploy --project-id' not in source
+    assert "PINNED_DEPLOY_CLI_REMOVED=true" in source
+
+
+def test_e_p1_certified_surface_freeze_module_present():
+    assert (ROOT / "tests" / "test_p2_certified_surface_freeze.py").is_file()
+    from tools.ci.p2_historical_p1_p2_regression_lock import HISTORICAL_P1_P2_REGRESSION_LOCK_MODULES
+
+    assert "tests/test_p2_certified_surface_freeze.py" in HISTORICAL_P1_P2_REGRESSION_LOCK_MODULES
+
+
+def test_f_migration_0007_sql_unchanged():
+    sql = (ROOT / "backend" / "nexus_persistence_pg" / "migrations" / "0007_p2_research_learning_store.sql").read_text(
+        encoding="utf-8"
+    )
+    assert "p2_research_lessons" in sql
+    assert "source_evidence_hash" in sql
+    assert "DROP TABLE" not in sql.upper()

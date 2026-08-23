@@ -71,6 +71,19 @@ jobs:
           echo "GIT_SHA_BAKED_AT_ZEABUR_BUILD=true"
           echo "P2_MIGRATION_CONTROL_SERVICE_ID_PREFIX=$(printf '%s' "$P2_MIGRATION_CONTROL_SERVICE_ID" | cut -c1-6)"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install official Zeabur CLI and prove prerequisite
+        run: |
+          set -euo pipefail
+          npm install -g zeabur@latest
+          command -v zeabur
+          zeabur --version
+          echo "ZEABUR_CLI_INSTALLED_PASS=true"
+          echo "OFFICIAL_ZEABUR_CLI_INSTALL_RESTORED=true"
+
       - name: Operational runtime readiness before migration
         id: runtime_ready
         env:
