@@ -1,0 +1,198 @@
+name: founder-approved-staging-postgres-p2-repeat-mistake-guard-qualification
+
+# RepeatMistakeGuard behavioral qualification. Research-only; no exchange execution.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type QUALIFY_NEXUS_STAGING_P2_REPEAT_MISTAKE_GUARD to confirm"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founder-staging-postgres-p2-repeat-mistake-guard-qualification
+  cancel-in-progress: false
+
+env:
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+
+jobs:
+  qualify-p2-repeat-mistake-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Confirm RepeatMistakeGuard qualification intent
+        run: test "${{ github.event.inputs.confirm }}" = "QUALIFY_NEXUS_STAGING_P2_REPEAT_MISTAKE_GUARD"
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run offline qualification tests + historical P1/P2 regression lock
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          MAINNET: "false"
+          REAL_MONEY: "false"
+          DEMO_AUTONOMOUS_ENABLED: "false"
+          AUTONOMOUS_SEND: "false"
+          EXCHANGE_WRITE: "false"
+        run: |
+          pip install -r requirements.txt pytest
+          python -m pytest tests/test_p2_repeat_mistake_guard_qualification.py -q --tb=line
+          python -m tools.ci.p2_historical_p1_p2_regression_lock
+          echo "HISTORICAL_P1_P2_REGRESSION_LOCK=PASS"
+
+      - name: Verify required secret, control service, and durable lesson identity
+        env:
+          NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          P2_MIGRATION_CONTROL_SERVICE_ID: ${{ vars.ZEABUR_P2_MIGRATION_CONTROL_SERVICE_ID }}
+          P2_REPEAT_MISTAKE_GUARD_EXPECTED_LESSON_ID: ${{ vars.P2_DURABLE_LESSON_ID }}
+          P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_EVIDENCE_HASH: ${{ vars.P2_DURABLE_LESSON_SOURCE_EVIDENCE_HASH }}
+          P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_TRADE_ID: ${{ vars.P2_DURABLE_LESSON_SOURCE_TRADE_ID }}
+          P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_DECISION_ID: ${{ vars.P2_DURABLE_LESSON_SOURCE_DECISION_ID }}
+        run: |
+          set -euo pipefail
+          python tools/ci/p1_mask_dsn.py
+          test -n "${NEXUS_STAGING_POSTGRES_URL:-}"
+          test -n "${ZEABUR_TOKEN:-}"
+          test -n "${P2_MIGRATION_CONTROL_SERVICE_ID:-}"
+          test -n "${P2_REPEAT_MISTAKE_GUARD_EXPECTED_LESSON_ID:-}"
+          test -n "${P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_EVIDENCE_HASH:-}"
+          test -n "${P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_TRADE_ID:-}"
+          test -n "${P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_DECISION_ID:-}"
+          echo "P2_REPEAT_MISTAKE_GUARD_SECRET_BOUNDARY_PASS=true"
+          echo "P2_REPEAT_MISTAKE_GUARD_IMPLEMENTED=true"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install official Zeabur CLI and prove prerequisite
+        run: |
+          set -euo pipefail
+          npm install -g zeabur@latest
+          command -v zeabur
+          zeabur --version
+          echo "ZEABUR_CLI_INSTALLED_PASS=true"
+
+      - name: Inject transient qualification DSN on persistent control service
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ vars.ZEABUR_P2_MIGRATION_CONTROL_SERVICE_ID }}
+          NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          set_var() {
+            local k="$1" v="$2"
+            zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "${k}=${v}" -y -i=false >/tmp/p2_rmg_qual_var.out 2>&1 ||
+              zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "${k}=${v}" -y -i=false >/tmp/p2_rmg_qual_var.out 2>&1
+          }
+          set_var MAINNET false
+          set_var REAL_MONEY false
+          set_var DEMO_AUTONOMOUS_ENABLED false
+          set_var AUTONOMOUS_SEND false
+          set_var EXCHANGE_WRITE false
+          set_var NEXUS_PG_RUNTIME_ENABLED true
+          set_var NEXUS_ENV STAGING
+          set_var NEXUS_DATA_DIR /tmp/nexus_p2_migration_0007
+          set_var NEXUS_POSTGRES_URL "$NEXUS_STAGING_POSTGRES_URL"
+          echo "P2_REPEAT_MISTAKE_GUARD_DSN_INJECTED=true"
+
+      - name: Run RepeatMistakeGuard qualification on control service
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ vars.ZEABUR_P2_MIGRATION_CONTROL_SERVICE_ID }}
+          P2_REPEAT_MISTAKE_GUARD_EXPECTED_LESSON_ID: ${{ vars.P2_DURABLE_LESSON_ID }}
+          P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_EVIDENCE_HASH: ${{ vars.P2_DURABLE_LESSON_SOURCE_EVIDENCE_HASH }}
+          P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_TRADE_ID: ${{ vars.P2_DURABLE_LESSON_SOURCE_TRADE_ID }}
+          P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_DECISION_ID: ${{ vars.P2_DURABLE_LESSON_SOURCE_DECISION_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/bybit_demo_p1
+          EVIDENCE_PATH="/tmp/nexus_p2_migration_0007/p2_repeat_mistake_guard_qual_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}.json"
+          . tools/ci/p1_validation_runtime.sh
+          p1_export_disarmed_flags
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          COMMAND="export MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true PYTHONPATH=/app P2_REPEAT_MISTAKE_GUARD_QUALIFICATION_EVIDENCE_PATH=${EVIDENCE_PATH} P2_REPEAT_MISTAKE_GUARD_EXPECTED_LESSON_ID=${P2_REPEAT_MISTAKE_GUARD_EXPECTED_LESSON_ID} P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_EVIDENCE_HASH=${P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_EVIDENCE_HASH} P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_TRADE_ID=${P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_TRADE_ID} P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_DECISION_ID=${P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_DECISION_ID}; python -m tools.ci.p2_repeat_mistake_guard_qualification"
+          set +e
+          zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- /bin/sh -lc "$COMMAND" >/tmp/p2_rmg_qual_exec.out 2>&1
+          EXEC_CODE=$?
+          set -e
+          echo "repeat_mistake_guard_service_exec_transport_exit=${EXEC_CODE}"
+          cat /tmp/p2_rmg_qual_exec.out
+          python - <<'PY'
+          import json, sys
+          raw = open("/tmp/p2_rmg_qual_exec.out", encoding="utf-8", errors="replace").read()
+          decoder = json.JSONDecoder()
+          payload = None
+          for i, ch in enumerate(raw):
+              if ch != "{":
+                  continue
+              try:
+                  candidate, _ = decoder.raw_decode(raw[i:])
+              except json.JSONDecodeError:
+                  continue
+              if isinstance(candidate, dict):
+                  payload = candidate
+                  break
+          if payload is None:
+              print("P2_REPEAT_MISTAKE_GUARD_QUALIFICATION_PASS=false")
+              sys.exit(1)
+          for key in (
+              "P2_REPEAT_MISTAKE_GUARD_QUALIFICATION_PASS",
+              "DURABLE_LESSON_RETRIEVAL_PASS",
+              "LESSON_ID",
+              "SOURCE_EVIDENCE_HASH_MATCH",
+              "SIMILARITY_ENGINE_PASS",
+              "SIMILARITY_SCORE",
+              "SIMILAR_CANDIDATE_MATCH_PASS",
+              "DISSIMILAR_CONTROL_REJECT_PASS",
+              "PRE_GUARD_DECISION",
+              "POST_GUARD_DECISION",
+              "PRE_POST_BEHAVIOR_DIFFERENCE_PASS",
+              "REPEAT_MISTAKE_GUARD_EFFECT_PASS",
+              "P2_REPEAT_MISTAKE_GUARD_DETERMINISM_PASS",
+              "HARD_RISK_AUTHORITY_UNCHANGED",
+              "LESSON_POLICY_TRUTH_REMAINS_FALSE",
+              "LESSON_REVALIDATION_REQUIRED_TRUE",
+              "create_order_calls",
+              "exchange_write_call_count",
+          ):
+              print(f"{key}={payload.get(key)}")
+          assert payload.get("P2_REPEAT_MISTAKE_GUARD_QUALIFICATION_PASS") is True
+          assert payload.get("create_order_calls") == 0
+          assert payload.get("exchange_write_call_count") == 0
+          open("artifacts/bybit_demo_p1/p2_repeat_mistake_guard_qualification.json", "w", encoding="utf-8").write(
+              json.dumps(payload, indent=2, sort_keys=True, default=str)
+          )
+          PY
+
+      - name: Upload sanitized RepeatMistakeGuard evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-postgres-p2-repeat-mistake-guard-qualification-evidence
+          path: artifacts/bybit_demo_p1/
+          if-no-files-found: warn
+
+      - name: Always disarm and clear transient qualification DSN
+        if: always()
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ vars.ZEABUR_P2_MIGRATION_CONTROL_SERVICE_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${SERVICE_ID:-}" || exit 0
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          for pair in MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_PG_RUNTIME_ENABLED=false; do
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "$pair" -y -i=false >/tmp/p2_rmg_qual_cleanup.out 2>&1 ||
+              zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "$pair" -y -i=false >/tmp/p2_rmg_qual_cleanup.out 2>&1
+          done
+          zeabur variable delete --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k NEXUS_POSTGRES_URL -y -i=false >/tmp/p2_rmg_qual_dsn_cleanup.out 2>&1 ||
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "NEXUS_POSTGRES_URL=" -y -i=false >/tmp/p2_rmg_qual_dsn_cleanup.out 2>&1
