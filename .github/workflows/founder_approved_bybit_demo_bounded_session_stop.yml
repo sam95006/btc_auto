@@ -1,0 +1,80 @@
+name: founder-approved-bybit-demo-bounded-session-stop
+
+# Safe founder stop for an active bounded 6H Demo session.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type STOP_NEXUS_BYBIT_DEMO_BOUNDED_6H_SESSION to confirm"
+        required: true
+        type: string
+      validation_service_id:
+        description: "Zeabur service id for nexus-bybit-demo-learning-validation"
+        required: true
+        default: "6a69ad539949111176cefe63"
+        type: string
+      stop_reason:
+        description: "Operator stop reason"
+        required: false
+        default: "FOUNDER_STOP"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founder-bounded-demo-6h-session-stop
+  cancel-in-progress: false
+
+env:
+  MAINNET: "false"
+  REAL_MONEY: "false"
+  EXCHANGE_WRITE: "false"
+  DEMO_AUTONOMOUS_ENABLED: "false"
+  AUTONOMOUS_SEND: "false"
+  DEMO_VAL_URL: https://nexus-bybit-demo-val.zeabur.app
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+
+jobs:
+  stop-bounded-demo-session:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Confirm bounded session stop intent
+        run: test "${{ github.event.inputs.confirm }}" = "STOP_NEXUS_BYBIT_DEMO_BOUNDED_6H_SESSION"
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Stop bounded session via validation service API
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          pip install -r requirements.txt
+          python -m tools.ci.demo_bounded_session_orchestrator stop \
+            --base "$DEMO_VAL_URL" \
+            > artifacts_stop.json || true
+          cat artifacts_stop.json
+          python - <<'PY'
+          import json, sys
+          payload = json.load(open("artifacts_stop.json", encoding="utf-8"))
+          assert payload.get("ok") is True, payload
+          print("FOUNDER_STOP_CONTROL_IMPLEMENTED=true")
+          PY
+
+      - name: Disarm validation service after stop
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ github.event.inputs.validation_service_id }}
+        run: |
+          set -euo pipefail
+          npm install -g zeabur@latest
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          for pair in MAINNET=false REAL_MONEY=false EXCHANGE_WRITE=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false FOUNDER_6H_APPROVED=false FOUNDER_APPROVE_DEMO_AUTONOMOUS_6H_V2=false; do
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "$pair" -y -i=false >/tmp/stop_cleanup.out 2>&1 ||
+              zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "$pair" -y -i=false >/tmp/stop_cleanup.out 2>&1
+          done
+          echo "BOUNDED_SESSION_STOP_COMPLETE=true"

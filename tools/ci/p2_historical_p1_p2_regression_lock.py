@@ -37,6 +37,7 @@ HISTORICAL_P1_P2_REGRESSION_LOCK_MODULES: tuple[str, ...] = (
     "tests/test_p2_durable_learning_closure_qualification.py",
     "tests/test_p2_repeat_mistake_guard_qualification.py",
     "tests/test_p2_failure_mode_e2e_qualification.py",
+    "tests/test_demo_bounded_autonomous_session.py",
     "tests/test_p2_zeabur_pinned_cli_contract.py",
 )
 

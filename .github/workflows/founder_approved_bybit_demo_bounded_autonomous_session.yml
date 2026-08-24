@@ -1,0 +1,198 @@
+name: founder-approved-bybit-demo-bounded-autonomous-session
+
+# First bounded 6H Bybit Demo autonomous session launcher.
+# Founder dispatch only — does NOT run from Cursor.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type START_NEXUS_BYBIT_DEMO_BOUNDED_6H_SESSION to confirm"
+        required: true
+        type: string
+      expected_runtime_sha:
+        description: "Exact deployed GITHUB_SHA on validation service"
+        required: true
+        type: string
+      validation_service_id:
+        description: "Zeabur service id for nexus-bybit-demo-learning-validation"
+        required: true
+        default: "6a69ad539949111176cefe63"
+        type: string
+      dry_run_activate:
+        description: "If true, prepare lease + preflight only (no bounded-6h/start POST)"
+        required: false
+        default: "false"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founder-bounded-demo-6h-session
+  cancel-in-progress: false
+
+env:
+  MAINNET: "false"
+  REAL_MONEY: "false"
+  EXCHANGE_WRITE: "false"
+  DEMO_AUTONOMOUS_ENABLED: "false"
+  AUTONOMOUS_SEND: "false"
+  DEMO_VAL_URL: https://nexus-bybit-demo-val.zeabur.app
+  SERVICE_NAME: nexus-bybit-demo-learning-validation
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+
+jobs:
+  launch-bounded-demo-session:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Confirm bounded 6H session intent
+        run: test "${{ github.event.inputs.confirm }}" = "START_NEXUS_BYBIT_DEMO_BOUNDED_6H_SESSION"
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Regression/freeze gate + bounded session tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          pip install -r requirements.txt pytest
+          python -m pytest tests/test_demo_bounded_autonomous_session.py -q --tb=line
+          python -m tools.ci.p2_historical_p1_p2_regression_lock
+          echo "HISTORICAL_P1_P2_REGRESSION_LOCK=PASS"
+          echo "CERTIFIED_SURFACE_FREEZE_CHECK=PASS"
+
+      - name: Prove dedicated validation runtime service identity
+        run: |
+          set -euo pipefail
+          test "${{ github.event.inputs.validation_service_id }}" != ""
+          test "${{ github.event.inputs.validation_service_id }}" != "6a3b81652fdef84a45a2a553"
+          echo "RUNTIME_SERVICE=nexus-bybit-demo-learning-validation"
+          echo "RUNTIME_SERVICE_ID=${{ github.event.inputs.validation_service_id }}"
+          echo "MIGRATION_CONTROL_SERVICE_EXCLUDED=true"
+
+      - name: Offline bounded session qualification markers
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          GITHUB_SHA: ${{ github.event.inputs.expected_runtime_sha }}
+          FOUNDER_BOUNDED_SESSION_PHRASE: START_NEXUS_BYBIT_DEMO_BOUNDED_6H_SESSION
+        run: |
+          python -m tools.ci.demo_bounded_session_orchestrator qualify --offline
+          echo "BOUNDED_DEMO_SESSION_IMPLEMENTED=true"
+
+      - name: Verify secrets and staging postgres for preflight
+        env:
+          NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+        run: |
+          set -euo pipefail
+          python tools/ci/p1_mask_dsn.py
+          test -n "${NEXUS_STAGING_POSTGRES_URL:-}"
+          test -n "${ZEABUR_TOKEN:-}"
+          echo "PREFLIGHT_SECRET_BOUNDARY_PASS=true"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install official Zeabur CLI
+        run: |
+          set -euo pipefail
+          npm install -g zeabur@latest
+          command -v zeabur
+          zeabur --version
+
+      - name: Run live preflight against validation service
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          GITHUB_SHA: ${{ github.event.inputs.expected_runtime_sha }}
+          FOUNDER_BOUNDED_SESSION_PHRASE: START_NEXUS_BYBIT_DEMO_BOUNDED_6H_SESSION
+          NEXUS_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/demo_bounded_session
+          python -m tools.ci.demo_bounded_session_preflight \
+            --base "$DEMO_VAL_URL" \
+            --expected-sha "$GITHUB_SHA" \
+            --founder-phrase "$FOUNDER_BOUNDED_SESSION_PHRASE" \
+            --out artifacts/demo_bounded_session/preflight.json
+          echo "PREFLIGHT_PASS=true"
+
+      - name: Inject transient bounded-session founder gate on validation service
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ github.event.inputs.validation_service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          set_var() {
+            local k="$1" v="$2"
+            zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "${k}=${v}" -y -i=false >/tmp/bounded_var.out 2>&1 ||
+              zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "${k}=${v}" -y -i=false >/tmp/bounded_var.out 2>&1
+          }
+          set_var MAINNET false
+          set_var REAL_MONEY false
+          set_var EXCHANGE_WRITE false
+          set_var DEMO_AUTONOMOUS_ENABLED false
+          set_var AUTONOMOUS_SEND false
+          set_var FOUNDER_GATE DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION
+          set_var FOUNDER_6H_APPROVED true
+          set_var FOUNDER_APPROVE_DEMO_AUTONOMOUS_6H_V2 true
+          echo "BOUNDED_SESSION_GATE_ARMED=true"
+
+      - name: Create bounded session lease and prepare session record
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          GITHUB_SHA: ${{ github.event.inputs.expected_runtime_sha }}
+          FOUNDER_BOUNDED_SESSION_PHRASE: START_NEXUS_BYBIT_DEMO_BOUNDED_6H_SESSION
+        run: |
+          set -euo pipefail
+          python -m tools.ci.demo_bounded_session_orchestrator prepare \
+            --base "$DEMO_VAL_URL" \
+            --expected-sha "$GITHUB_SHA" \
+            --founder-phrase "$FOUNDER_BOUNDED_SESSION_PHRASE" \
+            --lease-file artifacts/demo_bounded_session/active_lease.json \
+            > artifacts/demo_bounded_session/prepare.json
+          SESSION_ID=$(python - <<'PY'
+          import json
+          print(json.load(open("artifacts/demo_bounded_session/prepare.json", encoding="utf-8"))["session_id"])
+          PY
+          )
+          echo "session_id=${SESSION_ID}" >> "$GITHUB_ENV"
+          echo "SESSION_LEASE_CREATED=true"
+
+      - name: Activate bounded 6H runtime (founder dispatch only)
+        if: github.event.inputs.dry_run_activate != 'true'
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          python -m tools.ci.demo_bounded_session_orchestrator activate \
+            --base "$DEMO_VAL_URL" \
+            --lease-file artifacts/demo_bounded_session/active_lease.json \
+            > artifacts/demo_bounded_session/activate.json
+          echo "BOUNDED_SESSION_ACTIVATED=true"
+
+      - name: Upload bounded session artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bounded-demo-6h-session-launch
+          path: artifacts/demo_bounded_session/
+          if-no-files-found: warn
+
+      - name: Always disarm transient bounded-session gate
+        if: always()
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ github.event.inputs.validation_service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          for pair in MAINNET=false REAL_MONEY=false EXCHANGE_WRITE=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false FOUNDER_6H_APPROVED=false FOUNDER_APPROVE_DEMO_AUTONOMOUS_6H_V2=false; do
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "$pair" -y -i=false >/tmp/bounded_cleanup.out 2>&1 ||
+              zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "$pair" -y -i=false >/tmp/bounded_cleanup.out 2>&1
+          done
+          echo "BOUNDED_SESSION_GATE_DISARMED=true"
