@@ -13,7 +13,10 @@
 
 FROM python:3.11-slim-bookworm
 
+# Local/CI may pass GITHUB_SHA. Zeabur Git services expose ZEABUR_GIT_COMMIT_SHA
+# during the build phase; use it as the canonical fallback for UI-triggered redeploys.
 ARG GITHUB_SHA=
+ARG ZEABUR_GIT_COMMIT_SHA=
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -55,13 +58,14 @@ COPY deploy/zeabur_bybit_demo_validation/entrypoint.sh ./entrypoint.sh
 COPY deploy/zeabur_bybit_demo_validation/demo_founder_gate.env ./demo_founder_gate.env
 COPY deploy/zeabur_bybit_demo_validation/validation_health_server.py ./validation_health_server.py
 
-# Bake GitHub commit identity when build-arg is provided (CI / local proof).
-# Zeabur runtime may also inject GITHUB_SHA / NEXUS_DEPLOYMENT_COMMIT; entrypoint reconciles.
-ARG GITHUB_SHA
+# Bake deployment identity. Prefer explicit CI/local GITHUB_SHA; otherwise use the
+# Git commit SHA provided by Zeabur during a Git-service build.
 RUN chmod +x entrypoint.sh \
- && if [ -n "$GITHUB_SHA" ]; then \
-      printf '%s' "$GITHUB_SHA" > DEPLOYMENT_COMMIT \
-      && printf '%s' "$GITHUB_SHA" > SOURCE_COMMIT; \
+ && BUILD_SHA="$GITHUB_SHA" \
+ && if [ -z "$BUILD_SHA" ]; then BUILD_SHA="$ZEABUR_GIT_COMMIT_SHA"; fi \
+ && if [ -n "$BUILD_SHA" ]; then \
+      printf '%s' "$BUILD_SHA" > DEPLOYMENT_COMMIT \
+      && printf '%s' "$BUILD_SHA" > SOURCE_COMMIT; \
     else \
       : > DEPLOYMENT_COMMIT \
       && : > SOURCE_COMMIT; \
