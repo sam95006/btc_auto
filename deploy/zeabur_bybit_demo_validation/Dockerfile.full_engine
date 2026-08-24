@@ -45,7 +45,10 @@ COPY backend/ backend/
 COPY config/ config/
 COPY static/ static/
 COPY templates/ templates/
-COPY tools/ci/ tools/ci/
+# Full runtime needs more than CI helpers; e.g. customer-validation concierge imports
+# tools.customer_validation at app import time. Keep the repository tools tree available
+# (subject to .dockerignore exclusions such as bulk research tools).
+COPY tools/ tools/
 
 # Packaging layer — never assume these files live at repo root.
 COPY deploy/zeabur_bybit_demo_validation/entrypoint.sh ./entrypoint.sh
@@ -69,6 +72,7 @@ RUN chmod +x entrypoint.sh \
  && test -f entrypoint.sh \
  && test -f demo_founder_gate.env \
  && test -f validation_health_server.py \
+ && test -f tools/customer_validation/__init__.py \
  && test -f backend/nexus_demo_execution/bounded_12h_session.py \
  && test -f backend/nexus_bounded_runtime/certified_session.py \
  && grep -q "BoundedAutonomousSessionEngine" backend/nexus_demo_execution/bounded_12h_session.py \
