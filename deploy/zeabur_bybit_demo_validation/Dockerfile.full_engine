@@ -13,10 +13,14 @@
 
 FROM python:3.11-slim-bookworm
 
-# Local/CI may pass GITHUB_SHA. Zeabur Git services expose ZEABUR_GIT_COMMIT_SHA
-# during the build phase; use it as the canonical fallback for UI-triggered redeploys.
+# Local/CI may pass GITHUB_SHA. Zeabur Git service commit variables are build-phase
+# values, so accept both direct ARG names and zbpack-injected ZEABUR_ENV_* aliases.
 ARG GITHUB_SHA=
+ARG NEXUS_DEPLOYMENT_COMMIT=
+ARG NEXUS_SOURCE_COMMIT=
 ARG ZEABUR_GIT_COMMIT_SHA=
+ARG ZEABUR_ENV_GITHUB_SHA=
+ARG ZEABUR_ENV_ZEABUR_GIT_COMMIT_SHA=
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -56,25 +60,20 @@ COPY tools/ tools/
 
 # Packaging layer — never assume these files live at repo root.
 COPY deploy/zeabur_bybit_demo_validation/entrypoint.sh ./entrypoint.sh
+COPY deploy/zeabur_bybit_demo_validation/resolve_deployment_identity.sh ./resolve_deployment_identity.sh
 COPY deploy/zeabur_bybit_demo_validation/demo_founder_gate.env ./demo_founder_gate.env
 COPY deploy/zeabur_bybit_demo_validation/validation_health_server.py ./validation_health_server.py
 
-# Bake deployment identity. Prefer explicit CI/local GITHUB_SHA; otherwise use the
-# Git commit SHA provided by Zeabur during a Git-service build.
+# Bake deployment identity. The resolver accepts only full 40-hex Git SHAs and
+# leaves empty files when no build SHA is available, preserving fail-closed UNKNOWN.
 RUN chmod +x entrypoint.sh \
- && BUILD_SHA="$GITHUB_SHA" \
- && if [ -z "$BUILD_SHA" ]; then BUILD_SHA="$ZEABUR_GIT_COMMIT_SHA"; fi \
- && if [ -n "$BUILD_SHA" ]; then \
-      printf '%s' "$BUILD_SHA" > DEPLOYMENT_COMMIT \
-      && printf '%s' "$BUILD_SHA" > SOURCE_COMMIT; \
-    else \
-      : > DEPLOYMENT_COMMIT \
-      && : > SOURCE_COMMIT; \
-    fi \
+ && chmod +x resolve_deployment_identity.sh \
+ && ./resolve_deployment_identity.sh write \
  && test -f app.py \
  && test -f run.py \
  && test -f gunicorn.conf.py \
  && test -f entrypoint.sh \
+ && test -f resolve_deployment_identity.sh \
  && test -f demo_founder_gate.env \
  && test -f validation_health_server.py \
  && test -f tools/customer_validation/__init__.py \

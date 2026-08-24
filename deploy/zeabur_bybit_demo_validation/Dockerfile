@@ -13,6 +13,11 @@
 FROM python:3.11-slim-bookworm
 
 ARG GITHUB_SHA=
+ARG NEXUS_DEPLOYMENT_COMMIT=
+ARG NEXUS_SOURCE_COMMIT=
+ARG ZEABUR_GIT_COMMIT_SHA=
+ARG ZEABUR_ENV_GITHUB_SHA=
+ARG ZEABUR_ENV_ZEABUR_GIT_COMMIT_SHA=
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -43,19 +48,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ backend/
 COPY config/ config/
 COPY deploy/zeabur_bybit_demo_validation/entrypoint.sh ./entrypoint.sh
+COPY deploy/zeabur_bybit_demo_validation/resolve_deployment_identity.sh ./resolve_deployment_identity.sh
 COPY deploy/zeabur_bybit_demo_validation/validation_health_server.py ./validation_health_server.py
 COPY deploy/zeabur_bybit_demo_validation/demo_founder_gate.env ./demo_founder_gate.env
 
-ARG GITHUB_SHA
 RUN chmod +x entrypoint.sh \
- && if [ -n "$GITHUB_SHA" ]; then \
-      printf '%s' "$GITHUB_SHA" > DEPLOYMENT_COMMIT \
-      && printf '%s' "$GITHUB_SHA" > SOURCE_COMMIT; \
-    else \
-      : > DEPLOYMENT_COMMIT \
-      && : > SOURCE_COMMIT; \
-    fi \
+ && chmod +x resolve_deployment_identity.sh \
+ && ./resolve_deployment_identity.sh write \
  && test -f entrypoint.sh \
+ && test -f resolve_deployment_identity.sh \
  && test -f validation_health_server.py \
  && test -f demo_founder_gate.env \
  && test -f backend/nexus_demo_execution/p1_recovery.py \

@@ -66,7 +66,23 @@ def is_full_runtime_sha(value: str) -> bool:
 
 
 def runtime_sha() -> str:
-    for key in ("GITHUB_SHA", "NEXUS_DEPLOYMENT_COMMIT", "NEXUS_SOURCE_COMMIT", "SOURCE_COMMIT"):
+    try:
+        from backend.nexus_demo_execution.runtime_identity import read_container_baked_commit
+
+        baked, _ = read_container_baked_commit()
+        if baked:
+            return baked
+    except Exception:
+        pass
+    for key in (
+        "GITHUB_SHA",
+        "NEXUS_DEPLOYMENT_COMMIT",
+        "NEXUS_SOURCE_COMMIT",
+        "ZEABUR_GIT_COMMIT_SHA",
+        "ZEABUR_ENV_GITHUB_SHA",
+        "ZEABUR_ENV_ZEABUR_GIT_COMMIT_SHA",
+        "SOURCE_COMMIT",
+    ):
         value = (os.environ.get(key) or "").strip()
         if value:
             return value

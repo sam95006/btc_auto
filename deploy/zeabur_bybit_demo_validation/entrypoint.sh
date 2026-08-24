@@ -57,25 +57,8 @@ if [ -f ./demo_founder_gate.env ]; then
   echo "founder_gate_file=loaded_gaps_only"
 fi
 
-# Deployment identity: baked file (build-arg) wins; else Zeabur/GitHub env (no temp CTX).
-resolve_commit_identity() {
-  if [ -s ./DEPLOYMENT_COMMIT ]; then
-    tr -d ' \t\r\n' < ./DEPLOYMENT_COMMIT
-    return 0
-  fi
-  for key in NEXUS_DEPLOYMENT_COMMIT NEXUS_SOURCE_COMMIT GITHUB_SHA; do
-    # shellcheck disable=SC2086
-    eval "val=\${$key-}"
-    val=$(printf '%s' "$val" | tr -d ' \t\r\n')
-    if [ -n "$val" ] && [ "$val" != "unknown" ] && [ "$val" != "MISSING" ]; then
-      printf '%s' "$val"
-      return 0
-    fi
-  done
-  return 1
-}
-
-if DEPLOY_SHA=$(resolve_commit_identity); then
+# Deployment identity: baked file wins; env fallback is full-SHA only.
+if DEPLOY_SHA=$(./resolve_deployment_identity.sh print); then
   printf '%s' "$DEPLOY_SHA" > ./DEPLOYMENT_COMMIT
   printf '%s' "$DEPLOY_SHA" > ./SOURCE_COMMIT
   export NEXUS_DEPLOYMENT_COMMIT="$DEPLOY_SHA"

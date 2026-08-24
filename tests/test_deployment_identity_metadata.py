@@ -28,6 +28,14 @@ def test_runtime_deployment_commit_sot_is_dynamic(monkeypatch) -> None:
     assert v2_policy.RUNTIME_DEPLOYMENT_COMMIT_SOT.startswith("cccc")
 
 
+def test_resolve_runtime_deployment_commit_accepts_zeabur_git_sha(monkeypatch) -> None:
+    monkeypatch.delenv("NEXUS_DEPLOYMENT_COMMIT", raising=False)
+    monkeypatch.delenv("NEXUS_SOURCE_COMMIT", raising=False)
+    monkeypatch.delenv("GITHUB_SHA", raising=False)
+    monkeypatch.setenv("ZEABUR_GIT_COMMIT_SHA", "dddddddddddddddddddddddddddddddddddddddd")
+    assert v2_policy.resolve_runtime_deployment_commit().startswith("dddd")
+
+
 def test_demo_founder_gate_defaults_are_not_live_approvals() -> None:
     text = Path("deploy/zeabur_bybit_demo_validation/demo_founder_gate.env").read_text(encoding="utf-8")
     assert "FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" in text
