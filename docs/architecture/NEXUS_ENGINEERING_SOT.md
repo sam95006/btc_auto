@@ -39,18 +39,23 @@ market observation
 → measurable changed future decision
 → evidence review.
 
-The next immediate blocker is network/service reachability for the live Validation HTTP endpoints, because the documented public URL returned 404 from the latest observational preflight host.
+The next immediate step is final review of PR #34. The previously documented public URL is no longer treated as the current live Validation URL, and there is currently no bound public domain.
 
 ## Latest authoritative handoff state
 
 GitHub:
 - repository: `sam95006/btc_auto`
 - branch: `main`
-- authoritative HEAD at handoff: `b0c952ca2eb994c7fe514c1ac1d7c5f93be600d3`
+- handoff / verified deployment commit: `b0c952ca2eb994c7fe514c1ac1d7c5f93be600d3`
+- source-of-truth rule: the current source of truth is always latest verified GitHub `main` plus verified live deployment identity, not a permanent historical SHA.
+- current PR: PR #34, base `main`, head `codex/nexus-handoff`, not merged and not deployed.
 
 Zeabur Validation:
 - service: `nexus-bybit-demo-learning-validation`
 - service id: `6a82a79aa21454a2cf6b0015`
+- verified deployment identity during handoff: `b0c952ca2eb994c7fe514c1ac1d7c5f93be600d3`
+- current public domain status: Zeabur CLI confirmed `Domains=[]` and `domain list=[]`; there is currently no public domain.
+- legacy URL `https://nexus-bybit-demo-val.zeabur.app` is no longer treated as the current live Validation URL.
 
 Current full-engine deploy definition:
 `deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine`
@@ -62,7 +67,32 @@ Current code safety defaults:
 - exchange write false
 - autonomous disabled until an explicit bounded Founder-gated session.
 
+Current security handoff branch:
+- branch: `codex/nexus-handoff`
+- lineage includes `d02d97e5886874628cdc974785a26624ccf6b370`
+- current handoff branch SHA includes `9be8965bf350d4330f66ba3a314680b72dfb180e`
+- future merge must replace PR/branch SHA references with the new verified `main` commit.
+
+Validation public HTTP guard:
+- guard env: `NEXUS_VALIDATION_PUBLIC_GUARD`
+- control token env: `NEXUS_VALIDATION_CONTROL_TOKEN`
+- unauthenticated public GET allowlist:
+  - `/health`
+  - `/api/nexus/fee-policy`
+  - `/api/nexus/market/status`
+  - `/api/nexus/demo-execution/account`
+  - `/api/nexus/control-plane/overview`
+  - `/api/nexus/demo-execution/status`
+
+Public Exposure Security Audit:
+- completed during handoff.
+- original code surface had unauthenticated state-changing routes.
+- validation public HTTP hardening is completed on `codex/nexus-handoff`.
+- actual production Flask `url_map` security proof: 92 state-changing routes, 92/92 guarded.
+
 Historical P1/P2 evidence remains preserved.
+
+Real Money / Mainnet / Production ARM remain forbidden.
 
 ## Why current architecture must not be rolled back
 
@@ -129,6 +159,11 @@ Enterprise direction:
 - API/reporting;
 - privacy and non-leakage.
 
+Future product direction, deferred and out of scope for this Security PR:
+- Private Auto Trading may use Fed / US macro intelligence as external AI trading intelligence.
+- Member Intelligence may include Social / News / Global Financial Intelligence with per-score Evidence Ledger.
+- These are product-spec directions only and do not expand the current runtime, validation, or security branch scope.
+
 ## DataHunterX competitive direction
 
 The project should learn from DataHunterX's usability and product storytelling without becoming a clone.
@@ -143,21 +178,34 @@ Market Intelligence
 
 ## Current validation sequence
 
-1. Full Engine live boot — achieved historically in this handoff sequence.
-2. Confirm actual live public domain.
-3. Confirm deployment identity.
-4. GET-only observational preflight.
-5. Short bounded validation.
-6. Verify closed-loop learning evidence.
-7. 6H bounded validation.
-8. Review.
-9. 12H.
-10. 24H.
-11. Multi-day / multi-regime.
-12. restart/recovery/API failure/weak-market/volatility/loss-streak tests.
-13. Promotion review.
+1. PR #34 final review.
+2. Merge hardened security branch to `main`.
+3. Deploy hardened Validation Full Engine.
+4. Confirm live deployment commit matches merged `main`.
+5. Confirm Validation guard active.
+6. Create/bind public domain.
+7. GET `/health`.
+8. Verify unauthenticated protected route is denied.
+9. GET-only observational preflight.
+10. Confirm fresh Demo account.
+11. Confirm `open_positions=0`.
+12. Confirm `open_orders=0`.
+13. Confirm `MAINNET=false`.
+14. Confirm `REAL_MONEY=false`.
+15. Confirm `EXCHANGE_WRITE=false`.
+16. Founder review.
+17. Short bounded validation.
+18. Review learning closure.
+19. 6H.
+20. Review.
+21. 12H.
+22. 24H.
+23. Multi-day / multi-regime.
+24. Cross-session learning validation.
+25. Promotion Review.
 
 No step implies real-money authorization.
+No step authorizes real money.
 
 ## Learning boundary
 
