@@ -2,11 +2,71 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+
+EPHEMERAL_LEASE_PATH_MARKERS = (
+    "/tmp/",
+    "\\tmp\\",
+    "/var/tmp/",
+    "\\temp\\",
+    "/temp/",
+    "appdata/local/temp",
+    "appdata\\local\\temp",
+)
+
+
+def _is_ephemeral_path(path: Path) -> bool:
+    text = str(path.resolve()).lower().replace("\\", "/")
+    return any(marker.replace("\\", "/") in text for marker in EPHEMERAL_LEASE_PATH_MARKERS)
+
+
+def _ephemeral_rejection_policy_active() -> bool:
+    probes = [Path("/tmp/nexus_lease_probe"), Path("/var/tmp/nexus_lease_probe")]
+    temp = (os.environ.get("TEMP") or os.environ.get("TMP") or "").strip()
+    if temp:
+        probes.append(Path(temp) / "nexus_lease_probe")
+    return any(_is_ephemeral_path(path) for path in probes)
+
+
+def validate_durable_lease_storage_path(path: Path | str) -> dict[str, Any]:
+    """Prove lease authority storage is not ephemeral before live execution."""
+    root = Path(path).resolve()
+    ephemeral = _is_ephemeral_path(root)
+    if ephemeral:
+        return {
+            "ok": False,
+            "reason": "ephemeral_lease_storage_rejected",
+            "path": str(root),
+            "DURABLE_LEASE_STORAGE_PREFLIGHT_PASS": False,
+            "EPHEMERAL_LEASE_STORAGE_REJECTED": True,
+        }
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+        probe = root / ".lease_storage_probe"
+        token = f"probe-{time.time()}"
+        probe.write_text(token, encoding="utf-8")
+        readback = probe.read_text(encoding="utf-8")
+        probe.unlink(missing_ok=True)
+        writable = readback == token
+    except OSError:
+        writable = False
+    data_root_hint = (os.environ.get("NEXUS_DATA_ROOT") or os.environ.get("DATA_ROOT") or "").strip()
+    under_data_root = bool(data_root_hint) and str(root).startswith(str(Path(data_root_hint).resolve()))
+    ok = writable and not ephemeral
+    return {
+        "ok": ok,
+        "path": str(root),
+        "writable": writable,
+        "under_configured_data_root": under_data_root,
+        "DURABLE_LEASE_STORAGE_PREFLIGHT_PASS": ok,
+        "EPHEMERAL_LEASE_STORAGE_REJECTED": _ephemeral_rejection_policy_active(),
+    }
 
 
 @dataclass(frozen=True)

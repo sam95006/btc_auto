@@ -52,10 +52,11 @@ def test_control_plane_independence_not_boolean_echo(tmp_path: Path, monkeypatch
     _disarm(monkeypatch)
     monkeypatch.setenv("NEXUS_BOUNDED_SESSION_CONTROL_SECRET", _TEST_SECRET)
     monkeypatch.setenv("GITHUB_SHA", _TEST_SHA)
-    proof = prove_control_plane_independence(lease_root=tmp_path / "lease")
+    lease_root = Path("artifacts/test_pre_live_lease_independence")
+    proof = prove_control_plane_independence(lease_root=lease_root)
     assert proof["TRANSIENT_ZEABUR_ENV_RUNTIME_AUTHORITY_REMOVED"] is True
     assert proof["ACTIVE_SESSION_SURVIVES_CONTROL_PLANE_DISARM"] is True
-    store = DurableLeaseStore(tmp_path / "lease")
+    store = DurableLeaseStore(lease_root)
     assert store.load() is not None
 
 
@@ -126,10 +127,34 @@ def test_bootstrap_fail_closed_marker(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_pre_live_qualification_pipeline(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _disarm(monkeypatch)
-    evidence = run_pre_live(sqlite_path=tmp_path / "q.db", lease_root=tmp_path / "lease")
+    evidence = run_pre_live(
+        sqlite_path=tmp_path / "q.db",
+        lease_root=Path("artifacts/test_pre_live_exit_lease"),
+    )
+    assert evidence["FINAL_BOUNDED_6H_EXIT_LIFECYCLE_PASS"] is True
     assert evidence["FINAL_BOUNDED_RUNTIME_PRELIVE_HARDENING_PASS"] is True
     assert evidence["CREATE_ORDER_CALLS"] == 0
     assert evidence["EXCHANGE_WRITE_CALL_COUNT"] == 0
+    assert evidence["DURABLE_LEASE_STORAGE_PREFLIGHT_PASS"] is True
+
+
+def test_ephemeral_lease_storage_rejected() -> None:
+    from backend.nexus_bounded_runtime.durable_lease_store import validate_durable_lease_storage_path
+
+    ephemeral = validate_durable_lease_storage_path("/tmp/nexus_lease_test")
+    assert ephemeral["DURABLE_LEASE_STORAGE_PREFLIGHT_PASS"] is False
+    durable = validate_durable_lease_storage_path("artifacts/lease_probe")
+    assert durable["DURABLE_LEASE_STORAGE_PREFLIGHT_PASS"] is True
+    assert durable["EPHEMERAL_LEASE_STORAGE_REJECTED"] is True
+
+
+def test_wiring_markers_include_exit_lifecycle() -> None:
+    from backend.nexus_bounded_runtime.certified_session import wiring_markers
+
+    markers = wiring_markers()
+    assert markers["BOUNDED_RUNTIME_DURABLE_EXIT_LEDGER_AUTHORITY"] is True
+    assert markers["NO_FIRST_REDUCEONLY_CLOSE_FALLBACK"] is True
+    assert markers["PNL_PROVENANCE_FROM_RECONCILIATION"] is True
 
 
 def test_regression_lock_includes_pre_live_hardening_test() -> None:

@@ -9,6 +9,7 @@ from typing import Any
 from urllib import error, request
 
 from backend.nexus_demo_execution.demo_domain import DEMO_REST_BASE_URL
+from backend.nexus_bounded_runtime.durable_lease_store import validate_durable_lease_storage_path
 from backend.nexus_demo_execution.durable_order_ledger import DurableOrderLedger
 from backend.nexus_demo_execution.kill_switch import KillSwitch
 from backend.nexus_demo_execution.order_reconciliation import BybitDemoReconciler
@@ -155,6 +156,14 @@ def run_preflight(
     checks["SERVICE_IS_LEARNING_VALIDATION"] = service_name == LEARNING_VALIDATION_SERVICE_NAME
     checks["RISK_ENGINE_FINAL_AUTHORITY"] = FIXED_LEVERAGE == 25 and float(MARGIN_PER_TRADE_CAP) == 20.0
     checks["REPEAT_MISTAKE_GUARD_HEALTHY"] = _repeat_mistake_guard_healthy()
+    lease_root = Path(os.environ.get("NEXUS_DATA_ROOT") or os.environ.get("DATA_ROOT") or "artifacts").resolve()
+    lease_storage = validate_durable_lease_storage_path(
+        lease_root / "artifacts" / "bounded_runtime_lease" / "6H_V2"
+    )
+    checks["DURABLE_LEASE_STORAGE_PREFLIGHT_PASS"] = lease_storage.get("DURABLE_LEASE_STORAGE_PREFLIGHT_PASS") is True
+    checks["EPHEMERAL_LEASE_STORAGE_REJECTED"] = lease_storage.get("EPHEMERAL_LEASE_STORAGE_REJECTED") is True
+    if not checks["DURABLE_LEASE_STORAGE_PREFLIGHT_PASS"]:
+        problems.append("durable_lease_storage_not_proven")
     checks["CERTIFIED_BOUNDED_RUNTIME_ACTIVE"] = offline
     if not offline:
         status_payload, _ = _get(f"{base_url.rstrip('/')}/api/nexus/demo-execution/bounded-6h/status")
@@ -237,6 +246,8 @@ def run_preflight(
         "MIGRATION_0007_PRESENT",
         "DURABLE_LESSONS_READABLE",
         "CERTIFIED_BOUNDED_RUNTIME_ACTIVE",
+        "DURABLE_LEASE_STORAGE_PREFLIGHT_PASS",
+        "EPHEMERAL_LEASE_STORAGE_REJECTED",
     ):
         if not checks.get(key):
             problems.append(key.lower())

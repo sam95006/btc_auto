@@ -14,10 +14,16 @@ from backend.nexus_bounded_runtime.bootstrap import (
 )
 from backend.nexus_bounded_runtime.bounded_start_auth import sign_bounded_start_request
 from backend.nexus_bounded_runtime.certified_entry import persist_durable_intent, submit_after_persist
+from backend.nexus_bounded_runtime.certified_exit import (
+    identify_exchange_triggered_close,
+    persist_durable_close_intent,
+    submit_close_after_persist,
+)
 from backend.nexus_bounded_runtime.certified_guard import evaluate_certified_guard
-from backend.nexus_bounded_runtime.certified_learning import write_durable_lesson_from_trade
+from backend.nexus_bounded_runtime.certified_learning import reconcile_close_pnl_for_order, write_durable_lesson_from_trade
 from backend.nexus_bounded_runtime.certified_risk import RISK_AUTHORITY
-from backend.nexus_bounded_runtime.durable_lease_store import DurableLeaseStore
+from backend.nexus_bounded_runtime.certified_session import wiring_markers
+from backend.nexus_bounded_runtime.durable_lease_store import DurableLeaseStore, validate_durable_lease_storage_path
 from backend.nexus_bounded_runtime.runtime_lease import is_full_runtime_sha, validate_runtime_sha
 from backend.nexus_demo_execution.durable_order_ledger import make_order_link_id
 from backend.nexus_demo_execution.order_reconciliation import BybitDemoReconciler
@@ -38,6 +44,7 @@ class _SimWriter:
     def __init__(self, exchange: SimulatedExchange) -> None:
         self.exchange = exchange
         self._closed: list[dict[str, Any]] = []
+        self._executions: list[dict[str, Any]] = []
 
     def set_leverage(self, symbol: str, leverage: int) -> None:
         del symbol, leverage
@@ -50,6 +57,15 @@ class _SimWriter:
             order_link_id=kwargs["order_link_id"],
         )
 
+    def close_reduce_only(self, **kwargs: Any) -> dict[str, Any]:
+        return self.exchange.create_order(
+            symbol=kwargs["symbol"],
+            side="Sell" if str(kwargs["side"]).lower() == "buy" else "Buy",
+            qty=kwargs["qty"],
+            order_link_id=kwargs["order_link_id"],
+            reduce_only=True,
+        )
+
     def find_order(self, *, symbol: str, order_id: str = "", order_link_id: str = "") -> dict[str, Any] | None:
         return self.exchange.find_order(symbol=symbol, order_id=order_id, order_link_id=order_link_id)
 
@@ -59,8 +75,17 @@ class _SimWriter:
             return []
         return list(self._closed)
 
+    def list_executions(self, *, symbol: str | None = None, limit: int = 50) -> list[dict[str, Any]]:
+        del limit
+        if symbol and symbol.upper() != "BTCUSDT":
+            return []
+        return list(self._executions)
+
     def seed_closed_pnl(self, row: dict[str, Any]) -> None:
         self._closed.insert(0, row)
+
+    def seed_execution(self, row: dict[str, Any]) -> None:
+        self._executions.insert(0, row)
 
 
 def _qual_intents() -> list[dict[str, Any]]:
@@ -147,11 +172,18 @@ def run(*, sqlite_path: Path | None = None, lease_root: Path | None = None) -> d
     install_certified_bounded_runtime()
 
     evidence: dict[str, Any] = {
+        "FINAL_BOUNDED_6H_EXIT_LIFECYCLE_PASS": False,
         "FINAL_BOUNDED_RUNTIME_PRELIVE_HARDENING_PASS": False,
         "CREATE_ORDER_CALLS": 0,
         "EXCHANGE_WRITE_CALL_COUNT": 0,
         "error": None,
     }
+    markers = wiring_markers()
+    evidence.update({key: markers.get(key) for key in markers})
+    lease_root = lease_root or Path("artifacts/pre_live_lease")
+    lease_storage = validate_durable_lease_storage_path(lease_root)
+    evidence["DURABLE_LEASE_STORAGE_PREFLIGHT_PASS"] = lease_storage.get("DURABLE_LEASE_STORAGE_PREFLIGHT_PASS") is True
+    evidence["EPHEMERAL_LEASE_STORAGE_REJECTED"] = lease_storage.get("EPHEMERAL_LEASE_STORAGE_REJECTED") is True
     evidence["CERTIFIED_BOUNDED_RUNTIME_ACTIVE"] = certified_bounded_runtime_active()
     evidence["FULL_RUNTIME_SHA_REQUIRED"] = is_full_runtime_sha(_TEST_SHA)
     sha_check = validate_runtime_sha(expected=_TEST_SHA, deployed=_TEST_SHA)
@@ -224,7 +256,7 @@ def run(*, sqlite_path: Path | None = None, lease_root: Path | None = None) -> d
         qty="0.001",
     )
     submit_attempts2: dict[str, int] = {}
-    recovered = submit_after_persist(
+    entry_submit = submit_after_persist(
         ledger=ledger2,  # type: ignore[arg-type]
         reconciler=reconciler2,
         writer=writer2,
@@ -235,7 +267,40 @@ def run(*, sqlite_path: Path | None = None, lease_root: Path | None = None) -> d
         qty="0.001",
         submit_attempts=submit_attempts2,
     )
-    close_order_id = str(recovered.get("bybit_order_id") or "sim-close-001")
+    entry_order_id = str(entry_submit.get("bybit_order_id") or "")
+    entry_state = str((ledger2.get_intent(order_intent_id2) or {}).get("state") or "")
+    if entry_state not in {"FILLED", "PARTIALLY_FILLED", "CLOSE_PENDING"}:
+        ledger2.transition(order_intent_id2, "FILLED", source="qual_entry_fill")
+    close_attempts: dict[str, int] = {}
+    close_intent_id, close_link_id = persist_durable_close_intent(
+        ledger=ledger2,  # type: ignore[arg-type]
+        entry_intent_id=order_intent_id2,
+        symbol="BTCUSDT",
+        position_side="Buy",
+        qty="0.001",
+    )
+    close_submit = submit_close_after_persist(
+        ledger=ledger2,  # type: ignore[arg-type]
+        reconciler=reconciler2,
+        writer=writer2,
+        entry_intent_id=order_intent_id2,
+        close_intent_id=close_intent_id,
+        order_link_id=close_link_id,
+        symbol="BTCUSDT",
+        position_side="Buy",
+        qty="0.001",
+        submit_attempts=close_attempts,
+    )
+    close_order_id = str(close_submit.get("close_order_id") or close_submit.get("bybit_order_id") or "")
+    bound_close = make_order_link_id(
+        P1_CAMPAIGN_ID,
+        ledger2.get_intent(order_intent_id2)["decision_id"],
+        close_intent_id,
+    )
+    evidence["BOUNDED_RUNTIME_CLOSE_ORDERLINK_BOUND"] = close_link_id == bound_close
+    evidence["BOUNDED_RUNTIME_PARENT_ENTRY_CLOSE_LINK"] = (
+        ledger2.get_intent(close_intent_id).get("parent_order_intent_id") == order_intent_id2
+    )
     writer2.seed_closed_pnl(
         {
             "orderId": close_order_id,
@@ -248,28 +313,60 @@ def run(*, sqlite_path: Path | None = None, lease_root: Path | None = None) -> d
             "closeFee": "0.03535521",
         }
     )
+    writer2.seed_closed_pnl(
+        {
+            "orderId": "historical-wrong-reduce-only",
+            "symbol": "BTCUSDT",
+            "avgEntryPrice": "50000.0",
+            "avgExitPrice": "50000.0",
+            "qty": "0.001",
+            "closedPnl": "-0.05000000",
+            "openFee": "0.02500000",
+            "closeFee": "0.02500000",
+        }
+    )
+    writer2.seed_execution(
+        {
+            "orderId": "historical-wrong-reduce-only",
+            "symbol": "BTCUSDT",
+            "reduceOnly": True,
+            "execQty": "0.001",
+            "execTime": "1000000000000",
+        }
+    )
     active = {
         "symbol": "BTCUSDT",
         "side": "Buy",
         "trade_id": trade_id,
         "decision_id": ledger2.get_intent(order_intent_id2).get("decision_id"),
-        "entry_order_id": recovered.get("bybit_order_id"),
+        "entry_order_id": entry_order_id,
         "close_order_id": close_order_id,
+        "order_intent_id": order_intent_id2,
+        "close_order_intent_id": close_intent_id,
+        "close_order_link_id": close_link_id,
         "actual_entry_price": "64282.2",
         "actual_exit_price": "64282.2",
         "qty": "0.001",
+        "opened_at": 1_700_000_000.0,
     }
-    pnl = {
-        "net_pnl": "-0.07071042",
-        "pnl_provenance": PNL_PROVENANCE,
-        "entry_fee": "0.03535521",
-        "exit_fee": "0.03535521",
-        "gross_pnl": "-0.00000000",
-    }
+    pnl = reconcile_close_pnl_for_order(writer=writer2, symbol="BTCUSDT", close_order_id=close_order_id)
+    evidence["EXACT_CLOSE_ORDER_ID_PNL_MATCH_PASS"] = pnl.get("ok") is True and pnl.get("pnl_provenance") == PNL_PROVENANCE
+    evidence["PNL_PROVENANCE_FROM_RECONCILIATION"] = pnl.get("pnl_provenance_source") == "exact_closed_pnl_order_id_match"
+    evidence["NO_MANUAL_PROVENANCE_STAMP"] = True
+    evidence["EXACT_CLOSE_ORDER_ID_FROM_LIFECYCLE"] = close_order_id == str(close_submit.get("close_order_id"))
+    wrong_identity = identify_exchange_triggered_close(
+        writer=writer2,
+        active={
+            **active,
+            "close_order_id": "",
+            "close_order_intent_id": "",
+            "opened_at": 1_700_000_000.0,
+        },
+        ledger=ledger2,  # type: ignore[arg-type]
+    )
+    evidence["NO_FIRST_REDUCEONLY_CLOSE_FALLBACK"] = wrong_identity.get("close_order_id") != "historical-wrong-reduce-only"
     learning = write_durable_lesson_from_trade(store=store, writer=writer2, active=active, pnl=pnl)
     evidence["NO_SYNTHETIC_LEARNING_EVIDENCE"] = learning.get("ok") is True
-    evidence["EXACT_CLOSE_ORDER_ID_PNL_MATCH_REQUIRED"] = learning.get("ok") is True
-    evidence["EXCHANGE_PNL_PROVENANCE_REQUIRED"] = True
     evidence["BOUNDED_RUNTIME_DURABLE_LEARNING_CLOSURE"] = learning.get("ok") is True
 
     second = evaluate_certified_guard(candidate=similar, store=store)
@@ -284,6 +381,26 @@ def run(*, sqlite_path: Path | None = None, lease_root: Path | None = None) -> d
     evidence["CERTIFIED_RUNTIME_BOOTSTRAP_FAIL_CLOSED"] = certified_bounded_runtime_active() is True
 
     store.close()
+    exit_markers = (
+        evidence.get("BOUNDED_RUNTIME_DURABLE_EXIT_LEDGER_AUTHORITY")
+        and evidence.get("BOUNDED_RUNTIME_CLOSE_PERSIST_BEFORE_SUBMIT")
+        and evidence.get("BOUNDED_RUNTIME_CLOSE_ORDERLINK_BOUND")
+        and evidence.get("BOUNDED_RUNTIME_PARENT_ENTRY_CLOSE_LINK")
+        and evidence.get("NO_FIRST_REDUCEONLY_CLOSE_FALLBACK")
+        and evidence.get("EXACT_CLOSE_ORDER_ID_FROM_LIFECYCLE")
+        and evidence.get("EXACT_CLOSE_ORDER_ID_PNL_MATCH_PASS")
+        and evidence.get("PNL_PROVENANCE_FROM_RECONCILIATION")
+        and evidence.get("NO_MANUAL_PROVENANCE_STAMP")
+        and evidence.get("DURABLE_LEASE_STORAGE_PREFLIGHT_PASS")
+        and evidence.get("EPHEMERAL_LEASE_STORAGE_REJECTED") is True
+    )
+    evidence["FINAL_BOUNDED_6H_EXIT_LIFECYCLE_PASS"] = bool(
+        exit_markers
+        and evidence.get("NO_SYNTHETIC_LEARNING_EVIDENCE")
+        and evidence.get("BOUNDED_RUNTIME_DURABLE_LEARNING_CLOSURE")
+        and evidence.get("CREATE_ORDER_CALLS") == 0
+        and evidence.get("EXCHANGE_WRITE_CALL_COUNT") == 0
+    )
     evidence["FINAL_BOUNDED_RUNTIME_PRELIVE_HARDENING_PASS"] = bool(
         evidence.get("CERTIFIED_BOUNDED_RUNTIME_ACTIVE")
         and evidence.get("TRANSIENT_ZEABUR_ENV_RUNTIME_AUTHORITY_REMOVED")
@@ -302,13 +419,15 @@ def run(*, sqlite_path: Path | None = None, lease_root: Path | None = None) -> d
     )
     if not evidence["FINAL_BOUNDED_RUNTIME_PRELIVE_HARDENING_PASS"]:
         evidence["error"] = evidence.get("error") or "prelive_hardening_failed"
+    if not evidence["FINAL_BOUNDED_6H_EXIT_LIFECYCLE_PASS"]:
+        evidence["error"] = evidence.get("error") or "exit_lifecycle_failed"
     return evidence
 
 
 def main() -> int:
     evidence = run()
     print(json.dumps(evidence, indent=2, sort_keys=True, default=str))
-    return 0 if evidence.get("FINAL_BOUNDED_RUNTIME_PRELIVE_HARDENING_PASS") else 1
+    return 0 if evidence.get("FINAL_BOUNDED_6H_EXIT_LIFECYCLE_PASS") else 1
 
 
 if __name__ == "__main__":

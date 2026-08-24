@@ -14,8 +14,16 @@ from backend.nexus_bounded_runtime.certified_entry import (
     persist_durable_intent,
     submit_after_persist,
 )
+from backend.nexus_bounded_runtime.certified_exit import (
+    identify_exchange_triggered_close,
+    persist_durable_close_intent,
+    submit_close_after_persist,
+)
 from backend.nexus_bounded_runtime.certified_guard import evaluate_certified_guard
-from backend.nexus_bounded_runtime.certified_learning import write_durable_lesson_from_trade
+from backend.nexus_bounded_runtime.certified_learning import (
+    reconcile_close_pnl_for_order,
+    write_durable_lesson_from_trade,
+)
 from backend.nexus_bounded_runtime.certified_risk import RISK_AUTHORITY, evaluate_certified_entry_risk
 from backend.nexus_bounded_runtime.durable_lease_store import DurableLeaseStore
 from backend.nexus_bounded_runtime.runtime_lease import (
@@ -33,7 +41,6 @@ from backend.nexus_demo_execution.http_demo_reader import redact_secrets
 from backend.nexus_demo_execution.kill_switch import KillSwitchTrigger
 from backend.nexus_demo_execution.order_reconciliation import BybitDemoReconciler
 from backend.nexus_demo_execution.p2_durable_learning_store import DurableLessonStore
-from backend.nexus_demo_execution.p2_run8_durable_loader import PNL_PROVENANCE
 from backend.nexus_demo_execution.v2_session_recovery import LeaderLockError
 from backend.nexus_persistence_pg.pool import PostgresPool
 
@@ -57,7 +64,9 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
     _founder_auth_consumed: bool = field(default=False, repr=False)
     _durable_lease_store: DurableLeaseStore | None = field(default=None, repr=False)
     _submit_attempts: dict[str, int] = field(default_factory=dict, repr=False)
+    _close_submit_attempts: dict[str, int] = field(default_factory=dict, repr=False)
     _learning_closure_hold: bool = field(default=False, repr=False)
+    _last_known_active: dict[str, Any] | None = field(default=None, repr=False)
 
     def _lease_store(self) -> DurableLeaseStore:
         if self._durable_lease_store is None:
@@ -307,7 +316,7 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
             if not pos:
                 self._kill("no_fill", KillSwitchTrigger.GATE_FAILURE)
                 return None
-            return {
+            active = {
                 "symbol": cand.symbol,
                 "side": str(pos.get("side") or cand.direction),
                 "qty": str(pos.get("size") or qty),
@@ -326,31 +335,139 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
                 "candidate": cdict,
                 "cost_labels": list(cost.labels),
             }
+            self._track_active_trade(active)
+            return active
         return None
 
+    def _track_active_trade(self, active: dict[str, Any] | None) -> None:
+        self._last_known_active = active
+
+    def _resolve_active_for_close(self, symbol: str) -> dict[str, Any] | None:
+        active = self._last_known_active
+        if active and str(active.get("symbol") or "") == symbol:
+            return active
+        return None
+
+    def _execute_durable_close(self, active: dict[str, Any], symbol: str, side: str, qty: str) -> dict[str, Any]:
+        try:
+            self._ensure_certified_stores()
+        except ValueError as exc:
+            return {"ok": False, "reason": str(exc)}
+        entry_intent_id = str(active.get("order_intent_id") or "")
+        if not entry_intent_id:
+            return {"ok": False, "reason": "entry_intent_missing"}
+        ledger: DurableOrderLedger = self._certified_ledger
+        reconciler: BybitDemoReconciler = self._certified_reconciler
+        try:
+            close_intent_id, close_link_id = persist_durable_close_intent(
+                ledger=ledger,
+                entry_intent_id=entry_intent_id,
+                symbol=symbol,
+                position_side=side,
+                qty=qty,
+            )
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "reason": type(exc).__name__}
+        submit = submit_close_after_persist(
+            ledger=ledger,
+            reconciler=reconciler,
+            writer=self.writer,
+            entry_intent_id=entry_intent_id,
+            close_intent_id=close_intent_id,
+            order_link_id=close_link_id,
+            symbol=symbol,
+            position_side=side,
+            qty=qty,
+            submit_attempts=self._close_submit_attempts,
+        )
+        attempts = int(submit.get("create_order_calls") or submit.get("exchange_write_attempt_total") or 0)
+        if attempts:
+            with self._lock:
+                self._state["exchange_write_attempt_total"] += attempts
+        if submit.get("close_order_id") or submit.get("bybit_order_id"):
+            active["close_order_id"] = str(submit.get("close_order_id") or submit.get("bybit_order_id"))
+            active["close_order_intent_id"] = close_intent_id
+            active["close_order_link_id"] = close_link_id
+        return submit
+
+    def _force_flat(self, symbol: str, side: str, qty: str) -> None:
+        if not symbol or _f(qty) <= 0:
+            return
+        active = self._resolve_active_for_close(symbol)
+        if active and active.get("order_intent_id"):
+            result = self._execute_durable_close(active, symbol, side, qty)
+            if result.get("ok"):
+                return
+        try:
+            super()._force_flat(symbol, side, qty)
+        except Exception:
+            pass
+
+    def _supervise(self, active: dict[str, Any], export_root, account_epoch: str) -> dict[str, Any] | None:  # type: ignore[no-untyped-def]
+        self._track_active_trade(active)
+        return super()._supervise(active, export_root, account_epoch)
+
     def _record_exit(self, active: dict[str, Any], reason: str, export_root, account_epoch: str) -> None:  # type: ignore[no-untyped-def]
-        from backend.nexus_demo_execution.pnl_reconcile import reconcile_via_writer
-
-        close_order_id = active.get("close_order_id")
-        if not close_order_id and getattr(self.writer, "list_executions", None):
+        self._track_active_trade(active)
+        close_order_id = str(active.get("close_order_id") or "").strip()
+        if not close_order_id:
             try:
-                for row in self.writer.list_executions(symbol=active.get("symbol"), limit=20):
-                    if str(row.get("reduceOnly")).lower() in {"true", "1"}:
-                        close_order_id = str(row.get("orderId") or "")
-                        break
-            except Exception:
-                close_order_id = None
-        if close_order_id:
-            active = {**active, "close_order_id": close_order_id}
+                self._ensure_certified_stores()
+                identity = identify_exchange_triggered_close(
+                    writer=self.writer,
+                    active=active,
+                    ledger=self._certified_ledger,
+                )
+            except ValueError:
+                identity = {"ok": False, "reason": "CLOSE_IDENTITY_HOLD", "hold": True}
+            if identity.get("ok"):
+                close_order_id = str(identity.get("close_order_id") or "")
+                active = {**active, "close_order_id": close_order_id, "close_identity_source": identity.get("source")}
+            else:
+                self._learning_closure_hold = True
+                with self._lock:
+                    self._state["durable_learning_closure_hold"] = True
+                    self._state["close_identity_hold"] = True
+                self.persistence.append(
+                    "durable_lessons",
+                    {"ok": False, "reason": identity.get("reason") or "CLOSE_IDENTITY_HOLD", "exit_reason": reason},
+                    account_epoch=account_epoch,
+                )
+                self.session_write_enabled = False
+                self.gate.close_smoke_write_window()
+                super()._record_exit(active, reason, export_root, account_epoch)
+                self._track_active_trade(None)
+                return
 
-        pnl = reconcile_via_writer(self.writer, active["symbol"])
-        pnl["pnl_provenance"] = PNL_PROVENANCE
+        pnl_result = reconcile_close_pnl_for_order(
+            writer=self.writer,
+            symbol=str(active.get("symbol") or ""),
+            close_order_id=close_order_id,
+        )
+        if not pnl_result.get("ok"):
+            self._learning_closure_hold = True
+            with self._lock:
+                self._state["durable_learning_closure_hold"] = True
+            self.persistence.append(
+                "durable_lessons",
+                {"ok": False, "reason": "LEARNING_CLOSURE_HOLD", "detail": pnl_result.get("reason"), "exit_reason": reason},
+                account_epoch=account_epoch,
+            )
+            self.session_write_enabled = False
+            self.gate.close_smoke_write_window()
+            super()._record_exit({**active, "close_order_id": close_order_id}, reason, export_root, account_epoch)
+            self._track_active_trade(None)
+            return
+
+        pnl = {key: value for key, value in pnl_result.items() if key not in {"ok", "hold", "closed_pnl_row"}}
+        if pnl_result.get("exit_price"):
+            active = {**active, "actual_exit_price": str(pnl_result.get("exit_price"))}
         try:
             self._ensure_certified_stores()
             lesson = write_durable_lesson_from_trade(
                 store=self._certified_lesson_store,
                 writer=self.writer,
-                active=active,
+                active={**active, "close_order_id": close_order_id},
                 pnl=pnl,
             )
             self.persistence.append("durable_lessons", redact_secrets(lesson), account_epoch=account_epoch)
@@ -372,24 +489,36 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
             )
             self.session_write_enabled = False
             self.gate.close_smoke_write_window()
-        super()._record_exit(active, reason, export_root, account_epoch)
+        super()._record_exit({**active, "close_order_id": close_order_id}, reason, export_root, account_epoch)
+        self._track_active_trade(None)
 
 
 def wiring_markers() -> dict[str, bool]:
     source = inspect.getsource(CertifiedBounded6HSession._try_entry)
-    learning_source = inspect.getsource(CertifiedBounded6HSession._record_exit)
+    exit_source = inspect.getsource(CertifiedBounded6HSession._record_exit)
+    close_source = inspect.getsource(CertifiedBounded6HSession._execute_durable_close)
     start_source = inspect.getsource(CertifiedBounded6HSession.start)
     return {
         "BOUNDED_RUNTIME_DURABLE_LEDGER_AUTHORITY": "persist_durable_intent" in source,
         "BOUNDED_RUNTIME_PERSIST_BEFORE_SUBMIT": source.index("persist_durable_intent") < source.index("submit_after_persist"),
         "BOUNDED_RUNTIME_ORDERLINK_BOUND_TO_DURABLE_INTENT": "order_link_id" in source and "persist_durable_intent" in source,
+        "BOUNDED_RUNTIME_DURABLE_EXIT_LEDGER_AUTHORITY": "persist_durable_close_intent" in close_source,
+        "BOUNDED_RUNTIME_CLOSE_PERSIST_BEFORE_SUBMIT": "persist_durable_close_intent" in close_source
+        and close_source.index("persist_durable_close_intent") < close_source.index("submit_close_after_persist"),
+        "BOUNDED_RUNTIME_CLOSE_ORDERLINK_BOUND": "close_order_link_id" in close_source,
+        "BOUNDED_RUNTIME_PARENT_ENTRY_CLOSE_LINK": "parent_order_intent_id" in inspect.getsource(persist_durable_close_intent),
+        "NO_FIRST_REDUCEONLY_CLOSE_FALLBACK": "list_executions" not in exit_source,
+        "EXACT_CLOSE_ORDER_ID_FROM_LIFECYCLE": "close_order_id" in exit_source and "reconcile_close_pnl_for_order" in exit_source,
+        "EXACT_CLOSE_ORDER_ID_PNL_MATCH_PASS": "reconcile_close_pnl_for_order" in exit_source,
+        "PNL_PROVENANCE_FROM_RECONCILIATION": "pnl_provenance" not in exit_source,
+        "NO_MANUAL_PROVENANCE_STAMP": "PNL_PROVENANCE" not in exit_source,
         "BOUNDED_RUNTIME_DURABLE_LESSON_RETRIEVAL": "evaluate_certified_guard" in source,
         "BOUNDED_RUNTIME_CERTIFIED_RMG_AUTHORITY": "evaluate_certified_guard" in source,
         "BOUNDED_RUNTIME_SESSION_MEMORY_NOT_POLICY_AUTHORITY": "session_mistake_telemetry" in source,
-        "BOUNDED_RUNTIME_DURABLE_LEARNING_CLOSURE": "write_durable_lesson_from_trade" in learning_source,
+        "BOUNDED_RUNTIME_DURABLE_LEARNING_CLOSURE": "write_durable_lesson_from_trade" in exit_source,
         "BOUNDED_RUNTIME_EXCHANGE_PNL_TO_LESSON": "validate_exchange_outcome_evidence" in inspect.getsource(write_durable_lesson_from_trade),
         "CERTIFIED_RISK_FINAL_AUTHORITY": "evaluate_certified_entry_risk" in source,
         "SUBMIT_UNKNOWN_EXACT_RECONCILIATION": "submit_attempts" in source,
-        "LEARNING_FAILURE_BLOCKS_NEXT_ENTRY": "_learning_closure_hold" in learning_source,
+        "LEARNING_FAILURE_BLOCKS_NEXT_ENTRY": "_learning_closure_hold" in exit_source,
         "SIGNED_ONE_SHOT_FOUNDER_START": "verify_bounded_start_request" in start_source,
     }

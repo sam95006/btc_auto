@@ -20,6 +20,50 @@ def _required_text(value: Any, field: str) -> str:
     return text
 
 
+def reconcile_close_pnl_for_order(
+    *,
+    writer: Any,
+    symbol: str,
+    close_order_id: str,
+) -> dict[str, Any]:
+    """Exact close orderId → closed-pnl match; provenance returned only from exchange evidence."""
+    from backend.nexus_demo_execution.pnl_reconcile import reconcile_closed_trade_pnl
+
+    wanted = str(close_order_id or "").strip()
+    if not wanted:
+        return {"ok": False, "reason": "close_order_id_missing", "hold": True}
+
+    closed_row = find_closed_pnl_by_order_id(writer, symbol=symbol, close_order_id=wanted)
+    if closed_row is None:
+        return {"ok": False, "reason": "exact_closed_pnl_not_found", "hold": True}
+    if str(closed_row.get("orderId") or "") != wanted:
+        return {"ok": False, "reason": "closed_pnl_order_id_mismatch", "hold": True}
+
+    pnl = reconcile_closed_trade_pnl(closed_pnl_row=closed_row)
+    if pnl.get("net_pnl_status") != "AVAILABLE" or pnl.get("net_pnl") is None:
+        return {
+            "ok": False,
+            "reason": "exchange_pnl_not_available",
+            "hold": True,
+            "pnl": pnl,
+            "closed_pnl_row": closed_row,
+        }
+
+    pnl = {
+        **pnl,
+        "ok": True,
+        "close_order_id": wanted,
+        "closed_pnl_row": closed_row,
+        "entry_price": closed_row.get("avgEntryPrice"),
+        "exit_price": closed_row.get("avgExitPrice"),
+        "filled_qty": closed_row.get("qty"),
+        "realized_demo_pnl": pnl.get("net_pnl"),
+        "pnl_provenance": PNL_PROVENANCE,
+        "pnl_provenance_source": "exact_closed_pnl_order_id_match",
+    }
+    return pnl
+
+
 def find_closed_pnl_by_order_id(writer: Any, *, symbol: str, close_order_id: str) -> dict[str, Any] | None:
     list_fn = getattr(writer, "list_closed_pnl", None)
     if not callable(list_fn):
