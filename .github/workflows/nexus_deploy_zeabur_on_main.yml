@@ -1,5 +1,9 @@
 name: nexus-deploy-zeabur-on-main
 
+# Deploys the generic ZEABUR_SERVICE_ID target (unified / main app secret).
+# Does NOT deploy Bybit Demo Learning Validation, Stage3, or Member Preview.
+# Validation deploys require Founder workflow_dispatch on a Validation-specific workflow.
+
 on:
   workflow_dispatch:
   push:
@@ -14,7 +18,7 @@ on:
       - "tools/research/run_promotion_review_candidate.py"
       - "deploy/zeabur_unified/**"
       - ".env.example"
-      - ".github/workflows/**"
+      # Intentionally exclude .github/workflows/** so workflow-only edits do not redeploy.
 
 permissions:
   contents: read
@@ -23,8 +27,19 @@ concurrency:
   group: nexus-deploy-zeabur-on-main
   cancel-in-progress: false
 
+env:
+  FORBIDDEN_STAGE3: 6a3b81652fdef84a45a2a553
+  FORBIDDEN_VALIDATION_CANDIDATE: 6a69ad539949111176cefe63
+  FORBIDDEN_MEMBER_A: 69d559cb2696d526abde8cda
+  FORBIDDEN_MEMBER_PREVIEW: 6a744ba3472e2c91a9e728a8
+  FORBIDDEN_VALIDATION_LOCAL_CANDIDATE: 6a82a79aa21454a2cf6b0015
+
 jobs:
+  backend-product-gate:
+    uses: ./.github/workflows/backend_product_gate.yml
+
   deploy:
+    needs: backend-product-gate
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -36,7 +51,7 @@ jobs:
       - name: Install Zeabur CLI
         run: npm i -g zeabur
 
-      - name: Deploy to Zeabur
+      - name: Deploy to Zeabur (guarded service id)
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
@@ -46,5 +61,11 @@ jobs:
             echo "Missing ZEABUR_* secrets. Abort deploy."
             exit 1
           fi
+          case "$ZEABUR_SERVICE_ID" in
+            "$FORBIDDEN_STAGE3"|"$FORBIDDEN_VALIDATION_CANDIDATE"|"$FORBIDDEN_MEMBER_A"|"$FORBIDDEN_MEMBER_PREVIEW"|"$FORBIDDEN_VALIDATION_LOCAL_CANDIDATE")
+              echo "BLOCKED: ZEABUR_SERVICE_ID must not target Stage3 / Demo Validation / Member Preview."
+              echo "Use a Founder-gated Validation or Member workflow for those services."
+              exit 1
+              ;;
+          esac
           zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$ZEABUR_SERVICE_ID" -i=false
-

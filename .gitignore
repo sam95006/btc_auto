@@ -26,6 +26,9 @@ artifacts/**/pub_l*_status.json
 artifacts/**/market_cache/**
 artifacts/**/micro_cache/**
 artifacts/_gha_*/
+# Local upload ZIPs / extracted deploy bundles (never source-of-truth)
+artifacts/deploy/**/*.zip
+artifacts/deploy/nexus-bybit-demo-learning-validation-*/
 *.stdout.txt
 *_live.json
 12h_*.json

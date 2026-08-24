@@ -22,12 +22,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     NEXUS_WEB_ONLY=true \
     NEXUS_EMBEDDED_WORKER=false \
     FIXED_LEVERAGE=25 \
-    NEXUS_DATA_DIR=/tmp/nexus_demo_validation \
+    NEXUS_DATA_ROOT=/app/data/nexus_demo_validation \
+    NEXUS_DATA_DIR=/app/data/nexus_demo_validation \
     PORT=8080
 
 WORKDIR /app
 
-RUN mkdir -p /tmp/nexus_demo_validation /data/nexus_demo_validation || true
+# Prefer persistent mount path; entrypoint may fall back if unwritable.
+RUN mkdir -p /app/data/nexus_demo_validation /data/nexus_demo_validation || true
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
