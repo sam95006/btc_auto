@@ -18,6 +18,9 @@ _STALE_LABELS = frozenset(
     {
         "92a89dfaa8cc",
         "92a89dfaa8cc0000000000000000000000000000",
+        # Historical PR24 Validation bake — never current live identity.
+        "81b0d14e2ffb",
+        "81b0d14e2ffb6c5b5e92eeedd7962ed60dd00bc0",
     }
 )
 

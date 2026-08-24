@@ -34,3 +34,4 @@ Live post-deploy evidence (disarmed health boundary): `persistence_probe=ok`, `M
 - Deploy definition: `deploy/zeabur_bybit_demo_validation/`
 - Full engine Dockerfile (repo-root build context): `deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine`
 - Pin via Zeabur env: `ZBPACK_DOCKERFILE_PATH=deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine` (or minimal `Dockerfile` for health-only)
+- Documented public URL `https://nexus-bybit-demo-val.zeabur.app` returned HTTP 404 from this workstation (2026-08-24 observational GET). Confirm the live domain before 6H.

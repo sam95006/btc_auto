@@ -82,7 +82,9 @@ RUN chmod +x entrypoint.sh \
  && grep -q "BoundedAutonomousSessionEngine" backend/nexus_demo_execution/bounded_12h_session.py \
  && ! grep -q "_run_placeholder" backend/nexus_demo_execution/bounded_12h_session.py \
  && grep -q "BOUNDED_AUTONOMOUS_ENGINE_V1" backend/nexus_demo_execution/api_routes.py \
- && grep -q "FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" demo_founder_gate.env
+ && grep -q "FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" demo_founder_gate.env \
+ && grep -q "FOUNDER_6H_APPROVED=false" demo_founder_gate.env \
+ && grep -q "FOUNDER_APPROVE_DEMO_AUTONOMOUS_6H_V2=false" demo_founder_gate.env
 
 EXPOSE 8080
 

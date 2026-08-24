@@ -2,8 +2,12 @@
 
 Live Validation runtime remains frozen; these constants are for dry-run / CI / Draft PR.
 Do not lower MIN_NET_REWARD_RISK_RATIO or enable exchange write from this module.
+
+Deployment identity is env-resolved only — never a hardcoded historical commit.
 """
 from __future__ import annotations
+
+import os
 
 SESSION_GATE_NAME = "DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION"
 POLICY_VERSION = "demo-autonomous-6h-v2-bounded-v1"
@@ -46,9 +50,55 @@ PRETRADE_ROUND_TRIP_FEE_RATE = 0.00110
 FEE_REVIEW_BY = "2026-08-31"
 FEE_VERSION = "founder-conservative-v1-2026-07-31"
 
-# Runtime SoT for Validation after PR24 package deploy (docs tip must never replace this).
-RUNTIME_DEPLOYMENT_COMMIT_SOT = "81b0d14e2ffb6c5b5e92eeedd7962ed60dd00bc0"
-RUNTIME_DEPLOY_RUN_SOT = "30692231025"
+# Historical bake (PR24) — NEVER report as current live deployment identity.
+_HISTORICAL_DEPLOYMENT_COMMIT_PR24 = "81b0d14e2ffb6c5b5e92eeedd7962ed60dd00bc0"
+_HISTORICAL_DEPLOY_RUN_PR24 = "30692231025"
+_REJECTED_IDENTITY_MARKERS = frozenset(
+    {
+        _HISTORICAL_DEPLOYMENT_COMMIT_PR24,
+        _HISTORICAL_DEPLOYMENT_COMMIT_PR24[:12],
+        "unknown",
+        "missing",
+        "",
+    }
+)
+
+
+def resolve_runtime_deployment_commit() -> str:
+    """Current deployment identity: env only; never a stale hardcoded SHA."""
+    for key in ("NEXUS_DEPLOYMENT_COMMIT", "NEXUS_SOURCE_COMMIT", "GITHUB_SHA"):
+        value = (os.environ.get(key) or "").strip()
+        if not value:
+            continue
+        lowered = value.lower()
+        if lowered in _REJECTED_IDENTITY_MARKERS or value in _REJECTED_IDENTITY_MARKERS:
+            continue
+        if value.startswith(_HISTORICAL_DEPLOYMENT_COMMIT_PR24[:12]):
+            continue
+        return value
+    return "UNKNOWN"
+
+
+def resolve_runtime_deploy_run() -> str:
+    """Current deploy run id from env; never the historical PR24 run id."""
+    for key in ("NEXUS_DEPLOY_RUN_ID", "GITHUB_RUN_ID"):
+        value = (os.environ.get(key) or "").strip()
+        if not value or value == _HISTORICAL_DEPLOY_RUN_PR24:
+            continue
+        if value.lower() in {"unknown", "missing"}:
+            continue
+        return value
+    return "UNKNOWN"
+
+
+# Back-compat names: previously constants; now resolve dynamically (never stale SHA).
+def __getattr__(name: str) -> str:
+    if name == "RUNTIME_DEPLOYMENT_COMMIT_SOT":
+        return resolve_runtime_deployment_commit()
+    if name == "RUNTIME_DEPLOY_RUN_SOT":
+        return resolve_runtime_deploy_run()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 SIX_ROLES = (
     "market_context",
