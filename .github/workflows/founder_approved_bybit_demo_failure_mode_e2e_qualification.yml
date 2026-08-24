@@ -1,0 +1,102 @@
+name: founder-approved-bybit-demo-failure-mode-e2e-qualification
+
+# Execution-safety failure-mode matrix. Simulated exchange boundary only.
+# No real Bybit orders. Certified P1/P2 surfaces remain frozen.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type QUALIFY_NEXUS_BYBIT_DEMO_FAILURE_MODE_E2E to confirm"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founder-bybit-demo-failure-mode-e2e-qualification
+  cancel-in-progress: false
+
+jobs:
+  qualify-failure-mode-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Confirm failure-mode E2E qualification intent
+        run: test "${{ github.event.inputs.confirm }}" = "QUALIFY_NEXUS_BYBIT_DEMO_FAILURE_MODE_E2E"
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run failure-mode tests + historical P1/P2 regression lock
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          MAINNET: "false"
+          REAL_MONEY: "false"
+          DEMO_AUTONOMOUS_ENABLED: "false"
+          AUTONOMOUS_SEND: "false"
+          EXCHANGE_WRITE: "false"
+        run: |
+          pip install -r requirements.txt pytest
+          python -m pytest tests/test_p2_failure_mode_e2e_qualification.py -q --tb=line
+          python -m tools.ci.p2_historical_p1_p2_regression_lock
+          echo "HISTORICAL_P1_P2_REGRESSION_LOCK=PASS"
+
+      - name: Run complete failure-mode matrix
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          MAINNET: "false"
+          REAL_MONEY: "false"
+          DEMO_AUTONOMOUS_ENABLED: "false"
+          AUTONOMOUS_SEND: "false"
+          EXCHANGE_WRITE: "false"
+          P2_FAILURE_MODE_E2E_EVIDENCE_PATH: artifacts/bybit_demo_p1/p2_failure_mode_e2e_qualification.json
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/bybit_demo_p1
+          python -m tools.ci.p2_failure_mode_e2e_qualification
+          python - <<'PY'
+          import json, sys
+          payload = json.loads(open("artifacts/bybit_demo_p1/p2_failure_mode_e2e_qualification.json", encoding="utf-8").read())
+          required = (
+              "FAILURE_MODE_E2E_PASS",
+              "SUBMIT_TIMEOUT_UNKNOWN_OUTCOME_PASS",
+              "UNKNOWN_OUTCOME_BLIND_RETRY_FALSE",
+              "EXACT_ORDERLINK_RECONCILIATION_PASS",
+              "DUPLICATE_RETRY_IDEMPOTENCY_PASS",
+              "PARTIAL_FILL_STATE_PASS",
+              "PARTIAL_FILL_POSITION_TRUTH_PASS",
+              "PARTIAL_FILL_ACCOUNTING_PASS",
+              "CANCEL_FILL_RACE_PASS",
+              "MONOTONIC_ORDER_STATE_PASS",
+              "PROCESS_RESTART_RECOVERY_PASS",
+              "RESTART_DUPLICATE_ORDER_FALSE",
+              "ORPHAN_INTENT_DETECTED",
+              "ORPHAN_BLOCKS_NEW_ENTRY",
+              "ORPHAN_RECONCILIATION_PASS",
+              "KILL_SWITCH_ORDERING_PASS",
+              "POST_KILL_NEW_ENTRY_COUNT",
+              "DURABLE_LEDGER_INVARIANTS_PASS",
+              "RISK_ENGINE_FINAL_AUTHORITY_PASS",
+              "REPEAT_MISTAKE_GUARD_UNCHANGED",
+              "create_order_calls",
+              "exchange_write_call_count",
+          )
+          for key in required:
+              print(f"{key}={payload.get(key)}")
+          assert payload.get("FAILURE_MODE_E2E_PASS") is True
+          assert payload.get("POST_KILL_NEW_ENTRY_COUNT") == 0
+          assert payload.get("create_order_calls") == 0
+          assert payload.get("exchange_write_call_count") == 0
+          PY
+          echo "CERTIFIED_SURFACE_FREEZE_CHECK=PASS"
+
+      - name: Upload sanitized failure-mode evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bybit-demo-failure-mode-e2e-qualification-evidence
+          path: artifacts/bybit_demo_p1/
+          if-no-files-found: warn
