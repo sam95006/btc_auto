@@ -479,6 +479,17 @@ def register_nexus_routes(app):
         )
 
     try:
+        from backend.nexus_bounded_runtime import install_certified_bounded_runtime
+
+        install_certified_bounded_runtime()
+    except Exception as _bounded_rt_exc:  # noqa: BLE001
+        import logging as _logging
+
+        _logging.getLogger(__name__).warning(
+            "certified_bounded_runtime_unavailable: %s", type(_bounded_rt_exc).__name__
+        )
+
+    try:
         from backend.nexus_demo_execution.api_routes import register_demo_execution_routes
 
         register_demo_execution_routes(app)

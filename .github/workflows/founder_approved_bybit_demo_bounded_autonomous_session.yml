@@ -59,7 +59,8 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: |
           pip install -r requirements.txt pytest
-          python -m pytest tests/test_demo_bounded_autonomous_session.py -q --tb=line
+          python -m pytest tests/test_demo_bounded_autonomous_session.py tests/test_bounded_runtime_certified_wiring.py -q --tb=line
+          python -m tools.ci.bounded_runtime_integration_qualification
           python -m tools.ci.p2_historical_p1_p2_regression_lock
           echo "HISTORICAL_P1_P2_REGRESSION_LOCK=PASS"
           echo "CERTIFIED_SURFACE_FREEZE_CHECK=PASS"
@@ -162,6 +163,26 @@ jobs:
           )
           echo "session_id=${SESSION_ID}" >> "$GITHUB_ENV"
           echo "SESSION_LEASE_CREATED=true"
+
+      - name: Inject runtime lease identity on validation service
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ github.event.inputs.validation_service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          LEASE_JSON=$(python - <<'PY'
+          import json
+          from pathlib import Path
+          lease = json.loads(Path("artifacts/demo_bounded_session/active_lease.json").read_text(encoding="utf-8"))
+          print(json.dumps({"lease": lease}))
+          PY
+          )
+          zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "BOUNDED_SESSION_LEASE_JSON=${LEASE_JSON}" -y -i=false >/tmp/bounded_lease.out 2>&1 ||
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "BOUNDED_SESSION_LEASE_JSON=${LEASE_JSON}" -y -i=false >/tmp/bounded_lease.out 2>&1
+          zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "BOUNDED_SESSION_EXPECTED_RUNTIME_SHA=${{ github.event.inputs.expected_runtime_sha }}" -y -i=false >/tmp/bounded_sha.out 2>&1 ||
+            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "BOUNDED_SESSION_EXPECTED_RUNTIME_SHA=${{ github.event.inputs.expected_runtime_sha }}" -y -i=false >/tmp/bounded_sha.out 2>&1
+          echo "RUNTIME_LEASE_ENV_INJECTED=true"
 
       - name: Activate bounded 6H runtime (founder dispatch only)
         if: github.event.inputs.dry_run_activate != 'true'

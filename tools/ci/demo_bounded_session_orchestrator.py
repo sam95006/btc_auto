@@ -136,7 +136,7 @@ def prepare_session(
         return evidence
 
     try:
-        lease = create_lease(founder_phrase=founder_phrase)
+        lease = create_lease(founder_phrase=founder_phrase, expected_runtime_sha=expected_github_sha)
     except ValueError as exc:
         evidence["HOLD"] = True
         evidence["error"] = str(exc)
@@ -148,6 +148,7 @@ def prepare_session(
         save_lease(lease, lease_path)
     evidence["session_id"] = lease.session_id
     evidence["lease"] = lease.to_dict()
+    evidence["runtime_lease_payload"] = lease.to_runtime_payload()
     evidence["session_record_path"] = str(session_record_path(lease.session_id))
     evidence["FOUNDER_AUTHORIZATION_VALID"] = founder_phrase.strip() == FOUNDER_PHRASE
     return evidence
@@ -249,6 +250,7 @@ def run_qualification(*, offline: bool = True) -> dict[str, Any]:
         mainnet=False,
         real_money=False,
         founder_phrase_hash=lease.founder_phrase_hash,
+        expected_runtime_sha=lease.expected_runtime_sha,
     )
     evidence["SESSION_EXPIRY_BLOCKS_NEW_ENTRY"] = expiry_blocks_new_entry(expired_lease) and not writes_allowed(
         expired_lease

@@ -26,10 +26,23 @@ class BoundedSessionLease:
     mainnet: bool
     real_money: bool
     founder_phrase_hash: str
+    expected_runtime_sha: str = ""
     service_name: str = "nexus-bybit-demo-learning-validation"
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+    def to_runtime_payload(self) -> dict[str, Any]:
+        return {
+            "session_id": self.session_id,
+            "authorized_at": self.authorized_at,
+            "expires_at": self.expires_at,
+            "exchange": self.exchange,
+            "mainnet": self.mainnet,
+            "real_money": self.real_money,
+            "expected_runtime_sha": self.expected_runtime_sha,
+            "service_name": self.service_name,
+        }
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> BoundedSessionLease:
@@ -41,6 +54,7 @@ class BoundedSessionLease:
             mainnet=bool(payload.get("mainnet")),
             real_money=bool(payload.get("real_money")),
             founder_phrase_hash=str(payload["founder_phrase_hash"]),
+            expected_runtime_sha=str(payload.get("expected_runtime_sha") or payload.get("expected_github_sha") or ""),
             service_name=str(payload.get("service_name") or "nexus-bybit-demo-learning-validation"),
         )
 
@@ -57,13 +71,18 @@ def _phrase_hash(phrase: str) -> str:
     return hashlib.sha256(phrase.encode("utf-8")).hexdigest()
 
 
-def create_lease(*, founder_phrase: str, now: datetime | None = None) -> BoundedSessionLease:
+def create_lease(
+    *,
+    founder_phrase: str,
+    now: datetime | None = None,
+    expected_runtime_sha: str = "",
+) -> BoundedSessionLease:
     if founder_phrase.strip() != FOUNDER_PHRASE:
         raise ValueError("founder_phrase_invalid")
     start = now or _utc_now()
     end = start + timedelta(seconds=SESSION_DURATION_SEC)
     nonce = uuid.uuid4().hex[:8]
-    session_id = f"NEXUS-BOUNDED-DEMO-6H-{start.strftime('%Y%m%dT%H%M%SZ')}-{nonce}"
+    session_id = f"NEXUS-DEMO-6H-V2-{start.strftime('%Y%m%dT%H%M%SZ')}-{nonce}"
     return BoundedSessionLease(
         session_id=session_id,
         authorized_at=_fmt(start),
@@ -72,6 +91,7 @@ def create_lease(*, founder_phrase: str, now: datetime | None = None) -> Bounded
         mainnet=False,
         real_money=False,
         founder_phrase_hash=_phrase_hash(FOUNDER_PHRASE),
+        expected_runtime_sha=expected_runtime_sha.strip(),
     )
 
 
