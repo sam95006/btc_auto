@@ -1,14 +1,18 @@
-# Demo Validation Dockerfile
+# Demo Validation Dockerfile (minimal / disarmed health boundary)
 #
 # REQUIRED BUILD CONTEXT = repository root (NOT this subdirectory).
 # Example:
-#   docker build -f deploy/zeabur_bybit_demo_validation/Dockerfile -t nexus-demo-val .
+#   docker build \
+#     -f deploy/zeabur_bybit_demo_validation/Dockerfile \
+#     --build-arg GITHUB_SHA="$(git rev-parse HEAD)" \
+#     -t nexus-demo-val .
 #
-# Zeabur CLI `zeabur deploy` from repo root uses RootDirectory="" and this
-# path must be selected explicitly if used; otherwise root ./Dockerfile applies.
-# This image starts only the dedicated validation health endpoint.
+# Zeabur pin (health-only):
+#   ZBPACK_DOCKERFILE_PATH=deploy/zeabur_bybit_demo_validation/Dockerfile
 
 FROM python:3.11-slim-bookworm
+
+ARG GITHUB_SHA=
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -24,6 +28,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     FIXED_LEVERAGE=25 \
     NEXUS_DATA_ROOT=/app/data/nexus_demo_validation \
     NEXUS_DATA_DIR=/app/data/nexus_demo_validation \
+    NEXUS_VALIDATION_BOOT=health \
     PORT=8080
 
 WORKDIR /app
@@ -34,14 +39,25 @@ RUN mkdir -p /app/data/nexus_demo_validation /data/nexus_demo_validation || true
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Only P1 recovery/qualification dependencies and the minimal boot boundary.
+# P1 recovery/qualification dependencies + packaging from deploy/ folder.
 COPY backend/ backend/
 COPY config/ config/
 COPY deploy/zeabur_bybit_demo_validation/entrypoint.sh ./entrypoint.sh
 COPY deploy/zeabur_bybit_demo_validation/validation_health_server.py ./validation_health_server.py
+COPY deploy/zeabur_bybit_demo_validation/demo_founder_gate.env ./demo_founder_gate.env
+
+ARG GITHUB_SHA
 RUN chmod +x entrypoint.sh \
+ && if [ -n "$GITHUB_SHA" ]; then \
+      printf '%s' "$GITHUB_SHA" > DEPLOYMENT_COMMIT \
+      && printf '%s' "$GITHUB_SHA" > SOURCE_COMMIT; \
+    else \
+      : > DEPLOYMENT_COMMIT \
+      && : > SOURCE_COMMIT; \
+    fi \
  && test -f entrypoint.sh \
  && test -f validation_health_server.py \
+ && test -f demo_founder_gate.env \
  && test -f backend/nexus_demo_execution/p1_recovery.py \
  && test -f backend/nexus_demo_execution/p1_qualification.py
 

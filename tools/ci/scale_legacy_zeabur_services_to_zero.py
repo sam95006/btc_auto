@@ -15,7 +15,7 @@ import urllib.request
 API = "https://api.zeabur.com/graphql"
 TOKEN = os.environ.get("ZEABUR_TOKEN", "").strip()
 ENV_ID = os.environ.get("ZEABUR_ENV_ID", "69d559b6474db8a99d6dd6bf").strip()
-VALIDATION_ID = os.environ.get("VALIDATION_SERVICE_ID", "6a69ad539949111176cefe63").strip()
+VALIDATION_ID = os.environ.get("VALIDATION_SERVICE_ID", "6a82a79aa21454a2cf6b0015").strip()
 STAGE3_ID = os.environ.get("STAGE3_SERVICE_ID", "6a3b81652fdef84a45a2a553").strip()
 CONTROL_PLANE_ID = os.environ.get(
     "CONTROL_PLANE_SERVICE_ID", "6a6bf638ffb4fc697c8a7b1f"
@@ -114,7 +114,7 @@ def _try_suspend(service_id: str, label: str) -> dict:
     for name, query, vars_fn in MUTATIONS:
         try:
             payload = _gql(query, vars_fn(service_id))
-        except Exception as exc:  # noqa: BLE001 — collect attempts
+        except Exception as exc:  # noqa: BLE001 ??collect attempts
             errors.append(f"{name}:exc:{_redact(str(exc))}")
             continue
         if payload.get("errors"):

@@ -67,8 +67,13 @@ Optional secrets (GitHub / Zeabur only):
 
 See [docs/validation/SERVICE_ID_MAP.md](../../docs/validation/SERVICE_ID_MAP.md).
 
-Repo-documented Validation candidate: `6a69ad539949111176cefe63`.  
-Live confirmation required before deploy. Never use Stage3 / member preview IDs.
+Confirmed live Validation:
+
+- name: `nexus-bybit-demo-learning-validation`
+- id: `6a82a79aa21454a2cf6b0015`
+- `VALIDATION_SERVICE_ID_CONFIRMED=yes`
+
+Obsolete (do not deploy): `6a69ad539949111176cefe63`
 
 ## Deploy
 

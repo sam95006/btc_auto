@@ -1,8 +1,23 @@
-# Full autonomous engine Validation image (CLI CTX = repo-like root).
+# Full Engine Validation image — GitHub-native (repository-root build context)
+#
+# Build (from repository root on main):
+#   docker build \
+#     -f deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine \
+#     --build-arg GITHUB_SHA="$(git rev-parse HEAD)" \
+#     -t nexus-demo-val-full .
+#
+# Zeabur service must pin:
+#   ZBPACK_DOCKERFILE_PATH=deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine
+#
+# Do NOT assemble /tmp/*_ctx trees. Do NOT ZIP as primary source.
+
 FROM python:3.11-slim-bookworm
+
+ARG GITHUB_SHA=
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
     BYBIT_DEMO=true \
     MAINNET=false \
     REAL_MONEY=false \
@@ -14,26 +29,53 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     FIXED_LEVERAGE=25 \
     NEXUS_DATA_ROOT=/app/data/nexus_demo_validation \
     NEXUS_DATA_DIR=/app/data/nexus_demo_validation \
+    NEXUS_VALIDATION_BOOT=full_engine \
     PORT=8080
 
 WORKDIR /app
+
 RUN mkdir -p /app/data/nexus_demo_validation /data/nexus_demo_validation || true
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Application source from repository root (GitHub main = source-of-truth).
+COPY app.py run.py gunicorn.conf.py zbpack.json ./
+COPY backend/ backend/
+COPY config/ config/
+COPY static/ static/
+COPY templates/ templates/
+COPY tools/ci/ tools/ci/
 
-RUN test -f app.py \
+# Packaging layer — never assume these files live at repo root.
+COPY deploy/zeabur_bybit_demo_validation/entrypoint.sh ./entrypoint.sh
+COPY deploy/zeabur_bybit_demo_validation/demo_founder_gate.env ./demo_founder_gate.env
+COPY deploy/zeabur_bybit_demo_validation/validation_health_server.py ./validation_health_server.py
+
+# Bake GitHub commit identity when build-arg is provided (CI / local proof).
+# Zeabur runtime may also inject GITHUB_SHA / NEXUS_DEPLOYMENT_COMMIT; entrypoint reconciles.
+ARG GITHUB_SHA
+RUN chmod +x entrypoint.sh \
+ && if [ -n "$GITHUB_SHA" ]; then \
+      printf '%s' "$GITHUB_SHA" > DEPLOYMENT_COMMIT \
+      && printf '%s' "$GITHUB_SHA" > SOURCE_COMMIT; \
+    else \
+      : > DEPLOYMENT_COMMIT \
+      && : > SOURCE_COMMIT; \
+    fi \
+ && test -f app.py \
+ && test -f run.py \
  && test -f gunicorn.conf.py \
  && test -f entrypoint.sh \
- && test -s DEPLOYMENT_COMMIT \
- && test -s SOURCE_COMMIT \
  && test -f demo_founder_gate.env \
+ && test -f validation_health_server.py \
+ && test -f backend/nexus_demo_execution/bounded_12h_session.py \
+ && test -f backend/nexus_bounded_runtime/certified_session.py \
  && grep -q "BoundedAutonomousSessionEngine" backend/nexus_demo_execution/bounded_12h_session.py \
  && ! grep -q "_run_placeholder" backend/nexus_demo_execution/bounded_12h_session.py \
  && grep -q "BOUNDED_AUTONOMOUS_ENGINE_V1" backend/nexus_demo_execution/api_routes.py \
- && chmod +x entrypoint.sh
+ && grep -q "FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" demo_founder_gate.env
 
 EXPOSE 8080
+
 CMD ["/bin/sh", "./entrypoint.sh"]

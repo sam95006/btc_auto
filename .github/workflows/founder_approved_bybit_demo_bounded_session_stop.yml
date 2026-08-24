@@ -11,7 +11,7 @@ on:
       validation_service_id:
         description: "Zeabur service id for nexus-bybit-demo-learning-validation"
         required: true
-        default: "6a69ad539949111176cefe63"
+        default: "6a82a79aa21454a2cf6b0015"
         type: string
       stop_reason:
         description: "Operator stop reason"

@@ -3,7 +3,7 @@ name: demo-autonomous-6h-v2-zeabur
 # CONDITIONALLY APPROVED. Allows either full 24H observation PASS
 # OR explicit Founder abort override (never a silent boolean skip).
 # Never creates a new Zeabur service. Deploy target = existing Validation only.
-# 12H is NOT auto-started here — machine gate only after 6H finalize.
+# 12H is NOT auto-started here ??machine gate only after 6H finalize.
 
 on:
   workflow_dispatch:
@@ -22,7 +22,7 @@ on:
         type: string
       expected_service_id:
         required: true
-        default: "6a69ad539949111176cefe63"
+        default: "6a82a79aa21454a2cf6b0015"
         type: string
       expected_account_epoch:
         required: false
@@ -77,8 +77,12 @@ env:
   REAL_MONEY: "false"
   EXCHANGE_WRITE: "false"
   DEMO_AUTONOMOUS_ENABLED: "false"
-  VALIDATION_SERVICE_ID: 6a69ad539949111176cefe63
+  VALIDATION_SERVICE_ID: 6a82a79aa21454a2cf6b0015
+  OBSOLETE_VALIDATION_SERVICE_ID: 6a69ad539949111176cefe63
   FORBIDDEN_STAGE3: 6a3b81652fdef84a45a2a553
+  FORBIDDEN_MEMBER_A: 69d559cb2696d526abde8cda
+  FORBIDDEN_MEMBER_PREVIEW: 6a744ba3472e2c91a9e728a8
+  DOCKERFILE_PATH: deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine
   DEMO_VAL_URL: https://nexus-bybit-demo-val.zeabur.app
   ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
 
@@ -97,11 +101,13 @@ jobs:
             echo "Founder phrase mismatch"
             exit 1
           fi
-      - name: Service id must be Validation only
+      - name: Service id must be confirmed Validation only
         run: |
           SID="${{ github.event.inputs.expected_service_id }}"
           if [ "$SID" != "$VALIDATION_SERVICE_ID" ]; then echo "wrong service"; exit 1; fi
+          if [ "$SID" = "$OBSOLETE_VALIDATION_SERVICE_ID" ]; then echo "obsolete validation id forbidden"; exit 1; fi
           if [ "$SID" = "$FORBIDDEN_STAGE3" ]; then echo "stage3 forbidden"; exit 1; fi
+          if [ "$SID" = "$FORBIDDEN_MEMBER_A" ] || [ "$SID" = "$FORBIDDEN_MEMBER_PREVIEW" ]; then echo "member preview forbidden"; exit 1; fi
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
@@ -245,44 +251,79 @@ jobs:
           set_var NEXUS_DEPLOY_RUN_ID "$GITHUB_RUN_ID"
           set_var GITHUB_SHA "${{ github.sha }}"
           set_var NEXUS_BUILD_MARKER "6H_V2_${SHA:0:8}"
-      - name: Redeploy Validation with V2 start code (existing service only)
+      - name: Redeploy Validation from GitHub main (no temp CTX tree)
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          cd frontend && npm ci && npm run build && cd ..
-          CTX=/tmp/6h_v2_ctx
-          rm -rf "$CTX" && mkdir -p "$CTX/tools" "$CTX/deploy/zeabur_bybit_demo_validation"
-          cp app.py run.py gunicorn.conf.py zbpack.json requirements.txt "$CTX/"
-          cp -r backend config static templates "$CTX/"
-          mkdir -p "$CTX/static/operator_ui"
-          cp -r frontend/dist/* "$CTX/static/operator_ui/" || true
-          cp deploy/zeabur_bybit_demo_validation/Dockerfile "$CTX/Dockerfile"
-          cp deploy/zeabur_bybit_demo_validation/entrypoint.sh "$CTX/entrypoint.sh" || true
-          cp -r tools/ci "$CTX/tools/" || true
-          # Bake Founder V2 gate file — entrypoint set -a sources this and overwrites
-          # stale Zeabur FOUNDER_GATE leftovers (e.g. FIRST_BYBIT_DEMO_SMOKE_ORDER).
-          cp deploy/zeabur_bybit_demo_validation/demo_founder_gate.env "$CTX/demo_founder_gate.env"
-          # Bake commit identity into image (overrides stale NEXUS_DEPLOYMENT_ID labels).
-          echo "$GITHUB_SHA" > "$CTX/DEPLOYMENT_COMMIT"
-          echo "$GITHUB_SHA" > "$CTX/SOURCE_COMMIT"
-          grep -n "DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" "$CTX/backend/nexus_demo_execution/session_limits.py"
-          grep -n "FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" "$CTX/demo_founder_gate.env"
-          grep -q "BoundedAutonomousSessionEngine" "$CTX/backend/nexus_demo_execution/bounded_12h_session.py"
-          ! grep -q "_run_placeholder" "$CTX/backend/nexus_demo_execution/bounded_12h_session.py"
-          grep -q "account/forensic" "$CTX/backend/nexus_demo_execution/api_routes.py"
-          grep -q "persistence/stream/status" "$CTX/backend/nexus_demo_execution/api_routes.py"
-          grep -q "poll_until_stable" "$CTX/backend/nexus_demo_execution/session_finalizer.py"
-          test -s "$CTX/DEPLOYMENT_COMMIT"
-          echo "baked_commit=$(tr -d '\r\n' < "$CTX/DEPLOYMENT_COMMIT")"
+          SID="$VALIDATION_SERVICE_ID"
+          ENV_ID="$ZEABUR_ENV_ID"
+          if [ "$SID" = "$FORBIDDEN_STAGE3" ] || [ "$SID" = "$OBSOLETE_VALIDATION_SERVICE_ID" ]; then echo BLOCKED; exit 1; fi
+          if [ "$SID" = "$FORBIDDEN_MEMBER_A" ] || [ "$SID" = "$FORBIDDEN_MEMBER_PREVIEW" ]; then echo BLOCKED; exit 1; fi
+
+          # Optional operator UI assets into in-repo static/ (still GitHub-main tree, not /tmp CTX).
+          if [ -f frontend/package.json ]; then
+            cd frontend && npm ci && npm run build && cd ..
+            mkdir -p static/operator_ui
+            cp -r frontend/dist/* static/operator_ui/ || true
+          fi
+
+          set_var() {
+            local k="$1" v="$2"
+            set +e
+            zeabur variable upsert --key "$k" --value "$v" --service-id "$SID" --env-id "$ENV_ID" -i=false >/tmp/var_out.txt 2>&1
+            code=$?
+            if [ "$code" != "0" ]; then
+              zeabur variable update --id "$SID" -k "${k}=${v}" -y -i=false >/tmp/var_out.txt 2>&1
+              code=$?
+            fi
+            if [ "$code" != "0" ]; then
+              zeabur variable create --id "$SID" -k "${k}=${v}" -y -i=false >/tmp/var_out.txt 2>&1
+              code=$?
+            fi
+            set -e
+            echo "var_${k}_exit=$code"
+            if [ "$code" != "0" ]; then echo "FAILED_SET $k"; exit 1; fi
+          }
+
+          # Pin GitHub-native Dockerfile path — no /tmp/6h_v2_ctx, no ZIP, no manual source tree.
+          set_var ZBPACK_DOCKERFILE_PATH "$DOCKERFILE_PATH"
+          set_var GITHUB_SHA "${{ github.sha }}"
+          set_var NEXUS_DEPLOYMENT_COMMIT "${{ github.sha }}"
+          set_var NEXUS_SOURCE_COMMIT "${{ github.sha }}"
+          set_var NEXUS_DEPLOYMENT_ID "${{ github.sha }}"
+          set_var EXPECTED_DEPLOYMENT_COMMIT "${{ github.sha }}"
+          set_var MAINNET false
+          set_var REAL_MONEY false
+          set_var EXCHANGE_WRITE false
+          set_var DEMO_AUTONOMOUS_ENABLED false
+
+          # Preflight against repository-root main checkout only.
+          test -f "$DOCKERFILE_PATH"
+          test -f deploy/zeabur_bybit_demo_validation/entrypoint.sh
+          test -f deploy/zeabur_bybit_demo_validation/demo_founder_gate.env
+          grep -n "DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" backend/nexus_demo_execution/session_limits.py
+          grep -n "FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" deploy/zeabur_bybit_demo_validation/demo_founder_gate.env
+          grep -q "BoundedAutonomousSessionEngine" backend/nexus_demo_execution/bounded_12h_session.py
+          ! grep -q "_run_placeholder" backend/nexus_demo_execution/bounded_12h_session.py
+          grep -q "account/forensic" backend/nexus_demo_execution/api_routes.py
+          grep -q "persistence/stream/status" backend/nexus_demo_execution/api_routes.py
+          grep -q "poll_until_stable" backend/nexus_demo_execution/session_finalizer.py
+          grep -q "deploy/zeabur_bybit_demo_validation/entrypoint.sh" "$DOCKERFILE_PATH"
+          ! grep -q '/tmp/6h_v2_ctx' "$DOCKERFILE_PATH"
+          echo "github_native_deploy_source=main"
+          echo "dockerfile_path=$DOCKERFILE_PATH"
+          echo "validation_service_id=$SID"
+
           (
-            cd "$CTX"
-            zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$VALIDATION_SERVICE_ID" -i=false --json
+            zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SID" -i=false --json
           ) > /tmp/deploy_out.txt 2>&1
           sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 40
           grep -q '"status": "success"' /tmp/deploy_out.txt
+          echo "TEMP_CTX_PRIMARY_DEPLOY_REMOVED=true"
+          echo "ZIP_DEPLOY_REQUIRED=no"
       - name: Re-arm FOUNDER_GATE after deploy and restart
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
@@ -421,7 +462,7 @@ jobs:
       - name: POST start bounded 6H V2 (explicit live_start only)
         run: |
           set -euo pipefail
-          echo "LIVE_START was requested — this path is NOT used for same-router probe deploy."
+          echo "LIVE_START was requested ??this path is NOT used for same-router probe deploy."
           echo "Refusing silent 6H start during observability/probe wave unless Founder re-approves."
           exit 1
 
@@ -491,32 +532,33 @@ jobs:
           set_var NEXUS_SOURCE_COMMIT "$SHA"
           set_var NEXUS_DEPLOY_RUN_ID "$GITHUB_RUN_ID"
           set_var GITHUB_SHA "$SHA"
-      - name: Deploy Validation full engine
+      - name: Deploy Validation full engine from GitHub main
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          cd frontend && npm ci && npm run build && cd ..
-          CTX=/tmp/12h_full_ctx
-          rm -rf "$CTX" && mkdir -p "$CTX/tools"
-          cp app.py run.py gunicorn.conf.py zbpack.json requirements.txt "$CTX/"
-          cp -r backend config static templates "$CTX/"
-          mkdir -p "$CTX/static/operator_ui"
-          cp -r frontend/dist/* "$CTX/static/operator_ui/" || true
-          cp deploy/zeabur_bybit_demo_validation/Dockerfile "$CTX/Dockerfile"
-          cp deploy/zeabur_bybit_demo_validation/entrypoint.sh "$CTX/entrypoint.sh"
-          cp deploy/zeabur_bybit_demo_validation/demo_founder_gate.env "$CTX/demo_founder_gate.env"
-          cp -r tools/ci "$CTX/tools/" || true
-          echo "$GITHUB_SHA" > "$CTX/DEPLOYMENT_COMMIT"
-          echo "$GITHUB_SHA" > "$CTX/SOURCE_COMMIT"
-          grep -q "BoundedAutonomousSessionEngine" "$CTX/backend/nexus_demo_execution/bounded_12h_session.py"
-          ! grep -q "_run_placeholder" "$CTX/backend/nexus_demo_execution/bounded_12h_session.py"
-          cp deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine "$CTX/Dockerfile"
-          test -s "$CTX/DEPLOYMENT_COMMIT"
-          grep -q "BOUNDED_AUTONOMOUS_ENGINE_V1" "$CTX/backend/nexus_demo_execution/api_routes.py"
-          ( cd "$CTX" && zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$VALIDATION_SERVICE_ID" -i=false --json ) > /tmp/deploy_out.txt 2>&1
+          SID="$VALIDATION_SERVICE_ID"
+          if [ "$SID" != "6a82a79aa21454a2cf6b0015" ]; then echo BLOCKED_WRONG_VALIDATION; exit 1; fi
+          if [ -f frontend/package.json ]; then
+            cd frontend && npm ci && npm run build && cd ..
+            mkdir -p static/operator_ui
+            cp -r frontend/dist/* static/operator_ui/ || true
+          fi
+          zeabur variable update --id "$SID" -k "ZBPACK_DOCKERFILE_PATH=deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine" -y -i=false \
+            || zeabur variable create --id "$SID" -k "ZBPACK_DOCKERFILE_PATH=deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine" -y -i=false
+          SHA="${{ github.sha }}"
+          zeabur variable update --id "$SID" -k "GITHUB_SHA=${SHA}" -y -i=false || true
+          zeabur variable update --id "$SID" -k "NEXUS_DEPLOYMENT_COMMIT=${SHA}" -y -i=false || true
+          zeabur variable update --id "$SID" -k "NEXUS_SOURCE_COMMIT=${SHA}" -y -i=false || true
+          test -f deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine
+          grep -q "BoundedAutonomousSessionEngine" backend/nexus_demo_execution/bounded_12h_session.py
+          ! grep -q "_run_placeholder" backend/nexus_demo_execution/bounded_12h_session.py
+          grep -q "BOUNDED_AUTONOMOUS_ENGINE_V1" backend/nexus_demo_execution/api_routes.py
+          grep -q "deploy/zeabur_bybit_demo_validation/entrypoint.sh" deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine
+          ! grep -q '/tmp/12h_full_ctx' deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine
+          ( zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SID" -i=false --json ) > /tmp/deploy_out.txt 2>&1
           sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 40
           grep -q '"status": "success"' /tmp/deploy_out.txt
       - name: Restart + re-arm 12H gate + wait for new code + T+0/60/180

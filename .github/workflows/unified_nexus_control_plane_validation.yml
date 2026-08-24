@@ -1,6 +1,6 @@
 name: unified-nexus-control-plane-validation
 
-# Stacked on feature/bybit-demo-execution-validation — never binds main/stage3 overwrite.
+# Stacked on feature/bybit-demo-execution-validation ??never binds main/stage3 overwrite.
 # Read-only Control Plane hardening + Founder-gated deploy / forensic export.
 
 on:
@@ -54,8 +54,8 @@ env:
   DEMO_VAL_URL: https://nexus-bybit-demo-val.zeabur.app
   SERVICE_NAME: nexus-unified-control-plane
   FORBIDDEN_STAGE3: 6a3b81652fdef84a45a2a553
-  FORBIDDEN_VALIDATION: 6a69ad539949111176cefe63
-  VALIDATION_SERVICE_ID: 6a69ad539949111176cefe63
+  FORBIDDEN_VALIDATION: 6a82a79aa21454a2cf6b0015
+  VALIDATION_SERVICE_ID: 6a82a79aa21454a2cf6b0015
 
 jobs:
   control-plane-python:
@@ -848,7 +848,7 @@ jobs:
           ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
           STAGE3_SERVICE_ID: 6a3b81652fdef84a45a2a553
           CONTROL_PLANE_SERVICE_ID: 6a6bf638ffb4fc697c8a7b1f
-          VALIDATION_SERVICE_ID: 6a69ad539949111176cefe63
+          VALIDATION_SERVICE_ID: 6a82a79aa21454a2cf6b0015
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false

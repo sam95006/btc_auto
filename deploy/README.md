@@ -26,8 +26,9 @@ Do **not** duplicate application source into these folders.
 
 - **Source folder:** `deploy/zeabur_bybit_demo_validation/`
 - **Application code:** repository root (`backend/`, `app.py`, `run.py`, …) on **`main`**
-- **Build context:** repository root; Dockerfile path under this folder
-- **Forbidden targets:** Stage3 `6a3b81652fdef84a45a2a553`, member preview IDs (see `docs/validation/SERVICE_ID_MAP.md`)
+- **Confirmed service id:** `6a82a79aa21454a2cf6b0015`
+- **Build context:** repository root; `ZBPACK_DOCKERFILE_PATH=deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine`
+- **Forbidden targets:** Stage3 `6a3b81652fdef84a45a2a553`, member preview IDs, obsolete Validation `6a69ad539949111176cefe63`
 - **Secrets:** GitHub Secrets / Zeabur env only — never commit API keys
 
 ### Preferred deploy workflow

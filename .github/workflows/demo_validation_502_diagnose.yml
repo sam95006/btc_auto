@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 env:
-  SERVICE_ID: 6a69ad539949111176cefe63
+  SERVICE_ID: 6a82a79aa21454a2cf6b0015
   FORBIDDEN_SERVICE_ID: 6a3b81652fdef84a45a2a553
   ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
   SERVICE_NAME: nexus-bybit-demo-learning-validation

@@ -22,8 +22,15 @@ def test_validation_entrypoint_uses_minimal_health_server_and_disarms() -> None:
     assert "export AUTONOMOUS_SEND=false" in entrypoint
     assert "export EXCHANGE_WRITE=false" in entrypoint
     assert "exec python ./validation_health_server.py" in entrypoint
-    assert "gunicorn" not in entrypoint
-    assert "app:app" not in entrypoint
+    assert "boot_target=validation_health_server" in entrypoint
+    assert "NEXUS_VALIDATION_BOOT" in entrypoint
+    # Full Engine may exec gunicorn only when NEXUS_VALIDATION_BOOT=full_engine.
+    assert "export MAINNET=false" in entrypoint
+    assert "export REAL_MONEY=false" in entrypoint
+    health_exec_idx = entrypoint.index("exec python ./validation_health_server.py")
+    gunicorn_idx = entrypoint.index("exec gunicorn")
+    assert gunicorn_idx < health_exec_idx
+    assert "full_engine" in entrypoint[entrypoint.index("case \"$BOOT\"") : gunicorn_idx]
 
 
 def test_validation_dockerfile_excludes_full_web_boot_dependencies() -> None:

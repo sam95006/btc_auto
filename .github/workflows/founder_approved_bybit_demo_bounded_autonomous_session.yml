@@ -1,7 +1,7 @@
 name: founder-approved-bybit-demo-bounded-autonomous-session
 
 # First bounded 6H Bybit Demo autonomous session launcher.
-# Founder dispatch only — does NOT run from Cursor.
+# Founder dispatch only ??does NOT run from Cursor.
 on:
   workflow_dispatch:
     inputs:
@@ -16,7 +16,7 @@ on:
       validation_service_id:
         description: "Zeabur service id for nexus-bybit-demo-learning-validation"
         required: true
-        default: "6a69ad539949111176cefe63"
+        default: "6a82a79aa21454a2cf6b0015"
         type: string
       dry_run_activate:
         description: "If true, prepare lease + preflight only (no bounded-6h/start POST)"

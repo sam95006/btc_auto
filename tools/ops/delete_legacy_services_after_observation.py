@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Delete legacy Zeabur services only after observation PASS — default dry_run=true.
+"""Delete legacy Zeabur services only after observation PASS ??default dry_run=true.
 
 Never prints secrets. Never deletes Validation keep-service.
 """
@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-KEEP_DEFAULT = "6a69ad539949111176cefe63"
+KEEP_DEFAULT = "6a82a79aa21454a2cf6b0015"
 STAGE3_DEFAULT = "6a3b81652fdef84a45a2a553"
 CP_DEFAULT = "6a6bf638ffb4fc697c8a7b1f"
 

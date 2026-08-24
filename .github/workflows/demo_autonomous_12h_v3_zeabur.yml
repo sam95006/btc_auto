@@ -18,7 +18,7 @@ on:
         type: string
       expected_service_id:
         required: true
-        default: "6a69ad539949111176cefe63"
+        default: "6a82a79aa21454a2cf6b0015"
         type: string
       session_nonce:
         required: true
@@ -36,7 +36,7 @@ env:
   REAL_MONEY: "false"
   EXCHANGE_WRITE: "false"
   DEMO_AUTONOMOUS_ENABLED: "false"
-  VALIDATION_SERVICE_ID: 6a69ad539949111176cefe63
+  VALIDATION_SERVICE_ID: 6a82a79aa21454a2cf6b0015
 
 jobs:
   gate-from-6h:
