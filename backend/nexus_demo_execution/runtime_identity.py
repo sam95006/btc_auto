@@ -120,6 +120,9 @@ def resolve_executable_code_commit(*, data_root: Path | None = None) -> tuple[st
         "NEXUS_SOURCE_COMMIT",
         "NEXUS_DEPLOYMENT_COMMIT",
         "GITHUB_SHA",
+        "ZEABUR_GIT_COMMIT_SHA",
+        "ZEABUR_ENV_GITHUB_SHA",
+        "ZEABUR_ENV_ZEABUR_GIT_COMMIT_SHA",
         "ZEABUR_GIT_COMMIT",
         "NEXUS_DEPLOYMENT_ID",
     ):

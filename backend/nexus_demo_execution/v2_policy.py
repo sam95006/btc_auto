@@ -66,7 +66,14 @@ _REJECTED_IDENTITY_MARKERS = frozenset(
 
 def resolve_runtime_deployment_commit() -> str:
     """Current deployment identity: env only; never a stale hardcoded SHA."""
-    for key in ("NEXUS_DEPLOYMENT_COMMIT", "NEXUS_SOURCE_COMMIT", "GITHUB_SHA"):
+    for key in (
+        "NEXUS_DEPLOYMENT_COMMIT",
+        "NEXUS_SOURCE_COMMIT",
+        "GITHUB_SHA",
+        "ZEABUR_GIT_COMMIT_SHA",
+        "ZEABUR_ENV_GITHUB_SHA",
+        "ZEABUR_ENV_ZEABUR_GIT_COMMIT_SHA",
+    ):
         value = (os.environ.get(key) or "").strip()
         if not value:
             continue
