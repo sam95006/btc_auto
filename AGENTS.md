@@ -20,6 +20,11 @@
 - After each completion, provide the exact test command(s).
 - Report which prohibited areas were intentionally left untouched.
 
+## Founder-Facing Language
+- All Founder-facing natural-language responses must use Traditional Chinese with Taiwan usage.
+- Technical identifiers may remain in English, including file paths, class names, function names, commit SHAs, API endpoints, Git commands, error messages, and stdout key names.
+- Do not answer whole Founder-facing explanations in English unless the Founder explicitly requests English.
+
 ## Phase 0.1 Scope
 - Allowed additions:
   - `backend/security/secret_manager.py`
