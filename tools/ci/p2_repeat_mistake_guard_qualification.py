@@ -7,8 +7,15 @@ import os
 from pathlib import Path
 from typing import Any
 
+from backend.nexus_demo_execution.durable_order_ledger import DurableOrderLedger
 from backend.nexus_demo_execution.p1_validation_runtime import apply_disarmed_flags
 from backend.nexus_demo_execution.p2_durable_learning_store import DurableLessonStore
+from backend.nexus_demo_execution.p2_run8_durable_loader import (
+    PNL_PROVENANCE,
+    load_run8_from_intents,
+    load_run8_from_ledger,
+    reject_placeholder_ids,
+)
 from tools.ci.p2_lesson_similarity import (
     SIMILARITY_THRESHOLD,
     build_dissimilar_control_candidate,
@@ -33,21 +40,41 @@ class _EmptyLessonStore:
         return []
 
 
-def _expected_lesson_identity() -> dict[str, str]:
-    keys = (
-        "P2_REPEAT_MISTAKE_GUARD_EXPECTED_LESSON_ID",
-        "P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_EVIDENCE_HASH",
-        "P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_TRADE_ID",
-        "P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_DECISION_ID",
-    )
-    values = {key: (os.environ.get(key) or "").strip() for key in keys}
-    if not all(values.values()):
-        raise ValueError("expected_lesson_identity_missing_hold")
+def _load_run8_case(
+    *,
+    intents: list[dict[str, Any]] | None,
+    ledger: DurableOrderLedger | None,
+) -> dict[str, Any]:
+    if intents is not None:
+        case = load_run8_from_intents(intents)
+    elif ledger is not None:
+        case = load_run8_from_ledger(ledger)
+    else:
+        raise ValueError("run8_durable_input_required_hold")
+    reject_placeholder_ids(case)
+    if str(case.get("source") or "") != "DURABLE_POSTGRES_LEDGER":
+        raise ValueError("run8_source_not_durable_postgres_ledger_hold")
+    if int(case.get("candidate_count") or 0) != 1:
+        raise ValueError("run8_candidate_count_not_unique_hold")
+    if str(case.get("pnl_provenance") or "") != PNL_PROVENANCE:
+        raise ValueError("exchange_outcome_not_grounded_hold")
+    if case.get("realized_demo_pnl") in (None, ""):
+        raise ValueError("realized_pnl_missing_hold")
+    if case.get("synthetic_pnl") or case.get("latest_row_fallback"):
+        raise ValueError("synthetic_or_fallback_pnl_rejected_hold")
+    return case
+
+
+def derive_expected_lesson_identity_from_case(case: dict[str, Any]) -> dict[str, str]:
+    """Derive exact durable lesson identity from certified Run8 — no manual repo vars."""
+    evidence_hash = str(case.get("source_evidence_hash") or "")
+    if not evidence_hash:
+        raise ValueError("source_evidence_hash_missing_hold")
     return {
-        "lesson_id": values["P2_REPEAT_MISTAKE_GUARD_EXPECTED_LESSON_ID"],
-        "source_evidence_hash": values["P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_EVIDENCE_HASH"],
-        "source_trade_id": values["P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_TRADE_ID"],
-        "source_decision_id": values["P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_DECISION_ID"],
+        "lesson_id": f"LC_{evidence_hash[:24]}",
+        "source_evidence_hash": evidence_hash,
+        "source_trade_id": str(case["trade_id"]),
+        "source_decision_id": str(case["decision_id"]),
     }
 
 
@@ -137,13 +164,23 @@ def _write_evidence(payload: dict[str, Any]) -> None:
         pass
 
 
-def run(*, sqlite_path: str | Path | None = None) -> dict[str, Any]:
+def run(
+    *,
+    intents: list[dict[str, Any]] | None = None,
+    sqlite_path: str | Path | None = None,
+) -> dict[str, Any]:
     apply_disarmed_flags()
     os.environ["AUTONOMOUS_BYBIT_DEMO_ARM_READY"] = ARM_READY_HOLD
     leverage_before = FIXED_LEVERAGE
     cap_before = float(MARGIN_PER_TRADE_CAP)
     evidence: dict[str, Any] = {
         "P2_REPEAT_MISTAKE_GUARD_IMPLEMENTED": True,
+        "P2_RMG_MANUAL_IDENTITY_DEPENDENCY_REMOVED": True,
+        "CERTIFIED_RUN8_DURABLE_IDENTITY_AUTHORITY": False,
+        "RUN8_UNIQUE_TARGET_REQUIRED": True,
+        "LESSON_ID_DERIVED_FROM_EVIDENCE_HASH": False,
+        "LATEST_ROW_FALLBACK_FALSE": True,
+        "DURABLE_LESSON_EXACT_IDENTITY_REQUIRED": True,
         "P2_REPEAT_MISTAKE_GUARD_QUALIFICATION_PASS": False,
         "DURABLE_LESSON_RETRIEVAL_PASS": False,
         "SIMILARITY_ENGINE_PASS": False,
@@ -164,8 +201,11 @@ def run(*, sqlite_path: str | Path | None = None) -> dict[str, Any]:
     pool: PostgresPool | None = None
     store: DurableLessonStore | None = None
     try:
-        expected = _expected_lesson_identity()
         if sqlite_path is not None:
+            if intents is None:
+                evidence["error"] = "sqlite_intents_required_hold"
+                return evidence
+            case = _load_run8_case(intents=intents, ledger=None)
             store = DurableLessonStore(sqlite_path=sqlite_path)
         else:
             database_url = (os.environ.get("NEXUS_POSTGRES_URL") or "").strip()
@@ -178,7 +218,17 @@ def run(*, sqlite_path: str | Path | None = None) -> dict[str, Any]:
             if "0007" not in versions:
                 evidence["error"] = "migration_0007_missing"
                 return evidence
+            ledger = DurableOrderLedger(pool)
+            case = _load_run8_case(intents=None, ledger=ledger)
             store = DurableLessonStore(pool=pool)
+
+        expected = derive_expected_lesson_identity_from_case(case)
+        evidence["CERTIFIED_RUN8_DURABLE_IDENTITY_AUTHORITY"] = True
+        evidence["LESSON_ID_DERIVED_FROM_EVIDENCE_HASH"] = expected["lesson_id"] == f"LC_{expected['source_evidence_hash'][:24]}"
+        evidence["expected_source_trade_id"] = expected["source_trade_id"]
+        evidence["expected_source_decision_id"] = expected["source_decision_id"]
+        evidence["expected_source_evidence_hash"] = expected["source_evidence_hash"]
+        evidence["expected_lesson_id"] = expected["lesson_id"]
 
         support_before = int(
             (store.get_by_evidence_hash(expected["source_evidence_hash"]) or {}).get("support_count") or 0

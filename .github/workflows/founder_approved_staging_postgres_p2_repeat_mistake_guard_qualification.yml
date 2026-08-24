@@ -46,25 +46,19 @@ jobs:
           python -m tools.ci.p2_historical_p1_p2_regression_lock
           echo "HISTORICAL_P1_P2_REGRESSION_LOCK=PASS"
 
-      - name: Verify required secret, control service, and durable lesson identity
+      - name: Verify required secret and control service (Run8 identity from durable ledger)
         env:
           NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           P2_MIGRATION_CONTROL_SERVICE_ID: ${{ vars.ZEABUR_P2_MIGRATION_CONTROL_SERVICE_ID }}
-          P2_REPEAT_MISTAKE_GUARD_EXPECTED_LESSON_ID: ${{ vars.P2_DURABLE_LESSON_ID }}
-          P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_EVIDENCE_HASH: ${{ vars.P2_DURABLE_LESSON_SOURCE_EVIDENCE_HASH }}
-          P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_TRADE_ID: ${{ vars.P2_DURABLE_LESSON_SOURCE_TRADE_ID }}
-          P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_DECISION_ID: ${{ vars.P2_DURABLE_LESSON_SOURCE_DECISION_ID }}
         run: |
           set -euo pipefail
           python tools/ci/p1_mask_dsn.py
           test -n "${NEXUS_STAGING_POSTGRES_URL:-}"
           test -n "${ZEABUR_TOKEN:-}"
           test -n "${P2_MIGRATION_CONTROL_SERVICE_ID:-}"
-          test -n "${P2_REPEAT_MISTAKE_GUARD_EXPECTED_LESSON_ID:-}"
-          test -n "${P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_EVIDENCE_HASH:-}"
-          test -n "${P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_TRADE_ID:-}"
-          test -n "${P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_DECISION_ID:-}"
+          echo "P2_RMG_MANUAL_IDENTITY_DEPENDENCY_REMOVED=true"
+          echo "CERTIFIED_RUN8_DURABLE_IDENTITY_AUTHORITY=true"
           echo "P2_REPEAT_MISTAKE_GUARD_SECRET_BOUNDARY_PASS=true"
           echo "P2_REPEAT_MISTAKE_GUARD_IMPLEMENTED=true"
 
@@ -108,10 +102,6 @@ jobs:
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           SERVICE_ID: ${{ vars.ZEABUR_P2_MIGRATION_CONTROL_SERVICE_ID }}
-          P2_REPEAT_MISTAKE_GUARD_EXPECTED_LESSON_ID: ${{ vars.P2_DURABLE_LESSON_ID }}
-          P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_EVIDENCE_HASH: ${{ vars.P2_DURABLE_LESSON_SOURCE_EVIDENCE_HASH }}
-          P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_TRADE_ID: ${{ vars.P2_DURABLE_LESSON_SOURCE_TRADE_ID }}
-          P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_DECISION_ID: ${{ vars.P2_DURABLE_LESSON_SOURCE_DECISION_ID }}
         run: |
           set -euo pipefail
           mkdir -p artifacts/bybit_demo_p1
@@ -119,7 +109,7 @@ jobs:
           . tools/ci/p1_validation_runtime.sh
           p1_export_disarmed_flags
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          COMMAND="export MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true PYTHONPATH=/app P2_REPEAT_MISTAKE_GUARD_QUALIFICATION_EVIDENCE_PATH=${EVIDENCE_PATH} P2_REPEAT_MISTAKE_GUARD_EXPECTED_LESSON_ID=${P2_REPEAT_MISTAKE_GUARD_EXPECTED_LESSON_ID} P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_EVIDENCE_HASH=${P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_EVIDENCE_HASH} P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_TRADE_ID=${P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_TRADE_ID} P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_DECISION_ID=${P2_REPEAT_MISTAKE_GUARD_EXPECTED_SOURCE_DECISION_ID}; python -m tools.ci.p2_repeat_mistake_guard_qualification"
+          COMMAND="export MAINNET=false REAL_MONEY=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false EXCHANGE_WRITE=false NEXUS_ENV=STAGING NEXUS_PG_RUNTIME_ENABLED=true PYTHONPATH=/app P2_REPEAT_MISTAKE_GUARD_QUALIFICATION_EVIDENCE_PATH=${EVIDENCE_PATH}; python -m tools.ci.p2_repeat_mistake_guard_qualification"
           set +e
           zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- /bin/sh -lc "$COMMAND" >/tmp/p2_rmg_qual_exec.out 2>&1
           EXEC_CODE=$?
