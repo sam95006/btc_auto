@@ -155,6 +155,14 @@ def run_preflight(
     checks["SERVICE_IS_LEARNING_VALIDATION"] = service_name == LEARNING_VALIDATION_SERVICE_NAME
     checks["RISK_ENGINE_FINAL_AUTHORITY"] = FIXED_LEVERAGE == 25 and float(MARGIN_PER_TRADE_CAP) == 20.0
     checks["REPEAT_MISTAKE_GUARD_HEALTHY"] = _repeat_mistake_guard_healthy()
+    checks["CERTIFIED_BOUNDED_RUNTIME_ACTIVE"] = offline
+    if not offline:
+        status_payload, _ = _get(f"{base_url.rstrip('/')}/api/nexus/demo-execution/bounded-6h/status")
+        bounded = status_payload.get("bounded_6h") if isinstance(status_payload.get("bounded_6h"), dict) else status_payload
+        if isinstance(bounded, dict):
+            checks["CERTIFIED_BOUNDED_RUNTIME_ACTIVE"] = bounded.get("CERTIFIED_BOUNDED_RUNTIME_ACTIVE") is True
+        else:
+            checks["CERTIFIED_BOUNDED_RUNTIME_ACTIVE"] = False
 
     gate = DemoExecutionSafetyGate()
     kill = KillSwitch(gate)
@@ -170,7 +178,9 @@ def run_preflight(
     deployed_sha = _health_sha(health_payload)
     expected = (expected_github_sha or os.environ.get("GITHUB_SHA") or "").strip()
     checks["GITHUB_SHA_CONFIRMED"] = bool(expected) and (
-        deployed_sha.startswith(expected[:7]) or expected.startswith(deployed_sha[:7]) if deployed_sha else offline
+        deployed_sha.lower() == expected.lower()
+        if deployed_sha and len(expected) == 40 and len(deployed_sha) == 40
+        else offline
     )
     if not offline and expected and deployed_sha and not checks["GITHUB_SHA_CONFIRMED"]:
         problems.append("github_sha_mismatch")
@@ -226,6 +236,7 @@ def run_preflight(
         "NO_UNKNOWN_OUTCOME_STATE",
         "MIGRATION_0007_PRESENT",
         "DURABLE_LESSONS_READABLE",
+        "CERTIFIED_BOUNDED_RUNTIME_ACTIVE",
     ):
         if not checks.get(key):
             problems.append(key.lower())

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -12,7 +13,7 @@ from backend.nexus_demo_execution.demo_domain import DEMO_REST_BASE_URL
 
 LEASE_ENV_JSON = "BOUNDED_SESSION_LEASE_JSON"
 LEASE_ENV_PATH = "BOUNDED_SESSION_LEASE_PATH"
-EXPECTED_SHA_ENV = "BOUNDED_SESSION_EXPECTED_RUNTIME_SHA"
+_FULL_SHA40 = re.compile(r"^[0-9a-f]{40}$")
 
 
 @dataclass(frozen=True)
@@ -60,7 +61,45 @@ def _parse(ts: str) -> datetime:
     return datetime.fromisoformat(ts.replace("Z", "+00:00"))
 
 
-def load_runtime_lease() -> RuntimeLease | None:
+def is_full_runtime_sha(value: str) -> bool:
+    return bool(_FULL_SHA40.fullmatch(str(value or "").strip().lower()))
+
+
+def runtime_sha() -> str:
+    for key in ("GITHUB_SHA", "NEXUS_DEPLOYMENT_COMMIT", "NEXUS_SOURCE_COMMIT", "SOURCE_COMMIT"):
+        value = (os.environ.get(key) or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def validate_runtime_sha(*, expected: str, deployed: str) -> dict[str, Any]:
+    expected = (expected or "").strip().lower()
+    deployed = (deployed or "").strip().lower()
+    if not expected:
+        return {"ok": False, "reason": "expected_runtime_sha_missing"}
+    if not deployed:
+        return {"ok": False, "reason": "deployed_runtime_sha_missing"}
+    if not is_full_runtime_sha(expected):
+        return {"ok": False, "reason": "expected_runtime_sha_not_full_40_hex"}
+    if not is_full_runtime_sha(deployed):
+        return {"ok": False, "reason": "deployed_runtime_sha_not_full_40_hex"}
+    if expected != deployed:
+        return {"ok": False, "reason": "runtime_sha_mismatch"}
+    return {"ok": True}
+
+
+def lease_from_request(body: dict[str, Any] | None) -> RuntimeLease | None:
+    if not isinstance(body, dict):
+        return None
+    lease_payload = body.get("lease")
+    if isinstance(lease_payload, dict):
+        return RuntimeLease.from_dict(lease_payload)
+    return None
+
+
+def load_runtime_lease_from_env() -> RuntimeLease | None:
+    """Legacy/test-only env loader — production start uses signed POST body."""
     raw = (os.environ.get(LEASE_ENV_JSON) or "").strip()
     if not raw:
         path = (os.environ.get(LEASE_ENV_PATH) or "").strip()
@@ -75,14 +114,6 @@ def load_runtime_lease() -> RuntimeLease | None:
     return RuntimeLease.from_dict(lease_payload)
 
 
-def runtime_sha() -> str:
-    for key in ("GITHUB_SHA", "NEXUS_DEPLOYMENT_COMMIT", "NEXUS_SOURCE_COMMIT", "SOURCE_COMMIT"):
-        value = (os.environ.get(key) or "").strip()
-        if value:
-            return value
-    return ""
-
-
 def validate_runtime_lease(lease: RuntimeLease | None) -> dict[str, Any]:
     if lease is None:
         return {"ok": False, "reason": "runtime_lease_missing"}
@@ -95,29 +126,16 @@ def validate_runtime_lease(lease: RuntimeLease | None) -> dict[str, Any]:
         return {"ok": False, "reason": "runtime_lease_mainnet_or_real_money"}
     if "api-demo.bybit.com" not in DEMO_REST_BASE_URL:
         return {"ok": False, "reason": "runtime_not_demo_api"}
-    expected = (lease.expected_runtime_sha or os.environ.get(EXPECTED_SHA_ENV) or runtime_sha()).strip()
-    deployed = runtime_sha()
-    if expected and deployed and not (deployed.startswith(expected[:7]) or expected.startswith(deployed[:7])):
-        return {"ok": False, "reason": "runtime_sha_mismatch", "expected": expected[:12], "deployed": deployed[:12]}
+    sha = validate_runtime_sha(expected=lease.expected_runtime_sha, deployed=runtime_sha())
+    if not sha.get("ok"):
+        return sha
     if not lease.session_id.startswith("NEXUS-DEMO-6H-V2-"):
         return {"ok": False, "reason": "runtime_session_id_prefix_mismatch"}
     return {"ok": True, "session_id": lease.session_id}
 
 
-def lease_allows_new_entry(lease: RuntimeLease | None) -> bool:
+def lease_allows_new_entry(lease: RuntimeLease | None, *, learning_hold: bool = False) -> bool:
+    if learning_hold:
+        return False
     checked = validate_runtime_lease(lease)
     return bool(checked.get("ok"))
-
-
-def lease_wiring_markers() -> dict[str, bool]:
-    import inspect
-
-    from backend.nexus_bounded_runtime.certified_session import CertifiedBounded6HSession
-
-    start_source = inspect.getsource(CertifiedBounded6HSession.start)
-    entry_source = inspect.getsource(CertifiedBounded6HSession._runtime_entry_allowed)
-    return {
-        "CONTROL_PLANE_RUNTIME_LEASE_ID_MATCH": "load_runtime_lease" in start_source and "self.session_id = lease.session_id" in start_source,
-        "RUNTIME_LEASE_EXPIRY_AUTHORITY": "validate_runtime_lease" in start_source and "lease_allows_new_entry" in entry_source,
-        "SESSION_EXPIRY_BLOCKS_NEW_ENTRY": "lease_allows_new_entry" in entry_source,
-    }

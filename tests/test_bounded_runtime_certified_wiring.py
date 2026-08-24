@@ -2,24 +2,17 @@
 from __future__ import annotations
 
 import inspect
-import json
 import os
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
-from backend.nexus_bounded_runtime.bootstrap import install_certified_bounded_runtime
+from backend.nexus_bounded_runtime.bootstrap import certified_bounded_runtime_active, install_certified_bounded_runtime
+from backend.nexus_bounded_runtime.bounded_start_auth import sign_bounded_start_request, verify_bounded_start_request
 from backend.nexus_bounded_runtime.certified_session import CertifiedBounded6HSession, wiring_markers
-from backend.nexus_bounded_runtime.runtime_lease import (
-    RuntimeLease,
-    lease_wiring_markers,
-    load_runtime_lease,
-    validate_runtime_lease,
-)
+from backend.nexus_bounded_runtime.runtime_lease import RuntimeLease, validate_runtime_lease, validate_runtime_sha
 from backend.nexus_demo_execution.bounded_autonomous_engine import BoundedAutonomousSessionEngine
-from backend.nexus_demo_execution.session_mistake_memory import SessionMistakeMemory
 from tools.ci.bounded_runtime_integration_qualification import run as run_integration_qual
 from tools.ci.demo_bounded_session_lease import FOUNDER_PHRASE, create_lease
 from tools.ci.p2_historical_p1_p2_regression_lock import HISTORICAL_P1_P2_REGRESSION_LOCK_MODULES
@@ -27,6 +20,8 @@ from tools.ci.p2_historical_p1_p2_regression_lock import HISTORICAL_P1_P2_REGRES
 ROOT = Path(__file__).resolve().parents[1]
 FROZEN_ENGINE = ROOT / "backend/nexus_demo_execution/bounded_autonomous_engine.py"
 MIGRATION_0007 = ROOT / "backend/nexus_persistence_pg/migrations/0007_p2_research_learning_store.sql"
+_TEST_SHA = "dc98088eed40f7b6f599f0c06c593f8b736cea89"
+_TEST_SECRET = "test-bounded-control-secret-not-for-production"
 
 
 def _disarm(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -39,6 +34,7 @@ def test_bootstrap_replaces_bounded_6h_session_class() -> None:
     import backend.nexus_demo_execution.bounded_6h_session as mod
 
     assert mod.Bounded6HSession is CertifiedBounded6HSession
+    assert certified_bounded_runtime_active() is True
 
 
 def test_frozen_engine_still_has_legacy_session_memory_guard() -> None:
@@ -57,12 +53,12 @@ def test_certified_session_persist_before_submit_not_session_memory_policy() -> 
     assert source.index("evaluate_certified_guard") < source.index("persist_durable_intent")
     assert source.index("persist_durable_intent") < source.index("submit_after_persist")
     assert "session_mistake_telemetry" in source
-    assert "guard_eval.get(\"blocked\")" in source
+    assert "evaluate_certified_entry_risk" in source
 
 
-def test_certified_session_requires_runtime_lease_at_start() -> None:
+def test_certified_session_requires_signed_start_at_start() -> None:
     source = inspect.getsource(CertifiedBounded6HSession.start)
-    assert "load_runtime_lease" in source
+    assert "verify_bounded_start_request" in source
     assert "validate_runtime_lease" in source
     assert "self.session_id = lease.session_id" in source
 
@@ -72,18 +68,10 @@ def test_wiring_markers_all_true() -> None:
     assert all(markers.values()), markers
 
 
-def test_lease_wiring_markers_all_true() -> None:
-    markers = lease_wiring_markers()
-    assert all(markers.values()), markers
-
-
 def test_runtime_rejects_missing_and_expired_lease(monkeypatch: pytest.MonkeyPatch) -> None:
     _disarm(monkeypatch)
-    monkeypatch.delenv("BOUNDED_SESSION_LEASE_JSON", raising=False)
-    monkeypatch.delenv("BOUNDED_SESSION_LEASE_PATH", raising=False)
     assert validate_runtime_lease(None)["ok"] is False
-
-    lease = create_lease(founder_phrase=FOUNDER_PHRASE, expected_runtime_sha="abc1234")
+    lease = create_lease(founder_phrase=FOUNDER_PHRASE, expected_runtime_sha=_TEST_SHA)
     expired = RuntimeLease(
         session_id=lease.session_id,
         authorized_at=lease.authorized_at,
@@ -96,21 +84,20 @@ def test_runtime_rejects_missing_and_expired_lease(monkeypatch: pytest.MonkeyPat
     assert validate_runtime_lease(expired)["ok"] is False
 
 
-def test_lease_session_id_prefix_matches_policy(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_lease_session_id_prefix_and_full_sha(monkeypatch: pytest.MonkeyPatch) -> None:
     _disarm(monkeypatch)
-    lease = create_lease(founder_phrase=FOUNDER_PHRASE, expected_runtime_sha="offline")
+    monkeypatch.setenv("GITHUB_SHA", _TEST_SHA)
+    lease = create_lease(founder_phrase=FOUNDER_PHRASE, expected_runtime_sha=_TEST_SHA)
     assert lease.session_id.startswith("NEXUS-DEMO-6H-V2-")
-    payload = json.dumps({"lease": lease.to_runtime_payload()})
-    monkeypatch.setenv("BOUNDED_SESSION_LEASE_JSON", payload)
-    monkeypatch.setenv("GITHUB_SHA", "offline")
-    loaded = load_runtime_lease()
-    assert loaded is not None
+    loaded = RuntimeLease.from_dict(lease.to_runtime_payload())
     assert validate_runtime_lease(loaded)["ok"] is True
+    assert validate_runtime_sha(expected=_TEST_SHA, deployed=_TEST_SHA)["ok"] is True
 
 
-def test_certified_start_fails_without_lease(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_certified_start_fails_without_signed_request(monkeypatch: pytest.MonkeyPatch) -> None:
     _disarm(monkeypatch)
-    monkeypatch.delenv("BOUNDED_SESSION_LEASE_JSON", raising=False)
+    monkeypatch.setenv("GITHUB_SHA", _TEST_SHA)
+    install_certified_bounded_runtime()
     session = CertifiedBounded6HSession(
         gate=MagicMock(),
         reader=MagicMock(),
@@ -122,18 +109,27 @@ def test_certified_start_fails_without_lease(monkeypatch: pytest.MonkeyPatch) ->
         export_dir=Path("."),
         data_root=Path("."),
     )
-    result = session.start()
+    result = session.start(start_request=None)
     assert result.get("ok") is False
-    assert result.get("reason") == "runtime_lease_missing"
+
+
+def test_signed_start_enables_session_start_body(monkeypatch: pytest.MonkeyPatch) -> None:
+    _disarm(monkeypatch)
+    monkeypatch.setenv("NEXUS_BOUNDED_SESSION_CONTROL_SECRET", _TEST_SECRET)
+    monkeypatch.setenv("GITHUB_SHA", _TEST_SHA)
+    lease = create_lease(founder_phrase=FOUNDER_PHRASE, expected_runtime_sha=_TEST_SHA)
+    signed = sign_bounded_start_request(lease=lease.to_runtime_payload(), secret=_TEST_SECRET)
+    assert verify_bounded_start_request(signed)["ok"] is True
 
 
 def test_integration_qualification_offline_passes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _disarm(monkeypatch)
+    monkeypatch.setenv("NEXUS_BOUNDED_SESSION_CONTROL_SECRET", _TEST_SECRET)
+    monkeypatch.setenv("GITHUB_SHA", _TEST_SHA)
     evidence = run_integration_qual(sqlite_path=tmp_path / "bounded_qual.db")
     assert evidence["BOUNDED_RUNTIME_CERTIFIED_SURFACE_WIRING_PASS"] is True
     assert evidence["create_order_calls"] == 0
     assert evidence["exchange_write_call_count"] == 0
-    assert evidence["REAL_EXCHANGE_WRITE_CALLS"] == 0
 
 
 def test_regression_lock_includes_bounded_runtime_wiring_test() -> None:

@@ -159,14 +159,24 @@ def activate_session(
     lease: BoundedSessionLease,
     base_url: str = VALIDATION_URL,
     dry_run: bool = False,
+    founder_phrase: str = FOUNDER_PHRASE,
 ) -> dict[str, Any]:
     if expiry_blocks_new_entry(lease):
         return {"ok": False, "reason": "lease_expired"}
     if not writes_allowed(lease, risk_engine_allows=True):
         return {"ok": False, "reason": "lease_not_valid"}
     if dry_run:
-        return {"ok": True, "dry_run": True, "session_id": lease.session_id, "would_post": f"{base_url}/api/nexus/demo-execution/bounded-6h/start"}
-    payload, code = _post(f"{base_url.rstrip('/')}/api/nexus/demo-execution/bounded-6h/start")
+        return {
+            "ok": True,
+            "dry_run": True,
+            "session_id": lease.session_id,
+            "would_post": f"{base_url}/api/nexus/demo-execution/bounded-6h/start",
+            "signed_start": True,
+        }
+    from backend.nexus_bounded_runtime.bounded_start_auth import sign_bounded_start_request
+
+    signed_body = sign_bounded_start_request(lease=lease.to_runtime_payload(), founder_phrase=founder_phrase)
+    payload, code = _post(f"{base_url.rstrip('/')}/api/nexus/demo-execution/bounded-6h/start", signed_body)
     data = _unwrap(payload)
     start = data.get("bounded_6h_start") if isinstance(data.get("bounded_6h_start"), dict) else data
     return {
@@ -324,7 +334,7 @@ def main() -> int:
         if lease is None:
             print(json.dumps({"ok": False, "error": "lease_missing"}))
             return 1
-        result = activate_session(lease=lease, base_url=args.base, dry_run=args.dry_run)
+        result = activate_session(lease=lease, base_url=args.base, dry_run=args.dry_run, founder_phrase=args.founder_phrase)
         print(json.dumps(result, indent=2, sort_keys=True, default=str))
         return 0 if result.get("ok") else 1
     if args.command == "stop":

@@ -59,8 +59,9 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: |
           pip install -r requirements.txt pytest
-          python -m pytest tests/test_demo_bounded_autonomous_session.py tests/test_bounded_runtime_certified_wiring.py -q --tb=line
+          python -m pytest tests/test_demo_bounded_autonomous_session.py tests/test_bounded_runtime_certified_wiring.py tests/test_bounded_runtime_pre_live_hardening.py -q --tb=line
           python -m tools.ci.bounded_runtime_integration_qualification
+          python -m tools.ci.bounded_runtime_pre_live_hardening
           python -m tools.ci.p2_historical_p1_p2_regression_lock
           echo "HISTORICAL_P1_P2_REGRESSION_LOCK=PASS"
           echo "CERTIFIED_SURFACE_FREEZE_CHECK=PASS"
@@ -121,28 +122,6 @@ jobs:
             --out artifacts/demo_bounded_session/preflight.json
           echo "PREFLIGHT_PASS=true"
 
-      - name: Inject transient bounded-session founder gate on validation service
-        env:
-          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
-          SERVICE_ID: ${{ github.event.inputs.validation_service_id }}
-        run: |
-          set -euo pipefail
-          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          set_var() {
-            local k="$1" v="$2"
-            zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "${k}=${v}" -y -i=false >/tmp/bounded_var.out 2>&1 ||
-              zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "${k}=${v}" -y -i=false >/tmp/bounded_var.out 2>&1
-          }
-          set_var MAINNET false
-          set_var REAL_MONEY false
-          set_var EXCHANGE_WRITE false
-          set_var DEMO_AUTONOMOUS_ENABLED false
-          set_var AUTONOMOUS_SEND false
-          set_var FOUNDER_GATE DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION
-          set_var FOUNDER_6H_APPROVED true
-          set_var FOUNDER_APPROVE_DEMO_AUTONOMOUS_6H_V2 true
-          echo "BOUNDED_SESSION_GATE_ARMED=true"
-
       - name: Create bounded session lease and prepare session record
         env:
           PYTHONPATH: ${{ github.workspace }}
@@ -164,37 +143,21 @@ jobs:
           echo "session_id=${SESSION_ID}" >> "$GITHUB_ENV"
           echo "SESSION_LEASE_CREATED=true"
 
-      - name: Inject runtime lease identity on validation service
-        env:
-          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
-          SERVICE_ID: ${{ github.event.inputs.validation_service_id }}
-        run: |
-          set -euo pipefail
-          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          LEASE_JSON=$(python - <<'PY'
-          import json
-          from pathlib import Path
-          lease = json.loads(Path("artifacts/demo_bounded_session/active_lease.json").read_text(encoding="utf-8"))
-          print(json.dumps({"lease": lease}))
-          PY
-          )
-          zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "BOUNDED_SESSION_LEASE_JSON=${LEASE_JSON}" -y -i=false >/tmp/bounded_lease.out 2>&1 ||
-            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "BOUNDED_SESSION_LEASE_JSON=${LEASE_JSON}" -y -i=false >/tmp/bounded_lease.out 2>&1
-          zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "BOUNDED_SESSION_EXPECTED_RUNTIME_SHA=${{ github.event.inputs.expected_runtime_sha }}" -y -i=false >/tmp/bounded_sha.out 2>&1 ||
-            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "BOUNDED_SESSION_EXPECTED_RUNTIME_SHA=${{ github.event.inputs.expected_runtime_sha }}" -y -i=false >/tmp/bounded_sha.out 2>&1
-          echo "RUNTIME_LEASE_ENV_INJECTED=true"
-
       - name: Activate bounded 6H runtime (founder dispatch only)
         if: github.event.inputs.dry_run_activate != 'true'
         env:
           PYTHONPATH: ${{ github.workspace }}
+          NEXUS_BOUNDED_SESSION_CONTROL_SECRET: ${{ secrets.NEXUS_BOUNDED_SESSION_CONTROL_SECRET }}
+          FOUNDER_BOUNDED_SESSION_PHRASE: START_NEXUS_BYBIT_DEMO_BOUNDED_6H_SESSION
         run: |
           set -euo pipefail
           python -m tools.ci.demo_bounded_session_orchestrator activate \
             --base "$DEMO_VAL_URL" \
             --lease-file artifacts/demo_bounded_session/active_lease.json \
+            --founder-phrase "$FOUNDER_BOUNDED_SESSION_PHRASE" \
             > artifacts/demo_bounded_session/activate.json
           echo "BOUNDED_SESSION_ACTIVATED=true"
+          echo "TRANSIENT_ZEABUR_ENV_RUNTIME_AUTHORITY_REMOVED=true"
 
       - name: Upload bounded session artifacts
         if: always()
@@ -203,17 +166,3 @@ jobs:
           name: bounded-demo-6h-session-launch
           path: artifacts/demo_bounded_session/
           if-no-files-found: warn
-
-      - name: Always disarm transient bounded-session gate
-        if: always()
-        env:
-          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
-          SERVICE_ID: ${{ github.event.inputs.validation_service_id }}
-        run: |
-          set -euo pipefail
-          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          for pair in MAINNET=false REAL_MONEY=false EXCHANGE_WRITE=false DEMO_AUTONOMOUS_ENABLED=false AUTONOMOUS_SEND=false FOUNDER_6H_APPROVED=false FOUNDER_APPROVE_DEMO_AUTONOMOUS_6H_V2=false; do
-            zeabur variable update --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "$pair" -y -i=false >/tmp/bounded_cleanup.out 2>&1 ||
-              zeabur variable create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -k "$pair" -y -i=false >/tmp/bounded_cleanup.out 2>&1
-          done
-          echo "BOUNDED_SESSION_GATE_DISARMED=true"
