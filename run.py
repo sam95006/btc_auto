@@ -34,6 +34,7 @@ from backend.nexus_customer_validation_concierge.routes import (
 )
 from backend.core.env_loader import load_env_file
 from backend.runtime.single_instance_guard import SingleInstanceError, SingleInstanceGuard
+from backend.security.validation_public_guard import install_validation_public_guard
 from backend.security.secret_manager import initialize_security_foundation
 from backend.services.console_assets import verify_console_assets
 from backend.trading.trading_mode import TradingModeSafetyError, get_trading_mode, require_testnet_credentials
@@ -51,6 +52,7 @@ except TradingModeSafetyError as exc:
     raise SystemExit(str(exc))
 
 app = Flask(__name__)
+install_validation_public_guard(app)
 register_nexus_routes(app)
 register_market_public_routes(app)
 register_market_scanner_routes(app)

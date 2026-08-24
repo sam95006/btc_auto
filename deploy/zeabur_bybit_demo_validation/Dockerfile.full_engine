@@ -33,6 +33,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     NEXUS_DATA_ROOT=/app/data/nexus_demo_validation \
     NEXUS_DATA_DIR=/app/data/nexus_demo_validation \
     NEXUS_VALIDATION_BOOT=full_engine \
+    NEXUS_VALIDATION_PUBLIC_GUARD=true \
     PORT=8080
 
 WORKDIR /app
