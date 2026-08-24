@@ -47,7 +47,7 @@ def install_certified_bounded_runtime() -> bool:
 def patch_bounded_6h_start_handler() -> None:
     """Route bounded-6h/start through signed POST body — no Zeabur env lease authority."""
     from backend.nexus_bounded_runtime.bootstrap import certified_bounded_runtime_active
-    from backend.nexus_demo_execution.api_routes import DemoExecutionState
+    from backend.nexus_demo_execution.api_routes import DemoExecutionApiState
 
     def start_bounded_6h_signed(self):  # type: ignore[no-untyped-def]
         if not certified_bounded_runtime_active():
@@ -83,13 +83,16 @@ def patch_bounded_6h_start_handler() -> None:
             )
         return self._bounded_6h.start(start_request=body if isinstance(body, dict) else None)
 
-    DemoExecutionState.start_bounded_6h = start_bounded_6h_signed  # type: ignore[method-assign]
+    DemoExecutionApiState.start_bounded_6h = start_bounded_6h_signed  # type: ignore[method-assign]
 
-    original_status = DemoExecutionState.bounded_6h_status
+    original_status = DemoExecutionApiState.bounded_6h_status
 
     def bounded_6h_status_signed(self):  # type: ignore[no-untyped-def]
+        from backend.nexus_bounded_runtime.runtime_lease_storage_proof import prove_runtime_durable_lease_storage
+
         payload = original_status(self)
         payload["CERTIFIED_BOUNDED_RUNTIME_ACTIVE"] = certified_bounded_runtime_active()
+        payload.update(prove_runtime_durable_lease_storage(self.data_root))
         return payload
 
-    DemoExecutionState.bounded_6h_status = bounded_6h_status_signed  # type: ignore[method-assign]
+    DemoExecutionApiState.bounded_6h_status = bounded_6h_status_signed  # type: ignore[method-assign]

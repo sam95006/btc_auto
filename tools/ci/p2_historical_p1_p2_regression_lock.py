@@ -40,6 +40,7 @@ HISTORICAL_P1_P2_REGRESSION_LOCK_MODULES: tuple[str, ...] = (
     "tests/test_demo_bounded_autonomous_session.py",
     "tests/test_bounded_runtime_certified_wiring.py",
     "tests/test_bounded_runtime_pre_live_hardening.py",
+    "tests/test_bounded_runtime_remote_lease_storage_proof.py",
     "tests/test_p2_zeabur_pinned_cli_contract.py",
 )
 

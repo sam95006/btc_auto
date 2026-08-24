@@ -23,7 +23,8 @@ from backend.nexus_bounded_runtime.certified_guard import evaluate_certified_gua
 from backend.nexus_bounded_runtime.certified_learning import reconcile_close_pnl_for_order, write_durable_lesson_from_trade
 from backend.nexus_bounded_runtime.certified_risk import RISK_AUTHORITY
 from backend.nexus_bounded_runtime.certified_session import wiring_markers
-from backend.nexus_bounded_runtime.durable_lease_store import DurableLeaseStore, validate_durable_lease_storage_path
+from backend.nexus_bounded_runtime.durable_lease_store import DurableLeaseStore
+from backend.nexus_bounded_runtime.runtime_lease_storage_proof import prove_runtime_durable_lease_storage, resolve_bounded_lease_root
 from backend.nexus_bounded_runtime.runtime_lease import is_full_runtime_sha, validate_runtime_sha
 from backend.nexus_demo_execution.durable_order_ledger import make_order_link_id
 from backend.nexus_demo_execution.order_reconciliation import BybitDemoReconciler
@@ -180,10 +181,13 @@ def run(*, sqlite_path: Path | None = None, lease_root: Path | None = None) -> d
     }
     markers = wiring_markers()
     evidence.update({key: markers.get(key) for key in markers})
-    lease_root = lease_root or Path("artifacts/pre_live_lease")
-    lease_storage = validate_durable_lease_storage_path(lease_root)
-    evidence["DURABLE_LEASE_STORAGE_PREFLIGHT_PASS"] = lease_storage.get("DURABLE_LEASE_STORAGE_PREFLIGHT_PASS") is True
-    evidence["EPHEMERAL_LEASE_STORAGE_REJECTED"] = lease_storage.get("EPHEMERAL_LEASE_STORAGE_REJECTED") is True
+    storage_data_root = Path("artifacts")
+    lease_root = lease_root or resolve_bounded_lease_root(storage_data_root)
+    lease_storage = prove_runtime_durable_lease_storage(storage_data_root)
+    evidence["DURABLE_LEASE_STORAGE_PREFLIGHT_PASS"] = lease_storage.get("DURABLE_LEASE_STORAGE_RUNTIME_PROVEN") is True
+    evidence["DURABLE_LEASE_STORAGE_RUNTIME_PROVEN"] = lease_storage.get("DURABLE_LEASE_STORAGE_RUNTIME_PROVEN") is True
+    evidence["EPHEMERAL_LEASE_STORAGE"] = lease_storage.get("EPHEMERAL_LEASE_STORAGE") is True
+    evidence["EPHEMERAL_LEASE_STORAGE_REJECTED"] = lease_storage.get("EPHEMERAL_LEASE_STORAGE") is False
     evidence["CERTIFIED_BOUNDED_RUNTIME_ACTIVE"] = certified_bounded_runtime_active()
     evidence["FULL_RUNTIME_SHA_REQUIRED"] = is_full_runtime_sha(_TEST_SHA)
     sha_check = validate_runtime_sha(expected=_TEST_SHA, deployed=_TEST_SHA)
@@ -391,8 +395,8 @@ def run(*, sqlite_path: Path | None = None, lease_root: Path | None = None) -> d
         and evidence.get("EXACT_CLOSE_ORDER_ID_PNL_MATCH_PASS")
         and evidence.get("PNL_PROVENANCE_FROM_RECONCILIATION")
         and evidence.get("NO_MANUAL_PROVENANCE_STAMP")
-        and evidence.get("DURABLE_LEASE_STORAGE_PREFLIGHT_PASS")
-        and evidence.get("EPHEMERAL_LEASE_STORAGE_REJECTED") is True
+        and evidence.get("DURABLE_LEASE_STORAGE_RUNTIME_PROVEN")
+        and evidence.get("EPHEMERAL_LEASE_STORAGE") is False
     )
     evidence["FINAL_BOUNDED_6H_EXIT_LIFECYCLE_PASS"] = bool(
         exit_markers

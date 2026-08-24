@@ -91,6 +91,7 @@ def test_unresolved_intent_blocks_writes() -> None:
 
 def test_offline_preflight_passes_with_founder_phrase(monkeypatch: pytest.MonkeyPatch) -> None:
     _disarm(monkeypatch)
+    monkeypatch.setenv("NEXUS_DATA_ROOT", str(Path("artifacts/test_bounded_preflight_data").resolve()))
     report = run_preflight(
         founder_phrase=FOUNDER_PHRASE,
         expected_github_sha="offline",
