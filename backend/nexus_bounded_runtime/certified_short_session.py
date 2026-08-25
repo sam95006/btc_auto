@@ -59,6 +59,14 @@ class CertifiedShortBoundedSession(CertifiedBounded6HSession):
     def _authorization_scope(self) -> str:
         return "DEMO_CERTIFIED_SHORT_V1_SESSION_ONLY"
 
+    def _next_gate_metadata(self) -> dict[str, Any]:
+        return {
+            "next_machine_gate": "NONE",
+            "next_founder_gate": "FOUNDER_REVIEW_SHORT_LEARNING_CLOSURE",
+            "next_founder_gate_approved": False,
+            "24H_GATE_APPROVED": False,
+        }
+
     def _remaining_lease_seconds(self) -> float:
         if self._runtime_lease is None:
             return 0.0

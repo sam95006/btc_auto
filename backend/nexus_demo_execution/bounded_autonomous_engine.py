@@ -849,6 +849,16 @@ class BoundedAutonomousSessionEngine:
         self.session_write_enabled = False
         self.gate.close_smoke_write_window()
 
+    def _next_gate_metadata(self) -> dict[str, Any]:
+        return {
+            "next_machine_gate": (
+                "NONE" if self.policy.label == "12H_V3" else "DEMO_AUTONOMOUS_12H_V3_EXTENDED_OBSERVATION"
+            ),
+            "next_founder_gate": "FOUNDER_GATE=DEMO_AUTONOMOUS_24H_BOUNDED_VALIDATION",
+            "next_founder_gate_approved": False,
+            "24H_GATE_APPROVED": False,
+        }
+
     def _finalize(self, reason: str) -> None:
         from backend.nexus_demo_execution.count_semantics import reconcile_flat
 
@@ -947,10 +957,7 @@ class BoundedAutonomousSessionEngine:
                 "demo_autonomous_final": False,
                 "exchange_write_final": False,
                 "recommendation": rec,
-                "next_machine_gate": ("NONE" if self.policy.label == "12H_V3" else "DEMO_AUTONOMOUS_12H_V3_EXTENDED_OBSERVATION"),
-                "next_founder_gate": "FOUNDER_GATE=DEMO_AUTONOMOUS_24H_BOUNDED_VALIDATION",
-                "next_founder_gate_approved": False,
-                "24H_GATE_APPROVED": False,
+                **self._next_gate_metadata(),
                 "policy_version": self.policy.policy_version,
                 "schema_version": self.policy.schema_version,
                 "stop_reason": reason or self._state.get("stop_reason"),

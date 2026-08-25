@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import inspect
+import json
 import os
+import threading
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -23,6 +27,7 @@ from backend.nexus_bounded_runtime.certified_short_session import (
     CertifiedShortBoundedSession,
 )
 from backend.nexus_bounded_runtime.runtime_lease import RuntimeLease, validate_runtime_lease
+from backend.nexus_demo_execution.bounded_autonomous_engine import BoundedAutonomousSessionEngine
 from backend.nexus_demo_execution.session_policy import policy_12h_v3, policy_6h_v2, policy_short_v1
 from backend.security.validation_public_guard import CONTROL_TOKEN_ENV, GUARD_ENV, install_validation_public_guard
 from tools.ci.demo_bounded_session_lease import FOUNDER_PHRASE, create_lease
@@ -71,6 +76,35 @@ def _session(tmp_path: Path) -> CertifiedShortBoundedSession:
     )
 
 
+def _flat_snapshot() -> SimpleNamespace:
+    return SimpleNamespace(wallet_balance=100.0, equity=100.0, open_positions=[], open_orders=[])
+
+
+def _engine_for_finalize(tmp_path: Path, policy) -> BoundedAutonomousSessionEngine:
+    engine = BoundedAutonomousSessionEngine(
+        gate=MagicMock(),
+        reader=MagicMock(),
+        persistence=MagicMock(),
+        epoch_tracker=MagicMock(),
+        kill_switch=MagicMock(engaged=False),
+        writer=MagicMock(),
+        approval=MagicMock(),
+        export_dir=tmp_path,
+        data_root=tmp_path,
+        policy=policy,
+    )
+    engine.writer.list_positions.return_value = []
+    engine.reader.read_with_constitution.return_value = _flat_snapshot()
+    engine.session_id = f"summary-{policy.label.lower()}"
+    engine._state["export_path"] = str(tmp_path / policy.label)
+    return engine
+
+
+def _finalize_summary(engine: BoundedAutonomousSessionEngine, reason: str = "OPERATOR_STOP") -> dict[str, object]:
+    engine._finalize(reason)
+    return json.loads(Path(engine._state["export_path"], "session_summary.json").read_text(encoding="utf-8"))
+
+
 def _disarm(monkeypatch: pytest.MonkeyPatch) -> None:
     for key in ("MAINNET", "REAL_MONEY", "EXCHANGE_WRITE", "DEMO_AUTONOMOUS_ENABLED", "AUTONOMOUS_SEND"):
         monkeypatch.setenv(key, "false")
@@ -97,6 +131,26 @@ def test_short_policy_contract_and_6h_12h_regression_values() -> None:
     assert six.session_duration_sec == 6 * 3600
     assert six.max_total_entry_orders == 6
     assert twelve.session_duration_sec == 12 * 3600
+
+
+def test_short_final_metadata_requires_founder_learning_closure_review(tmp_path: Path) -> None:
+    six_summary = _finalize_summary(_engine_for_finalize(tmp_path / "six", policy_6h_v2()))
+    twelve_summary = _finalize_summary(_engine_for_finalize(tmp_path / "twelve", policy_12h_v3()))
+    short = _session(tmp_path / "short")
+    short.writer.list_positions.return_value = []
+    short.reader.read_with_constitution.return_value = _flat_snapshot()
+    short.session_id = "summary-short"
+    short._state["export_path"] = str(tmp_path / "short-summary")
+    short_summary = _finalize_summary(short)
+
+    assert six_summary["next_machine_gate"] == "DEMO_AUTONOMOUS_12H_V3_EXTENDED_OBSERVATION"
+    assert six_summary["next_founder_gate"] == "FOUNDER_GATE=DEMO_AUTONOMOUS_24H_BOUNDED_VALIDATION"
+    assert twelve_summary["next_machine_gate"] == "NONE"
+    assert twelve_summary["next_founder_gate"] == "FOUNDER_GATE=DEMO_AUTONOMOUS_24H_BOUNDED_VALIDATION"
+    assert short_summary["next_machine_gate"] == "NONE"
+    assert short_summary["next_founder_gate"] == "FOUNDER_REVIEW_SHORT_LEARNING_CLOSURE"
+    assert "DEMO_AUTONOMOUS_12H_V3_EXTENDED_OBSERVATION" not in json.dumps(short_summary)
+    assert "FOUNDER_GATE=DEMO_AUTONOMOUS_24H_BOUNDED_VALIDATION" not in json.dumps(short_summary)
 
 
 def test_short_signed_phrase_valid_and_cross_phrase_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -214,6 +268,124 @@ def test_lesson_readback_fail_is_failed_learning_closure(tmp_path: Path) -> None
     assert s.session_write_enabled is False
 
 
+def test_full_short_exit_closure_writes_reads_back_and_blocks_second_entry(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    import backend.nexus_bounded_runtime.certified_session as certified_module
+    import backend.nexus_demo_execution.pnl_reconcile as pnl_module
+
+    lesson = {"ok": True, "lesson_id": "LC_full", "source_evidence_hash": "hash-full"}
+    store = MagicMock()
+    store.get_by_evidence_hash.return_value = {
+        "lesson_id": "LC_full",
+        "source_evidence_hash": "hash-full",
+    }
+    monkeypatch.setattr(
+        certified_module,
+        "reconcile_close_pnl_for_order",
+        lambda **kwargs: {"ok": True, "net_pnl": "0.12", "exit_price": "50010"},
+    )
+    monkeypatch.setattr(certified_module, "write_durable_lesson_from_trade", lambda **kwargs: lesson)
+    monkeypatch.setattr(
+        pnl_module,
+        "reconcile_via_writer",
+        lambda writer, symbol: {
+            "net_pnl_status": "AVAILABLE",
+            "net_pnl": "0.12",
+            "gross_pnl": "0.20",
+            "entry_fee": "0.04",
+            "exit_fee": "0.04",
+            "total_fees": "0.08",
+            "funding": "0.0",
+            "fee_source": "mock",
+            "actual_fees_status": "AVAILABLE",
+        },
+    )
+
+    s = _session(tmp_path)
+    s._ensure_certified_stores = MagicMock()
+    s._certified_lesson_store = store
+    s.reader.read_with_constitution.return_value = _flat_snapshot()
+    s.session_write_enabled = True
+    s._runtime_lease = RuntimeLease.from_dict(_short_lease(seconds=3600))
+    s._state["entries_total"] = 1
+    active = {
+        "symbol": "BTCUSDT",
+        "side": "Buy",
+        "qty": "0.001",
+        "trade_case_id": "case-full",
+        "order_intent_id": "intent-full",
+        "close_order_id": "close-full",
+        "candidate": {"symbol": "BTCUSDT"},
+        "cost_labels": [],
+    }
+
+    s._record_exit(active, "TP", tmp_path / "export", "epoch")
+
+    assert s._state["entries_total"] == 1
+    assert s._state["trades_completed"] == 1
+    assert s._state["completed_trades_total"] == 1
+    assert s._state["completed_outcomes"] == 1
+    assert s._state["reflections_total"] == 1
+    assert s._state["learning_proposals_total"] >= 1
+    assert s._state["short_lesson_readback_pass"] is True
+    assert s._state["short_learning_closure_complete"] is True
+    assert s._state["SHORT_LEARNING_CLOSURE_COMPLETE"] is True
+    assert s._state["short_entry_limit_reached"] is True
+    assert s.session_write_enabled is False
+    assert s._before_durable_entry_intent() is False
+    store.get_by_evidence_hash.assert_called_once_with("hash-full")
+
+
+def test_full_short_exit_learning_failure_does_not_look_successful(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    import backend.nexus_bounded_runtime.certified_session as certified_module
+    import backend.nexus_demo_execution.pnl_reconcile as pnl_module
+
+    monkeypatch.setattr(
+        certified_module,
+        "reconcile_close_pnl_for_order",
+        lambda **kwargs: {"ok": True, "net_pnl": "0.12", "exit_price": "50010"},
+    )
+    monkeypatch.setattr(
+        certified_module,
+        "write_durable_lesson_from_trade",
+        MagicMock(side_effect=RuntimeError("lesson write failed")),
+    )
+    monkeypatch.setattr(
+        pnl_module,
+        "reconcile_via_writer",
+        lambda writer, symbol: {"net_pnl_status": "AVAILABLE", "net_pnl": "0.12"},
+    )
+
+    s = _session(tmp_path)
+    s._ensure_certified_stores = MagicMock()
+    s.reader.read_with_constitution.return_value = _flat_snapshot()
+    s.session_write_enabled = True
+    s._state["entries_total"] = 1
+    active = {
+        "symbol": "BTCUSDT",
+        "side": "Buy",
+        "qty": "0.001",
+        "trade_case_id": "case-fail",
+        "order_intent_id": "intent-fail",
+        "close_order_id": "close-fail",
+        "candidate": {"symbol": "BTCUSDT"},
+        "cost_labels": [],
+    }
+
+    s._record_exit(active, "TP", tmp_path / "export", "epoch")
+
+    assert s._state.get("short_learning_closure_complete") is not True
+    assert s._state.get("SHORT_LEARNING_CLOSURE_COMPLETE") is not True
+    assert s._state.get("short_lesson_readback_pass") is not True
+    assert s._state["durable_learning_closure_hold"] is True
+    assert s.session_write_enabled is False
+
+
 def test_manual_stop_race_cannot_create_second_entry_after_one_entry(tmp_path: Path) -> None:
     s = _session(tmp_path)
     s._runtime_lease = RuntimeLease.from_dict(_short_lease(seconds=3600))
@@ -246,6 +418,88 @@ def test_short_6h_12h_mutual_exclusion(monkeypatch: pytest.MonkeyPatch, tmp_path
     st._bounded_short.status.return_value = {"thread_alive": True, "status": "RUNNING"}
     assert st.start_bounded_6h()["active_controller"] == "SHORT_V1"
     assert st.start_bounded_12h({})["active_controller"] == "SHORT_V1"
+
+
+def test_concurrent_short_vs_6h_start_allows_exactly_one_owner(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setenv("NEXUS_DATA_DIR", str(tmp_path / "data"))
+    from backend.nexus_demo_execution import api_routes
+    from backend.nexus_demo_execution.api_routes import DemoExecutionApiState
+
+    entered = threading.Event()
+
+    class _FakeSession:
+        def __init__(self, *args, **kwargs) -> None:
+            self._started = False
+
+        def start(self, *args, **kwargs) -> dict[str, object]:
+            entered.set()
+            time.sleep(0.05)
+            self._started = True
+            return {"ok": True, "status": "STARTING"}
+
+        def status(self) -> dict[str, object]:
+            return {"thread_alive": self._started, "status": "STARTING" if self._started else "IDLE"}
+
+    monkeypatch.setattr(api_routes, "_build_live_or_fake_reader", lambda: MagicMock())
+    monkeypatch.setattr("backend.nexus_demo_execution.bounded_6h_session.Bounded6HSession", _FakeSession)
+    monkeypatch.setattr("backend.nexus_bounded_runtime.certified_short_session.CertifiedShortBoundedSession", _FakeSession)
+
+    st = DemoExecutionApiState()
+    barrier = threading.Barrier(2)
+    results: list[dict[str, object]] = []
+    results_lock = threading.Lock()
+
+    def _start_short() -> None:
+        barrier.wait(timeout=2)
+        result = st.start_bounded_short({})
+        with results_lock:
+            results.append(result)
+
+    def _start_6h() -> None:
+        barrier.wait(timeout=2)
+        result = st.start_bounded_6h()
+        with results_lock:
+            results.append(result)
+
+    threads = [threading.Thread(target=_start_short), threading.Thread(target=_start_6h)]
+    for thread in threads:
+        thread.start()
+    assert entered.wait(timeout=2)
+    for thread in threads:
+        thread.join(timeout=2)
+
+    assert len(results) == 2
+    assert sum(1 for result in results if result.get("ok") is True) == 1
+    blocked = [result for result in results if result.get("ok") is False]
+    assert len(blocked) == 1
+    assert blocked[0]["reason"] == "bounded_execution_owner_already_active"
+
+
+def test_owner_status_exception_fails_closed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("NEXUS_DATA_DIR", str(tmp_path / "data"))
+    from backend.nexus_demo_execution.api_routes import DemoExecutionApiState
+
+    class _BrokenStatus:
+        def status(self) -> dict[str, object]:
+            raise RuntimeError("status unavailable")
+
+    st = DemoExecutionApiState()
+    st._bounded_short = _BrokenStatus()
+    result = st.start_bounded_6h()
+    assert result["ok"] is False
+    assert result["reason"] == "bounded_execution_owner_state_uncertain"
+    assert result["active_controller"] == "SHORT_V1"
+
+
+def test_patched_6h_handler_uses_atomic_owner_lock() -> None:
+    from backend.nexus_bounded_runtime.bootstrap import patch_bounded_6h_start_handler
+
+    source = inspect.getsource(patch_bounded_6h_start_handler)
+    assert "with self._bounded_owner_start_lock" in source
+    assert "_bounded_owner_blocked(\"_bounded_6h\")" in source
 
 
 def test_anonymous_short_post_guarded_and_control_token_does_not_bypass_signed_auth(
