@@ -27,6 +27,9 @@ STREAMS = frozenset(
         "session_summaries",
         "universe_scans",
         "bounded_candidates",
+        "session_mistake_telemetry",
+        "certified_risk",
+        "durable_lessons",
     }
 )
 
