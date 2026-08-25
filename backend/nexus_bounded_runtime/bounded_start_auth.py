@@ -12,6 +12,7 @@ from typing import Any
 from tools.ci.demo_bounded_session_lease import FOUNDER_PHRASE
 
 SECRET_ENV = "NEXUS_BOUNDED_SESSION_CONTROL_SECRET"
+SHORT_FOUNDER_PHRASE = "START_NEXUS_BYBIT_DEMO_CERTIFIED_SHORT_V1"
 _MAX_SKEW_SEC = 300
 _SHA256_HEX = re.compile(r"^[0-9a-f]{64}$")
 
@@ -53,7 +54,11 @@ def sign_bounded_start_request(
     }
 
 
-def verify_bounded_start_request(body: dict[str, Any] | None) -> dict[str, Any]:
+def verify_bounded_start_request(
+    body: dict[str, Any] | None,
+    *,
+    expected_founder_phrase: str = FOUNDER_PHRASE,
+) -> dict[str, Any]:
     if not isinstance(body, dict):
         return {"ok": False, "reason": "start_request_missing"}
     lease = body.get("lease")
@@ -62,7 +67,7 @@ def verify_bounded_start_request(body: dict[str, Any] | None) -> dict[str, Any]:
     founder_phrase = str(body.get("founder_phrase") or "").strip()
     signed_at = str(body.get("signed_at") or "").strip()
     signature = str(body.get("signature") or "").strip().lower()
-    if founder_phrase != FOUNDER_PHRASE:
+    if founder_phrase != expected_founder_phrase:
         return {"ok": False, "reason": "founder_phrase_invalid"}
     if not signed_at:
         return {"ok": False, "reason": "signed_at_missing"}

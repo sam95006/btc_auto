@@ -112,4 +112,41 @@ def policy_12h_v3() -> BoundedSessionPolicy:
     )
 
 
+def policy_short_v1() -> BoundedSessionPolicy:
+    return BoundedSessionPolicy(
+        label="SHORT_V1",
+        session_gate_name="DEMO_CERTIFIED_SHORT_BOUNDED_V1",
+        allowed_gates=frozenset({"DEMO_CERTIFIED_SHORT_BOUNDED_V1"}),
+        policy_version="demo-certified-short-bounded-v1",
+        schema_version="demo_validation_short_v1",
+        session_duration_sec=60 * 60,
+        max_total_entry_orders=1,
+        max_completed_trades=1,
+        margin_per_trade=v2.MARGIN_PER_TRADE_CAP,
+        leverage=v2.FIXED_LEVERAGE,
+        margin_mode=v2.MARGIN_MODE,
+        max_session_net_loss=v2.MAX_SESSION_NET_LOSS,
+        max_single_trade_net_loss=v2.MAX_SINGLE_TRADE_NET_LOSS,
+        max_consecutive_losses=v2.MAX_CONSECUTIVE_LOSSES,
+        max_bad_process_outcomes=v2.MAX_BAD_PROCESS_OUTCOMES,
+        max_hold_sec=v2.MAX_HOLD_SEC,
+        protection_verify_deadline_sec=v2.PROTECTION_VERIFY_DEADLINE_SEC,
+        cycle_interval_sec=v2.CYCLE_INTERVAL_SEC,
+        supervisor_poll_sec=v2.SUPERVISOR_POLL_SEC,
+        checkpoint_offsets_sec=(0, 15 * 60, 30 * 60, 45 * 60, 60 * 60),
+        session_id_prefix="NEXUS-DEMO-SHORT-V1",
+        thread_name="bounded-certified-short-v1",
+        export_subdir="demo_validation_short_v1",
+        recommendations=(
+            "DEMO_CERTIFIED_SHORT_V1_PASS",
+            "DEMO_CERTIFIED_SHORT_V1_PASS_WITH_FINDINGS",
+            "DEMO_CERTIFIED_SHORT_V1_INCONCLUSIVE_NO_EXECUTION",
+            "DEMO_CERTIFIED_SHORT_V1_FAILED",
+            "DEMO_CERTIFIED_SHORT_V1_FAILED_LEARNING_CLOSURE",
+        ),
+        founder_approval_env="FOUNDER_SHORT_BOUNDED_APPROVED",
+        controller_type="FULL_AUTONOMOUS_ENGINE",
+    )
+
+
 SessionIdFactory = Callable[[str], str]

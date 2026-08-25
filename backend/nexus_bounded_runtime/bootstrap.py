@@ -57,6 +57,9 @@ def patch_bounded_6h_start_handler() -> None:
                 "hold": True,
                 "CERTIFIED_BOUNDED_RUNTIME_ACTIVE": False,
             }
+        active = self._other_bounded_session_active("_bounded_6h")
+        if active:
+            return {"ok": False, "reason": "bounded_execution_owner_already_active", "active_controller": active}
         try:
             from flask import has_request_context, request
 

@@ -74,6 +74,32 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
             self._durable_lease_store = DurableLeaseStore(root)
         return self._durable_lease_store
 
+    def _verify_start_request(self, start_request: dict[str, Any] | None) -> dict[str, Any]:
+        return verify_bounded_start_request(start_request)
+
+    def _validate_start_lease(self, lease: RuntimeLease | None) -> dict[str, Any]:
+        return validate_runtime_lease(lease)
+
+    def _lease_allows_new_entry(self) -> bool:
+        return lease_allows_new_entry(self._runtime_lease, learning_hold=self._learning_closure_hold)
+
+    def _authorization_scope(self) -> str:
+        return "DEMO_6H_V2_SESSION_ONLY"
+
+    def _before_durable_entry_intent(self) -> bool:
+        return True
+
+    def _after_durable_lesson_written(
+        self,
+        *,
+        lesson: dict[str, Any],
+        active: dict[str, Any],
+        account_epoch: str,
+        exit_reason: str,
+    ) -> dict[str, Any]:
+        del lesson, active, account_epoch, exit_reason
+        return {"ok": True}
+
     def _ensure_certified_stores(self) -> None:
         if self._certified_ledger is not None and self._certified_lesson_store is not None:
             if self._certified_reconciler is None:
@@ -102,12 +128,14 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
                 {"ok": False, "reason": "certified_bounded_runtime_unavailable", "CERTIFIED_BOUNDED_RUNTIME_ACTIVE": False}
             )
 
-        verified = verify_bounded_start_request(start_request)
+        # 6H default hook delegates to verify_bounded_start_request; Short overrides only the phrase.
+        verified = self._verify_start_request(start_request)
         if not verified.get("ok"):
             return redact_secrets({"ok": False, "reason": verified.get("reason"), "certified_runtime": True})
 
+        # 6H default hook delegates to validate_runtime_lease; Short narrows prefix/duration.
         lease = lease_from_request(start_request)
-        checked = validate_runtime_lease(lease)
+        checked = self._validate_start_lease(lease)
         if not checked.get("ok"):
             return redact_secrets({"ok": False, "reason": checked.get("reason"), "certified_runtime": True})
         assert lease is not None
@@ -151,7 +179,7 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
             with self._lock:
                 self._state["durable_learning_closure_hold"] = True
             return False
-        if not lease_allows_new_entry(self._runtime_lease, learning_hold=self._learning_closure_hold):
+        if not self._lease_allows_new_entry():
             with self._lock:
                 self._state["runtime_lease_expired"] = True
             return False
@@ -259,6 +287,9 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
                 with self._lock:
                     self._state["cost_gate_blocks"] += 1
                 continue
+
+            if not self._before_durable_entry_intent():
+                return None
 
             try:
                 order_intent_id, order_link_id, trade_id = persist_durable_intent(
@@ -478,6 +509,21 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
                     self._state["durable_learning_closure_pending"] = True
                 self.session_write_enabled = False
                 self.gate.close_smoke_write_window()
+            else:
+                readback = self._after_durable_lesson_written(
+                    lesson=lesson,
+                    active={**active, "close_order_id": close_order_id},
+                    account_epoch=account_epoch,
+                    exit_reason=reason,
+                )
+                if not readback.get("ok"):
+                    self._learning_closure_hold = True
+                    with self._lock:
+                        self._state["durable_learning_closure_hold"] = True
+                        self._state["durable_learning_closure_pending"] = True
+                        self._state["durable_lesson_readback_failed"] = True
+                    self.session_write_enabled = False
+                    self.gate.close_smoke_write_window()
         except Exception as exc:  # noqa: BLE001
             self._learning_closure_hold = True
             with self._lock:
