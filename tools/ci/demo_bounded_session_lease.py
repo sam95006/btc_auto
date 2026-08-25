@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from backend.nexus_demo_execution import SERVICE_NAME
 from backend.nexus_demo_execution.demo_domain import DEMO_REST_BASE_URL
 from backend.nexus_demo_execution.session_limits import SESSION_DURATION_SEC
 
@@ -27,7 +28,7 @@ class BoundedSessionLease:
     real_money: bool
     founder_phrase_hash: str
     expected_runtime_sha: str = ""
-    service_name: str = "nexus-bybit-demo-learning-validation"
+    service_name: str = SERVICE_NAME
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -55,7 +56,7 @@ class BoundedSessionLease:
             real_money=bool(payload.get("real_money")),
             founder_phrase_hash=str(payload["founder_phrase_hash"]),
             expected_runtime_sha=str(payload.get("expected_runtime_sha") or payload.get("expected_github_sha") or ""),
-            service_name=str(payload.get("service_name") or "nexus-bybit-demo-learning-validation"),
+            service_name=str(payload.get("service_name") or SERVICE_NAME),
         )
 
 
