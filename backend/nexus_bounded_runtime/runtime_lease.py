@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from backend.nexus_demo_execution import SERVICE_NAME
 from backend.nexus_demo_execution.demo_domain import DEMO_REST_BASE_URL
 
 LEASE_ENV_JSON = "BOUNDED_SESSION_LEASE_JSON"
@@ -25,7 +26,7 @@ class RuntimeLease:
     mainnet: bool
     real_money: bool
     expected_runtime_sha: str
-    service_name: str = "nexus-bybit-demo-learning-validation"
+    service_name: str = SERVICE_NAME
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> RuntimeLease:
@@ -37,7 +38,7 @@ class RuntimeLease:
             mainnet=bool(payload.get("mainnet")),
             real_money=bool(payload.get("real_money")),
             expected_runtime_sha=str(payload.get("expected_runtime_sha") or payload.get("expected_github_sha") or ""),
-            service_name=str(payload.get("service_name") or "nexus-bybit-demo-learning-validation"),
+            service_name=str(payload.get("service_name") or ""),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -149,6 +150,11 @@ def validate_runtime_lease(
         return {"ok": False, "reason": "runtime_lease_exchange_mismatch"}
     if lease.mainnet or lease.real_money:
         return {"ok": False, "reason": "runtime_lease_mainnet_or_real_money"}
+    service_name = str(lease.service_name or "").strip()
+    if not service_name:
+        return {"ok": False, "reason": "runtime_lease_service_name_missing"}
+    if service_name != SERVICE_NAME:
+        return {"ok": False, "reason": "runtime_lease_service_name_mismatch"}
     if "api-demo.bybit.com" not in DEMO_REST_BASE_URL:
         return {"ok": False, "reason": "runtime_not_demo_api"}
     sha = validate_runtime_sha(expected=lease.expected_runtime_sha, deployed=runtime_sha())
