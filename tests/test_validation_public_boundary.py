@@ -377,7 +377,7 @@ def test_route_inventory_all_state_changing_routes_require_control_auth(monkeypa
         if rule.endpoint != "static" and rule.methods and rule.methods.intersection(STATE_METHODS)
     ]
     state_method_count = sum(len(rule.methods.intersection(STATE_METHODS)) for rule in state_rules)
-    assert state_method_count == 91
+    assert state_method_count == 93
 
     for rule in state_rules:
         path = str(rule.rule)

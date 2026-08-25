@@ -34,6 +34,27 @@ from backend.nexus_demo_execution.safety_gate import DemoExecutionSafetyGate
 logger = logging.getLogger(__name__)
 
 
+def _worker_env_value(name: str) -> int:
+    raw = (os.environ.get(name) or "").strip()
+    if not raw:
+        return 1
+    try:
+        return int(raw)
+    except ValueError:
+        return 0
+
+
+def validation_gunicorn_single_worker_proof() -> dict[str, Any]:
+    web = _worker_env_value("WEB_CONCURRENCY")
+    gunicorn = _worker_env_value("GUNICORN_WORKERS")
+    ok = web == 1 and gunicorn == 1
+    return {
+        "VALIDATION_GUNICORN_SINGLE_WORKER": ok,
+        "WEB_CONCURRENCY_EFFECTIVE": str(web) if web > 0 else "INVALID",
+        "GUNICORN_WORKERS_EFFECTIVE": str(gunicorn) if gunicorn > 0 else "INVALID",
+    }
+
+
 def _candidate_data_roots() -> list[Path]:
     preferred = (os.environ.get("NEXUS_DATA_DIR") or "").strip()
     roots: list[Path] = []
@@ -153,6 +174,10 @@ class DemoExecutionApiState:
         self.approval = FounderSmokeApprovalStore()
         self._bounded_6h: Any = None
         self._bounded_12h: Any = None
+        self._bounded_short: Any = None
+        import threading
+
+        self._bounded_owner_start_lock = threading.RLock()
         logger.info(
             "demo_api_state_ready data_root=%s persistence_blocked=%s",
             self.data_root,
@@ -229,8 +254,10 @@ class DemoExecutionApiState:
             or identity.get("runtime_current_code_commit")
             or ""
         )
+        worker_proof = validation_gunicorn_single_worker_proof()
         return {
             **READ_ONLY_META,
+            **worker_proof,
             "baked_deployment_commit": baked_commit or None,
             "code_marker": "BOUNDED_AUTONOMOUS_ENGINE_V1",
             "fixed_leverage": FIXED_LEVERAGE,
@@ -263,6 +290,7 @@ class DemoExecutionApiState:
             "last_smoke": self._last_smoke_result,
             "bounded_6h": self._bounded_6h.status() if self._bounded_6h else {"status": "IDLE"},
             "bounded_12h": self._bounded_12h.status() if getattr(self, "_bounded_12h", None) else {"status": "IDLE", "found": False},
+            "bounded_short": self._bounded_short.status() if getattr(self, "_bounded_short", None) else {"status": "IDLE", "found": False},
             "bounded_12h_controller_type": "FULL_AUTONOMOUS_ENGINE",
             "bounded_12h_full_engine_ready": True,
             "placeholder_reference_count": 0,
@@ -273,6 +301,12 @@ class DemoExecutionApiState:
                         bool(
                             getattr(self, "_bounded_12h", None)
                             and self._bounded_12h.status().get("thread_alive")
+                        )
+                    )
+                    + int(
+                        bool(
+                            getattr(self, "_bounded_short", None)
+                            and self._bounded_short.status().get("thread_alive")
                         )
                     )
                 )
@@ -433,25 +467,79 @@ class DemoExecutionApiState:
             "report": {"status": "STARTED", "poll": "/api/nexus/demo-execution/founder-smoke/latest"},
         }
 
+    def _bounded_session_active(self, name: str) -> bool:
+        sess = getattr(self, name, None)
+        if sess is None:
+            return False
+        try:
+            status = sess.status()
+        except Exception:
+            return True
+        return bool(status.get("thread_alive") or status.get("status") in {"STARTING", "RUNNING", "FINALIZING"})
+
+    def _other_bounded_session_active(self, current: str) -> dict[str, str]:
+        for name, label in (
+            ("_bounded_short", "SHORT_V1"),
+            ("_bounded_6h", "6H_V2"),
+            ("_bounded_12h", "12H_V3"),
+        ):
+            if name == current:
+                continue
+            sess = getattr(self, name, None)
+            if sess is None:
+                continue
+            try:
+                status = sess.status()
+            except Exception:
+                return {
+                    "reason": "bounded_execution_owner_state_uncertain",
+                    "active_controller": label,
+                }
+            if status.get("thread_alive") or status.get("status") in {"STARTING", "RUNNING", "FINALIZING"}:
+                return {
+                    "reason": "bounded_execution_owner_already_active",
+                    "active_controller": label,
+                }
+        return {}
+
+    def _bounded_owner_blocked(self, current: str) -> dict[str, Any] | None:
+        active = self._other_bounded_session_active(current)
+        if active:
+            return {"ok": False, **active}
+        return None
+
+    def _bounded_start_runtime_preflight(self) -> dict[str, Any] | None:
+        proof = validation_gunicorn_single_worker_proof()
+        if proof["VALIDATION_GUNICORN_SINGLE_WORKER"]:
+            return None
+        return {"ok": False, "reason": "validation_gunicorn_worker_count_unsafe", **proof}
+
     def start_bounded_6h(self) -> dict[str, Any]:
         from backend.nexus_demo_execution.bounded_6h_session import Bounded6HSession
         from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
 
-        if self._bounded_6h is None:
-            export_dir = self.data_root / "artifacts" / "demo_validation_6h_v2"
-            export_dir.mkdir(parents=True, exist_ok=True)
-            self._bounded_6h = Bounded6HSession(
-                gate=self.gate,
-                reader=_build_live_or_fake_reader(),
-                persistence=self.persistence,
-                epoch_tracker=self.epoch_tracker,
-                kill_switch=self.kill_switch,
-                writer=DemoWriteClient(),
-                approval=self.approval,
-                export_dir=export_dir,
-                data_root=self.data_root,
-            )
-        return self._bounded_6h.start()
+        with self._bounded_owner_start_lock:
+            runtime_block = self._bounded_start_runtime_preflight()
+            if runtime_block:
+                return runtime_block
+            blocked = self._bounded_owner_blocked("_bounded_6h")
+            if blocked:
+                return blocked
+            if self._bounded_6h is None:
+                export_dir = self.data_root / "artifacts" / "demo_validation_6h_v2"
+                export_dir.mkdir(parents=True, exist_ok=True)
+                self._bounded_6h = Bounded6HSession(
+                    gate=self.gate,
+                    reader=_build_live_or_fake_reader(),
+                    persistence=self.persistence,
+                    epoch_tracker=self.epoch_tracker,
+                    kill_switch=self.kill_switch,
+                    writer=DemoWriteClient(),
+                    approval=self.approval,
+                    export_dir=export_dir,
+                    data_root=self.data_root,
+                )
+            return self._bounded_6h.start()
 
     def bounded_6h_status(self) -> dict[str, Any]:
         if self._bounded_6h is None:
@@ -472,44 +560,51 @@ class DemoExecutionApiState:
         from backend.nexus_demo_execution.runtime_identity import capture_runtime_identity
 
         body = body or {}
-        # Block 12H start when runtime identity is still a stale env label.
-        identity = capture_runtime_identity(
-            account_epoch=str((self.epoch_tracker.current_epoch.epoch_id if self.epoch_tracker.current_epoch else "")),
-            policy_version="demo-autonomous-12h-v3-bounded",
-            schema_version="demo_validation_session_v3",
-            service_name=SERVICE_NAME,
-            data_root=self.data_root,
-        )
-        if identity.identity_class == "RUNTIME_IDENTITY_LABEL_STALE":
-            return {
-                "ok": False,
-                "reason": "RUNTIME_IDENTITY_LABEL_STALE",
-                "12H_ALLOWED": False,
-                "runtime_identity": identity.to_dict(),
-            }
-        if self._bounded_12h is None:
-            export_dir = self.data_root / "artifacts" / "demo_validation_12h_v3"
-            export_dir.mkdir(parents=True, exist_ok=True)
-            self._bounded_12h = Bounded12HSession(
-                gate=self.gate,
-                reader=_build_live_or_fake_reader(),
-                persistence=self.persistence,
-                epoch_tracker=self.epoch_tracker,
-                kill_switch=self.kill_switch,
-                writer=DemoWriteClient(),
-                approval=self.approval,
-                export_dir=export_dir,
+        with self._bounded_owner_start_lock:
+            runtime_block = self._bounded_start_runtime_preflight()
+            if runtime_block:
+                return runtime_block
+            blocked = self._bounded_owner_blocked("_bounded_12h")
+            if blocked:
+                return blocked
+            # Block 12H start when runtime identity is still a stale env label.
+            identity = capture_runtime_identity(
+                account_epoch=str((self.epoch_tracker.current_epoch.epoch_id if self.epoch_tracker.current_epoch else "")),
+                policy_version="demo-autonomous-12h-v3-bounded",
+                schema_version="demo_validation_session_v3",
+                service_name=SERVICE_NAME,
                 data_root=self.data_root,
             )
-        report = body.get("source_6h_report") or body
-        if isinstance(report, dict):
-            report = dict(report)
-            report.setdefault("approval_phrase", body.get("approval_phrase") or body.get("exact_phrase"))
-            report.setdefault("exact_phrase", body.get("exact_phrase") or body.get("approval_phrase"))
-        return self._bounded_12h.start(
-            source_6h_report=report if isinstance(report, dict) else {},
-            nonce=str(body.get("session_nonce") or "") or None,
-        )
+            if identity.identity_class == "RUNTIME_IDENTITY_LABEL_STALE":
+                return {
+                    "ok": False,
+                    "reason": "RUNTIME_IDENTITY_LABEL_STALE",
+                    "12H_ALLOWED": False,
+                    "runtime_identity": identity.to_dict(),
+                }
+            if self._bounded_12h is None:
+                export_dir = self.data_root / "artifacts" / "demo_validation_12h_v3"
+                export_dir.mkdir(parents=True, exist_ok=True)
+                self._bounded_12h = Bounded12HSession(
+                    gate=self.gate,
+                    reader=_build_live_or_fake_reader(),
+                    persistence=self.persistence,
+                    epoch_tracker=self.epoch_tracker,
+                    kill_switch=self.kill_switch,
+                    writer=DemoWriteClient(),
+                    approval=self.approval,
+                    export_dir=export_dir,
+                    data_root=self.data_root,
+                )
+            report = body.get("source_6h_report") or body
+            if isinstance(report, dict):
+                report = dict(report)
+                report.setdefault("approval_phrase", body.get("approval_phrase") or body.get("exact_phrase"))
+                report.setdefault("exact_phrase", body.get("exact_phrase") or body.get("approval_phrase"))
+            return self._bounded_12h.start(
+                source_6h_report=report if isinstance(report, dict) else {},
+                nonce=str(body.get("session_nonce") or "") or None,
+            )
 
     def bounded_12h_status(self) -> dict[str, Any]:
         if self._bounded_12h is None:
@@ -522,6 +617,46 @@ class DemoExecutionApiState:
         if self._bounded_12h is None:
             return {"ok": False, "reason": "no_session"}
         return self._bounded_12h.stop(reason)
+
+    def start_bounded_short(self, body: dict[str, Any] | None = None) -> dict[str, Any]:
+        from backend.nexus_bounded_runtime.certified_short_session import CertifiedShortBoundedSession
+        from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
+
+        with self._bounded_owner_start_lock:
+            runtime_block = self._bounded_start_runtime_preflight()
+            if runtime_block:
+                return runtime_block
+            blocked = self._bounded_owner_blocked("_bounded_short")
+            if blocked:
+                return blocked
+            if self._bounded_short is None:
+                export_dir = self.data_root / "artifacts" / "demo_validation_short_v1"
+                export_dir.mkdir(parents=True, exist_ok=True)
+                self._bounded_short = CertifiedShortBoundedSession(
+                    gate=self.gate,
+                    reader=_build_live_or_fake_reader(),
+                    persistence=self.persistence,
+                    epoch_tracker=self.epoch_tracker,
+                    kill_switch=self.kill_switch,
+                    writer=DemoWriteClient(),
+                    approval=self.approval,
+                    export_dir=export_dir,
+                    data_root=self.data_root,
+                )
+            return self._bounded_short.start(start_request=body if isinstance(body, dict) else None)
+
+    def bounded_short_status(self) -> dict[str, Any]:
+        if self._bounded_short is None:
+            return {"status": "IDLE", "found": False}
+        payload = self._bounded_short.status()
+        payload["found"] = True
+        return payload
+
+    def stop_bounded_short(self, reason: str = "OPERATOR_STOP") -> dict[str, Any]:
+        if self._bounded_short is None:
+            return {"ok": False, "reason": "no_session"}
+        self._bounded_short.stop(reason)
+        return {"ok": True, "status": self._bounded_short.status()}
 
     def run_same_router_probe(self, *, dry_run: bool = True) -> dict[str, Any]:
         from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
@@ -942,6 +1077,26 @@ def register_demo_execution_routes(app: Flask) -> None:
         body = request.get_json(silent=True) or {}
         reason = str(body.get("reason") or "OPERATOR_STOP").strip() or "OPERATOR_STOP"
         return jsonify(_wrap(get_demo_execution_state().stop_bounded_12h(reason)))
+
+    @app.route("/api/nexus/demo-execution/bounded-short/start", methods=["POST"])
+    def demo_execution_bounded_short_start():
+        from flask import request
+
+        body = request.get_json(silent=True) or {}
+        result = get_demo_execution_state().start_bounded_short(body)
+        return jsonify(_wrap({"bounded_short_start": result}))
+
+    @app.route("/api/nexus/demo-execution/bounded-short/status", methods=["GET"])
+    def demo_execution_bounded_short_status():
+        return jsonify(_wrap({"bounded_short": get_demo_execution_state().bounded_short_status()}))
+
+    @app.route("/api/nexus/demo-execution/bounded-short/stop", methods=["POST"])
+    def demo_execution_bounded_short_stop():
+        from flask import request
+
+        body = request.get_json(silent=True) or {}
+        reason = str(body.get("reason") or "OPERATOR_STOP").strip() or "OPERATOR_STOP"
+        return jsonify(_wrap(get_demo_execution_state().stop_bounded_short(reason)))
 
     @app.route("/api/nexus/demo-execution/same-router-probe", methods=["POST"])
     def demo_execution_same_router_probe():

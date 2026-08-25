@@ -61,6 +61,10 @@ def _parse(ts: str) -> datetime:
     return datetime.fromisoformat(ts.replace("Z", "+00:00"))
 
 
+def lease_duration_seconds(lease: RuntimeLease) -> float:
+    return (_parse(lease.expires_at) - _parse(lease.authorized_at)).total_seconds()
+
+
 def is_full_runtime_sha(value: str) -> bool:
     return bool(_FULL_SHA40.fullmatch(str(value or "").strip().lower()))
 
@@ -130,7 +134,12 @@ def load_runtime_lease_from_env() -> RuntimeLease | None:
     return RuntimeLease.from_dict(lease_payload)
 
 
-def validate_runtime_lease(lease: RuntimeLease | None) -> dict[str, Any]:
+def validate_runtime_lease(
+    lease: RuntimeLease | None,
+    *,
+    session_id_prefix: str = "NEXUS-DEMO-6H-V2-",
+    max_duration_sec: int | None = None,
+) -> dict[str, Any]:
     if lease is None:
         return {"ok": False, "reason": "runtime_lease_missing"}
     now = _utc_now()
@@ -145,13 +154,25 @@ def validate_runtime_lease(lease: RuntimeLease | None) -> dict[str, Any]:
     sha = validate_runtime_sha(expected=lease.expected_runtime_sha, deployed=runtime_sha())
     if not sha.get("ok"):
         return sha
-    if not lease.session_id.startswith("NEXUS-DEMO-6H-V2-"):
+    if not lease.session_id.startswith(session_id_prefix):
         return {"ok": False, "reason": "runtime_session_id_prefix_mismatch"}
+    if max_duration_sec is not None and lease_duration_seconds(lease) > max_duration_sec:
+        return {"ok": False, "reason": "runtime_lease_duration_exceeds_scope"}
     return {"ok": True, "session_id": lease.session_id}
 
 
-def lease_allows_new_entry(lease: RuntimeLease | None, *, learning_hold: bool = False) -> bool:
+def lease_allows_new_entry(
+    lease: RuntimeLease | None,
+    *,
+    learning_hold: bool = False,
+    session_id_prefix: str = "NEXUS-DEMO-6H-V2-",
+    max_duration_sec: int | None = None,
+) -> bool:
     if learning_hold:
         return False
-    checked = validate_runtime_lease(lease)
+    checked = validate_runtime_lease(
+        lease,
+        session_id_prefix=session_id_prefix,
+        max_duration_sec=max_duration_sec,
+    )
     return bool(checked.get("ok"))

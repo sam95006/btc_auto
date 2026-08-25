@@ -50,38 +50,45 @@ def patch_bounded_6h_start_handler() -> None:
     from backend.nexus_demo_execution.api_routes import DemoExecutionApiState
 
     def start_bounded_6h_signed(self):  # type: ignore[no-untyped-def]
-        if not certified_bounded_runtime_active():
-            return {
-                "ok": False,
-                "reason": "certified_bounded_runtime_unavailable",
-                "hold": True,
-                "CERTIFIED_BOUNDED_RUNTIME_ACTIVE": False,
-            }
-        try:
-            from flask import has_request_context, request
+        with self._bounded_owner_start_lock:
+            if not certified_bounded_runtime_active():
+                return {
+                    "ok": False,
+                    "reason": "certified_bounded_runtime_unavailable",
+                    "hold": True,
+                    "CERTIFIED_BOUNDED_RUNTIME_ACTIVE": False,
+                }
+            runtime_block = self._bounded_start_runtime_preflight()
+            if runtime_block:
+                return runtime_block
+            blocked = self._bounded_owner_blocked("_bounded_6h")
+            if blocked:
+                return blocked
+            try:
+                from flask import has_request_context, request
 
-            body = request.get_json(silent=True) if has_request_context() else None
-        except Exception:
-            body = None
-        if self._bounded_6h is None:
-            from backend.nexus_demo_execution.bounded_6h_session import Bounded6HSession
-            from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
-            from backend.nexus_demo_execution.api_routes import _build_live_or_fake_reader
+                body = request.get_json(silent=True) if has_request_context() else None
+            except Exception:
+                body = None
+            if self._bounded_6h is None:
+                from backend.nexus_demo_execution.bounded_6h_session import Bounded6HSession
+                from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
+                from backend.nexus_demo_execution.api_routes import _build_live_or_fake_reader
 
-            export_dir = self.data_root / "artifacts" / "demo_validation_6h_v2"
-            export_dir.mkdir(parents=True, exist_ok=True)
-            self._bounded_6h = Bounded6HSession(
-                gate=self.gate,
-                reader=_build_live_or_fake_reader(),
-                persistence=self.persistence,
-                epoch_tracker=self.epoch_tracker,
-                kill_switch=self.kill_switch,
-                writer=DemoWriteClient(),
-                approval=self.approval,
-                export_dir=export_dir,
-                data_root=self.data_root,
-            )
-        return self._bounded_6h.start(start_request=body if isinstance(body, dict) else None)
+                export_dir = self.data_root / "artifacts" / "demo_validation_6h_v2"
+                export_dir.mkdir(parents=True, exist_ok=True)
+                self._bounded_6h = Bounded6HSession(
+                    gate=self.gate,
+                    reader=_build_live_or_fake_reader(),
+                    persistence=self.persistence,
+                    epoch_tracker=self.epoch_tracker,
+                    kill_switch=self.kill_switch,
+                    writer=DemoWriteClient(),
+                    approval=self.approval,
+                    export_dir=export_dir,
+                    data_root=self.data_root,
+                )
+            return self._bounded_6h.start(start_request=body if isinstance(body, dict) else None)
 
     DemoExecutionApiState.start_bounded_6h = start_bounded_6h_signed  # type: ignore[method-assign]
 

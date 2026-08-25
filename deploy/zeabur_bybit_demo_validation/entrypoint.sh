@@ -89,6 +89,13 @@ export NEXUS_EMBEDDED_WORKER=false
 export NEXUS_VALIDATION_PUBLIC_GUARD="${NEXUS_VALIDATION_PUBLIC_GUARD:-true}"
 export MAINNET=false
 export REAL_MONEY=false
+export WEB_CONCURRENCY=1
+export GUNICORN_WORKERS=1
+export VALIDATION_GUNICORN_SINGLE_WORKER=true
+
+echo "validation_single_worker_enforced=true"
+echo "web_concurrency_effective=$WEB_CONCURRENCY"
+echo "gunicorn_workers_effective=$GUNICORN_WORKERS"
 
 BOOT="${NEXUS_VALIDATION_BOOT:-health}"
 case "$BOOT" in
