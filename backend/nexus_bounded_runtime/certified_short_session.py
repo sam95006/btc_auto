@@ -17,6 +17,7 @@ from backend.nexus_bounded_runtime.certified_session import CertifiedBounded6HSe
 from backend.nexus_bounded_runtime.runtime_lease import (
     RuntimeLease,
     lease_allows_new_entry,
+    lease_from_request,
     validate_runtime_lease,
 )
 from backend.nexus_demo_execution.http_demo_reader import redact_secrets
@@ -34,6 +35,38 @@ class CertifiedShortBoundedSession(CertifiedBounded6HSession):
     """Certified Short V1: exactly one possible entry, then durable lesson proof."""
 
     policy: BoundedSessionPolicy = field(default_factory=policy_short_v1)
+    _short_start_authorization_consumed: bool = field(default=False, repr=False)
+    _short_consumed_session_id: str = field(default="", repr=False)
+
+    def start(self, start_request: dict[str, Any] | None = None) -> dict[str, Any]:
+        lease = lease_from_request(start_request)
+        session_id = lease.session_id if lease else ""
+        with self._lock:
+            if (
+                self._short_start_authorization_consumed
+                and session_id
+                and session_id == self._short_consumed_session_id
+            ):
+                self.session_write_enabled = False
+                try:
+                    self.gate.close_smoke_write_window()
+                except Exception:
+                    pass
+                return redact_secrets(
+                    {
+                        "ok": False,
+                        "reason": "short_founder_authorization_already_consumed",
+                        "session_id": session_id,
+                        "certified_runtime": True,
+                    }
+                )
+
+        result = super().start(start_request=start_request)
+        if isinstance(result, dict) and result.get("ok") is True and session_id:
+            with self._lock:
+                self._short_start_authorization_consumed = True
+                self._short_consumed_session_id = session_id
+        return result
 
     def _verify_start_request(self, start_request: dict[str, Any] | None) -> dict[str, Any]:
         return verify_bounded_start_request(

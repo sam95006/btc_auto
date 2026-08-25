@@ -34,6 +34,27 @@ from backend.nexus_demo_execution.safety_gate import DemoExecutionSafetyGate
 logger = logging.getLogger(__name__)
 
 
+def _worker_env_value(name: str) -> int:
+    raw = (os.environ.get(name) or "").strip()
+    if not raw:
+        return 1
+    try:
+        return int(raw)
+    except ValueError:
+        return 0
+
+
+def validation_gunicorn_single_worker_proof() -> dict[str, Any]:
+    web = _worker_env_value("WEB_CONCURRENCY")
+    gunicorn = _worker_env_value("GUNICORN_WORKERS")
+    ok = web == 1 and gunicorn == 1
+    return {
+        "VALIDATION_GUNICORN_SINGLE_WORKER": ok,
+        "WEB_CONCURRENCY_EFFECTIVE": str(web) if web > 0 else "INVALID",
+        "GUNICORN_WORKERS_EFFECTIVE": str(gunicorn) if gunicorn > 0 else "INVALID",
+    }
+
+
 def _candidate_data_roots() -> list[Path]:
     preferred = (os.environ.get("NEXUS_DATA_DIR") or "").strip()
     roots: list[Path] = []
@@ -233,8 +254,10 @@ class DemoExecutionApiState:
             or identity.get("runtime_current_code_commit")
             or ""
         )
+        worker_proof = validation_gunicorn_single_worker_proof()
         return {
             **READ_ONLY_META,
+            **worker_proof,
             "baked_deployment_commit": baked_commit or None,
             "code_marker": "BOUNDED_AUTONOMOUS_ENGINE_V1",
             "fixed_leverage": FIXED_LEVERAGE,
@@ -485,11 +508,20 @@ class DemoExecutionApiState:
             return {"ok": False, **active}
         return None
 
+    def _bounded_start_runtime_preflight(self) -> dict[str, Any] | None:
+        proof = validation_gunicorn_single_worker_proof()
+        if proof["VALIDATION_GUNICORN_SINGLE_WORKER"]:
+            return None
+        return {"ok": False, "reason": "validation_gunicorn_worker_count_unsafe", **proof}
+
     def start_bounded_6h(self) -> dict[str, Any]:
         from backend.nexus_demo_execution.bounded_6h_session import Bounded6HSession
         from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
 
         with self._bounded_owner_start_lock:
+            runtime_block = self._bounded_start_runtime_preflight()
+            if runtime_block:
+                return runtime_block
             blocked = self._bounded_owner_blocked("_bounded_6h")
             if blocked:
                 return blocked
@@ -529,6 +561,9 @@ class DemoExecutionApiState:
 
         body = body or {}
         with self._bounded_owner_start_lock:
+            runtime_block = self._bounded_start_runtime_preflight()
+            if runtime_block:
+                return runtime_block
             blocked = self._bounded_owner_blocked("_bounded_12h")
             if blocked:
                 return blocked
@@ -588,6 +623,9 @@ class DemoExecutionApiState:
         from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
 
         with self._bounded_owner_start_lock:
+            runtime_block = self._bounded_start_runtime_preflight()
+            if runtime_block:
+                return runtime_block
             blocked = self._bounded_owner_blocked("_bounded_short")
             if blocked:
                 return blocked

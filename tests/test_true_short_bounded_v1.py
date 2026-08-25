@@ -62,6 +62,18 @@ def _short_lease(*, seconds: int = SHORT_MAX_DURATION_SEC, **overrides) -> dict[
     return payload
 
 
+def _signed_short_body(monkeypatch: pytest.MonkeyPatch, lease: dict[str, object] | None = None) -> dict[str, object]:
+    _disarm(monkeypatch)
+    monkeypatch.setenv("NEXUS_BOUNDED_SESSION_CONTROL_SECRET", TEST_SECRET)
+    monkeypatch.setenv("FOUNDER_GATE", "DEMO_CERTIFIED_SHORT_BOUNDED_V1")
+    monkeypatch.setenv("FOUNDER_SHORT_BOUNDED_APPROVED", "true")
+    return sign_bounded_start_request(
+        lease=lease or _short_lease(),
+        founder_phrase=SHORT_FOUNDER_PHRASE,
+        secret=TEST_SECRET,
+    )
+
+
 def _session(tmp_path: Path) -> CertifiedShortBoundedSession:
     return CertifiedShortBoundedSession(
         gate=MagicMock(),
@@ -153,6 +165,35 @@ def test_short_final_metadata_requires_founder_learning_closure_review(tmp_path:
     assert "FOUNDER_GATE=DEMO_AUTONOMOUS_24H_BOUNDED_VALIDATION" not in json.dumps(short_summary)
 
 
+def test_validation_entrypoint_forces_single_worker_and_full_engine_boot_path() -> None:
+    entrypoint = (ROOT / "deploy" / "zeabur_bybit_demo_validation" / "entrypoint.sh").read_text(encoding="utf-8")
+    generic_gunicorn = (ROOT / "gunicorn.conf.py").read_text(encoding="utf-8")
+
+    assert "export WEB_CONCURRENCY=1" in entrypoint
+    assert "export GUNICORN_WORKERS=1" in entrypoint
+    assert "export VALIDATION_GUNICORN_SINGLE_WORKER=true" in entrypoint
+    assert "validation_single_worker_enforced=true" in entrypoint
+    assert "exec gunicorn -c gunicorn.conf.py app:app" in entrypoint
+    assert 'os.getenv("WEB_CONCURRENCY", "1")' in generic_gunicorn
+
+
+def test_bounded_start_preflight_blocks_unsafe_worker_proof(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setenv("NEXUS_DATA_DIR", str(tmp_path / "data"))
+    monkeypatch.setenv("WEB_CONCURRENCY", "2")
+    monkeypatch.setenv("GUNICORN_WORKERS", "1")
+    from backend.nexus_demo_execution.api_routes import DemoExecutionApiState
+
+    st = DemoExecutionApiState()
+    result = st.start_bounded_short({})
+    assert result["ok"] is False
+    assert result["reason"] == "validation_gunicorn_worker_count_unsafe"
+    assert result["VALIDATION_GUNICORN_SINGLE_WORKER"] is False
+    assert result["WEB_CONCURRENCY_EFFECTIVE"] == "2"
+
+
 def test_short_signed_phrase_valid_and_cross_phrase_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
     _disarm(monkeypatch)
     monkeypatch.setenv("NEXUS_BOUNDED_SESSION_CONTROL_SECRET", TEST_SECRET)
@@ -193,6 +234,104 @@ def test_short_auth_rejects_wrong_signature_and_expired_signature(monkeypatch: p
         secret=TEST_SECRET,
     )
     assert verify_bounded_start_request(old, expected_founder_phrase=SHORT_FOUNDER_PHRASE)["reason"] == "signed_at_skew_exceeded"
+
+
+def test_short_valid_start_consumes_authorization_and_same_request_replay_is_blocked(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    import backend.nexus_bounded_runtime.bootstrap as bootstrap
+
+    monkeypatch.setattr(bootstrap, "CERTIFIED_BOUNDED_RUNTIME_ACTIVE", True)
+    monkeypatch.setattr(
+        BoundedAutonomousSessionEngine,
+        "start",
+        lambda self: {"ok": True, "status": "STARTING"},
+    )
+    body = _signed_short_body(monkeypatch)
+    s = _session(tmp_path)
+    s._ensure_certified_stores = MagicMock()
+    s._durable_lease_store = MagicMock()
+    s._durable_lease_store.claim_or_resume.return_value = {"ok": True}
+
+    first = s.start(start_request=body)
+    s._state["entries_total"] = 1
+    s._state["status"] = "COMPLETED"
+    second = s.start(start_request=body)
+
+    assert first["ok"] is True
+    assert s._short_start_authorization_consumed is True
+    assert second["ok"] is False
+    assert second["reason"] == "short_founder_authorization_already_consumed"
+    assert s.session_write_enabled is False
+    assert s._state["entries_total"] == 1
+    assert s._state["order_intent_total"] == 0
+    assert s._state["exchange_request_total"] == 0
+
+
+def test_short_same_session_id_replay_is_blocked_even_with_new_signature(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    import backend.nexus_bounded_runtime.bootstrap as bootstrap
+
+    calls = {"base_start": 0}
+
+    def _accepted(self) -> dict[str, object]:
+        calls["base_start"] += 1
+        return {"ok": True, "status": "STARTING"}
+
+    monkeypatch.setattr(bootstrap, "CERTIFIED_BOUNDED_RUNTIME_ACTIVE", True)
+    monkeypatch.setattr(BoundedAutonomousSessionEngine, "start", _accepted)
+    lease = _short_lease()
+    first_body = _signed_short_body(monkeypatch, lease)
+    second_body = sign_bounded_start_request(
+        lease=lease,
+        founder_phrase=SHORT_FOUNDER_PHRASE,
+        signed_at=_fmt(_now() + timedelta(seconds=1)),
+        secret=TEST_SECRET,
+    )
+    s = _session(tmp_path)
+    s._ensure_certified_stores = MagicMock()
+    s._durable_lease_store = MagicMock()
+    s._durable_lease_store.claim_or_resume.return_value = {"ok": True}
+
+    assert s.start(start_request=first_body)["ok"] is True
+    s._state["status"] = "COMPLETED"
+    second = s.start(start_request=second_body)
+
+    assert second["ok"] is False
+    assert second["reason"] == "short_founder_authorization_already_consumed"
+    assert calls["base_start"] == 1
+
+
+def test_invalid_short_request_does_not_consume_authorization(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    import backend.nexus_bounded_runtime.bootstrap as bootstrap
+
+    monkeypatch.setattr(bootstrap, "CERTIFIED_BOUNDED_RUNTIME_ACTIVE", True)
+    monkeypatch.setattr(
+        BoundedAutonomousSessionEngine,
+        "start",
+        lambda self: {"ok": True, "status": "STARTING"},
+    )
+    body = _signed_short_body(monkeypatch)
+    invalid = dict(body)
+    invalid["signature"] = "0" * 64
+    s = _session(tmp_path)
+    s._ensure_certified_stores = MagicMock()
+    s._durable_lease_store = MagicMock()
+    s._durable_lease_store.claim_or_resume.return_value = {"ok": True}
+
+    bad = s.start(start_request=invalid)
+    good = s.start(start_request=body)
+
+    assert bad["ok"] is False
+    assert bad["reason"] == "signature_mismatch"
+    assert good["ok"] is True
+    assert s._short_start_authorization_consumed is True
 
 
 def test_short_lease_scope_fail_closed(monkeypatch: pytest.MonkeyPatch) -> None:

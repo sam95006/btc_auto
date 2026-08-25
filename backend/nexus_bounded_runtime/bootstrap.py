@@ -58,6 +58,9 @@ def patch_bounded_6h_start_handler() -> None:
                     "hold": True,
                     "CERTIFIED_BOUNDED_RUNTIME_ACTIVE": False,
                 }
+            runtime_block = self._bounded_start_runtime_preflight()
+            if runtime_block:
+                return runtime_block
             blocked = self._bounded_owner_blocked("_bounded_6h")
             if blocked:
                 return blocked
