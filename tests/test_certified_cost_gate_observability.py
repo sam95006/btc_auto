@@ -295,6 +295,20 @@ def test_cost_gate_persistence_failure_fails_closed_before_intent_or_exchange(
     assert persistence.count("cost_gates", account_epoch="epoch") == 0
     assert session._state["OBSERVABILITY_PERSISTENCE_FAIL_CLOSED"] is True
     assert session._state["last_entry_block_reason"] == "OBSERVABILITY_PERSISTENCE_FAIL_CLOSED"
+    assert session._state["stop_reason"] == "OBSERVABILITY_PERSISTENCE_FAIL_CLOSED"
+    assert session.session_write_enabled is False
+    assert session._stop.is_set() is True
+    session.gate.close_smoke_write_window.assert_called_once()
+    persist_intent.assert_not_called()
+    submit.assert_not_called()
+    session.writer.create_market_order.assert_not_called()
+    assert session._state["order_intent_total"] == 0
+    assert session._state["exchange_write_attempt_total"] == 0
+
+    second = session._try_entry(MagicMock(), tmp_path / "export", "epoch")
+
+    assert second is None
+    assert evaluate.call_count == 1
     persist_intent.assert_not_called()
     submit.assert_not_called()
     session.writer.create_market_order.assert_not_called()

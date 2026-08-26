@@ -355,9 +355,16 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
                     account_epoch=account_epoch,
                 )
             except Exception:
+                self.session_write_enabled = False
+                try:
+                    self.gate.close_smoke_write_window()
+                except Exception:
+                    pass
                 with self._lock:
                     self._state["OBSERVABILITY_PERSISTENCE_FAIL_CLOSED"] = True
                     self._state["last_entry_block_reason"] = "OBSERVABILITY_PERSISTENCE_FAIL_CLOSED"
+                    self._state["stop_reason"] = "OBSERVABILITY_PERSISTENCE_FAIL_CLOSED"
+                self._stop.set()
                 return None
             if not cost.allowed:
                 continue
