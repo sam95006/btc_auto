@@ -16,6 +16,10 @@ from backend.nexus_demo_execution.market_structure import (
     support_resistance_from_swings,
     swing_high_low,
 )
+from backend.nexus_demo_execution.pit_data_foundation import (
+    validate_candidate_field_asof,
+    validate_outcome_after_decision,
+)
 from backend.nexus_demo_execution.session_limits import (
     MIN_NET_REWARD_RISK_RATIO,
     MIN_NET_REWARD_TO_COST,
@@ -61,6 +65,7 @@ class MarketCandidate:
     last_input_candle_time: int
     entry_price: float
     evidence: CandidateEvidence
+    interval: str = "15"
     future_data_reference_count: int = 0
     look_ahead_contamination: bool = False
 
@@ -146,6 +151,23 @@ def build_candidates_from_dataset(
             side = "Sell"
         else:
             side = "Buy" if last.close >= last.open else "Sell"
+        decision_ts_ms = int(last.close_ts_ms or last.ts_ms)
+        feature_asof = {
+            "entry_price": decision_ts_ms,
+            "atr": decision_ts_ms,
+            "recent_swing_high": decision_ts_ms,
+            "recent_swing_low": decision_ts_ms,
+            "support": decision_ts_ms,
+            "resistance": decision_ts_ms,
+            "liquidity_levels": decision_ts_ms,
+            "spread_bps": decision_ts_ms,
+            "slippage_bps": decision_ts_ms,
+            "fee_rate": decision_ts_ms,
+            "funding_rate": decision_ts_ms,
+            "tick_size": decision_ts_ms,
+            "qty": decision_ts_ms,
+        }
+        feature_sources = {field: "PIT_HISTORICAL_MARKET_DATA_OR_STATIC_POLICY" for field in feature_asof}
         evidence = CandidateEvidence(
             symbol=ds.symbol,
             side=side,
@@ -166,6 +188,9 @@ def build_candidates_from_dataset(
             qty=qty,
             data_freshness_sec=0.0,
             ts=float(last.ts_ms),
+            decision_ts_ms=decision_ts_ms,
+            field_asof_ts_ms=feature_asof,
+            field_sources=feature_sources,
         )
         out.append(
             MarketCandidate(
@@ -173,6 +198,7 @@ def build_candidates_from_dataset(
                 side=side,
                 strategy="STRUCT_SWING",
                 regime=regime,
+                interval=ds.interval,
                 candidate_snapshot_time=int(last.ts_ms),
                 last_input_candle_time=int(last.ts_ms),
                 entry_price=float(last.close),
@@ -204,6 +230,33 @@ def simulate_natural_trade(
     apply_costs: bool = True,
 ) -> SimTrade:
     """Natural entry on subsequent real candles only."""
+    asof = validate_candidate_field_asof(candidate.evidence)
+    if not asof.ok:
+        return SimTrade(
+            symbol=candidate.symbol,
+            side=candidate.side,
+            strategy=candidate.strategy,
+            regime=candidate.regime,
+            entry_status="GEOMETRY_BLOCKED",
+            candidate_snapshot_time=candidate.candidate_snapshot_time,
+            look_ahead_contamination=True,
+        )
+    if candidate.evidence.decision_ts_ms is not None:
+        outcome = validate_outcome_after_decision(
+            decision_ts_ms=int(candidate.evidence.decision_ts_ms),
+            outcome_bars=subsequent,
+            interval=candidate.interval,
+        )
+        if not outcome.ok:
+            return SimTrade(
+                symbol=candidate.symbol,
+                side=candidate.side,
+                strategy=candidate.strategy,
+                regime=candidate.regime,
+                entry_status="GEOMETRY_BLOCKED",
+                candidate_snapshot_time=candidate.candidate_snapshot_time,
+                look_ahead_contamination=True,
+            )
     geo = evaluate_structural_geometry(candidate.evidence)
     if geo.get("geometry_missing") or geo.get("geometry_invalid") or not geo.get("geometry_complete"):
         return SimTrade(

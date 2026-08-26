@@ -33,6 +33,9 @@ class CandidateEvidence:
     data_freshness_sec: float | None = None
     max_freshness_sec: float = 300.0
     ts: float | None = None
+    decision_ts_ms: int | None = None
+    field_asof_ts_ms: dict[str, int] = field(default_factory=dict)
+    field_sources: dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
