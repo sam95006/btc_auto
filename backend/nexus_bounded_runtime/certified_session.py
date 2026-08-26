@@ -89,6 +89,65 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
     def _before_durable_entry_intent(self) -> bool:
         return True
 
+    def _persist_certified_cost_gate_observation(
+        self,
+        *,
+        cost: Any,
+        cand: Any,
+        entry_price: float,
+        stop_loss: str,
+        take_profit: str,
+        qty: Any,
+        spread_bps: Any,
+        funding_rate: Any,
+        account_epoch: str,
+    ) -> None:
+        record = dict(cost.to_dict())
+        record.update(
+            {
+                "session_id": self.session_id,
+                "symbol": cand.symbol,
+                "direction": cand.direction,
+                "candidate_score": cand.candidate_score,
+                "entry_price": entry_price,
+                "stop_loss": _f(stop_loss),
+                "take_profit": _f(take_profit),
+                "qty": _f(qty),
+                "spread_bps": _f(spread_bps),
+                "funding_status": cost.funding_status,
+                "funding_rate": funding_rate if funding_rate is not None else "UNAVAILABLE",
+                "fee_rate_status": cost.fee_rate_status,
+                "cost_allowed": bool(cost.allowed),
+                "cost_reason": cost.reason,
+                "cost_labels": list(cost.labels),
+                "estimated_total_cost": cost.estimated_total_cost,
+                "estimated_net_reward": cost.estimated_net_reward,
+                "estimated_net_risk": cost.estimated_net_risk,
+                "net_reward_risk_ratio": cost.net_reward_risk_ratio,
+                "cost_to_gross_reward_ratio": cost.cost_to_gross_reward_ratio,
+                "timestamp": time.time(),
+            }
+        )
+        candidate_id = getattr(cand, "candidate_id", "")
+        if candidate_id:
+            record["candidate_id"] = candidate_id
+
+        self.persistence.append("cost_gates", redact_secrets(record), account_epoch=account_epoch)
+        with self._lock:
+            self._state["cost_gate_evaluated_total"] += 1
+            self._state["geometry_evaluated_total"] += 1
+            self._state["geometry_complete_total"] += 1
+            if cost.allowed:
+                self._state["cost_gate_pass_total"] += 1
+                self._state["valid_intent_total"] += 1
+            else:
+                self._state["cost_gate_blocks"] += 1
+                self._state["cost_gate_block_total"] += 1
+                dist = dict(self._state.get("cost_gate_block_reason_distribution") or {})
+                reason = str(cost.reason or "UNKNOWN")
+                dist[reason] = int(dist.get(reason) or 0) + 1
+                self._state["cost_gate_block_reason_distribution"] = dist
+
     def _after_durable_lesson_written(
         self,
         *,
@@ -283,9 +342,24 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
                 slippage_bps=cand.spread_bps,
                 fee_meta=fee_quote.to_dict(),
             )
-            if not cost.allowed:
+            try:
+                self._persist_certified_cost_gate_observation(
+                    cost=cost,
+                    cand=cand,
+                    entry_price=price,
+                    stop_loss=sl,
+                    take_profit=tp,
+                    qty=qty,
+                    spread_bps=cand.spread_bps,
+                    funding_rate=funding,
+                    account_epoch=account_epoch,
+                )
+            except Exception:
                 with self._lock:
-                    self._state["cost_gate_blocks"] += 1
+                    self._state["OBSERVABILITY_PERSISTENCE_FAIL_CLOSED"] = True
+                    self._state["last_entry_block_reason"] = "OBSERVABILITY_PERSISTENCE_FAIL_CLOSED"
+                return None
+            if not cost.allowed:
                 continue
 
             if not self._before_durable_entry_intent():
