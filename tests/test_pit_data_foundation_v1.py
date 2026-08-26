@@ -17,12 +17,17 @@ from backend.nexus_demo_execution.pit_data_foundation import (
     CANONICAL_TIMESTAMP_UNIT,
     CANONICAL_TIMEZONE,
     CURRENT_LIQUIDITY_CLAIMED_AS_ORDERBOOK,
+    CURRENT_ONLY_METADATA,
+    DERIVED_FROM_PIT_BARS,
+    PIT_HISTORICAL_MARKET_DATA,
     QUALIFICATION_FEE_SOURCE,
+    STATIC_CONSERVATIVE_POLICY_ASSUMPTION,
     STRUCTURAL_LIQUIDITY_LABEL,
     FundingRecord,
     fee_policy_for_qualification,
     funding_records_for_decision,
     metadata_status_for_historical_replay,
+    realized_funding_cashflow,
     realized_funding_cost,
     slippage_policy_for_replay,
     spread_policy_for_replay,
@@ -114,19 +119,102 @@ def test_candidate_field_asof_rejects_future_and_accepts_past() -> None:
         side="Buy",
         entry_price=100.0,
         decision_ts_ms=1000,
-        field_asof_ts_ms={"atr": 1000, "support": 900},
+        field_asof_ts_ms={
+            "entry_price": 1000,
+            "atr": 1000,
+            "recent_swing_high": 1000,
+            "recent_swing_low": 1000,
+            "support": 900,
+            "resistance": 1000,
+            "liquidity_levels": 1000,
+        },
+        field_sources={
+            "entry_price": DERIVED_FROM_PIT_BARS,
+            "atr": DERIVED_FROM_PIT_BARS,
+            "recent_swing_high": DERIVED_FROM_PIT_BARS,
+            "recent_swing_low": DERIVED_FROM_PIT_BARS,
+            "support": DERIVED_FROM_PIT_BARS,
+            "resistance": DERIVED_FROM_PIT_BARS,
+            "liquidity_levels": DERIVED_FROM_PIT_BARS,
+        },
     )
     bad = CandidateEvidence(
         symbol="BTCUSDT",
         side="Buy",
         entry_price=100.0,
         decision_ts_ms=1000,
-        field_asof_ts_ms={"atr": 1001},
+        field_asof_ts_ms={
+            "entry_price": 1000,
+            "atr": 1001,
+            "recent_swing_high": 1000,
+            "recent_swing_low": 1000,
+            "support": 1000,
+            "resistance": 1000,
+            "liquidity_levels": 1000,
+        },
+        field_sources={
+            "entry_price": DERIVED_FROM_PIT_BARS,
+            "atr": DERIVED_FROM_PIT_BARS,
+            "recent_swing_high": DERIVED_FROM_PIT_BARS,
+            "recent_swing_low": DERIVED_FROM_PIT_BARS,
+            "support": DERIVED_FROM_PIT_BARS,
+            "resistance": DERIVED_FROM_PIT_BARS,
+            "liquidity_levels": DERIVED_FROM_PIT_BARS,
+        },
     )
 
     assert validate_candidate_field_asof(good).ok is True
     assert validate_candidate_field_asof(bad).ok is False
     assert validate_candidate_field_asof(bad).reason == "future_feature_asof_ts"
+
+
+def test_required_pit_field_missing_asof_and_dishonest_sources_fail_closed() -> None:
+    base_sources = {
+        "entry_price": DERIVED_FROM_PIT_BARS,
+        "atr": DERIVED_FROM_PIT_BARS,
+        "recent_swing_high": DERIVED_FROM_PIT_BARS,
+        "recent_swing_low": DERIVED_FROM_PIT_BARS,
+        "support": DERIVED_FROM_PIT_BARS,
+        "resistance": DERIVED_FROM_PIT_BARS,
+        "liquidity_levels": DERIVED_FROM_PIT_BARS,
+    }
+    missing_asof = CandidateEvidence(
+        symbol="BTCUSDT",
+        side="Buy",
+        entry_price=100.0,
+        decision_ts_ms=1000,
+        field_asof_ts_ms={k: 1000 for k in base_sources if k != "atr"},
+        field_sources=base_sources,
+    )
+    static_as_historical = CandidateEvidence(
+        symbol="BTCUSDT",
+        side="Buy",
+        entry_price=100.0,
+        decision_ts_ms=1000,
+        field_asof_ts_ms={k: 1000 for k in base_sources},
+        field_sources={**base_sources, "atr": STATIC_CONSERVATIVE_POLICY_ASSUMPTION},
+    )
+    current_only = CandidateEvidence(
+        symbol="BTCUSDT",
+        side="Buy",
+        entry_price=100.0,
+        decision_ts_ms=1000,
+        field_asof_ts_ms={k: 1000 for k in base_sources},
+        field_sources={**base_sources, "atr": CURRENT_ONLY_METADATA},
+    )
+    ambiguous = CandidateEvidence(
+        symbol="BTCUSDT",
+        side="Buy",
+        entry_price=100.0,
+        decision_ts_ms=1000,
+        field_asof_ts_ms={k: 1000 for k in base_sources},
+        field_sources={**base_sources, "atr": "PIT_HISTORICAL_MARKET_DATA" + "_OR_STATIC_POLICY"},
+    )
+
+    assert validate_candidate_field_asof(missing_asof).reason == "required_pit_field_asof_missing"
+    assert validate_candidate_field_asof(static_as_historical).reason == "policy_assumption_not_historical_truth"
+    assert validate_candidate_field_asof(current_only).reason == "current_only_metadata_not_pit_complete"
+    assert validate_candidate_field_asof(ambiguous).reason == "ambiguous_provenance_source"
 
 
 def test_outcome_candle_before_decision_rejected_next_legal_accepted() -> None:
@@ -156,19 +244,56 @@ def test_funding_decision_context_and_realized_crossing_rule() -> None:
     assert cost == 1.0
 
 
+def test_funding_side_semantics_and_outside_events_ignored() -> None:
+    records = [
+        FundingRecord(symbol="BTCUSDT", funding_rate=0.001, funding_ts_ms=900_000),
+        FundingRecord(symbol="BTCUSDT", funding_rate=-0.002, funding_ts_ms=1_800_000),
+        FundingRecord(symbol="BTCUSDT", funding_rate=0.004, funding_ts_ms=2_700_000),
+    ]
+
+    assert realized_funding_cashflow(notional=1000.0, side="Buy", entry_ts_ms=0, exit_ts_ms=1_000_000, records=records) == -1.0
+    assert realized_funding_cashflow(notional=1000.0, side="Sell", entry_ts_ms=0, exit_ts_ms=1_000_000, records=records) == 1.0
+    assert realized_funding_cashflow(notional=1000.0, side="Buy", entry_ts_ms=1_000_000, exit_ts_ms=2_000_000, records=records) == 2.0
+    assert realized_funding_cashflow(notional=1000.0, side="Sell", entry_ts_ms=1_000_000, exit_ts_ms=2_000_000, records=records) == -2.0
+    assert realized_funding_cashflow(notional=1000.0, side="Buy", entry_ts_ms=0, exit_ts_ms=2_000_000, records=records) == 1.0
+
+
 def test_metadata_liquidity_spread_slippage_and_fee_policies_are_honest() -> None:
     assert metadata_status_for_historical_replay(has_pit_history=False) == "CURRENT_ONLY_METADATA"
     assert survivorship_bias_guard(symbol_status_pit_proven=False)["SURVIVORSHIP_BIAS_RISK"] == "HIGH"
     assert STRUCTURAL_LIQUIDITY_LABEL == "STRUCTURAL_LIQUIDITY_PROXY"
     assert CURRENT_LIQUIDITY_CLAIMED_AS_ORDERBOOK is False
     assert spread_policy_for_replay(historical_bid_ask_available=False)["performance_dependent_selection"] is False
+    assert spread_policy_for_replay(historical_bid_ask_available=False)["source_class"] == STATIC_CONSERVATIVE_POLICY_ASSUMPTION
     assert spread_policy_for_replay(historical_bid_ask_available=False)["source"] == "FIXED_CONSERVATIVE_BPS_BY_LIQUIDITY_TIER"
+    assert spread_policy_for_replay(historical_bid_ask_available=True)["source_class"] == PIT_HISTORICAL_MARKET_DATA
     assert slippage_policy_for_replay()["performance_dependent_selection"] is False
+    assert slippage_policy_for_replay()["source_class"] == STATIC_CONSERVATIVE_POLICY_ASSUMPTION
     fee = fee_policy_for_qualification()
     assert fee["source"] == QUALIFICATION_FEE_SOURCE
+    assert fee["source_class"] == STATIC_CONSERVATIVE_POLICY_ASSUMPTION
     assert fee["cost_thresholds_changed"] is False
     assert MIN_NET_REWARD_RISK_RATIO == 1.2
     assert MIN_NET_REWARD_TO_COST == 1.5
+
+
+def test_market_event_candidate_default_sources_are_not_ambiguous_or_false_historical() -> None:
+    from backend.nexus_demo_execution.historical_market_data import build_dataset
+    from backend.nexus_demo_execution.market_event_sim import build_candidates_from_dataset
+
+    candles = [_c(i * 900_000, price=100.0 + i) for i in range(45)]
+    ds = build_dataset(symbol="BTCUSDT", interval="15", candles=candles)
+    candidates = build_candidates_from_dataset(ds, min_bars=40, stride=4)
+
+    sources = candidates[0].evidence.field_sources
+    assert ("PIT_HISTORICAL_MARKET_DATA" + "_OR_STATIC_POLICY") not in sources.values()
+    assert sources["atr"] == DERIVED_FROM_PIT_BARS
+    assert sources["spread_bps"] == STATIC_CONSERVATIVE_POLICY_ASSUMPTION
+    assert sources["slippage_bps"] == STATIC_CONSERVATIVE_POLICY_ASSUMPTION
+    assert sources["fee_rate"] == STATIC_CONSERVATIVE_POLICY_ASSUMPTION
+    assert sources["funding_rate"] == STATIC_CONSERVATIVE_POLICY_ASSUMPTION
+    assert sources["tick_size"] == "UNAVAILABLE"
+    assert validate_candidate_field_asof(candidates[0].evidence).ok is True
 
 
 def test_market_structure_ohlc_calculations_unchanged_with_timestamp_metadata() -> None:

@@ -17,6 +17,9 @@ from backend.nexus_demo_execution.market_structure import (
     swing_high_low,
 )
 from backend.nexus_demo_execution.pit_data_foundation import (
+    DERIVED_FROM_PIT_BARS,
+    STATIC_CONSERVATIVE_POLICY_ASSUMPTION,
+    UNAVAILABLE,
     validate_candidate_field_asof,
     validate_outcome_after_decision,
 )
@@ -152,7 +155,7 @@ def build_candidates_from_dataset(
         else:
             side = "Buy" if last.close >= last.open else "Sell"
         decision_ts_ms = int(last.close_ts_ms or last.ts_ms)
-        feature_asof = {
+        derived_asof = {
             "entry_price": decision_ts_ms,
             "atr": decision_ts_ms,
             "recent_swing_high": decision_ts_ms,
@@ -160,14 +163,22 @@ def build_candidates_from_dataset(
             "support": decision_ts_ms,
             "resistance": decision_ts_ms,
             "liquidity_levels": decision_ts_ms,
-            "spread_bps": decision_ts_ms,
-            "slippage_bps": decision_ts_ms,
-            "fee_rate": decision_ts_ms,
-            "funding_rate": decision_ts_ms,
-            "tick_size": decision_ts_ms,
-            "qty": decision_ts_ms,
         }
-        feature_sources = {field: "PIT_HISTORICAL_MARKET_DATA_OR_STATIC_POLICY" for field in feature_asof}
+        feature_sources = {
+            "entry_price": DERIVED_FROM_PIT_BARS,
+            "atr": DERIVED_FROM_PIT_BARS,
+            "recent_swing_high": DERIVED_FROM_PIT_BARS,
+            "recent_swing_low": DERIVED_FROM_PIT_BARS,
+            "support": DERIVED_FROM_PIT_BARS,
+            "resistance": DERIVED_FROM_PIT_BARS,
+            "liquidity_levels": DERIVED_FROM_PIT_BARS,
+            "spread_bps": STATIC_CONSERVATIVE_POLICY_ASSUMPTION,
+            "slippage_bps": STATIC_CONSERVATIVE_POLICY_ASSUMPTION,
+            "fee_rate": STATIC_CONSERVATIVE_POLICY_ASSUMPTION,
+            "funding_rate": STATIC_CONSERVATIVE_POLICY_ASSUMPTION,
+            "tick_size": UNAVAILABLE,
+            "qty": STATIC_CONSERVATIVE_POLICY_ASSUMPTION,
+        }
         evidence = CandidateEvidence(
             symbol=ds.symbol,
             side=side,
@@ -189,7 +200,7 @@ def build_candidates_from_dataset(
             data_freshness_sec=0.0,
             ts=float(last.ts_ms),
             decision_ts_ms=decision_ts_ms,
-            field_asof_ts_ms=feature_asof,
+            field_asof_ts_ms=derived_asof,
             field_sources=feature_sources,
         )
         out.append(

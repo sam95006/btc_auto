@@ -22,6 +22,11 @@ CANONICAL_TIMEZONE = "UTC"
 PARTIAL_CANDLE_ALLOWED = False
 STRUCTURAL_LIQUIDITY_LABEL = "STRUCTURAL_LIQUIDITY_PROXY"
 CURRENT_LIQUIDITY_CLAIMED_AS_ORDERBOOK = False
+PIT_HISTORICAL_MARKET_DATA = "PIT_HISTORICAL_MARKET_DATA"
+DERIVED_FROM_PIT_BARS = "DERIVED_FROM_PIT_BARS"
+STATIC_CONSERVATIVE_POLICY_ASSUMPTION = "STATIC_CONSERVATIVE_POLICY_ASSUMPTION"
+CURRENT_ONLY_METADATA = "CURRENT_ONLY_METADATA"
+UNAVAILABLE = "UNAVAILABLE"
 
 DATA_QUALITY_LABELS = frozenset(
     {
@@ -32,6 +37,27 @@ DATA_QUALITY_LABELS = frozenset(
         "CONSERVATIVE_POLICY_ASSUMPTION",
         "UNAVAILABLE",
         "INVALID_SAMPLE",
+    }
+)
+SOURCE_CLASSES = frozenset(
+    {
+        PIT_HISTORICAL_MARKET_DATA,
+        DERIVED_FROM_PIT_BARS,
+        STATIC_CONSERVATIVE_POLICY_ASSUMPTION,
+        CURRENT_ONLY_METADATA,
+        UNAVAILABLE,
+    }
+)
+LEGACY_AMBIGUOUS_PROVENANCE_SOURCE = "PIT_HISTORICAL_MARKET_DATA" + "_OR_STATIC_POLICY"
+DEFAULT_REQUIRED_PIT_FIELDS = frozenset(
+    {
+        "entry_price",
+        "atr",
+        "recent_swing_high",
+        "recent_swing_low",
+        "support",
+        "resistance",
+        "liquidity_levels",
     }
 )
 
@@ -74,13 +100,76 @@ class FundingRecord:
 
 
 def validate_candidate_field_asof(candidate: CandidateEvidence) -> ValidationResult:
-    """Fail closed when a PIT feature is newer than the decision timestamp."""
+    """Fail closed for dishonest PIT qualification provenance.
+
+    This is qualification-specific validation. Legacy CandidateEvidence
+    construction remains backwards compatible, but a research qualification run
+    must explicitly classify market data, derived fields, policy assumptions,
+    current-only metadata, and unavailable inputs.
+    """
+    return validate_candidate_provenance(
+        candidate,
+        required_pit_fields=DEFAULT_REQUIRED_PIT_FIELDS,
+    )
+
+
+def validate_candidate_provenance(
+    candidate: CandidateEvidence,
+    *,
+    required_pit_fields: frozenset[str] | set[str] | tuple[str, ...] = DEFAULT_REQUIRED_PIT_FIELDS,
+    allowed_policy_fields: frozenset[str] | set[str] | tuple[str, ...] = (
+        "spread_bps",
+        "slippage_bps",
+        "fee_rate",
+        "funding_rate",
+        "qty",
+    ),
+) -> ValidationResult:
     if candidate.decision_ts_ms is None:
         return ValidationResult(False, "decision_ts_ms_missing")
+    sources = candidate.field_sources or {}
+    asof = candidate.field_asof_ts_ms or {}
+    ambiguous = {
+        field: source
+        for field, source in sources.items()
+        if source == LEGACY_AMBIGUOUS_PROVENANCE_SOURCE
+    }
+    if ambiguous:
+        return ValidationResult(False, "ambiguous_provenance_source", {"fields": sorted(ambiguous)})
+    unknown = {field: source for field, source in sources.items() if source not in SOURCE_CLASSES}
+    if unknown:
+        return ValidationResult(False, "unknown_provenance_source", {"fields": sorted(unknown)})
+    missing_source = [field for field in required_pit_fields if field not in sources]
+    if missing_source:
+        return ValidationResult(False, "required_pit_field_source_missing", {"fields": sorted(missing_source)})
+    missing_asof = [
+        field
+        for field in required_pit_fields
+        if sources.get(field) in {PIT_HISTORICAL_MARKET_DATA, DERIVED_FROM_PIT_BARS} and field not in asof
+    ]
+    if missing_asof:
+        return ValidationResult(False, "required_pit_field_asof_missing", {"fields": sorted(missing_asof)})
+    unavailable_required = [field for field in required_pit_fields if sources.get(field) == UNAVAILABLE]
+    if unavailable_required:
+        return ValidationResult(False, "required_pit_field_unavailable", {"fields": sorted(unavailable_required)})
+    current_only_required = [field for field in required_pit_fields if sources.get(field) == CURRENT_ONLY_METADATA]
+    if current_only_required:
+        return ValidationResult(False, "current_only_metadata_not_pit_complete", {"fields": sorted(current_only_required)})
+    policy_required = [field for field in required_pit_fields if sources.get(field) == STATIC_CONSERVATIVE_POLICY_ASSUMPTION]
+    if policy_required:
+        return ValidationResult(False, "policy_assumption_not_historical_truth", {"fields": sorted(policy_required)})
+    policy_not_allowed = [
+        field
+        for field, source in sources.items()
+        if source == STATIC_CONSERVATIVE_POLICY_ASSUMPTION and field not in allowed_policy_fields
+    ]
+    if policy_not_allowed:
+        return ValidationResult(False, "policy_assumption_not_preregistered_for_field", {"fields": sorted(policy_not_allowed)})
     future = {
         field: ts
-        for field, ts in (candidate.field_asof_ts_ms or {}).items()
-        if int(ts) > int(candidate.decision_ts_ms)
+        for field, ts in asof.items()
+        if sources.get(field) in {PIT_HISTORICAL_MARKET_DATA, DERIVED_FROM_PIT_BARS}
+        and int(ts) > int(candidate.decision_ts_ms)
     }
     if future:
         return ValidationResult(False, "future_feature_asof_ts", {"future_fields": sorted(future)})
@@ -144,10 +233,37 @@ def realized_funding_cost(
     entry_ts_ms: int,
     exit_ts_ms: int,
     records: list[FundingRecord],
+    side: str | None = None,
 ) -> float:
-    """Count only funding events crossed while the position is open."""
+    """Count crossed funding events.
+
+    Compatibility: without side, returns the prior unsigned aggregate cost.
+    With side, returns signed cashflow: long pays -N*r, short receives +N*r.
+    """
     crossed = [r for r in records if int(entry_ts_ms) < int(r.funding_ts_ms) <= int(exit_ts_ms)]
-    return sum(abs(float(notional)) * float(r.funding_rate) for r in crossed)
+    if side is None:
+        return sum(abs(float(notional)) * float(r.funding_rate) for r in crossed)
+    long_side = side.lower() in {"buy", "long"}
+    sign = -1.0 if long_side else 1.0
+    return sum(sign * abs(float(notional)) * float(r.funding_rate) for r in crossed)
+
+
+def realized_funding_cashflow(
+    *,
+    notional: float,
+    side: str,
+    entry_ts_ms: int,
+    exit_ts_ms: int,
+    records: list[FundingRecord],
+) -> float:
+    """Signed funding cashflow using exchange funding economics."""
+    return realized_funding_cost(
+        notional=notional,
+        side=side,
+        entry_ts_ms=entry_ts_ms,
+        exit_ts_ms=exit_ts_ms,
+        records=records,
+    )
 
 
 def metadata_status_for_historical_replay(*, has_pit_history: bool) -> str:
@@ -164,6 +280,7 @@ def spread_policy_for_replay(*, historical_bid_ask_available: bool) -> dict[str,
     source = SPREAD_POLICY[0] if historical_bid_ask_available else SPREAD_POLICY[2]
     return {
         "source": source,
+        "source_class": STATIC_CONSERVATIVE_POLICY_ASSUMPTION if not historical_bid_ask_available else PIT_HISTORICAL_MARKET_DATA,
         "hierarchy": list(SPREAD_POLICY),
         "performance_dependent_selection": False,
     }
@@ -172,6 +289,7 @@ def spread_policy_for_replay(*, historical_bid_ask_available: bool) -> dict[str,
 def slippage_policy_for_replay() -> dict[str, Any]:
     return {
         "source": SLIPPAGE_POLICY[0],
+        "source_class": STATIC_CONSERVATIVE_POLICY_ASSUMPTION,
         "hierarchy": list(SLIPPAGE_POLICY),
         "performance_dependent_selection": False,
     }
@@ -180,6 +298,7 @@ def slippage_policy_for_replay() -> dict[str, Any]:
 def fee_policy_for_qualification() -> dict[str, Any]:
     return {
         "source": QUALIFICATION_FEE_SOURCE,
+        "source_class": STATIC_CONSERVATIVE_POLICY_ASSUMPTION,
         "taker_fee_rate": TAKER_FEE_RATE_DEFAULT,
         "MIN_NET_REWARD_RISK_RATIO": MIN_NET_REWARD_RISK_RATIO,
         "MIN_NET_REWARD_TO_COST": MIN_NET_REWARD_TO_COST,
