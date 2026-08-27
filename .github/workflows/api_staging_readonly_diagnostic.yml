@@ -1,0 +1,79 @@
+name: api-staging-readonly-diagnostic
+
+# Read-only diagnostic for nexus-api-staging. This workflow inspects Zeabur
+# service, domain, and deployment metadata for the exact staging service and
+# emits only whitelisted, non-sensitive evidence. It performs ZERO mutations:
+# it never uploads code, never changes variables, never touches domains, never
+# restarts, and never runs any in-pod command. It contains no deployment path.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type READ_NEXUS_API_STAGING"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-staging-readonly-diagnostic
+  cancel-in-progress: false
+
+env:
+  SERVICE_NAME: nexus-api-staging
+  API_STAGING_SERVICE_ID: 6a7ee0a82b4272705cd1c9c8
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+  CANONICAL_API_URL: https://nexus-api-staging.zeabur.app
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Validate Founder read-only confirmation
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event.inputs.confirm }}" != "READ_NEXUS_API_STAGING" ]; then
+            echo "Confirmation mismatch"
+            exit 1
+          fi
+          echo "DIAGNOSTIC_HEAD_SHA=$(git rev-parse HEAD)"
+          echo "READ_ONLY_DIAGNOSTIC=yes"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Read-only Zeabur inspection (no mutations)
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ env.API_STAGING_SERVICE_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$ZEABUR_TOKEN"
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          # Only read-only queries below; outputs are captured to runner-local
+          # temp files and never uploaded as artifacts.
+          zeabur service get --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/diag-service.json 2>&1 || true
+          zeabur domain list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/diag-domain.json 2>&1 || true
+          zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/diag-deployment.json 2>&1 || true
+
+      - name: Emit whitelisted diagnostic evidence
+        run: |
+          set -euo pipefail
+          python tools/ci/zeabur_readonly_diagnostic.py \
+            /tmp/diag-service.json \
+            /tmp/diag-domain.json \
+            /tmp/diag-deployment.json
+          echo "RAW_ZEABUR_JSON_UPLOADED=no"
+          echo "READ_ONLY_DIAGNOSTIC_COMPLETE=yes"
