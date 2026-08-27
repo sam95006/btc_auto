@@ -94,6 +94,13 @@ class AuthAlphaService:
     def resolve_session(self, session_id: str) -> dict[str, Any] | None:
         return self.repo.get_active_session(session_id)
 
+    def refresh_csrf(self, session_id: str) -> str | None:
+        if not self.resolve_session(session_id):
+            return None
+        csrf_token = secrets.token_urlsafe(32)
+        self.repo.update_session_csrf_hash(session_id, self._csrf_hash(csrf_token))
+        return csrf_token
+
     def verify_csrf(self, session_id: str, token: str | None) -> bool:
         if not token:
             return False

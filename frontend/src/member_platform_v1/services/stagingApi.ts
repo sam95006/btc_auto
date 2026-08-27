@@ -215,7 +215,7 @@ export async function stagingLogout() {
   return result;
 }
 export async function getMemberSession() {
-  return getJson<{ session: { user_id: string; email: string; account_status: "ACTIVE" | "DISABLED" | "PENDING_VERIFICATION"; role: "MEMBER" | "FOUNDER_ADMIN"; plan: "BEGINNER" | "INTERMEDIATE" | "PRO" | "ENTERPRISE" }; profile: MemberProfile }>("/member/session");
+  return getJson<{ session: { user_id: string; email: string; account_status: "ACTIVE" | "DISABLED" | "PENDING_VERIFICATION"; role: "MEMBER" | "FOUNDER_ADMIN"; plan: "BEGINNER" | "INTERMEDIATE" | "PRO" | "ENTERPRISE" }; profile: MemberProfile; csrf_token?: string }>("/member/session");
 }
 export async function getMemberProfile() {
   return getJson<{ classification: "LIVE_MEMBER_DB"; profile: MemberProfile }>("/member/profile");

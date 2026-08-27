@@ -229,6 +229,19 @@ class ProductRepository:
             "_csrf_token_hash": (metadata_json or {}).get("csrf_token_hash"),
         }
 
+    def update_session_csrf_hash(self, session_id: str, csrf_token_hash: str) -> None:
+        self.pool.execute(
+            """
+            UPDATE nexus.auth_sessions
+            SET metadata_json = COALESCE(metadata_json, '{}'::jsonb)
+                || jsonb_build_object('csrf_token_hash', %s)
+            WHERE session_id = %s
+              AND revoked_at IS NULL
+              AND expires_at > NOW()
+            """,
+            (csrf_token_hash, session_id),
+        )
+
     def revoke_session(self, session_id: str) -> None:
         self.pool.execute(
             "UPDATE nexus.auth_sessions SET revoked_at = NOW() WHERE session_id = %s",

@@ -110,7 +110,7 @@ def create_app() -> Flask:
             response.headers["Access-Control-Allow-Origin"] = origin
             response.headers["Vary"] = "Origin"
             response.headers["Access-Control-Allow-Headers"] = (
-                "Content-Type, X-Nexus-Session"
+                "Content-Type, X-Nexus-Session, X-Nexus-CSRF"
             )
             response.headers["Access-Control-Allow-Methods"] = "GET, POST, PATCH, PUT, DELETE, OPTIONS"
             response.headers["Access-Control-Allow-Credentials"] = "true"

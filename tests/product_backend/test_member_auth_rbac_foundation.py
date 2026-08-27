@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -122,6 +123,10 @@ class InMemoryProductRepo:
     def revoke_session(self, session_id: str) -> None:
         if session_id in self.sessions:
             self.sessions[session_id]["revoked_at"] = datetime.now(timezone.utc)
+
+    def update_session_csrf_hash(self, session_id: str, csrf_token_hash: str) -> None:
+        if session_id in self.sessions and self.sessions[session_id]["revoked_at"] is None:
+            self.sessions[session_id]["csrf_token_hash"] = csrf_token_hash
 
     def grant_entitlement(self, account_id: str, product_code: str) -> None:
         self.entitlements.setdefault(account_id, []).append(product_code)
@@ -397,6 +402,170 @@ def test_cookie_auth_requires_csrf_for_state_change(
     assert denied.status_code == 403
     allowed = client.post("/api/v1/member/session/logout", headers={"X-Nexus-CSRF": registration["csrf_token"]})
     assert allowed.status_code == 200
+
+
+def test_login_cookie_is_httponly_and_auth_responses_are_not_cached(
+    auth: AuthAlphaService, app: Flask
+) -> None:
+    register_user(auth)
+    response = app.test_client().post(
+        "/api/v1/member/session/login",
+        json={"email": "member@example.invalid", "password": "safe-password-12345"},
+    )
+    assert response.status_code == 200
+    set_cookie = response.headers.get("Set-Cookie", "")
+    assert "nexus_session=" in set_cookie
+    assert "HttpOnly" in set_cookie
+    assert "Secure" in set_cookie
+    assert response.headers["Cache-Control"] == "no-store"
+    payload = response.get_json()
+    assert payload["csrf_token"]
+    assert "session_id" not in payload
+
+
+def test_browser_reload_can_rehydrate_csrf_without_exposing_session_id(
+    auth: AuthAlphaService, app: Flask
+) -> None:
+    register_user(auth)
+    client = app.test_client()
+    login = client.post(
+        "/api/v1/member/session/login",
+        json={"email": "member@example.invalid", "password": "safe-password-12345"},
+    ).get_json()
+    assert login["csrf_token"]
+
+    missing = client.post("/api/v1/product/entitlement/check", json={"capability_id": "MARKET_OVERVIEW"})
+    assert missing.status_code == 403
+
+    bootstrap = client.get("/api/v1/member/session")
+    assert bootstrap.status_code == 200
+    assert bootstrap.headers["Cache-Control"] == "no-store"
+    body = bootstrap.get_json()
+    rehydrated_csrf = body["csrf_token"]
+    assert rehydrated_csrf
+    assert rehydrated_csrf != login["csrf_token"]
+    assert "session_id" not in body
+    assert "session_id" not in body["session"]
+
+    accepted = client.post(
+        "/api/v1/product/entitlement/check",
+        headers={"X-Nexus-CSRF": rehydrated_csrf},
+        json={"capability_id": "MARKET_OVERVIEW"},
+    )
+    assert accepted.status_code == 200
+    assert accepted.get_json()["allowed"] is True
+
+
+def test_wrong_and_cross_session_csrf_are_denied(auth: AuthAlphaService, app: Flask) -> None:
+    register_user(auth, "member-a@example.invalid")
+    register_user(auth, "member-b@example.invalid")
+    client_a = app.test_client()
+    client_b = app.test_client()
+    csrf_a = client_a.post(
+        "/api/v1/member/session/login",
+        json={"email": "member-a@example.invalid", "password": "safe-password-12345"},
+    ).get_json()["csrf_token"]
+    csrf_b = client_b.post(
+        "/api/v1/member/session/login",
+        json={"email": "member-b@example.invalid", "password": "safe-password-12345"},
+    ).get_json()["csrf_token"]
+    assert csrf_a != csrf_b
+
+    wrong = client_a.post(
+        "/api/v1/product/entitlement/check",
+        headers={"X-Nexus-CSRF": "not-the-session-token"},
+        json={"capability_id": "MARKET_OVERVIEW"},
+    )
+    assert wrong.status_code == 403
+
+    cross_session = client_b.post(
+        "/api/v1/product/entitlement/check",
+        headers={"X-Nexus-CSRF": csrf_a},
+        json={"capability_id": "MARKET_OVERVIEW"},
+    )
+    assert cross_session.status_code == 403
+
+
+@pytest.mark.parametrize("blocked_state", ["revoked", "expired", "disabled"])
+def test_blocked_sessions_cannot_rehydrate_csrf(
+    repo: InMemoryProductRepo, auth: AuthAlphaService, app: Flask, blocked_state: str
+) -> None:
+    registration = register_user(auth)
+    if blocked_state == "revoked":
+        repo.revoke_session(registration["session_id"])
+    elif blocked_state == "expired":
+        repo.sessions[registration["session_id"]]["expires_at"] = datetime.now(timezone.utc) - timedelta(seconds=1)
+    else:
+        repo.accounts[registration["account_id"]]["status"] = "disabled"
+
+    client = app.test_client()
+    client.set_cookie("nexus_session", registration["session_id"])
+    response = client.get("/api/v1/member/session")
+    assert response.status_code == 401
+    assert "csrf_token" not in (response.get_json() or {})
+
+
+def test_logout_clears_cookie_and_revokes_session(auth: AuthAlphaService, app: Flask) -> None:
+    registration = register_user(auth)
+    client = app.test_client()
+    client.set_cookie("nexus_session", registration["session_id"])
+    response = client.post(
+        "/api/v1/member/session/logout",
+        headers={"X-Nexus-CSRF": registration["csrf_token"]},
+    )
+    assert response.status_code == 200
+    assert auth.resolve_session(registration["session_id"]) is None
+    set_cookie = response.headers.get("Set-Cookie", "")
+    assert "nexus_session=" in set_cookie
+    assert "Expires=" in set_cookie
+    assert response.headers["Cache-Control"] == "no-store"
+
+
+def test_auth_sessions_schema_matches_pr41_session_contract() -> None:
+    migration = Path("backend/nexus_persistence_pg/migrations/0002_auth_identity.sql").read_text(encoding="utf-8")
+    auth_sessions = migration.split("CREATE TABLE IF NOT EXISTS nexus.auth_sessions", 1)[1].split(");", 1)[0]
+    for column in (
+        "session_id",
+        "account_id",
+        "expires_at",
+        "revoked_at",
+        "metadata_json",
+        "ip_address",
+        "user_agent",
+    ):
+        assert column in auth_sessions
+
+
+def test_staging_registration_keeps_unverified_email_identity_source_proof() -> None:
+    source = Path("backend/nexus_product_backend/repository.py").read_text(encoding="utf-8")
+    assert "INSERT INTO nexus.email_identities" in source
+    assert "VALUES (%s, %s, %s, FALSE)" in source
+    assert "VALUES (%s, %s, 'active')" in source
+
+
+def test_cors_credentials_policy_uses_explicit_origin_and_csrf_header() -> None:
+    source = Path("api_staging_app.py").read_text(encoding="utf-8")
+    assert 'startswith("https://")' in source
+    assert 'Access-Control-Allow-Origin"] = origin' in source
+    assert 'Access-Control-Allow-Origin"] = "*"' not in source
+    assert "Access-Control-Allow-Credentials" in source
+    assert "X-Nexus-CSRF" in source
+
+
+def test_member_frontend_never_persists_session_id_to_browser_storage() -> None:
+    source_dir = Path("frontend/src/member_platform_v1")
+    combined = "\n".join(path.read_text(encoding="utf-8") for path in source_dir.rglob("*.ts*"))
+    assert "localStorage" not in combined
+    assert "sessionStorage" not in combined
+    assert "nexus_session" not in combined
+
+
+def test_password_reset_does_not_have_public_route_and_session_revocation_is_deferred() -> None:
+    routes = Path("backend/nexus_product_backend/routes.py").read_text(encoding="utf-8")
+    auth_source = Path("backend/nexus_product_backend/auth_alpha.py").read_text(encoding="utf-8")
+    assert "password_reset" not in routes
+    reset_body = auth_source.split("def reset_password", 1)[1]
+    assert "revoke_session" not in reset_body
 
 
 def test_production_capable_mode_never_returns_inline_email_tokens(app: Flask) -> None:

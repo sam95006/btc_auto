@@ -87,6 +87,19 @@ def _csrf_error_if_required(app: Flask) -> tuple[Response, int] | None:
     return None
 
 
+def _no_store(response: Response) -> Response:
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+
+def _json_no_store(payload: dict[str, Any], status: int = 200) -> Response:
+    response = jsonify(payload)
+    response.status_code = status
+    return _no_store(response)
+
+
 def _publish_runtime_health() -> dict[str, Any]:
     health = compose_health()
     contract_payload = {
@@ -142,7 +155,7 @@ def register_product_alpha_routes(app: Flask) -> None:
             "nexus_session", session_id, secure=True, httponly=True,
             samesite="None", max_age=24 * 60 * 60,
         )
-        return response
+        return _no_store(response)
 
     @app.get("/api/v1/market/snapshot")
     def market_snapshot():
@@ -278,7 +291,7 @@ def register_product_alpha_routes(app: Flask) -> None:
             auth.logout(_session_id() or "")
         response = jsonify({"ok": True})
         response.delete_cookie("nexus_session", secure=True, httponly=True, samesite="None")
-        return response
+        return _no_store(response)
 
     @app.get("/api/v1/member/session")
     def member_session():
@@ -287,7 +300,14 @@ def register_product_alpha_routes(app: Flask) -> None:
             return error
         repo = _services(app).get("repo")
         profile = repo.profile(identity["account_id"]) if repo else {}
-        return jsonify({"session": _public_identity(app, identity), "profile": profile, "staging_only": True})
+        payload = {"session": _public_identity(app, identity), "profile": profile, "staging_only": True}
+        session_id = _cookie_session_id()
+        auth = _services(app).get("auth")
+        if session_id and auth:
+            csrf_token = auth.refresh_csrf(session_id)
+            if csrf_token:
+                payload["csrf_token"] = csrf_token
+        return _json_no_store(payload)
 
     @app.route("/api/v1/member/profile", methods=["GET", "PATCH"])
     def member_profile():
