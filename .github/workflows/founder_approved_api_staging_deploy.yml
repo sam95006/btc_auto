@@ -254,12 +254,14 @@ jobs:
               raise SystemExit("required_variable_missing:NEXUS_CORS_ALLOWED_ORIGINS")
           if any(not part.strip().startswith("https://") for part in cors.split(",") if part.strip()):
               raise SystemExit("required_variable_incompatible:NEXUS_CORS_ALLOWED_ORIGINS")
-          for key in ("DATABASE_URL", "NEXUS_POSTGRES_URL"):
-              if not str(values.get(key, "")).strip():
-                  raise SystemExit(f"required_database_variable_missing:{key}")
+          database_url_present = bool(str(values.get("DATABASE_URL", "")).strip())
+          nexus_postgres_url_present = bool(str(values.get("NEXUS_POSTGRES_URL", "")).strip())
+          if not (database_url_present or nexus_postgres_url_present):
+              raise SystemExit("required_database_variable_missing:DATABASE_URL_or_NEXUS_POSTGRES_URL")
           print("ENV_MUTATION_IN_SAFE_CATCHUP=no")
           print("SAFE_CATCHUP_ENV_COMPATIBLE=yes")
-          print("DATABASE_CREDENTIAL_VARIABLES_PRESENT=yes")
+          print("DATABASE_CREDENTIAL_VARIABLE_PRESENT=yes")
+          print("DB_ENV_REQUIREMENT_SEMANTICS=NEXUS_POSTGRES_URL_or_DATABASE_URL")
           PY
 
       - name: Set and verify required staging API variables

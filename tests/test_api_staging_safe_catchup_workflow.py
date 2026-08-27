@@ -79,8 +79,8 @@ def test_safe_catchup_environment_check_is_read_only_and_fail_closed() -> None:
         '"NEXUS_RUNTIME_BINDING": "UNAVAILABLE"',
         '"NEXUS_PG_RUNTIME_ENABLED": "true"',
         "NEXUS_CORS_ALLOWED_ORIGINS",
-        "DATABASE_URL",
-        "NEXUS_POSTGRES_URL",
+        "DATABASE_URL_or_NEXUS_POSTGRES_URL",
+        "DB_ENV_REQUIREMENT_SEMANTICS=NEXUS_POSTGRES_URL_or_DATABASE_URL",
     ):
         assert required in safe_env_block
 
