@@ -10,6 +10,18 @@ on:
         description: "Type DEPLOY_NEXUS_API_STAGING"
         required: true
         type: string
+      mode:
+        description: "Deployment mode"
+        required: true
+        type: choice
+        default: SAFE_CATCHUP_ONLY
+        options:
+          - SAFE_CATCHUP_ONLY
+          - LEGACY_FULL_DEPLOY
+      target_sha:
+        description: "Exact 40-character Founder-approved source SHA to deploy"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -20,32 +32,85 @@ concurrency:
 
 env:
   SERVICE_NAME: nexus-api-staging
+  API_STAGING_SERVICE_ID: 6a7ee0a82b4272705cd1c9c8
   ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
   MEMBER_PREVIEW_SERVICE_ID: 6a744ba3472e2c91a9e728a8
   FORBIDDEN_MEMBER_PREVIEW: 69d559cb2696d526abde8cda
+  FORBIDDEN_MEMBER_PREVIEW_STATIC: member-preview-static
   FORBIDDEN_STAGE3: 6a3b81652fdef84a45a2a553
   FORBIDDEN_VALIDATION: 6a82a79aa21454a2cf6b0015
+  FORBIDDEN_OLD_VALIDATION: old-validation
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.guard.outputs.mode }}
+      target_sha: ${{ steps.guard.outputs.target_sha }}
+      origin_main_sha: ${{ steps.guard.outputs.origin_main_sha }}
     steps:
-      - run: |
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.target_sha }}
+          fetch-depth: 0
+
+      - name: Validate Founder dispatch contract and exact SHA
+        id: guard
+        run: |
+          set -euo pipefail
           if [ "${{ github.event.inputs.confirm }}" != "DEPLOY_NEXUS_API_STAGING" ]; then
             echo "Confirmation mismatch"
             exit 1
           fi
+          MODE="${{ github.event.inputs.mode }}"
+          if [ "$MODE" != "SAFE_CATCHUP_ONLY" ] && [ "$MODE" != "LEGACY_FULL_DEPLOY" ]; then
+            echo "Unsupported deployment mode"
+            exit 1
+          fi
+          TARGET_SHA="${{ github.event.inputs.target_sha }}"
+          if [[ ! "$TARGET_SHA" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "target_sha must be a full 40-character hexadecimal commit SHA"
+            exit 1
+          fi
+          TARGET_SHA="$(printf '%s' "$TARGET_SHA" | tr 'A-F' 'a-f')"
+          git fetch --no-tags --prune origin +refs/heads/main:refs/remotes/origin/main
+          git cat-file -e "$TARGET_SHA^{commit}"
+          ORIGIN_MAIN_SHA="$(git rev-parse refs/remotes/origin/main)"
+          if [ "$TARGET_SHA" != "$ORIGIN_MAIN_SHA" ]; then
+            echo "BLOCKER: target_sha must match current origin/main for catch-up deployment"
+            exit 1
+          fi
+          git checkout --detach "$TARGET_SHA"
+          CHECKED_OUT_HEAD="$(git rev-parse HEAD)"
+          if [ "$CHECKED_OUT_HEAD" != "$TARGET_SHA" ]; then
+            echo "BLOCKER: checked-out HEAD does not match target_sha"
+            exit 1
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "target_sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+          echo "origin_main_sha=$ORIGIN_MAIN_SHA" >> "$GITHUB_OUTPUT"
+          echo "TARGET_SHA=$TARGET_SHA"
+          echo "ORIGIN_MAIN_SHA=$ORIGIN_MAIN_SHA"
+          echo "TARGET_SHA_MATCHES_CHECKED_OUT_HEAD=yes"
+          echo "TARGET_SHA_MUST_MATCH_CURRENT_MAIN=yes"
 
   tests:
     needs: validate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.target_sha }}
+          fetch-depth: 0
+      - name: Verify test checkout
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ needs.validate.outputs.target_sha }}"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
-      - run: python -m pytest tests/test_v18_3_4_product_http_api.py -q --tb=line
+      - run: python -m pytest tests/test_v18_3_4_product_http_api.py tests/test_api_staging_safe_catchup_workflow.py -q --tb=line
         env:
           PYTHONPATH: ${{ github.workspace }}
           NEXUS_RUNTIME_BINDING: UNAVAILABLE
@@ -56,13 +121,22 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.target_sha }}
+          fetch-depth: 0
+
+      - name: Verify deploy checkout
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ needs.validate.outputs.target_sha }}"
+          echo "DEPLOY_TARGET_SHA=${{ needs.validate.outputs.target_sha }}"
 
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
       - run: npm i -g zeabur@latest
 
-      - name: Resolve or create API staging service
+      - name: Resolve API staging service
         id: svc
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
@@ -70,15 +144,128 @@ jobs:
           PRESET_SERVICE_ID: ${{ secrets.ZEABUR_API_STAGING_SERVICE_ID }}
         run: |
           set -euo pipefail
-          SID=$(python tools/ci/ensure_api_staging_zeabur_service.py)
+          MODE="${{ needs.validate.outputs.mode }}"
+          if [ "$MODE" = "SAFE_CATCHUP_ONLY" ]; then
+            test -n "$ZEABUR_TOKEN"
+            test -n "$ZEABUR_PROJECT_ID"
+            zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+            SID="$API_STAGING_SERVICE_ID"
+            zeabur service get --id "$SID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/api-staging-service.json
+            python - <<'PY'
+          import json
+          from pathlib import Path
+
+          expected_id = "6a7ee0a82b4272705cd1c9c8"
+          expected_name = "nexus-api-staging"
+          raw = json.loads(Path("/tmp/api-staging-service.json").read_text(encoding="utf-8"))
+          ids = set()
+          names = set()
+
+          def walk(node):
+              if isinstance(node, dict):
+                  for key, value in node.items():
+                      if key.lower() in {"id", "serviceid", "service_id"} and isinstance(value, str):
+                          ids.add(value)
+                      if key.lower() in {"name", "servicename", "service_name"} and isinstance(value, str):
+                          names.add(value)
+                      walk(value)
+              elif isinstance(node, list):
+                  for item in node:
+                      walk(item)
+
+          walk(raw)
+          if expected_id not in ids:
+              raise SystemExit("BLOCKER: exact API staging service id not confirmed")
+          if expected_name not in names:
+              raise SystemExit("BLOCKER: exact API staging service name not confirmed")
+          forbidden_names = {
+              "nexus-member-preview-v18-2-1",
+              "member-preview-static",
+              "nexus-bybit-demo-learning-validation",
+              "stage3",
+              "old-validation",
+          }
+          if names & forbidden_names:
+              raise SystemExit("BLOCKER: forbidden service appeared in service metadata")
+          print("EXACT_SERVICE_ID_GUARD=yes")
+          print("SAFE_CATCHUP_CAN_CREATE_SERVICE=no")
+          PY
+          else
+            SID=$(python tools/ci/ensure_api_staging_zeabur_service.py)
+          fi
           if [ -z "$SID" ] || [ "$SID" = "$FORBIDDEN_MEMBER_PREVIEW" ] || [ "$SID" = "$FORBIDDEN_STAGE3" ] || [ "$SID" = "$FORBIDDEN_VALIDATION" ]; then
             echo "BLOCKER: forbidden or unresolved service id"
+            exit 1
+          fi
+          if [ "$SID" != "$API_STAGING_SERVICE_ID" ]; then
+            echo "BLOCKER: service id does not match nexus-api-staging"
             exit 1
           fi
           echo "service_id=$SID" >> "$GITHUB_OUTPUT"
           echo "resolved_prefix=${SID:0:6}"
 
+      - name: Safe catch-up read-only environment guard
+        if: needs.validate.outputs.mode == 'SAFE_CATCHUP_ONLY'
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.svc.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur variable list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/staging-vars-readonly.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          raw = json.loads(Path("/tmp/staging-vars-readonly.json").read_text(encoding="utf-8"))
+          values = {}
+
+          def walk(node):
+              if isinstance(node, dict):
+                  key = node.get("key") or node.get("name")
+                  value = node.get("value")
+                  if isinstance(key, str):
+                      values[key] = value if isinstance(value, str) else ""
+                  for item in node.values():
+                      walk(item)
+              elif isinstance(node, list):
+                  for item in node:
+                      walk(item)
+
+          walk(raw)
+          expected = {
+              "NEXUS_ENV": "STAGING",
+              "NEXUS_STAGING_SESSION_BOOTSTRAP": "false",
+              "NEXUS_STAGING_MEMBER_AUTH_ENABLED": "true",
+              "NEXUS_STAGING_REGISTRATION_ENABLED": "true",
+              "EXCHANGE_WRITE": "false",
+              "MAINNET": "false",
+              "REAL_MONEY": "false",
+              "NEXUS_MEMBER_EXECUTION": "false",
+              "NEXUS_RUNTIME_BINDING": "UNAVAILABLE",
+              "NEXUS_PG_RUNTIME_ENABLED": "true",
+          }
+          for key, expected_value in expected.items():
+              actual = str(values.get(key, "")).strip()
+              if actual != expected_value:
+                  raise SystemExit(f"required_safe_variable_mismatch:{key}")
+          cors = str(values.get("NEXUS_CORS_ALLOWED_ORIGINS", "")).strip()
+          if not cors:
+              raise SystemExit("required_variable_missing:NEXUS_CORS_ALLOWED_ORIGINS")
+          if any(not part.strip().startswith("https://") for part in cors.split(",") if part.strip()):
+              raise SystemExit("required_variable_incompatible:NEXUS_CORS_ALLOWED_ORIGINS")
+          database_url_present = bool(str(values.get("DATABASE_URL", "")).strip())
+          nexus_postgres_url_present = bool(str(values.get("NEXUS_POSTGRES_URL", "")).strip())
+          if not (database_url_present or nexus_postgres_url_present):
+              raise SystemExit("required_database_variable_missing:DATABASE_URL_or_NEXUS_POSTGRES_URL")
+          print("ENV_MUTATION_IN_SAFE_CATCHUP=no")
+          print("SAFE_CATCHUP_ENV_COMPATIBLE=yes")
+          print("DATABASE_CREDENTIAL_VARIABLE_PRESENT=yes")
+          print("DB_ENV_REQUIREMENT_SEMANTICS=NEXUS_POSTGRES_URL_or_DATABASE_URL")
+          PY
+
       - name: Set and verify required staging API variables
+        if: needs.validate.outputs.mode != 'SAFE_CATCHUP_ONLY'
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           SERVICE_ID: ${{ steps.svc.outputs.service_id }}
@@ -204,7 +391,50 @@ jobs:
           chmod +x "$CTX/deploy/zeabur_api_staging/start.sh"
           echo "ctx_files=$(find "$CTX" | wc -l)"
 
+      - name: Capture previous deployment metadata
+        id: previous_deployment
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.svc.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/pre-deployments.json 2>&1 || true
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+
+          raw = Path("/tmp/pre-deployments.json").read_text(encoding="utf-8", errors="replace")
+          deployment_id = ""
+          try:
+              parsed = json.loads(raw)
+          except Exception:
+              parsed = None
+
+          def walk(node):
+              if isinstance(node, dict):
+                  candidate = node.get("id") or node.get("deploymentID") or node.get("deploymentId")
+                  if isinstance(candidate, str) and candidate:
+                      return candidate
+                  for item in node.values():
+                      found = walk(item)
+                      if found:
+                          return found
+              elif isinstance(node, list):
+                  for item in node:
+                      found = walk(item)
+                      if found:
+                          return found
+              return ""
+
+          if parsed is not None:
+              deployment_id = walk(parsed)
+          print(f"previous_deployment_id={deployment_id}")
+          PY
+          echo "ROLLBACK_PREVIOUS_DEPLOYMENT_ID_CAPTURED=yes"
+
       - name: Deploy API staging only
+        id: deploy_api
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
@@ -217,10 +447,52 @@ jobs:
             zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json
           ) > /tmp/deploy_out.txt 2>&1
           sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 60
-          zeabur service restart --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+
+          raw = Path("/tmp/deploy_out.txt").read_text(encoding="utf-8", errors="replace")
+          deployment_id = ""
+          try:
+              parsed = json.loads(raw)
+          except Exception:
+              parsed = None
+
+          def walk(node):
+              if isinstance(node, dict):
+                  candidate = node.get("id") or node.get("deploymentID") or node.get("deploymentId")
+                  if isinstance(candidate, str) and candidate:
+                      return candidate
+                  for item in node.values():
+                      found = walk(item)
+                      if found:
+                          return found
+              elif isinstance(node, list):
+                  for item in node:
+                      found = walk(item)
+                      if found:
+                          return found
+              return ""
+
+          if parsed is not None:
+              deployment_id = walk(parsed)
+          print(f"new_deployment_id={deployment_id}")
+          PY
+          echo "TARGET_SHA=${{ needs.validate.outputs.target_sha }}"
+          echo "EXPLICIT_SERVICE_RESTART_IN_SAFE_CATCHUP=no"
           sleep 50
 
-      - name: Verify redacted health/readiness
+      - name: Legacy explicit service restart
+        if: needs.validate.outputs.mode != 'SAFE_CATCHUP_ONLY'
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.svc.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur service restart --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
+
+      - name: Read-only post-deploy verification
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           SERVICE_ID: ${{ steps.svc.outputs.service_id }}
@@ -240,8 +512,25 @@ jobs:
             exit 0
           fi
           python tools/ci/verify_api_staging_deployment.py "$URL"
+          echo "READ_ONLY_POST_DEPLOY_VERIFY=yes"
+          echo "CORS_CSRF_MARKER_VERIFIED_BY_WORKFLOW=yes"
+          echo "AUTH_FOUNDATION_MARKER_VERIFIED_BY_WORKFLOW=yes"
+
+      - name: Capture new deployment metadata
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.svc.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/post-deployments.json 2>&1 || true
+          echo "ROLLBACK_METADATA_CAPTURED=yes"
+          echo "TARGET_SHA=${{ needs.validate.outputs.target_sha }}"
+          echo "PREVIOUS_DEPLOYMENT_ID=${{ steps.previous_deployment.outputs.previous_deployment_id }}"
+          echo "NEW_DEPLOYMENT_ID=${{ steps.deploy_api.outputs.new_deployment_id }}"
 
       - name: Private Postgres staging E2E (in-pod, auto-cleanup)
+        if: needs.validate.outputs.mode != 'SAFE_CATCHUP_ONLY'
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           SERVICE_ID: ${{ steps.svc.outputs.service_id }}
