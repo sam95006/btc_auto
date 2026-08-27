@@ -1,0 +1,103 @@
+name: api-staging-readonly-diagnostic
+
+# Read-only diagnostic for nexus-api-staging. This workflow inspects Zeabur
+# service, domain, and deployment metadata for the exact staging service and
+# emits only whitelisted, non-sensitive evidence. It performs ZERO mutations:
+# it never uploads code, never changes variables, never touches domains, never
+# restarts, and never runs any in-pod command. It contains no deployment path.
+#
+# Fail-closed: a required Zeabur read query that fails (non-zero exit or invalid
+# JSON) fails the whole job, so this diagnostic cannot report a false green.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type READ_NEXUS_API_STAGING"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-staging-readonly-diagnostic
+  cancel-in-progress: false
+
+env:
+  SERVICE_NAME: nexus-api-staging
+  API_STAGING_SERVICE_ID: 6a7ee0a82b4272705cd1c9c8
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+  CANONICAL_API_URL: https://nexus-api-staging.zeabur.app
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Validate Founder read-only confirmation
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event.inputs.confirm }}" != "READ_NEXUS_API_STAGING" ]; then
+            echo "Confirmation mismatch"
+            exit 1
+          fi
+          echo "DIAGNOSTIC_HEAD_SHA=$(git rev-parse HEAD)"
+          echo "READ_ONLY_DIAGNOSTIC=yes"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Read-only Zeabur inspection and fail-closed evidence
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ env.API_STAGING_SERVICE_ID }}
+        run: |
+          # Manual error handling: capture each query exit code without letting
+          # a failure abort silently, and keep stdout JSON separate from stderr.
+          set -uo pipefail
+          test -n "$ZEABUR_TOKEN"
+
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false > /tmp/diag-auth.out 2> /tmp/diag-auth.err
+          AUTH_RC=$?
+
+          zeabur service get --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false \
+            > /tmp/diag-service.json 2> /tmp/diag-service.err
+          SERVICE_QUERY_RC=$?
+
+          zeabur domain list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false \
+            > /tmp/diag-domain.json 2> /tmp/diag-domain.err
+          DOMAIN_QUERY_RC=$?
+
+          zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false \
+            > /tmp/diag-deployment.json 2> /tmp/diag-deployment.err
+          DEPLOYMENT_QUERY_RC=$?
+
+          # Only report booleans about the queries; never print the raw .err
+          # files (they may contain unexpected content) or the raw .json.
+          echo "AUTH_LOGIN_RC_ZERO=$([ "$AUTH_RC" = "0" ] && echo yes || echo no)"
+
+          export SERVICE_QUERY_RC DOMAIN_QUERY_RC DEPLOYMENT_QUERY_RC
+          # The helper prints whitelisted evidence and exits non-zero (fail
+          # closed) if any required query failed or returned invalid JSON.
+          python tools/ci/zeabur_readonly_diagnostic.py \
+            /tmp/diag-service.json \
+            /tmp/diag-domain.json \
+            /tmp/diag-deployment.json
+          HELPER_RC=$?
+
+          echo "RAW_ZEABUR_JSON_UPLOADED=no"
+          if [ "$AUTH_RC" != "0" ] || [ "$HELPER_RC" != "0" ]; then
+            echo "READ_ONLY_DIAGNOSTIC_FAILED_CLOSED=yes"
+            exit 1
+          fi
+          echo "READ_ONLY_DIAGNOSTIC_COMPLETE=yes"
