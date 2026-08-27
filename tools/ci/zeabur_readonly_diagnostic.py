@@ -5,13 +5,21 @@ This helper reads locally-saved outputs of read-only ``zeabur ... --json``
 commands (service get / domain list / deployment list) and emits ONLY a
 whitelist of non-sensitive KEY=VALUE evidence lines.
 
+Fail-closed contract:
+  * Each required query has an exit code supplied via the environment
+    (SERVICE_QUERY_RC / DOMAIN_QUERY_RC / DEPLOYMENT_QUERY_RC, default "0").
+  * A query "passes" only when its CLI exit code is 0 AND its stdout is
+    valid JSON. A CLI failure or invalid JSON fails the whole diagnostic
+    (process exits non-zero) so the workflow cannot report a false green.
+  * A valid *negative* result (query succeeded but the expected domain /
+    deployment is absent) is NOT a failure — it is legitimate evidence.
+
 Hard safety rules enforced by construction:
-  * It NEVER prints raw JSON.
-  * It NEVER prints environment-variable values, tokens, DSNs, passwords,
+  * It NEVER prints raw JSON, env-variable values, tokens, DSNs, passwords,
     session tokens, or arbitrary metadata values.
-  * It prints only: booleans, small counts, opaque deployment ids,
-    deployment status/state strings, ISO timestamps, ``*.zeabur.app``
-    hostnames, and the expected service name (only when it matches).
+  * For domains it emits only the expected canonical hostname or the literal
+    ``unexpected_or_absent`` — never some other discovered ``*.zeabur.app``
+    hostname.
   * Schema visibility is limited to KEY NAMES, never their values.
 
 Usage:
@@ -21,6 +29,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -55,6 +64,14 @@ def _load(path: str):
         return json.loads(text), True
     except (json.JSONDecodeError, ValueError):
         return None, False
+
+
+def _rc(name: str) -> int:
+    raw = os.environ.get(name, "0").strip()
+    try:
+        return int(raw)
+    except ValueError:
+        return 1
 
 
 def _walk_key_names(node, out: set) -> None:
@@ -106,7 +123,6 @@ def _deployment_records(node):
         if dicts:
             return dicts
     if isinstance(node, dict):
-        # Prefer a value that is a list of dicts (e.g. {"deployments": [...]}).
         best: list = []
         for value in node.values():
             if isinstance(value, list):
@@ -115,7 +131,6 @@ def _deployment_records(node):
                     best = dicts
         if best:
             return best
-        # A single deployment object.
         return [node]
     return []
 
@@ -156,16 +171,28 @@ def emit(lines, key, value):
 
 
 def analyze(service_path: str, domain_path: str, deployment_path: str):
+    """Return (evidence_lines, ok_bool). ok is False when a required query
+    failed (bad CLI exit code or invalid JSON) — fail closed."""
     lines: list = []
 
-    # ----- service metadata -----
     svc, svc_valid = _load(service_path)
+    dom, dom_valid = _load(domain_path)
+    dep, dep_valid = _load(deployment_path)
+
+    svc_pass = _rc("SERVICE_QUERY_RC") == 0 and svc_valid
+    dom_pass = _rc("DOMAIN_QUERY_RC") == 0 and dom_valid
+    dep_pass = _rc("DEPLOYMENT_QUERY_RC") == 0 and dep_valid
+
+    emit(lines, "SERVICE_QUERY_PASS", "yes" if svc_pass else "no")
+    emit(lines, "DOMAIN_QUERY_PASS", "yes" if dom_pass else "no")
+    emit(lines, "DEPLOYMENT_QUERY_PASS", "yes" if dep_pass else "no")
+
+    # ----- service metadata -----
     emit(lines, "SERVICE_JSON_VALID", "yes" if svc_valid else "no")
     svc_ids, svc_names = _collect_ids_names(svc) if svc is not None else (set(), set())
     service_id_match = EXPECTED_SERVICE_ID in svc_ids
     service_name_match = EXPECTED_SERVICE_NAME in svc_names
     emit(lines, "SERVICE_ID_MATCH", "yes" if service_id_match else "no")
-    # Only ever echo the name when it equals the known-safe expected value.
     emit(lines, "SERVICE_NAME", EXPECTED_SERVICE_NAME if service_name_match else "unexpected_or_absent")
     env_in_service = svc is not None and any(
         EXPECTED_ENV_ID in text for text in _walk_strings(svc)
@@ -173,7 +200,6 @@ def analyze(service_path: str, domain_path: str, deployment_path: str):
     emit(lines, "ENVIRONMENT_ID_MATCH", "yes" if env_in_service else "unknown")
 
     # ----- domain metadata -----
-    dom, dom_valid = _load(domain_path)
     emit(lines, "DOMAIN_JSON_VALID", "yes" if dom_valid else "no")
     dom_hostnames: set = set()
     dom_has_scheme = False
@@ -181,18 +207,13 @@ def analyze(service_path: str, domain_path: str, deployment_path: str):
         for text in _walk_strings(dom):
             for match in ZEABUR_HOST_RE.finditer(text):
                 dom_hostnames.add(match.group(1).lower())
-                # Was this hostname embedded in a scheme-qualified URL?
-                start = match.start(1)
-                if "://" in text[:start]:
+                if "://" in text[: match.start(1)]:
                     dom_has_scheme = True
+    expected_present = EXPECTED_DOMAIN in dom_hostnames
     domain_found = bool(dom_hostnames)
     emit(lines, "DOMAIN_FOUND", "yes" if domain_found else "no")
-    emit(
-        lines,
-        "DOMAIN_HOSTNAME",
-        EXPECTED_DOMAIN if EXPECTED_DOMAIN in dom_hostnames
-        else (sorted(dom_hostnames)[0] if dom_hostnames else "none"),
-    )
+    # Never surface an arbitrary other hostname: expected canonical or nothing.
+    emit(lines, "DOMAIN_HOSTNAME", EXPECTED_DOMAIN if expected_present else "unexpected_or_absent")
     emit(lines, "DOMAIN_VALUE_HAS_SCHEME", "yes" if dom_has_scheme else "no")
     dom_keys: set = set()
     if dom is not None:
@@ -207,7 +228,6 @@ def analyze(service_path: str, domain_path: str, deployment_path: str):
     emit(lines, "DOMAIN_PARSER_HTTPS_ASSUMPTION_CONFIRMED_WRONG", parser_wrong)
 
     # ----- deployment metadata -----
-    dep, dep_valid = _load(deployment_path)
     emit(lines, "DEPLOYMENT_JSON_VALID", "yes" if dep_valid else "no")
     records = _deployment_records(dep) if dep is not None else []
     emit(lines, "DEPLOYMENT_COUNT", str(len(records)))
@@ -235,14 +255,23 @@ def analyze(service_path: str, domain_path: str, deployment_path: str):
         emit(lines, "LATEST_DEPLOYMENT_UPDATED_AT", "none")
 
     aug27 = [record for record in records if _is_aug27(_dep_created(record))]
-    if not dep_valid:
+    match_count = len(aug27)
+    ambiguous = match_count > 1
+    emit(lines, "AUG27_DEPLOYMENT_MATCH_COUNT", str(match_count))
+    emit(lines, "AUG27_DEPLOYMENT_AMBIGUOUS", "yes" if ambiguous else "no")
+    if not dep_pass:
         emit(lines, "AUG27_DEPLOYMENT_RECORD_FOUND", "unknown")
         emit(lines, "AUG27_DEPLOYMENT_ID", "unknown")
         emit(lines, "AUG27_DEPLOYMENT_STATUS", "unknown")
-    elif aug27:
+    elif match_count == 1:
         emit(lines, "AUG27_DEPLOYMENT_RECORD_FOUND", "yes")
         emit(lines, "AUG27_DEPLOYMENT_ID", _dep_id(aug27[0]) or "unknown")
         emit(lines, "AUG27_DEPLOYMENT_STATUS", _dep_status(aug27[0]) or "unknown")
+    elif ambiguous:
+        # More than one candidate — do not claim an exact Aug-27 deployment.
+        emit(lines, "AUG27_DEPLOYMENT_RECORD_FOUND", "ambiguous")
+        emit(lines, "AUG27_DEPLOYMENT_ID", "ambiguous")
+        emit(lines, "AUG27_DEPLOYMENT_STATUS", "ambiguous")
     else:
         emit(lines, "AUG27_DEPLOYMENT_RECORD_FOUND", "no")
         emit(lines, "AUG27_DEPLOYMENT_ID", "none")
@@ -252,10 +281,13 @@ def analyze(service_path: str, domain_path: str, deployment_path: str):
     emit(lines, "SERVICE_ID_PROVEN", "yes" if service_id_match else "no")
     emit(lines, "SERVICE_NAME_PROVEN", "yes" if service_name_match else "no")
     emit(lines, "ENV_BINDING_PROVEN", "yes" if env_in_service else "unknown")
-    domain_binding = EXPECTED_DOMAIN in dom_hostnames
-    emit(lines, "DOMAIN_BINDING_PROVEN", "yes" if domain_binding else "no")
+    emit(lines, "DOMAIN_BINDING_PROVEN", "yes" if expected_present else "no")
 
-    return lines
+    ok = svc_pass and dom_pass and dep_pass
+    emit(lines, "ALL_REQUIRED_QUERIES_PASS", "yes" if ok else "no")
+    # Restart remains a hypothesis; never asserted as proven here.
+    emit(lines, "RESTART_REQUIRED_PROVEN", "no")
+    return lines, ok
 
 
 def main(argv) -> int:
@@ -263,9 +295,11 @@ def main(argv) -> int:
         print("usage: zeabur_readonly_diagnostic.py <service.json> <domain.json> <deployment.json>",
               file=sys.stderr)
         return 2
-    for line in analyze(argv[1], argv[2], argv[3]):
+    lines, ok = analyze(argv[1], argv[2], argv[3])
+    for line in lines:
         print(line)
-    return 0
+    # Fail closed: a required CLI query failure or invalid JSON is an error.
+    return 0 if ok else 1
 
 
 if __name__ == "__main__":
