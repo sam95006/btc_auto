@@ -141,3 +141,33 @@ def test_safe_catchup_preserves_rollback_metadata_without_auto_rollback() -> Non
     assert "PREVIOUS_DEPLOYMENT_ID" in source
     assert "NEW_DEPLOYMENT_ID" in source
     assert "rollback" not in source.lower().replace("rollback_metadata", "").replace("rollback_previous", "")
+
+
+def test_post_deploy_verification_fails_closed_and_never_skips() -> None:
+    source = _workflow_source()
+    verify_block = _step_block(source, "Read-only post-deploy verification")
+    # The old false-green path (domain_not_ready_yet -> exit 0) must be gone.
+    assert "domain_not_ready_yet" not in verify_block
+    assert "exit 0" not in verify_block
+    # Fail closed on timeout.
+    assert "LIVE_VERIFICATION_TIMEOUT=yes" in verify_block
+    assert "exit 1" in verify_block
+    assert "POST_DEPLOY_VERIFY_FAIL_CLOSED=yes" in verify_block
+    # Bounded polling loop around the actual verifier.
+    assert "for attempt in $(seq 1 40)" in verify_block
+    assert "python tools/ci/verify_api_staging_deployment.py" in verify_block
+    # Bare hostname is normalized to https and a canonical fallback exists so
+    # verification is never skipped for lack of a URL.
+    assert "zeabur" in verify_block
+    assert "https://" in verify_block
+    assert "CANONICAL_API_URL" in verify_block
+
+
+def test_safe_catchup_deploy_uses_exact_environment_id() -> None:
+    source = _workflow_source()
+    assert "CANONICAL_API_URL: https://nexus-api-staging.zeabur.app" in source
+    deploy_block = _step_block(source, "Deploy API staging only")
+    # Exact environment targeting on the (supported) deploy flag.
+    assert '--environment-id "$ZEABUR_ENV_ID"' in deploy_block
+    # Still no restart inside the SAFE deploy step.
+    assert "zeabur service restart" not in deploy_block
