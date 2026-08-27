@@ -37,6 +37,7 @@ class AuthAlphaService:
         session_id = self.repo.create_session(
             account_id,
             csrf_token_hash=self._csrf_hash(csrf_token),
+            csrf_token=csrf_token,
             ip_address=ip if ip != "unknown" else None,
             user_agent=user_agent,
         )
@@ -64,6 +65,7 @@ class AuthAlphaService:
             display_name=display_name,
             founder=founder,
             csrf_token_hash=self._csrf_hash(csrf_token),
+            csrf_token=csrf_token,
         )
         # Staging registration still uses the existing atomic repository path.
         # It does not expose production email/reset tokens.
@@ -93,13 +95,6 @@ class AuthAlphaService:
 
     def resolve_session(self, session_id: str) -> dict[str, Any] | None:
         return self.repo.get_active_session(session_id)
-
-    def refresh_csrf(self, session_id: str) -> str | None:
-        if not self.resolve_session(session_id):
-            return None
-        csrf_token = secrets.token_urlsafe(32)
-        self.repo.update_session_csrf_hash(session_id, self._csrf_hash(csrf_token))
-        return csrf_token
 
     def verify_csrf(self, session_id: str, token: str | None) -> bool:
         if not token:

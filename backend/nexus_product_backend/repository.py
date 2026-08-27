@@ -54,6 +54,7 @@ class ProductRepository:
         display_name: str,
         founder: bool,
         csrf_token_hash: str | None = None,
+        csrf_token: str | None = None,
     ) -> tuple[str, str]:
         """Atomically create the complete staging member identity and session."""
         account_id = f"acct_{uuid.uuid4().hex[:16]}"
@@ -133,7 +134,14 @@ class ProductRepository:
                             session_id,
                             account_id,
                             expires,
-                            json.dumps({"csrf_token_hash": csrf_token_hash} if csrf_token_hash else {}),
+                            json.dumps({
+                                key: value
+                                for key, value in {
+                                    "csrf_token_hash": csrf_token_hash,
+                                    "csrf_token": csrf_token,
+                                }.items()
+                                if value
+                            }),
                         ),
                     )
                     self._append_audit_cursor(
@@ -183,12 +191,20 @@ class ProductRepository:
         *,
         ttl_hours: int = 24,
         csrf_token_hash: str | None = None,
+        csrf_token: str | None = None,
         ip_address: str | None = None,
         user_agent: str | None = None,
     ) -> str:
         session_id = f"sess_{uuid.uuid4().hex}"
         expires = _utcnow() + timedelta(hours=ttl_hours)
-        metadata_json = json.dumps({"csrf_token_hash": csrf_token_hash} if csrf_token_hash else {})
+        metadata_json = json.dumps({
+            key: value
+            for key, value in {
+                "csrf_token_hash": csrf_token_hash,
+                "csrf_token": csrf_token,
+            }.items()
+            if value
+        })
         self.pool.execute(
             """
             INSERT INTO nexus.auth_sessions
@@ -227,20 +243,8 @@ class ProductRepository:
             "status": status,
             "created_at": created_at.isoformat() if created_at else None,
             "_csrf_token_hash": (metadata_json or {}).get("csrf_token_hash"),
+            "_csrf_token": (metadata_json or {}).get("csrf_token"),
         }
-
-    def update_session_csrf_hash(self, session_id: str, csrf_token_hash: str) -> None:
-        self.pool.execute(
-            """
-            UPDATE nexus.auth_sessions
-            SET metadata_json = COALESCE(metadata_json, '{}'::jsonb)
-                || jsonb_build_object('csrf_token_hash', %s)
-            WHERE session_id = %s
-              AND revoked_at IS NULL
-              AND expires_at > NOW()
-            """,
-            (csrf_token_hash, session_id),
-        )
 
     def revoke_session(self, session_id: str) -> None:
         self.pool.execute(

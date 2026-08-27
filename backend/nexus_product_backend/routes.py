@@ -301,12 +301,11 @@ def register_product_alpha_routes(app: Flask) -> None:
         repo = _services(app).get("repo")
         profile = repo.profile(identity["account_id"]) if repo else {}
         payload = {"session": _public_identity(app, identity), "profile": profile, "staging_only": True}
-        session_id = _cookie_session_id()
-        auth = _services(app).get("auth")
-        if session_id and auth:
-            csrf_token = auth.refresh_csrf(session_id)
-            if csrf_token:
-                payload["csrf_token"] = csrf_token
+        if _cookie_session_id():
+            csrf_token = identity.get("_csrf_token")
+            if not csrf_token:
+                return _json_no_store({"error": "csrf_unavailable", "classification": "AUTH_REQUIRED"}, 401)
+            payload["csrf_token"] = csrf_token
         return _json_no_store(payload)
 
     @app.route("/api/v1/member/profile", methods=["GET", "PATCH"])

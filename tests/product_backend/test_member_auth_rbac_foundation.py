@@ -62,13 +62,14 @@ class InMemoryProductRepo:
         display_name: str,
         founder: bool,
         csrf_token_hash: str | None = None,
+        csrf_token: str | None = None,
     ) -> tuple[str, str]:
         del display_name
         account_id = self.create_account(email, password_hash)
         if founder:
             self.roles[account_id] = {"role_founder"}
             self.entitlements[account_id] = ["ENTERPRISE"]
-        return account_id, self.create_session(account_id, csrf_token_hash=csrf_token_hash)
+        return account_id, self.create_session(account_id, csrf_token_hash=csrf_token_hash, csrf_token=csrf_token)
 
     def get_account_by_email(self, email: str) -> dict[str, Any] | None:
         account_id = self.email_index.get(email)
@@ -88,6 +89,7 @@ class InMemoryProductRepo:
         *,
         ttl_hours: int = 24,
         csrf_token_hash: str | None = None,
+        csrf_token: str | None = None,
         ip_address: str | None = None,
         user_agent: str | None = None,
     ) -> str:
@@ -99,6 +101,7 @@ class InMemoryProductRepo:
             "expires_at": datetime.now(timezone.utc) + timedelta(hours=ttl_hours),
             "revoked_at": None,
             "csrf_token_hash": csrf_token_hash,
+            "csrf_token": csrf_token,
         }
         return session_id
 
@@ -118,15 +121,12 @@ class InMemoryProductRepo:
             "status": account["status"],
             "created_at": account["created_at"].isoformat(),
             "_csrf_token_hash": session["csrf_token_hash"],
+            "_csrf_token": session.get("csrf_token"),
         }
 
     def revoke_session(self, session_id: str) -> None:
         if session_id in self.sessions:
             self.sessions[session_id]["revoked_at"] = datetime.now(timezone.utc)
-
-    def update_session_csrf_hash(self, session_id: str, csrf_token_hash: str) -> None:
-        if session_id in self.sessions and self.sessions[session_id]["revoked_at"] is None:
-            self.sessions[session_id]["csrf_token_hash"] = csrf_token_hash
 
     def grant_entitlement(self, account_id: str, product_code: str) -> None:
         self.entitlements.setdefault(account_id, []).append(product_code)
@@ -423,7 +423,7 @@ def test_login_cookie_is_httponly_and_auth_responses_are_not_cached(
     assert "session_id" not in payload
 
 
-def test_browser_reload_can_rehydrate_csrf_without_exposing_session_id(
+def test_browser_reload_can_rehydrate_stable_csrf_without_exposing_session_id(
     auth: AuthAlphaService, app: Flask
 ) -> None:
     register_user(auth)
@@ -443,9 +443,13 @@ def test_browser_reload_can_rehydrate_csrf_without_exposing_session_id(
     body = bootstrap.get_json()
     rehydrated_csrf = body["csrf_token"]
     assert rehydrated_csrf
-    assert rehydrated_csrf != login["csrf_token"]
+    assert rehydrated_csrf == login["csrf_token"]
     assert "session_id" not in body
     assert "session_id" not in body["session"]
+
+    second_bootstrap = client.get("/api/v1/member/session")
+    assert second_bootstrap.status_code == 200
+    assert second_bootstrap.get_json()["csrf_token"] == rehydrated_csrf
 
     accepted = client.post(
         "/api/v1/product/entitlement/check",
@@ -454,6 +458,70 @@ def test_browser_reload_can_rehydrate_csrf_without_exposing_session_id(
     )
     assert accepted.status_code == 200
     assert accepted.get_json()["allowed"] is True
+
+
+def test_member_session_get_does_not_call_repository_csrf_update(
+    auth: AuthAlphaService, app: Flask
+) -> None:
+    register_user(auth)
+    client = app.test_client()
+    login = client.post(
+        "/api/v1/member/session/login",
+        json={"email": "member@example.invalid", "password": "safe-password-12345"},
+    )
+    assert login.status_code == 200
+    assert not hasattr(auth.repo, "update_session_csrf_hash")
+    before = {sid: dict(session) for sid, session in auth.repo.sessions.items()}  # type: ignore[attr-defined]
+
+    response = client.get("/api/v1/member/session")
+
+    assert response.status_code == 200
+    assert auth.repo.sessions == before  # type: ignore[attr-defined]
+
+
+def test_multi_tab_same_session_csrf_remains_valid_after_repeated_reads(
+    auth: AuthAlphaService, app: Flask
+) -> None:
+    registration = register_user(auth)
+    tab_a = app.test_client()
+    tab_b = app.test_client()
+    tab_a.set_cookie("nexus_session", registration["session_id"])
+    tab_b.set_cookie("nexus_session", registration["session_id"])
+
+    csrf_a = tab_a.get("/api/v1/member/session").get_json()["csrf_token"]
+    csrf_b = tab_b.get("/api/v1/member/session").get_json()["csrf_token"]
+    csrf_a_second = tab_a.get("/api/v1/member/session").get_json()["csrf_token"]
+
+    assert csrf_a == registration["csrf_token"]
+    assert csrf_b == registration["csrf_token"]
+    assert csrf_a_second == registration["csrf_token"]
+    assert tab_a.post(
+        "/api/v1/product/entitlement/check",
+        headers={"X-Nexus-CSRF": csrf_a},
+        json={"capability_id": "MARKET_OVERVIEW"},
+    ).status_code == 200
+    assert tab_b.post(
+        "/api/v1/product/entitlement/check",
+        headers={"X-Nexus-CSRF": csrf_b},
+        json={"capability_id": "MARKET_OVERVIEW"},
+    ).status_code == 200
+
+
+def test_legacy_session_without_recoverable_csrf_is_not_mutated_by_get(
+    repo: InMemoryProductRepo, auth: AuthAlphaService, app: Flask
+) -> None:
+    registration = register_user(auth)
+    session = repo.sessions[registration["session_id"]]
+    session["csrf_token"] = None
+    before = dict(session)
+    client = app.test_client()
+    client.set_cookie("nexus_session", registration["session_id"])
+
+    response = client.get("/api/v1/member/session")
+
+    assert response.status_code == 401
+    assert response.get_json()["error"] == "csrf_unavailable"
+    assert repo.sessions[registration["session_id"]] == before
 
 
 def test_wrong_and_cross_session_csrf_are_denied(auth: AuthAlphaService, app: Flask) -> None:
