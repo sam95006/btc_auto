@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from backend.nexus_persistence_pg.pool import PostgresPool
+from backend.nexus_product_backend.member_foundation import account_can_use_member_api
 
 
 def _utcnow() -> datetime:
@@ -46,7 +47,14 @@ class ProductRepository:
         return account_id
 
     def register_staging_account(
-        self, *, email: str, password_hash: str, display_name: str, founder: bool
+        self,
+        *,
+        email: str,
+        password_hash: str,
+        display_name: str,
+        founder: bool,
+        csrf_token_hash: str | None = None,
+        csrf_token: str | None = None,
     ) -> tuple[str, str]:
         """Atomically create the complete staging member identity and session."""
         account_id = f"acct_{uuid.uuid4().hex[:16]}"
@@ -117,8 +125,24 @@ class ProductRepository:
                         if cur.rowcount != 1:
                             raise ValueError("founder_already_initialized")
                     cur.execute(
-                        "INSERT INTO nexus.auth_sessions (session_id, account_id, expires_at) VALUES (%s, %s, %s)",
-                        (session_id, account_id, expires),
+                        """
+                        INSERT INTO nexus.auth_sessions
+                          (session_id, account_id, expires_at, metadata_json)
+                        VALUES (%s, %s, %s, %s::jsonb)
+                        """,
+                        (
+                            session_id,
+                            account_id,
+                            expires,
+                            json.dumps({
+                                key: value
+                                for key, value in {
+                                    "csrf_token_hash": csrf_token_hash,
+                                    "csrf_token": csrf_token,
+                                }.items()
+                                if value
+                            }),
+                        ),
                     )
                     self._append_audit_cursor(
                         cur, account_id, "member.registration", "account", account_id,
@@ -161,22 +185,41 @@ class ProductRepository:
             "password_hash": password_hash,
         }
 
-    def create_session(self, account_id: str, *, ttl_hours: int = 24) -> str:
+    def create_session(
+        self,
+        account_id: str,
+        *,
+        ttl_hours: int = 24,
+        csrf_token_hash: str | None = None,
+        csrf_token: str | None = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> str:
         session_id = f"sess_{uuid.uuid4().hex}"
         expires = _utcnow() + timedelta(hours=ttl_hours)
+        metadata_json = json.dumps({
+            key: value
+            for key, value in {
+                "csrf_token_hash": csrf_token_hash,
+                "csrf_token": csrf_token,
+            }.items()
+            if value
+        })
         self.pool.execute(
             """
-            INSERT INTO nexus.auth_sessions (session_id, account_id, expires_at)
-            VALUES (%s, %s, %s)
+            INSERT INTO nexus.auth_sessions
+              (session_id, account_id, expires_at, ip_address, user_agent, metadata_json)
+            VALUES (%s, %s, %s, %s, %s, %s::jsonb)
             """,
-            (session_id, account_id, expires),
+            (session_id, account_id, expires, ip_address, user_agent, metadata_json),
         )
         return session_id
 
     def get_active_session(self, session_id: str) -> dict[str, Any] | None:
         rows = self.pool.fetchall(
             """
-            SELECT s.session_id, s.account_id, s.expires_at, s.revoked_at, a.email, a.status
+            SELECT s.session_id, s.account_id, s.expires_at, s.revoked_at, a.email, a.status,
+                   a.created_at, COALESCE(s.metadata_json, '{}'::jsonb)
             FROM nexus.auth_sessions s
             JOIN nexus.accounts a ON a.account_id = s.account_id
             WHERE s.session_id = %s
@@ -186,16 +229,21 @@ class ProductRepository:
         )
         if not rows:
             return None
-        sid, account_id, expires_at, revoked_at, email, status = rows[0]
+        sid, account_id, expires_at, revoked_at, email, status, created_at, metadata_json = rows[0]
         if revoked_at is not None:
             return None
         if expires_at and expires_at < _utcnow():
+            return None
+        if not account_can_use_member_api(status):
             return None
         return {
             "session_id": sid,
             "account_id": account_id,
             "email": email,
             "status": status,
+            "created_at": created_at.isoformat() if created_at else None,
+            "_csrf_token_hash": (metadata_json or {}).get("csrf_token_hash"),
+            "_csrf_token": (metadata_json or {}).get("csrf_token"),
         }
 
     def revoke_session(self, session_id: str) -> None:
@@ -259,6 +307,18 @@ class ProductRepository:
               AND (expires_at IS NULL OR expires_at > NOW())
             """,
             (account_id,),
+        )
+        return [r[0] for r in rows]
+
+    def role_ids(self, account_id: str, org_id: str | None = None) -> list[str]:
+        rows = self.pool.fetchall(
+            """
+            SELECT rb.role_id
+            FROM nexus.rbac_bindings rb
+            WHERE rb.account_id = %s
+              AND (%s::text IS NULL OR rb.org_id IS NULL OR rb.org_id = %s::text)
+            """,
+            (account_id, org_id, org_id),
         )
         return [r[0] for r in rows]
 

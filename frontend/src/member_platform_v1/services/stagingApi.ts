@@ -5,6 +5,7 @@
  */
 
 const DEFAULT_ORIGIN = "https://nexus-api-staging.zeabur.app";
+let csrfToken: string | null = null;
 
 function origin(): string {
   const candidate = (import.meta.env.VITE_NEXUS_API_ORIGIN || DEFAULT_ORIGIN).trim().replace(/\/$/, "");
@@ -15,13 +16,22 @@ function origin(): string {
 }
 
 async function getJson<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const method = (init.method || "GET").toUpperCase();
+  const headers: Record<string, string> = { Accept: "application/json", ...(init.headers as Record<string, string> || {}) };
+  if (csrfToken && ["POST", "PUT", "PATCH", "DELETE"].includes(method) && !headers["X-Nexus-Session"]) {
+    headers["X-Nexus-CSRF"] = csrfToken;
+  }
   const response = await fetch(`${origin()}/api/v1${path}`, {
     ...init,
-    headers: { Accept: "application/json", ...(init.headers || {}) },
+    headers,
     credentials: "include",
   });
   if (!response.ok) throw new Error(`staging_api_http_${response.status}`);
-  return response.json() as Promise<T>;
+  const body = await response.json() as T & { csrf_token?: string };
+  if (typeof body.csrf_token === "string" && body.csrf_token.length > 0) {
+    csrfToken = body.csrf_token;
+  }
+  return body as T;
 }
 
 /** Fail-closed probe helper: never invents an allowed=true outcome. */
@@ -200,10 +210,12 @@ export async function stagingRegister(input: {
   });
 }
 export async function stagingLogout() {
-  return getJson<{ ok: boolean }>("/member/session/logout", { method: "POST" });
+  const result = await getJson<{ ok: boolean }>("/member/session/logout", { method: "POST" });
+  csrfToken = null;
+  return result;
 }
 export async function getMemberSession() {
-  return getJson<{ session: { account_id: string; email: string }; profile: MemberProfile }>("/member/session");
+  return getJson<{ session: { user_id: string; email: string; account_status: "ACTIVE" | "DISABLED" | "PENDING_VERIFICATION"; role: "MEMBER" | "FOUNDER_ADMIN"; plan: "BEGINNER" | "INTERMEDIATE" | "PRO" | "ENTERPRISE" }; profile: MemberProfile; csrf_token?: string }>("/member/session");
 }
 export async function getMemberProfile() {
   return getJson<{ classification: "LIVE_MEMBER_DB"; profile: MemberProfile }>("/member/profile");
@@ -236,7 +248,7 @@ export async function markMemberNotificationRead(id: string) {
   return getJson<{ ok: boolean }>(`/member/notifications/${encodeURIComponent(id)}/read`, { method: "POST" });
 }
 export async function getMemberEntitlements() {
-  return getJson<{ classification: "LIVE_MEMBER_DB"; entitlements: string[]; effective_limits: { watchlist: number }; billing: "NOT_IMPLEMENTED" }>("/member/entitlements");
+  return getJson<{ classification: "LIVE_MEMBER_DB"; entitlements: string[]; plan: "BEGINNER" | "INTERMEDIATE" | "PRO" | "ENTERPRISE"; features: string[]; effective_limits: { watchlist: number }; billing: "NOT_IMPLEMENTED" }>("/member/entitlements");
 }
 
 export async function checkEntitlement(sessionId: string, capabilityId: string) {

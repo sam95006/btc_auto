@@ -38,9 +38,15 @@ class SessionService:
             raise HardBanViolation(f"account status {account.status} cannot create session")
         roles = normalize_member_roles(member_roles or account.member_roles)
 
-        # Explicit require_mfa only — optional MFA enroll does not auto-mandate
-        # for normal closed-beta members unless login/admin policy requests it.
-        mfa_required = bool(require_mfa)
+        enabled_mfa = [
+            f
+            for f in self.store.list_mfa_factors(account_id)
+            if getattr(f, "status", None) == "enabled"
+        ]
+        # Direct SessionService callers must not bypass the service-layer MFA
+        # policy. Once a factor is enabled, a verified one-shot challenge is
+        # required and can be bound to at most one session.
+        mfa_required = bool(require_mfa) or bool(enabled_mfa)
         mfa_verified = False
         if mfa_required:
             if not mfa_challenge_id:
