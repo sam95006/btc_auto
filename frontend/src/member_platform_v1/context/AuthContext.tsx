@@ -39,11 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const hydrate = useCallback(async () => {
     const [{ session: remote, profile }, entitlements] = await Promise.all([getMemberSession(), getMemberEntitlements()]);
-    const tier: MembershipTier = entitlements.entitlements.includes("ENTERPRISE") ? "enterprise"
-      : entitlements.entitlements.includes("PROFESSIONAL") ? "professional"
-      : entitlements.entitlements.includes("ADVANCED") ? "advanced" : "starter";
+    const tier: MembershipTier = entitlements.plan === "ENTERPRISE" ? "enterprise"
+      : entitlements.plan === "PRO" ? "professional"
+      : entitlements.plan === "INTERMEDIATE" ? "advanced" : "starter";
     setSession({
-      id: remote.account_id, email: remote.email, displayName: profile.display_name || remote.email.split("@")[0],
+      id: remote.user_id, email: remote.email, displayName: profile.display_name || remote.email.split("@")[0],
       accountType: "individual", tier,
     });
   }, []);

@@ -25,6 +25,11 @@ from backend.nexus_product_backend.market_snapshot import (
 )
 from backend.nexus_product_health import compose_health, compose_readiness
 from backend.nexus_public_realtime_transport.routes import get_hub
+from backend.nexus_product_backend.member_foundation import (
+    build_entitlement_snapshot,
+    normalize_account_status,
+    normalize_member_role,
+)
 
 
 def _services(app: Flask) -> dict[str, Any]:
@@ -33,6 +38,10 @@ def _services(app: Flask) -> dict[str, Any]:
 
 def _session_id() -> str | None:
     return request.headers.get("X-Nexus-Session") or request.cookies.get("nexus_session")
+
+
+def _cookie_session_id() -> str | None:
+    return request.cookies.get("nexus_session") if not request.headers.get("X-Nexus-Session") else None
 
 
 def _verified_session(app: Flask) -> dict[str, Any] | None:
@@ -48,6 +57,34 @@ def _member_identity(app: Flask) -> tuple[dict[str, Any] | None, tuple[Response,
     if not identity:
         return None, (jsonify({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}), 401)
     return identity, None
+
+
+def _public_identity(app: Flask, identity: dict[str, Any]) -> dict[str, Any]:
+    repo = _services(app).get("repo")
+    account_id = identity["account_id"]
+    entitlements = repo.active_entitlements(account_id) if repo else []
+    role_ids = repo.role_ids(account_id) if repo else []
+    snapshot = build_entitlement_snapshot(account_id, entitlements)
+    return {
+        "user_id": account_id,
+        "email": identity["email"],
+        "account_status": normalize_account_status(identity.get("status")),
+        "role": normalize_member_role(role_ids),
+        "plan": snapshot.plan,
+        "created_at": identity.get("created_at"),
+        "updated_at": None,
+    }
+
+
+def _csrf_error_if_required(app: Flask) -> tuple[Response, int] | None:
+    session_id = _cookie_session_id()
+    if not session_id or request.method not in {"POST", "PUT", "PATCH", "DELETE"}:
+        return None
+    auth = _services(app).get("auth")
+    token = request.headers.get("X-Nexus-CSRF")
+    if not auth or not auth.verify_csrf(session_id, token):
+        return jsonify({"error": "csrf_required", "classification": "AUTH_REQUIRED"}), 403
+    return None
 
 
 def _publish_runtime_health() -> dict[str, Any]:
@@ -96,6 +133,9 @@ def register_product_alpha_routes(app: Flask) -> None:
     )
 
     def session_response(payload: dict[str, Any], session_id: str, status: int = 200) -> Response:
+        csrf_token = str(payload.pop("csrf_token", "") or "")
+        if csrf_token:
+            payload["csrf_token"] = csrf_token
         response = jsonify(payload)
         response.status_code = status
         response.set_cookie(
@@ -165,7 +205,10 @@ def register_product_alpha_routes(app: Flask) -> None:
             return jsonify({"error": "invalid_credentials"}), 401
         try:
             session = auth.login(body["email"].strip().lower(), body["password"], ip=request.remote_addr or "unknown")
-            return session_response({"email": session["email"], "staging_only": True}, session["session_id"])
+            return session_response(
+                {"email": session["email"], "csrf_token": session.get("csrf_token"), "staging_only": True},
+                session["session_id"],
+            )
         except ValueError:
             return jsonify({"error": "invalid_credentials"}), 401
 
@@ -207,7 +250,9 @@ def register_product_alpha_routes(app: Flask) -> None:
                     "classification": "LIVE_MEMBER_DB",
                     "registered": True,
                     "role": "FOUNDER" if has_valid_claim else "MEMBER",
-                    "tier": "ENTERPRISE" if has_valid_claim else "FREE",
+                    "plan": "ENTERPRISE" if has_valid_claim else "BEGINNER",
+                    "tier": "ENTERPRISE" if has_valid_claim else "BEGINNER",
+                    "csrf_token": registered.get("csrf_token"),
                 },
                 registered["session_id"],
                 201,
@@ -221,6 +266,9 @@ def register_product_alpha_routes(app: Flask) -> None:
 
     @app.post("/api/v1/member/session/logout")
     def member_logout():
+        csrf_error = _csrf_error_if_required(app)
+        if csrf_error:
+            return csrf_error
         identity, error = _member_identity(app)
         if error:
             return error
@@ -239,13 +287,16 @@ def register_product_alpha_routes(app: Flask) -> None:
             return error
         repo = _services(app).get("repo")
         profile = repo.profile(identity["account_id"]) if repo else {}
-        return jsonify({"session": identity, "profile": profile, "staging_only": True})
+        return jsonify({"session": _public_identity(app, identity), "profile": profile, "staging_only": True})
 
     @app.route("/api/v1/member/profile", methods=["GET", "PATCH"])
     def member_profile():
         identity, error = _member_identity(app)
         if error:
             return error
+        csrf_error = _csrf_error_if_required(app)
+        if csrf_error:
+            return csrf_error
         repo = _services(app).get("repo")
         if not repo:
             return jsonify({"error": "member_store_unavailable"}), 503
@@ -264,6 +315,9 @@ def register_product_alpha_routes(app: Flask) -> None:
         identity, error = _member_identity(app)
         if error:
             return error
+        csrf_error = _csrf_error_if_required(app)
+        if csrf_error:
+            return csrf_error
         repo = _services(app).get("repo")
         if not repo:
             return jsonify({"error": "member_store_unavailable"}), 503
@@ -275,6 +329,9 @@ def register_product_alpha_routes(app: Flask) -> None:
         identity, error = _member_identity(app)
         if error:
             return error
+        csrf_error = _csrf_error_if_required(app)
+        if csrf_error:
+            return csrf_error
         repo = _services(app).get("repo")
         if not repo:
             return jsonify({"error": "member_store_unavailable"}), 503
@@ -299,6 +356,9 @@ def register_product_alpha_routes(app: Flask) -> None:
         identity, error = _member_identity(app)
         if error:
             return error
+        csrf_error = _csrf_error_if_required(app)
+        if csrf_error:
+            return csrf_error
         repo = _services(app).get("repo")
         if not repo:
             return jsonify({"error": "member_store_unavailable"}), 503
@@ -318,6 +378,9 @@ def register_product_alpha_routes(app: Flask) -> None:
         identity, error = _member_identity(app)
         if error:
             return error
+        csrf_error = _csrf_error_if_required(app)
+        if csrf_error:
+            return csrf_error
         repo = _services(app).get("repo")
         if repo:
             repo.mark_notification_read(identity["account_id"], notification_id)
@@ -330,8 +393,12 @@ def register_product_alpha_routes(app: Flask) -> None:
             return error
         repo = _services(app).get("repo")
         entitlements = repo.active_entitlements(identity["account_id"]) if repo else []
+        snapshot = build_entitlement_snapshot(identity["account_id"], entitlements)
         return jsonify({
             "classification": "LIVE_MEMBER_DB", "entitlements": entitlements,
+            "plan": snapshot.plan,
+            "features": list(snapshot.features),
+            "entitlement_source": snapshot.source,
             "billing": "NOT_IMPLEMENTED", "effective_limits": {"watchlist": 30},
         })
 
@@ -396,6 +463,7 @@ def register_product_alpha_routes(app: Flask) -> None:
                 "tokens_hashed": True,
                 "mfa_model": True,
                 "customer_onboarding": False,
+                "inline_verification_token_allowed_in_production": False,
                 "billing": False,
             }
         )
@@ -409,7 +477,11 @@ def register_product_alpha_routes(app: Flask) -> None:
             return jsonify({"allowed": False, "reason": "service_or_session_unavailable"}), 401
         if not _verified_session(app):
             return jsonify({"allowed": False, "reason": "invalid_or_expired_session"}), 401
-        return jsonify(entitlement.decision_from_session(session_id, capability_id))
+        csrf_error = _csrf_error_if_required(app)
+        if csrf_error:
+            return csrf_error
+        decision = entitlement.decision_from_session(session_id, capability_id)
+        return jsonify(decision), 200 if decision.get("allowed") else 403
 
     @app.get("/api/v1/product/organization/permissions")
     def organization_permissions():
@@ -427,6 +499,7 @@ def register_product_alpha_routes(app: Flask) -> None:
         if not rbac or not session_id or not _verified_session(app):
             return jsonify({"allowed": False, "reason": "invalid_or_expired_session"}), 401
         try:
+            rbac.require_founder_admin(session_id)
             rbac.require_permission(session_id, permission)
         except PermissionError:
             return jsonify({"allowed": False, "reason": "founder_permission_required"}), 403
@@ -457,6 +530,9 @@ def register_product_alpha_routes(app: Flask) -> None:
             return jsonify({"allowed": False, "reason": "service_or_session_unavailable"}), 401
         if not _verified_session(app):
             return jsonify({"allowed": False, "reason": "invalid_or_expired_session"}), 401
+        csrf_error = _csrf_error_if_required(app)
+        if csrf_error:
+            return csrf_error
         try:
             rbac.require_permission(session_id, "org.view_audit", org_id=request.args.get("org_id"))
         except PermissionError as exc:

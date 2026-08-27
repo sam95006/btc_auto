@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from backend.nexus_product_backend.auth_alpha import AuthAlphaService
+from backend.nexus_product_backend.member_foundation import normalize_member_role
 from backend.nexus_product_backend.repository import ProductRepository
 
 
@@ -30,8 +31,10 @@ class RbacAlphaService:
                 "alpha_status": self.ALPHA_READY,
             }
         perms = sorted(self.repo.role_permissions(session["account_id"], org_id=org_id))
+        role = normalize_member_role(self.repo.role_ids(session["account_id"], org_id=org_id))
         return {
             "permissions": perms,
+            "role": role,
             "allowed": True,
             "account_id": session["account_id"],
             "alpha_status": self.ALPHA_READY,
@@ -49,3 +52,10 @@ class RbacAlphaService:
             raise PermissionError("invalid_session")
         if permission_code not in result["permissions"]:
             raise PermissionError(f"missing_permission:{permission_code}")
+
+    def require_founder_admin(self, session_id: str) -> None:
+        result = self.permissions_for_session(session_id)
+        if not result["allowed"]:
+            raise PermissionError("invalid_session")
+        if result.get("role") != "FOUNDER_ADMIN":
+            raise PermissionError("founder_admin_required")
