@@ -34,6 +34,7 @@ env:
   SERVICE_NAME: nexus-api-staging
   API_STAGING_SERVICE_ID: 6a7ee0a82b4272705cd1c9c8
   ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+  CANONICAL_API_URL: https://nexus-api-staging.zeabur.app
   MEMBER_PREVIEW_SERVICE_ID: 6a744ba3472e2c91a9e728a8
   FORBIDDEN_MEMBER_PREVIEW: 69d559cb2696d526abde8cda
   FORBIDDEN_MEMBER_PREVIEW_STATIC: member-preview-static
@@ -444,7 +445,7 @@ jobs:
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           (
             cd /tmp/api_staging_ctx
-            zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json
+            zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" --environment-id "$ZEABUR_ENV_ID" -i=false --json
           ) > /tmp/deploy_out.txt 2>&1
           sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 60
           python - <<'PY' >> "$GITHUB_OUTPUT"
@@ -499,22 +500,42 @@ jobs:
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
-          zeabur domain list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/dom.txt 2>&1 || true
+          zeabur domain list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/dom.txt 2> /tmp/dom.err || true
           URL=$(python - <<'PY'
           import re
           raw=open('/tmp/dom.txt',encoding='utf-8',errors='replace').read()
-          m=re.search(r'https://[a-z0-9.-]+\.zeabur\.app', raw)
-          print(m.group(0) if m else '')
+          # Accept a bare Zeabur hostname or a scheme-qualified URL; normalize to https.
+          m=re.search(r'([a-z0-9-]+(?:\.[a-z0-9-]+)*\.zeabur\.app)', raw, re.I)
+          print('https://' + m.group(1) if m else '')
           PY
           )
           if [ -z "$URL" ]; then
-            echo "domain_not_ready_yet"
-            exit 0
+            # Fall back to the canonical API URL (proven by the read-only
+            # diagnostic to bind to this exact service/env). Never skip verify.
+            URL="$CANONICAL_API_URL"
+            echo "DOMAIN_LOOKUP_FELL_BACK_TO_CANONICAL=yes"
           fi
-          python tools/ci/verify_api_staging_deployment.py "$URL"
+          echo "VERIFY_TARGET_RESOLVED=yes"
+          # Bounded polling: the Zeabur deploy activates asynchronously, so wait
+          # (up to ~10 minutes) for the live runtime markers to appear. Fail
+          # closed on timeout so success always means an actual verifier PASS.
+          ok=no
+          for attempt in $(seq 1 40); do
+            if python tools/ci/verify_api_staging_deployment.py "$URL"; then
+              ok=yes
+              break
+            fi
+            echo "live_markers_not_ready_attempt=$attempt"
+            sleep 15
+          done
+          if [ "$ok" != "yes" ]; then
+            echo "LIVE_VERIFICATION_TIMEOUT=yes"
+            exit 1
+          fi
           echo "READ_ONLY_POST_DEPLOY_VERIFY=yes"
           echo "CORS_CSRF_MARKER_VERIFIED_BY_WORKFLOW=yes"
           echo "AUTH_FOUNDATION_MARKER_VERIFIED_BY_WORKFLOW=yes"
+          echo "POST_DEPLOY_VERIFY_FAIL_CLOSED=yes"
 
       - name: Capture new deployment metadata
         env:
