@@ -52,19 +52,31 @@ def support_resistance_from_swings(
 
 
 def parse_bybit_kline_list(raw: list[Any]) -> list[dict[str, float]]:
-    """Bybit kline list is newest-first; reverse to chronological."""
+    """Bybit kline list is newest-first; reverse to chronological.
+
+    Bybit item[0] is the candle start time in Unix milliseconds. Existing OHLCV
+    keys are preserved for callers that ignore timestamp metadata.
+    """
     out: list[dict[str, float]] = []
     for item in raw:
         if isinstance(item, list) and len(item) >= 5:
-            out.append(
-                {
-                    "open": _f(item[1]),
-                    "high": _f(item[2]),
-                    "low": _f(item[3]),
-                    "close": _f(item[4]),
-                    "volume": _f(item[5]) if len(item) > 5 else 0.0,
-                }
-            )
+            row = {
+                "open": _f(item[1]),
+                "high": _f(item[2]),
+                "low": _f(item[3]),
+                "close": _f(item[4]),
+                "volume": _f(item[5]) if len(item) > 5 else 0.0,
+            }
+            try:
+                ts_ms = int(item[0])
+            except (TypeError, ValueError):
+                ts_ms = None
+            if ts_ms is not None:
+                row["ts_ms"] = float(ts_ms)
+                row["open_ts_ms"] = float(ts_ms)
+            if len(item) > 6:
+                row["turnover"] = _f(item[6])
+            out.append(row)
     out.reverse()
     return out
 

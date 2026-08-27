@@ -20,6 +20,15 @@ BYBIT_PUBLIC = DEMO_REST_BASE_URL  # api-demo.bybit.com only — public klines, 
 SOURCE_ENDPOINT = "/v5/market/kline"
 MARKET_TYPE = "linear"
 EXCHANGE = "bybit"
+SOURCE = "BYBIT_DEMO_PUBLIC"
+SCHEMA_VERSION = "pit_historical_dataset_v1"
+CANONICAL_TIMESTAMP_UNIT = "milliseconds"
+CANONICAL_TIMEZONE = "UTC"
+SUPPORTED_INTERVALS = frozenset({"1", "5", "15", "30", "60", "240", "D"})
+SOURCE_LIMITATIONS = (
+    "Public kline history provides timestamped OHLCV/turnover only; instrument metadata, "
+    "bid/ask spread, and account fees require separate point-in-time policy labels."
+)
 
 
 @dataclass
@@ -30,9 +39,21 @@ class Candle:
     low: float
     close: float
     volume: float
+    turnover: float | None = None
+    close_ts_ms: int | None = None
+    source: str = SOURCE
+    source_endpoint: str = SOURCE_ENDPOINT
+    retrieved_at_ms: int | None = None
+    schema_version: str = "pit_candle_v1"
+
+    @property
+    def open_ts_ms(self) -> int:
+        return int(self.ts_ms)
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        data = asdict(self)
+        data["open_ts_ms"] = self.open_ts_ms
+        return data
 
 
 @dataclass
@@ -52,6 +73,11 @@ class MarketDataset:
     timestamps_monotonic: bool
     duplicate_records: int
     future_data_used: bool
+    timestamp_unit: str = CANONICAL_TIMESTAMP_UNIT
+    timezone: str = CANONICAL_TIMEZONE
+    data_quality_status: str = "PIT_COMPLETE"
+    dataset_id: str = ""
+    source_limitations: str = SOURCE_LIMITATIONS
     candles: list[Candle] = field(default_factory=list)
     data_gaps: list[dict[str, Any]] = field(default_factory=list)
     classification: str = "REAL_HISTORICAL_MARKET_DATA"
@@ -73,8 +99,38 @@ class MarketDataset:
             "timestamps_monotonic": self.timestamps_monotonic,
             "duplicate_records": self.duplicate_records,
             "future_data_used": self.future_data_used,
+            "timestamp_unit": self.timestamp_unit,
+            "timezone": self.timezone,
+            "data_quality_status": self.data_quality_status,
+            "dataset_id": self.dataset_id,
+            "source_limitations": self.source_limitations,
             "classification": self.classification,
             "gap_count": len(self.data_gaps),
+        }
+
+    def manifest(self) -> dict[str, Any]:
+        earliest = self.candles[0].open_ts_ms if self.candles else 0
+        latest = self.candles[-1].close_ts_ms if self.candles and self.candles[-1].close_ts_ms is not None else self.end_time
+        return {
+            "schema_version": SCHEMA_VERSION,
+            "dataset_id": self.dataset_id,
+            "symbol": self.symbol,
+            "interval": self.interval,
+            "source": SOURCE,
+            "endpoint": self.source_endpoint,
+            "earliest_open_ts_ms": earliest,
+            "latest_close_ts_ms": latest,
+            "record_count": self.record_count,
+            "gap_count": len(self.data_gaps),
+            "missing_interval_count": self.missing_interval_count,
+            "duplicate_count": self.duplicate_interval_count,
+            "timestamp_unit": self.timestamp_unit,
+            "timezone": self.timezone,
+            "retrieved_at_ms": int(self.downloaded_at * 1000),
+            "data_quality_status": self.data_quality_status,
+            "source_limitations": self.source_limitations,
+            "content_sha256": self.data_checksum,
+            "large_dataset_git_policy": "DO_NOT_COMMIT_RAW_DATASETS",
         }
 
 
@@ -99,20 +155,35 @@ def interval_ms(interval: str) -> int:
     return mapping[interval]
 
 
-def parse_kline_rows(raw: list[Any]) -> list[Candle]:
+def _candle_close_ts(open_ts_ms: int, interval: str | None) -> int | None:
+    if interval is None:
+        return None
+    return int(open_ts_ms) + interval_ms(interval)
+
+
+def parse_kline_rows(
+    raw: list[Any],
+    *,
+    interval: str | None = None,
+    retrieved_at_ms: int | None = None,
+) -> list[Candle]:
     """Bybit returns newest-first; convert to chronological Candle list."""
     rows: list[Candle] = []
     for item in raw:
         if not isinstance(item, list) or len(item) < 5:
             continue
+        open_ts = int(item[0])
         rows.append(
             Candle(
-                ts_ms=int(item[0]),
+                ts_ms=open_ts,
                 open=_f(item[1]),
                 high=_f(item[2]),
                 low=_f(item[3]),
                 close=_f(item[4]),
                 volume=_f(item[5]) if len(item) > 5 else 0.0,
+                turnover=_f(item[6]) if len(item) > 6 else None,
+                close_ts_ms=_candle_close_ts(open_ts, interval),
+                retrieved_at_ms=retrieved_at_ms,
             )
         )
     rows.sort(key=lambda c: c.ts_ms)
@@ -149,7 +220,7 @@ def fetch_klines_page(
     if int(data.get("retCode") or 0) != 0:
         raise RuntimeError(f"bybit_kline_error:{data.get('retCode')}:{data.get('retMsg')}")
     raw = (data.get("result") or {}).get("list") or []
-    return parse_kline_rows(raw)
+    return parse_kline_rows(raw, interval=interval, retrieved_at_ms=int(time.time() * 1000))
 
 
 def fetch_historical_klines(
@@ -200,10 +271,30 @@ def build_dataset(
     step = expected_step_ms or interval_ms(interval)
     downloaded_at = downloaded_at if downloaded_at is not None else time.time()
     now_ms = int(time.time() * 1000)
-    future = sum(1 for c in candles if c.ts_ms > now_ms + step)
+    for c in candles:
+        if c.close_ts_ms is None:
+            c.close_ts_ms = c.ts_ms + step
+    future = sum(1 for c in candles if c.ts_ms > now_ms + step or (c.close_ts_ms or c.ts_ms) > now_ms + step)
     mono = all(candles[i].ts_ms < candles[i + 1].ts_ms for i in range(len(candles) - 1)) if len(candles) > 1 else True
-    # duplicates already collapsed by ts key when fetched; count any equal consecutive
-    dup = sum(1 for i in range(len(candles) - 1) if candles[i].ts_ms == candles[i + 1].ts_ms)
+    seen: set[int] = set()
+    dup = 0
+    for c in candles:
+        if c.ts_ms in seen:
+            dup += 1
+        seen.add(c.ts_ms)
+    invalid_ohlc = [
+        c
+        for c in candles
+        if c.open <= 0
+        or c.high <= 0
+        or c.low <= 0
+        or c.close <= 0
+        or c.low > c.high
+        or not (c.low <= c.open <= c.high)
+        or not (c.low <= c.close <= c.high)
+        or c.volume < 0
+        or (c.turnover is not None and c.turnover < 0)
+    ]
     gaps: list[dict[str, Any]] = []
     missing = 0
     for i in range(len(candles) - 1):
@@ -220,17 +311,28 @@ def build_dataset(
                 }
             )
     payload = [
-        [c.ts_ms, c.open, c.high, c.low, c.close, c.volume]
+        [c.ts_ms, c.close_ts_ms, c.open, c.high, c.low, c.close, c.volume, c.turnover]
         for c in candles
     ]
     checksum = hashlib.sha256(
         json.dumps(payload, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
     ).hexdigest()
     start_t = candles[0].ts_ms if candles else 0
-    end_t = candles[-1].ts_ms if candles else 0
+    end_t = candles[-1].close_ts_ms if candles and candles[-1].close_ts_ms is not None else (candles[-1].ts_ms if candles else 0)
     classification = "REAL_HISTORICAL_MARKET_DATA"
-    if future > 0 or not mono or dup > 0:
+    if invalid_ohlc or future > 0 or not mono or dup > 0:
         classification = "DATA_INVALID"
+    if invalid_ohlc or future > 0 or not mono or dup > 0:
+        quality = "INVALID_SAMPLE"
+    elif missing > 0:
+        quality = "PIT_GAPS_PRESENT"
+    elif not candles:
+        quality = "UNAVAILABLE"
+    else:
+        quality = "PIT_COMPLETE"
+    dataset_id = hashlib.sha256(
+        f"{EXCHANGE}|{MARKET_TYPE}|{symbol.upper()}|{interval}|{start_t}|{end_t}|{checksum}".encode("utf-8")
+    ).hexdigest()[:24]
     return MarketDataset(
         exchange=EXCHANGE,
         market_type=MARKET_TYPE,
@@ -247,6 +349,8 @@ def build_dataset(
         timestamps_monotonic=mono,
         duplicate_records=dup,
         future_data_used=future > 0,
+        data_quality_status=quality,
+        dataset_id=dataset_id,
         candles=candles,
         data_gaps=gaps,
         classification=classification,
@@ -257,6 +361,7 @@ def save_dataset(ds: MarketDataset, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     blob = {
         **ds.provenance(),
+        "manifest": ds.manifest(),
         "candles": [c.to_dict() for c in ds.candles],
         "data_gaps": ds.data_gaps,
     }
@@ -273,6 +378,9 @@ def load_dataset(path: Path) -> MarketDataset:
             low=float(c["low"]),
             close=float(c["close"]),
             volume=float(c.get("volume") or 0.0),
+            turnover=(float(c["turnover"]) if c.get("turnover") is not None else None),
+            close_ts_ms=(int(c["close_ts_ms"]) if c.get("close_ts_ms") is not None else None),
+            retrieved_at_ms=(int(c["retrieved_at_ms"]) if c.get("retrieved_at_ms") is not None else None),
         )
         for c in (raw.get("candles") or [])
     ]
