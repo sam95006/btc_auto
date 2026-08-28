@@ -356,8 +356,10 @@ def build_email_provider(env: Optional[dict[str, str]] = None) -> EmailProvider:
     if provider_name == "resend":
         api_key = (env.get("RESEND_API_KEY") or "").strip()
         from_address = (env.get("NEXUS_EMAIL_FROM") or "").strip()
-        if not api_key or not from_address:
-            # Named but not fully configured -> fail closed, never Null-success.
+        web_base_url = (env.get("NEXUS_PUBLIC_WEB_BASE_URL") or "").strip()
+        if not api_key or not from_address or not web_base_url:
+            # Named but not fully configured (key + sender + web base URL all
+            # required) -> fail closed, never a fabricated Null-success.
             return NullEmailProvider()
         return ResendEmailProvider(api_key=api_key, from_address=from_address)
     # Unknown provider name -> fail closed.

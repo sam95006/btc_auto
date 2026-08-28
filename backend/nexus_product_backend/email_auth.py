@@ -72,7 +72,7 @@ class MemberEmailService:
         self,
         repo: EmailTokenRepo,
         *,
-        hash_password: Callable[[str], str],
+        hash_password: Optional[Callable[[str], str]],
         provider: Optional[EmailProvider] = None,
         frontend_base_url: str = "",
         resend_cooldown_seconds: int = RESEND_COOLDOWN_SECONDS,
@@ -150,6 +150,11 @@ class MemberEmailService:
             return EmailActionResult(False, "invalid_token", 400, "invalid_or_expired_token")
         if not new_password or len(new_password) < MIN_PASSWORD_LENGTH:
             return EmailActionResult(False, "weak_password", 400, "weak_password")
+        # Fail closed if the canonical Argon2 hasher is unavailable, BEFORE the
+        # reset token is consumed, so the token remains usable and the password
+        # is never downgraded to a weaker hash.
+        if self._hash_password is None:
+            return EmailActionResult(False, "service_unavailable", 503, "service_unavailable")
         account_id = self._repo.consume_one_time_token(raw_token, PURPOSE_PASSWORD_RESET)
         if not account_id:
             return EmailActionResult(False, "invalid_token", 400, "invalid_or_expired_token")

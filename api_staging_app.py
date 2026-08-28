@@ -71,6 +71,14 @@ def _allowed_origins() -> set[str]:
     }
 
 
+def email_enforcement_enabled(env: dict[str, str]) -> bool:
+    """Return True only when email-verification enforcement is explicitly on
+    AND the deployment environment is staging. Fails closed otherwise."""
+    flag = (env.get("NEXUS_EMAIL_VERIFICATION_ENFORCED", "") or "").strip().lower() == "true"
+    deployment_env = (env.get("NEXUS_ENV") or env.get("NEXUS_DEPLOYMENT_ENV") or "").strip().lower()
+    return flag and deployment_env == "staging"
+
+
 def create_app() -> Flask:
     app = Flask(__name__)
     app.config["NEXUS_PRODUCT_ALPHA_SERVICES"] = _product_services()
@@ -87,6 +95,9 @@ def create_app() -> Flask:
         os.getenv("NEXUS_STAGING_REGISTRATION_ENABLED", "").strip().lower() == "true"
         and (os.getenv("NEXUS_ENV") or os.getenv("NEXUS_DEPLOYMENT_ENV") or "").strip().lower() == "staging"
     )
+    # Email verification enforcement is opt-in AND only ever active in staging.
+    # It fails closed (disabled) when unset, false, or outside the staging env.
+    app.config["NEXUS_EMAIL_VERIFICATION_ENFORCED"] = email_enforcement_enabled(dict(os.environ))
     _provision_staging_seed(app.config["NEXUS_PRODUCT_ALPHA_SERVICES"])
 
     @app.get("/health")

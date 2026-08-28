@@ -18,7 +18,7 @@ from typing import Any, Optional
 
 from flask import Flask, Response, jsonify, request
 
-from backend.nexus_product_backend.email_auth import MemberEmailService
+from backend.nexus_product_backend.email_auth import GENERIC_RESEND_MESSAGE, MemberEmailService
 from backend.nexus_product_backend.email_provider import build_email_provider
 
 EMAIL_SERVICE_CONFIG_KEY = "NEXUS_MEMBER_EMAIL_SERVICE"
@@ -73,13 +73,9 @@ def build_member_email_service(app: Flask) -> MemberEmailService:
     auth = services.get("auth")
     hasher = getattr(auth, "_hasher", None)
 
-    def hash_password(raw: str) -> str:
-        if hasher is not None:
-            return hasher.hash(raw)
-        # Fallback should never be used in production wiring; kept non-plaintext.
-        import hashlib
-
-        return "sha256$" + hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    # Use ONLY the canonical Argon2 hasher. If it is unavailable, pass None so
+    # password reset fails closed rather than downgrading to a weaker hash.
+    hash_password = (lambda raw: hasher.hash(raw)) if hasher is not None else None
 
     frontend_base = (
         app.config.get(FRONTEND_BASE_CONFIG_KEY)
@@ -121,18 +117,6 @@ def register_member_email_routes(app: Flask) -> None:
             )
         return None
 
-    def _delivery_state(delivery: Optional[dict[str, Any]]) -> dict[str, Any]:
-        # Surface only non-sensitive audit fields; make provider-unconfigured
-        # state explicit rather than pretending a send happened.
-        if not delivery:
-            return {"delivery_status": "UNKNOWN"}
-        return {
-            "delivery_status": delivery.get("status"),
-            "delivery_provider": delivery.get("provider"),
-            "delivery_attempted": bool(delivery.get("attempts", 0)) or delivery.get("delivered", False),
-            "email_provider_configured": delivery.get("provider") != "null",
-        }
-
     @app.post("/api/v1/product/auth/verify-email")
     def product_verify_email():
         limited = _rate_limited("verify-email")
@@ -152,10 +136,15 @@ def register_member_email_routes(app: Flask) -> None:
             return limited
         body = request.get_json(silent=True) or {}
         email = str(body.get("email") or "").strip().lower()
-        result = build_member_email_service(app).resend_verification(email=email)
-        payload = {"ok": True, "code": result.code, "message": result.message}
-        payload.update(_delivery_state(result.delivery))
-        return _json_no_store(payload, result.status_code)
+        # Perform the side effect (which is itself enumeration-resistant and
+        # cooldown-limited) but ALWAYS return an identical public response so
+        # that unknown / pending / active accounts and delivery success/failure
+        # are indistinguishable to an unauthenticated caller. Provider delivery
+        # evidence stays server-side only.
+        build_member_email_service(app).resend_verification(email=email)
+        return _json_no_store(
+            {"ok": True, "code": "accepted", "message": GENERIC_RESEND_MESSAGE}, 200
+        )
 
     @app.post("/api/v1/product/auth/forgot-password")
     def product_forgot_password():

@@ -273,6 +273,25 @@ def test_weak_new_password_rejected_before_token_consumed() -> None:
     assert repo.tokens[reset_raw]["consumed"] is False
 
 
+def test_reset_fails_closed_when_hasher_unavailable_without_consuming_token() -> None:
+    repo = FakeRepo()
+    aid = repo.add_account("a@example.com", status="active")
+    repo.add_session(aid)
+    # hash_password=None models the canonical Argon2 hasher being unavailable.
+    svc = MemberEmailService(
+        repo, hash_password=None, provider=NullEmailProvider(), frontend_base_url="https://x"
+    )
+    svc.forgot_password(email="a@example.com")
+    reset_raw = next(iter(repo.tokens))
+    res = svc.reset_password(raw_token=reset_raw, new_password="newpassword12")
+    assert res.ok is False
+    assert res.status_code == 503 and res.code == "service_unavailable"
+    # Token must NOT be consumed, password must NOT change, sessions NOT revoked.
+    assert repo.tokens[reset_raw]["consumed"] is False
+    assert repo.password_hashes[aid] == "OLD_HASH"
+    assert all(not s["revoked"] for s in repo.sessions.values())
+
+
 def test_supersede_invalidates_prior_verification_token() -> None:
     repo = FakeRepo()
     aid = repo.add_account("a@example.com")
@@ -381,9 +400,18 @@ def test_route_rate_limit_triggers_429(client_and_repo) -> None:
     assert 429 in codes
 
 
-def test_route_resend_reports_provider_not_configured(client_and_repo) -> None:
+def test_route_resend_is_enumeration_resistant_and_leaks_no_delivery_state(client_and_repo) -> None:
     client, repo = client_and_repo
-    repo.add_account("a@example.com")
-    r = client.post("/api/v1/product/auth/resend-verification", json={"email": "a@example.com"})
-    body = r.get_json()
-    assert body["email_provider_configured"] is False
+    repo.add_account("pending@example.com", status="pending_verification")
+    repo.add_account("active@example.com", status="active")
+    r_unknown = client.post("/api/v1/product/auth/resend-verification", json={"email": "ghost@example.com"})
+    r_pending = client.post("/api/v1/product/auth/resend-verification", json={"email": "pending@example.com"})
+    r_active = client.post("/api/v1/product/auth/resend-verification", json={"email": "active@example.com"})
+    for r in (r_unknown, r_pending, r_active):
+        assert r.status_code == 200
+    # Identical public response regardless of account existence/state.
+    assert r_unknown.get_json() == r_pending.get_json() == r_active.get_json()
+    body_text = r_pending.get_data(as_text=True)
+    # No provider delivery state leaked to unauthenticated callers.
+    for leaked in ("delivery_status", "delivery_provider", "email_provider_configured", "delivery_attempted", "null", "resend"):
+        assert leaked not in body_text

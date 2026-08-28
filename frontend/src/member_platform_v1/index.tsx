@@ -15,8 +15,11 @@ import {
   ForgotPasswordPage,
   LandingPage,
   LoginPage,
+  PendingVerificationPage,
   PlansPage,
   RegisterPage,
+  ResetPasswordPage,
+  VerifyEmailPage,
 } from "./pages/PublicPages";
 import "./styles/memberPlatformV1.css";
 import "./styles/memberPlatformMobile.css";
@@ -31,6 +34,9 @@ export function MemberPlatformV1App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
+            <Route path="/check-email" element={<PendingVerificationPage />} />
             <Route path="/plans" element={<PlansPage />} />
           </Route>
           <Route path="/app" element={<AppShell />}>

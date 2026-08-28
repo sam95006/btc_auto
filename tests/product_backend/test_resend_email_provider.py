@@ -159,9 +159,22 @@ def test_factory_builds_configured_resend_provider() -> None:
             "NEXUS_EMAIL_PROVIDER": "resend",
             "RESEND_API_KEY": API_KEY,
             "NEXUS_EMAIL_FROM": FROM,
+            "NEXUS_PUBLIC_WEB_BASE_URL": "https://frontend.example",
         }
     )
     assert isinstance(p, ResendEmailProvider)
     assert p.configured is True
     assert p.name == "resend"
     assert p.health()["status"] == "READY"
+
+
+def test_factory_requires_web_base_url_for_resend() -> None:
+    # Missing NEXUS_PUBLIC_WEB_BASE_URL -> fail closed to Null (never a send).
+    p = build_email_provider(
+        {
+            "NEXUS_EMAIL_PROVIDER": "resend",
+            "RESEND_API_KEY": API_KEY,
+            "NEXUS_EMAIL_FROM": FROM,
+        }
+    )
+    assert isinstance(p, NullEmailProvider)

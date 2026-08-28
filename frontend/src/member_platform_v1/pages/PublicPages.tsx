@@ -1,8 +1,14 @@
-import { Link, Navigate, useNavigate } from "react-router-dom";
-import { useEffect, useState, type FormEvent } from "react";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { AuthFooter, MarketingFooter, MarketingHeader } from "../layout/Shells";
 import { useAuth } from "../context/AuthContext";
 import { memberApi } from "../services";
+import {
+  stagingForgotPassword,
+  stagingResendVerification,
+  stagingResetPassword,
+  stagingVerifyEmail,
+} from "../services/stagingApi";
 import type { PlanDto } from "../types/dto";
 import { IconChart, IconCrown, IconLock, IconMail, IconShield, IconTarget, IconTrend } from "../components/Icons";
 import { SparkChart } from "../components/SparkChart";
@@ -754,21 +760,171 @@ export function RegisterPage() {
   );
 }
 
-export function ForgotPasswordPage() {
+function AuthCard({ title, sub, children }: { title: string; sub?: string; children: ReactNode }) {
   return (
     <div className="mpv1-auth-shell">
       <MarketingHeader />
       <div className="mpv1-page-pad">
         <div className="mpv1-auth-card" style={{ margin: "2rem auto" }}>
-          <h2>忘記密碼</h2>
-          <p className="mpv1-sub">此 staging 環境未開放密碼重設。請聯絡 staging 管理員；此頁不會寄送重設郵件。</p>
-          <Link className="mpv1-btn mpv1-btn-primary mpv1-btn-block" to="/login">
-            返回登入
-          </Link>
+          <h2>{title}</h2>
+          {sub ? <p className="mpv1-sub">{sub}</p> : null}
+          {children}
         </div>
       </div>
       <AuthFooter />
     </div>
+  );
+}
+
+export function ForgotPasswordPage() {
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    try {
+      // Response is intentionally generic (enumeration resistant); always show
+      // the same confirmation regardless of whether the account exists.
+      await stagingForgotPassword(email.trim().toLowerCase());
+      setDone(true);
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (done) {
+    return (
+      <AuthCard title="忘記密碼" sub="如果該 Email 對應到一個帳號，我們已寄出密碼重設連結。請檢查你的信箱（連結一小時內有效）。">
+        <Link className="mpv1-btn mpv1-btn-primary mpv1-btn-block" to="/login">返回登入</Link>
+      </AuthCard>
+    );
+  }
+  return (
+    <AuthCard title="忘記密碼" sub="輸入你的 Email，我們會寄出密碼重設連結。">
+      <form onSubmit={(event) => void onSubmit(event)}>
+        <label className="mpv1-field">Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
+        <button className="mpv1-btn mpv1-btn-primary mpv1-btn-block" disabled={busy} type="submit">{busy ? "送出中…" : "寄送重設連結"}</button>
+      </form>
+      <p className="mpv1-sub">想起來了？ <Link to="/login">返回登入</Link></p>
+    </AuthCard>
+  );
+}
+
+export function PendingVerificationPage() {
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  async function onResend(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    try {
+      await stagingResendVerification(email.trim().toLowerCase());
+      setSent(true);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <AuthCard title="請確認你的 Email" sub="我們已寄出一封驗證信。請點擊信中的連結完成帳號啟用（連結 24 小時內有效）。">
+      {sent ? (
+        <p className="mpv1-sub">如果該 Email 尚未驗證，我們已重新寄出驗證連結。</p>
+      ) : (
+        <form onSubmit={(event) => void onResend(event)}>
+          <label className="mpv1-field">沒收到信？重新寄送<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
+          <button className="mpv1-btn mpv1-btn-secondary mpv1-btn-block" disabled={busy} type="submit">{busy ? "寄送中…" : "重新寄送驗證信"}</button>
+        </form>
+      )}
+      <p className="mpv1-sub"><Link to="/login">返回登入</Link></p>
+    </AuthCard>
+  );
+}
+
+export function VerifyEmailPage() {
+  const [params] = useSearchParams();
+  const token = params.get("token") || "";
+  const [state, setState] = useState<"working" | "ok" | "invalid">("working");
+  useEffect(() => {
+    let active = true;
+    if (!token) {
+      setState("invalid");
+      return;
+    }
+    void stagingVerifyEmail(token).then((res) => {
+      if (active) setState(res.ok ? "ok" : "invalid");
+    });
+    return () => {
+      active = false;
+    };
+  }, [token]);
+  if (state === "working") {
+    return <AuthCard title="驗證中…" sub="正在確認你的 Email 驗證連結。" >{null}</AuthCard>;
+  }
+  if (state === "ok") {
+    return (
+      <AuthCard title="Email 已驗證" sub="你的帳號已啟用，現在可以登入。">
+        <Link className="mpv1-btn mpv1-btn-primary mpv1-btn-block" to="/login">前往登入</Link>
+      </AuthCard>
+    );
+  }
+  return (
+    <AuthCard title="連結無效或已過期" sub="這個驗證連結無法使用。你可以重新寄送一封新的驗證信。">
+      <Link className="mpv1-btn mpv1-btn-primary mpv1-btn-block" to="/check-email">重新寄送驗證信</Link>
+    </AuthCard>
+  );
+}
+
+export function ResetPasswordPage() {
+  const [params] = useSearchParams();
+  const token = params.get("token") || "";
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [done, setDone] = useState(false);
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (password.length < 12) {
+      setErr("密碼至少需為 12 字元");
+      return;
+    }
+    if (password !== confirm) {
+      setErr("兩次密碼不一致");
+      return;
+    }
+    setErr("");
+    setBusy(true);
+    try {
+      const res = await stagingResetPassword(token, password);
+      if (res.ok) {
+        setDone(true);
+      } else if (res.code === "weak_password") {
+        setErr("密碼強度不足");
+      } else {
+        setErr("重設連結無效或已過期，請重新申請。");
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (!token) {
+    return <AuthCard title="重設密碼" sub="缺少有效的重設連結。請重新申請忘記密碼。"><Link className="mpv1-btn mpv1-btn-primary mpv1-btn-block" to="/forgot-password">前往忘記密碼</Link></AuthCard>;
+  }
+  if (done) {
+    return (
+      <AuthCard title="密碼已更新" sub="你的密碼已重設，且所有既有登入工作階段皆已登出。請用新密碼登入。">
+        <Link className="mpv1-btn mpv1-btn-primary mpv1-btn-block" to="/login">前往登入</Link>
+      </AuthCard>
+    );
+  }
+  return (
+    <AuthCard title="重設密碼" sub="請設定新密碼（至少 12 字元）。">
+      <form onSubmit={(event) => void onSubmit(event)}>
+        <label className="mpv1-field">新密碼<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={12} /></label>
+        <label className="mpv1-field">確認新密碼<input type="password" value={confirm} onChange={(event) => setConfirm(event.target.value)} required minLength={12} /></label>
+        {err ? <p className="mpv1-auth-error" role="alert">{err}</p> : null}
+        <button className="mpv1-btn mpv1-btn-primary mpv1-btn-block" disabled={busy} type="submit">{busy ? "更新中…" : "更新密碼"}</button>
+      </form>
+    </AuthCard>
   );
 }
 

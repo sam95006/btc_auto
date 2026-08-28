@@ -271,6 +271,11 @@ def register_product_alpha_routes(app: Flask) -> None:
                     )
 
                     repo.set_account_pending(registered["account_id"])
+                    # Revoke the session created during registration so a
+                    # pending (unverified) account cannot hold a usable member
+                    # session before it verifies its email.
+                    if hasattr(repo, "revoke_session"):
+                        repo.revoke_session(registered["session_id"])
                     build_member_email_service(app).issue_verification(
                         account_id=registered["account_id"], email=email
                     )
