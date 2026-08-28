@@ -270,3 +270,48 @@ export async function getOrganizationPermissions(sessionId: string) {
 }
 
 export const STAGING_API_ORIGIN = origin();
+
+// ---------------------------------------------------------------------------
+// Member email lifecycle: verification + password reset.
+// These endpoints return a structured {ok, code, message} body even on 4xx
+// (e.g. an invalid/expired token), so they read the body regardless of status
+// instead of throwing. No raw token is ever logged by the client.
+// ---------------------------------------------------------------------------
+
+export type EmailActionResponse = {
+  ok: boolean;
+  code: string;
+  message: string;
+  sessions_revoked?: number;
+  delivery_status?: string;
+  email_provider_configured?: boolean;
+};
+
+async function postEmailAction(path: string, body: Record<string, unknown>): Promise<EmailActionResponse> {
+  const response = await fetch(`${origin()}/api/v1${path}`, {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+  if (response.status === 429) {
+    return { ok: false, code: "rate_limited", message: "Too many requests. Please try again shortly." };
+  }
+  return (await response.json()) as EmailActionResponse;
+}
+
+export async function stagingVerifyEmail(token: string): Promise<EmailActionResponse> {
+  return postEmailAction("/product/auth/verify-email", { token });
+}
+
+export async function stagingResendVerification(email: string): Promise<EmailActionResponse> {
+  return postEmailAction("/product/auth/resend-verification", { email });
+}
+
+export async function stagingForgotPassword(email: string): Promise<EmailActionResponse> {
+  return postEmailAction("/product/auth/forgot-password", { email });
+}
+
+export async function stagingResetPassword(token: string, newPassword: string): Promise<EmailActionResponse> {
+  return postEmailAction("/product/auth/reset-password", { token, new_password: newPassword });
+}

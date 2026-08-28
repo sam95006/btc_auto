@@ -258,6 +258,34 @@ def register_product_alpha_routes(app: Flask) -> None:
             registered = auth.register_staging_member(
                 email=email, password=password, display_name=display_name, founder=has_valid_claim
             )
+            # Email-verification enforcement (opt-in, backward compatible). When
+            # enabled, a non-founder registration is moved to PENDING_VERIFICATION
+            # and a verification email is issued; the account cannot use the
+            # member API until it is verified. The Founder identity is exempt so
+            # it can never be locked out.
+            if app.config.get("NEXUS_EMAIL_VERIFICATION_ENFORCED") and not has_valid_claim:
+                repo = _services(app).get("repo")
+                if repo is not None and hasattr(repo, "set_account_pending"):
+                    from backend.nexus_product_backend.email_routes import (
+                        build_member_email_service,
+                    )
+
+                    repo.set_account_pending(registered["account_id"])
+                    build_member_email_service(app).issue_verification(
+                        account_id=registered["account_id"], email=email
+                    )
+                    return _json_no_store(
+                        {
+                            "classification": "LIVE_MEMBER_DB",
+                            "registered": True,
+                            "account_status": "PENDING_VERIFICATION",
+                            "verification_required": True,
+                            "role": "MEMBER",
+                            "plan": "BEGINNER",
+                            "tier": "BEGINNER",
+                        },
+                        201,
+                    )
             return session_response(
                 {
                     "classification": "LIVE_MEMBER_DB",

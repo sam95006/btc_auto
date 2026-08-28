@@ -288,6 +288,78 @@ class ProductRepository:
         )
         return account_id
 
+    def supersede_unconsumed_tokens(self, account_id: str, purpose: str) -> int:
+        """Consume any prior unconsumed tokens of this purpose for the account.
+
+        Used when issuing a fresh verification/reset token so an older
+        outstanding one cannot be replayed. Returns the number superseded.
+        """
+        rows = self.pool.fetchall(
+            """
+            UPDATE nexus.one_time_tokens
+            SET consumed_at = NOW()
+            WHERE account_id = %s AND purpose = %s AND consumed_at IS NULL
+            RETURNING token_id
+            """,
+            (account_id, purpose),
+        )
+        return len(rows or [])
+
+    def seconds_since_last_token(self, account_id: str, purpose: str) -> float | None:
+        rows = self.pool.fetchall(
+            """
+            SELECT MAX(created_at) FROM nexus.one_time_tokens
+            WHERE account_id = %s AND purpose = %s
+            """,
+            (account_id, purpose),
+        )
+        if not rows or rows[0][0] is None:
+            return None
+        last = rows[0][0]
+        return max(0.0, (_utcnow() - last).total_seconds())
+
+    def mark_email_verified_and_activate(self, account_id: str) -> None:
+        """Mark the account's email verified and move it to ACTIVE.
+
+        Additive lifecycle update on existing tables; never destructive.
+        """
+        self.pool.execute(
+            "UPDATE nexus.email_identities SET verified = TRUE WHERE account_id = %s",
+            (account_id,),
+        )
+        self.pool.execute(
+            "UPDATE nexus.accounts SET status = 'active' WHERE account_id = %s",
+            (account_id,),
+        )
+
+    def set_account_pending(self, account_id: str) -> None:
+        self.pool.execute(
+            "UPDATE nexus.accounts SET status = 'pending_verification' WHERE account_id = %s",
+            (account_id,),
+        )
+
+    def update_password_hash(self, account_id: str, password_hash: str) -> None:
+        self.pool.execute(
+            """
+            UPDATE nexus.password_credentials
+            SET password_hash = %s, updated_at = NOW()
+            WHERE account_id = %s
+            """,
+            (password_hash, account_id),
+        )
+
+    def revoke_all_sessions(self, account_id: str) -> int:
+        rows = self.pool.fetchall(
+            """
+            UPDATE nexus.auth_sessions
+            SET revoked_at = NOW()
+            WHERE account_id = %s AND revoked_at IS NULL
+            RETURNING session_id
+            """,
+            (account_id,),
+        )
+        return len(rows or [])
+
     def grant_entitlement(self, account_id: str, product_code: str) -> None:
         entitlement_id = f"ent_{uuid.uuid4().hex[:16]}"
         self.pool.execute(
