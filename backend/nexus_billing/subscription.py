@@ -103,14 +103,15 @@ class Subscription:
         self.status = to_status
 
     def to_public_dict(self) -> dict[str, Any]:
+        """Member-facing serialization. Intentionally excludes payment-provider
+        internal identifiers (``provider``, ``provider_customer_id``,
+        ``provider_subscription_id``) — the normal member frontend has no need
+        for them and they must not leak through the member API."""
         return {
             "account_id": self.account_id,
             "plan_code": self.plan_code,
             "status": self.status,
             "is_live": self.is_live,
-            "provider": self.provider,
-            "provider_customer_id": self.provider_customer_id,
-            "provider_subscription_id": self.provider_subscription_id,
             "started_at": _iso(self.started_at),
             "current_period_start": _iso(self.current_period_start),
             "current_period_end": _iso(self.current_period_end),
@@ -120,6 +121,19 @@ class Subscription:
             "created_at": _iso(self.created_at),
             "updated_at": _iso(self.updated_at),
         }
+
+    def to_internal_dict(self) -> dict[str, Any]:
+        """Internal/operator serialization retaining provider identifiers, for
+        later BILLING stages. Never returned by the member-facing API."""
+        data = self.to_public_dict()
+        data.update(
+            {
+                "provider": self.provider,
+                "provider_customer_id": self.provider_customer_id,
+                "provider_subscription_id": self.provider_subscription_id,
+            }
+        )
+        return data
 
 
 def default_subscription(account_id: str) -> Subscription:

@@ -68,8 +68,7 @@ def test_subscription_serialization_shape() -> None:
     sub = default_subscription("acct_1")
     d = sub.to_public_dict()
     for key in (
-        "account_id", "plan_code", "status", "is_live", "provider",
-        "provider_customer_id", "provider_subscription_id", "started_at",
+        "account_id", "plan_code", "status", "is_live", "started_at",
         "current_period_start", "current_period_end", "cancel_at",
         "canceled_at", "ended_at", "created_at", "updated_at",
     ):
@@ -77,6 +76,29 @@ def test_subscription_serialization_shape() -> None:
     assert d["plan_code"] == "free"
     assert d["status"] == "inactive"
     assert d["is_live"] is False
+
+
+def test_public_serialization_hides_provider_internal_ids() -> None:
+    sub = Subscription(
+        account_id="acct_1",
+        plan_code="pro",
+        status=STATUS_ACTIVE,
+        provider="stripe",
+        provider_customer_id="cus_INTERNAL",
+        provider_subscription_id="sub_INTERNAL",
+    )
+    public = sub.to_public_dict()
+    # Payment-provider internal identifiers must NOT be member-facing.
+    assert "provider" not in public
+    assert "provider_customer_id" not in public
+    assert "provider_subscription_id" not in public
+    assert "cus_INTERNAL" not in str(public)
+    assert "sub_INTERNAL" not in str(public)
+    # But they are retained in the internal serialization for later stages.
+    internal = sub.to_internal_dict()
+    assert internal["provider"] == "stripe"
+    assert internal["provider_customer_id"] == "cus_INTERNAL"
+    assert internal["provider_subscription_id"] == "sub_INTERNAL"
 
 
 @pytest.mark.parametrize(
@@ -188,7 +210,11 @@ def test_subscription_requires_auth(billing_app) -> None:
 def test_subscription_creation_and_authenticated_read(billing_app) -> None:
     app, auth, repo = billing_app
     auth.sessions["sid-a"] = "acct_a"
-    repo.create_subscription(account_id="acct_a", plan_code="pro", status=STATUS_ACTIVE)
+    sub = repo.create_subscription(account_id="acct_a", plan_code="pro", status=STATUS_ACTIVE)
+    # Simulate provider identifiers being present internally.
+    sub.provider = "stripe"
+    sub.provider_customer_id = "cus_SECRET"
+    sub.provider_subscription_id = "sub_SECRET"
     r = app.test_client().get("/api/v1/billing/subscription", headers={"X-Nexus-Session": "sid-a"})
     assert r.status_code == 200
     body = r.get_json()["subscription"]
@@ -196,6 +222,11 @@ def test_subscription_creation_and_authenticated_read(billing_app) -> None:
     assert body["plan_code"] == "pro"
     assert body["status"] == "active"
     assert body["is_live"] is True
+    # The member API must never leak provider internal identifiers.
+    assert "provider" not in body
+    assert "provider_customer_id" not in body
+    assert "provider_subscription_id" not in body
+    assert "SECRET" not in r.get_data(as_text=True)
 
 
 def test_missing_subscription_resolves_to_safe_default(billing_app) -> None:
