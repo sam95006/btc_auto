@@ -19,6 +19,11 @@ EVENT_PAYMENT_FAILED = "payment_failed"
 EVENT_PAYMENT_RECOVERED = "payment_recovered"
 EVENT_SUBSCRIPTION_CANCELED = "subscription_canceled"
 EVENT_SUBSCRIPTION_EXPIRED = "subscription_expired"
+# Status-driven subscription events (used by adapters like Stripe whose
+# subscription.* events carry a status rather than a single semantic action).
+EVENT_SUBSCRIPTION_ACTIVE = "subscription_active"
+EVENT_SUBSCRIPTION_TRIALING = "subscription_trialing"
+EVENT_SUBSCRIPTION_PAST_DUE = "subscription_past_due"
 
 KNOWN_EVENT_TYPES: frozenset[str] = frozenset(
     {
@@ -27,6 +32,9 @@ KNOWN_EVENT_TYPES: frozenset[str] = frozenset(
         EVENT_PAYMENT_RECOVERED,
         EVENT_SUBSCRIPTION_CANCELED,
         EVENT_SUBSCRIPTION_EXPIRED,
+        EVENT_SUBSCRIPTION_ACTIVE,
+        EVENT_SUBSCRIPTION_TRIALING,
+        EVENT_SUBSCRIPTION_PAST_DUE,
     }
 )
 
