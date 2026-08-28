@@ -14,6 +14,9 @@ from typing import Any, Optional
 from backend.nexus_persistence_pg.pool import PostgresPool
 from backend.nexus_billing.plans import normalize_plan_code
 from backend.nexus_billing.subscription import (
+    STATUS_ACTIVE,
+    STATUS_CANCELED,
+    STATUS_EXPIRED,
     STATUS_INACTIVE,
     Subscription,
     assert_transition,
@@ -108,6 +111,68 @@ class SubscriptionRepository:
         self.pool.execute(
             "UPDATE nexus.subscriptions SET status = %s, updated_at = NOW() WHERE account_id = %s",
             (to_status, account_id),
+        )
+        updated = self.get_by_account(account_id)
+        assert updated is not None
+        return updated
+
+    def ensure_subscription(self, account_id: str) -> Subscription:
+        """Return the account's subscription row, creating a default inactive
+        free row if none exists yet."""
+        current = self.get_by_account(account_id)
+        if current is not None:
+            return current
+        return self.create_subscription(account_id=account_id, plan_code="free", status=STATUS_INACTIVE)
+
+    def apply_provider_transition(
+        self,
+        account_id: str,
+        to_status: str,
+        *,
+        plan_code: Optional[str] = None,
+        provider: Optional[str] = None,
+        provider_customer_id: Optional[str] = None,
+        provider_subscription_id: Optional[str] = None,
+    ) -> Subscription:
+        """Apply a provider-authoritative lifecycle transition with validation.
+
+        The status change must be legal per the BILLING-1 state machine
+        (illegal transitions raise, never silently succeed). Plan and provider
+        metadata are set explicitly — there is no uncontrolled bulk update.
+        Lifecycle timestamps are maintained for the meaningful transitions.
+        """
+        current = self.ensure_subscription(account_id)
+        assert_transition(current.status, to_status)
+
+        sets = ["status = %s", "updated_at = NOW()"]
+        params: list[Any] = [to_status]
+        if plan_code is not None:
+            sets.append("plan_code = %s")
+            params.append(normalize_plan_code(plan_code))
+        if provider is not None:
+            sets.append("provider = %s")
+            params.append(provider)
+        if provider_customer_id is not None:
+            sets.append("provider_customer_id = %s")
+            params.append(provider_customer_id)
+        if provider_subscription_id is not None:
+            sets.append("provider_subscription_id = %s")
+            params.append(provider_subscription_id)
+        if to_status == STATUS_ACTIVE:
+            sets.append("started_at = COALESCE(started_at, NOW())")
+            sets.append("current_period_start = NOW()")
+            sets.append("current_period_end = NOW() + INTERVAL '30 days'")
+            sets.append("canceled_at = NULL")
+            sets.append("ended_at = NULL")
+        elif to_status == STATUS_CANCELED:
+            sets.append("canceled_at = NOW()")
+        elif to_status == STATUS_EXPIRED:
+            sets.append("ended_at = NOW()")
+
+        params.append(account_id)
+        self.pool.execute(
+            f"UPDATE nexus.subscriptions SET {', '.join(sets)} WHERE account_id = %s",
+            tuple(params),
         )
         updated = self.get_by_account(account_id)
         assert updated is not None
