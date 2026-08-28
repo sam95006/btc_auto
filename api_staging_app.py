@@ -99,6 +99,12 @@ def create_app() -> Flask:
     # Email verification enforcement is opt-in AND only ever active in staging.
     # It fails closed (disabled) when unset, false, or outside the staging env.
     app.config["NEXUS_EMAIL_VERIFICATION_ENFORCED"] = email_enforcement_enabled(dict(os.environ))
+    # Mock billing endpoints are opt-in AND only ever active in staging; they
+    # never touch real money and default to disabled (fail closed).
+    app.config["NEXUS_BILLING_MOCK_ENABLED"] = (
+        os.getenv("NEXUS_BILLING_MOCK_ENABLED", "").strip().lower() == "true"
+        and (os.getenv("NEXUS_ENV") or os.getenv("NEXUS_DEPLOYMENT_ENV") or "").strip().lower() == "staging"
+    )
     _provision_staging_seed(app.config["NEXUS_PRODUCT_ALPHA_SERVICES"])
 
     @app.get("/health")

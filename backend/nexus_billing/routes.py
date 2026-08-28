@@ -23,9 +23,16 @@ from backend.nexus_billing.entitlements import (
     EntitlementResolution,
     resolve_entitlements,
 )
+from backend.nexus_billing.event_repository import BillingEventRepository
+from backend.nexus_billing.mock_provider import MockPaymentProvider
 from backend.nexus_billing.plans import DEFAULT_PLAN_CODE, list_plans
+from backend.nexus_billing.provider import KNOWN_EVENT_TYPES
 from backend.nexus_billing.repository import SubscriptionRepository
+from backend.nexus_billing.service import BillingError, BillingService
 from backend.nexus_billing.subscription import Subscription, default_subscription
+
+MOCK_ENABLED_CONFIG_KEY = "NEXUS_BILLING_MOCK_ENABLED"
+BILLING_SERVICE_CONFIG_KEY = "NEXUS_BILLING_SERVICE"
 
 SUBSCRIPTION_REPO_CONFIG_KEY = "NEXUS_BILLING_SUBSCRIPTION_REPO"
 
@@ -92,6 +99,26 @@ def resolve_request_entitlements(
         )
     resolution = resolve_entitlements(_account_subscription(app, account_id))
     return resolution, None
+
+
+def _mock_enabled(app: Flask) -> bool:
+    return bool(app.config.get(MOCK_ENABLED_CONFIG_KEY))
+
+
+def _billing_service(app: Flask) -> Optional[BillingService]:
+    service = app.config.get(BILLING_SERVICE_CONFIG_KEY)
+    if service is not None:
+        return service
+    pool = _services(app).get("pool")
+    if pool is None:
+        return None
+    service = BillingService(
+        subscription_repo=SubscriptionRepository(pool),
+        event_repo=BillingEventRepository(pool),
+        provider=MockPaymentProvider(),
+    )
+    app.config[BILLING_SERVICE_CONFIG_KEY] = service
+    return service
 
 
 def enforce_entitlement(app: Flask, feature_code: str) -> Optional[Response]:
@@ -168,3 +195,60 @@ def register_billing_routes(app: Flask) -> None:
                 "data_class": "ENTITLEMENT_DEMO_READ_ONLY",
             }
         )
+
+    # ----- development/staging-only mock billing endpoints (disabled default) --
+    @app.post("/api/v1/billing/mock/checkout")
+    def billing_mock_checkout():
+        if not _mock_enabled(app):
+            return _json_no_store({"error": "not_found", "classification": "DISABLED"}, 404)
+        account_id = _authenticated_account_id(app)
+        if not account_id:
+            return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
+        service = _billing_service(app)
+        if service is None:
+            return _json_no_store({"error": "billing_unavailable", "classification": "UNAVAILABLE"}, 503)
+        body = request.get_json(silent=True) or {}
+        plan_code = str(body.get("plan_code") or "").strip().lower()
+        try:
+            session = service.start_checkout(account_id=account_id, plan_code=plan_code)
+        except BillingError:
+            return _json_no_store({"error": "invalid_checkout_plan", "classification": "INVALID_PLAN"}, 400)
+        return _json_no_store({"checkout": session.to_public_dict()})
+
+    @app.post("/api/v1/billing/mock/event")
+    def billing_mock_event():
+        if not _mock_enabled(app):
+            return _json_no_store({"error": "not_found", "classification": "DISABLED"}, 404)
+        account_id = _authenticated_account_id(app)
+        if not account_id:
+            return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
+        service = _billing_service(app)
+        if service is None:
+            return _json_no_store({"error": "billing_unavailable", "classification": "UNAVAILABLE"}, 503)
+        body = request.get_json(silent=True) or {}
+        event_type = str(body.get("event_type") or "").strip()
+        if event_type not in KNOWN_EVENT_TYPES:
+            return _json_no_store({"error": "unsupported_event_type", "classification": "INVALID_EVENT"}, 400)
+        plan_code = body.get("plan_code")
+        # The account is ALWAYS derived from the session; a body/query account is
+        # never honored. The mock provider fabricates the normalized event.
+        event = MockPaymentProvider().make_event(
+            account_id=account_id,
+            event_type=event_type,
+            target_plan_code=str(plan_code).strip().lower() if isinstance(plan_code, str) else None,
+            provider_event_id=(str(body.get("provider_event_id")).strip() if body.get("provider_event_id") else None),
+        )
+        result = service.process_provider_event(event)
+        return _json_no_store({"result": result})
+
+    @app.post("/api/v1/billing/mock/cancel")
+    def billing_mock_cancel():
+        if not _mock_enabled(app):
+            return _json_no_store({"error": "not_found", "classification": "DISABLED"}, 404)
+        account_id = _authenticated_account_id(app)
+        if not account_id:
+            return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
+        service = _billing_service(app)
+        if service is None:
+            return _json_no_store({"error": "billing_unavailable", "classification": "UNAVAILABLE"}, 503)
+        return _json_no_store({"result": service.request_cancellation(account_id=account_id)})
