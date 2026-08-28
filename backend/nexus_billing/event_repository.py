@@ -1,34 +1,60 @@
-"""Durable billing-event idempotency ledger (PostgreSQL).
+"""Durable billing-event idempotency + crash-recovery ledger (PostgreSQL).
 
-Idempotency is enforced by the ``UNIQUE (provider, provider_event_id)``
-constraint on ``nexus.billing_events`` — not by process memory — so duplicate
-provider deliveries (including concurrent ones across workers) are applied at
-most once.
+Idempotency is enforced by ``UNIQUE (provider, provider_event_id)`` on
+``nexus.billing_events`` — not process memory — so duplicate provider deliveries
+(including concurrent ones) are recorded once.
+
+Crash recovery: only ``processed`` and ``rejected`` are terminal states. A row
+left in ``received``/``processing`` (e.g. a worker crashed before it finished)
+is NOT treated as done; the next delivery re-attempts it. Combined with a
+convergent, idempotent subscription mutation, this yields at-most-once *effect*
+while still recovering from crashes.
 """
 
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass
 from typing import Any, Optional
 
 from backend.nexus_persistence_pg.pool import PostgresPool
 from backend.nexus_billing.provider import ProviderEvent
 
 STATUS_RECEIVED = "received"
+STATUS_PROCESSING = "processing"
 STATUS_PROCESSED = "processed"
 STATUS_REJECTED = "rejected"
+
+TERMINAL_STATUSES = frozenset({STATUS_PROCESSED, STATUS_REJECTED})
+
+# begin_processing decisions
+DECISION_NEW = "new"
+DECISION_RETRY = "retry"
+DECISION_TERMINAL_PROCESSED = "terminal_processed"
+DECISION_TERMINAL_REJECTED = "terminal_rejected"
+
+
+@dataclass(frozen=True)
+class ProcessingClaim:
+    billing_event_id: str
+    decision: str
+
+    @property
+    def should_process(self) -> bool:
+        return self.decision in (DECISION_NEW, DECISION_RETRY)
 
 
 class BillingEventRepository:
     def __init__(self, pool: PostgresPool):
         self.pool = pool
 
-    def claim_event(self, event: ProviderEvent) -> tuple[str, bool]:
-        """Atomically claim an event for processing.
+    def begin_processing(self, event: ProviderEvent) -> ProcessingClaim:
+        """Claim an event for processing, recovering crashed attempts.
 
-        Returns (billing_event_id, is_new). ``is_new`` is False when the event
-        (provider + provider_event_id) was already recorded, in which case the
-        caller must treat processing as an idempotent no-op.
+        - New event -> inserted as 'processing', decision NEW.
+        - Existing terminal (processed/rejected) -> skip (idempotent).
+        - Existing non-terminal (received/processing) -> re-attempt, decision RETRY
+          (a previous worker crashed before reaching a terminal state).
         """
         billing_event_id = f"be_{uuid.uuid4().hex[:16]}"
         rows = self.pool.fetchall(
@@ -36,9 +62,10 @@ class BillingEventRepository:
             INSERT INTO nexus.billing_events (
                 billing_event_id, provider, provider_event_id, event_type,
                 account_id, provider_customer_id, provider_subscription_id,
-                target_plan_code, processing_status
+                target_plan_code, processing_status, processing_started_at,
+                processing_attempts, last_attempt_at
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), 1, NOW())
             ON CONFLICT (provider, provider_event_id) DO NOTHING
             RETURNING billing_event_id
             """,
@@ -51,13 +78,34 @@ class BillingEventRepository:
                 event.provider_customer_id,
                 event.provider_subscription_id,
                 event.target_plan_code,
-                STATUS_RECEIVED,
+                STATUS_PROCESSING,
             ),
         )
         if rows:
-            return rows[0][0], True
+            return ProcessingClaim(rows[0][0], DECISION_NEW)
+
         existing = self.get_by_provider_event(event.provider, event.provider_event_id)
-        return (existing["billing_event_id"] if existing else billing_event_id), False
+        if existing is None:
+            # Extremely unlikely race; treat as new attempt id.
+            return ProcessingClaim(billing_event_id, DECISION_RETRY)
+        status = existing["processing_status"]
+        eid = existing["billing_event_id"]
+        if status == STATUS_PROCESSED:
+            return ProcessingClaim(eid, DECISION_TERMINAL_PROCESSED)
+        if status == STATUS_REJECTED:
+            return ProcessingClaim(eid, DECISION_TERMINAL_REJECTED)
+        # received/processing -> a prior attempt did not reach a terminal state.
+        self.pool.execute(
+            """
+            UPDATE nexus.billing_events
+            SET processing_status = %s,
+                processing_attempts = processing_attempts + 1,
+                last_attempt_at = NOW()
+            WHERE billing_event_id = %s
+            """,
+            (STATUS_PROCESSING, eid),
+        )
+        return ProcessingClaim(eid, DECISION_RETRY)
 
     def mark_processed(self, billing_event_id: str) -> None:
         self.pool.execute(
@@ -69,10 +117,22 @@ class BillingEventRepository:
         self.pool.execute(
             """
             UPDATE nexus.billing_events
-            SET processing_status = %s, error_class = %s, processed_at = NOW()
+            SET processing_status = %s, error_class = %s, processed_at = NOW(), last_error_at = NOW()
             WHERE billing_event_id = %s
             """,
             (STATUS_REJECTED, error_class, billing_event_id),
+        )
+
+    def record_transient_error(self, billing_event_id: str, error_class: str) -> None:
+        """Record a retryable failure WITHOUT reaching a terminal state, so the
+        provider's retry can recover it."""
+        self.pool.execute(
+            """
+            UPDATE nexus.billing_events
+            SET processing_status = %s, error_class = %s, last_error_at = NOW()
+            WHERE billing_event_id = %s
+            """,
+            (STATUS_RECEIVED, error_class, billing_event_id),
         )
 
     def get_by_provider_event(self, provider: str, provider_event_id: str) -> Optional[dict[str, Any]]:

@@ -15,6 +15,8 @@ BILLING-1.
 
 from __future__ import annotations
 
+import json
+import os
 from typing import Any, Optional
 
 from flask import Flask, Response, jsonify, request
@@ -24,15 +26,24 @@ from backend.nexus_billing.entitlements import (
     resolve_entitlements,
 )
 from backend.nexus_billing.event_repository import BillingEventRepository
+from backend.nexus_billing.factory import build_stripe_config
 from backend.nexus_billing.mock_provider import MockPaymentProvider
 from backend.nexus_billing.plans import DEFAULT_PLAN_CODE, list_plans
 from backend.nexus_billing.provider import KNOWN_EVENT_TYPES
 from backend.nexus_billing.repository import SubscriptionRepository
 from backend.nexus_billing.service import BillingError, BillingService
+from backend.nexus_billing.stripe_provider import (
+    StripeConfigError,
+    StripePaymentProvider,
+    normalize_stripe_event,
+    verify_stripe_signature,
+)
 from backend.nexus_billing.subscription import Subscription, default_subscription
 
 MOCK_ENABLED_CONFIG_KEY = "NEXUS_BILLING_MOCK_ENABLED"
 BILLING_SERVICE_CONFIG_KEY = "NEXUS_BILLING_SERVICE"
+STRIPE_CONFIG_CONFIG_KEY = "NEXUS_BILLING_STRIPE_CONFIG"
+STRIPE_SERVICE_CONFIG_KEY = "NEXUS_BILLING_STRIPE_SERVICE"
 
 SUBSCRIPTION_REPO_CONFIG_KEY = "NEXUS_BILLING_SUBSCRIPTION_REPO"
 
@@ -119,6 +130,34 @@ def _billing_service(app: Flask) -> Optional[BillingService]:
     )
     app.config[BILLING_SERVICE_CONFIG_KEY] = service
     return service
+
+
+def _stripe_config(app: Flask):
+    cfg = app.config.get(STRIPE_CONFIG_CONFIG_KEY)
+    if cfg is not None:
+        return cfg
+    return build_stripe_config(dict(os.environ))
+
+
+def _stripe_service(app: Flask) -> Optional[BillingService]:
+    svc = app.config.get(STRIPE_SERVICE_CONFIG_KEY)
+    if svc is not None:
+        return svc
+    cfg = _stripe_config(app)
+    pool = _services(app).get("pool")
+    if cfg is None or pool is None:
+        return None
+    try:
+        provider = StripePaymentProvider(cfg)
+    except StripeConfigError:
+        return None
+    svc = BillingService(
+        subscription_repo=SubscriptionRepository(pool),
+        event_repo=BillingEventRepository(pool),
+        provider=provider,
+    )
+    app.config[STRIPE_SERVICE_CONFIG_KEY] = svc
+    return svc
 
 
 def enforce_entitlement(app: Flask, feature_code: str) -> Optional[Response]:
@@ -252,3 +291,52 @@ def register_billing_routes(app: Flask) -> None:
         if service is None:
             return _json_no_store({"error": "billing_unavailable", "classification": "UNAVAILABLE"}, 503)
         return _json_no_store({"result": service.request_cancellation(account_id=account_id)})
+
+    # ----- provider-neutral real checkout (Stripe when configured) -----
+    @app.post("/api/v1/billing/checkout")
+    def billing_checkout():
+        account_id = _authenticated_account_id(app)
+        if not account_id:
+            return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
+        service = _stripe_service(app)
+        if service is None:
+            # Provider not configured (e.g. sandbox creds absent). Deferred, not
+            # an error the member can fix — never falls back to granting access.
+            return _json_no_store({"error": "billing_provider_unavailable", "classification": "UNAVAILABLE"}, 503)
+        body = request.get_json(silent=True) or {}
+        plan_code = str(body.get("plan_code") or "").strip().lower()
+        try:
+            session = service.start_checkout(account_id=account_id, plan_code=plan_code)
+        except BillingError:
+            return _json_no_store({"error": "invalid_checkout_plan", "classification": "INVALID_PLAN"}, 400)
+        except StripeConfigError:
+            return _json_no_store({"error": "billing_provider_unavailable", "classification": "UNAVAILABLE"}, 503)
+        return _json_no_store({"checkout": session.to_public_dict()})
+
+    # ----- Stripe webhook (no member session; signature-verified) -----
+    @app.post("/api/v1/billing/webhook/stripe")
+    def billing_webhook_stripe():
+        cfg = _stripe_config(app)
+        if cfg is None:
+            return _json_no_store({"error": "webhook_unavailable", "classification": "UNAVAILABLE"}, 503)
+        # Use the RAW body for signature verification BEFORE any parsing.
+        raw = request.get_data()
+        signature = request.headers.get("Stripe-Signature", "")
+        if not verify_stripe_signature(raw, signature, cfg.webhook_secret, tolerance=cfg.signature_tolerance_seconds):
+            return _json_no_store({"error": "invalid_signature", "classification": "SIGNATURE_INVALID"}, 400)
+        try:
+            payload = json.loads(raw.decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            return _json_no_store({"error": "malformed_payload", "classification": "MALFORMED"}, 400)
+        event = normalize_stripe_event(payload)
+        if event is None:
+            # Unknown/ignored event type or unmapped status: acknowledge, no-op.
+            return _json_no_store({"received": True, "handled": False}, 200)
+        service = _stripe_service(app)
+        if service is None:
+            return _json_no_store({"error": "webhook_unavailable", "classification": "UNAVAILABLE"}, 503)
+        result = service.process_provider_event(event)
+        if result.get("status") == "error" and result.get("retryable"):
+            # Transient failure: signal Stripe to retry (do not ack as done).
+            return _json_no_store({"received": True, "retry": True}, 500)
+        return _json_no_store({"received": True, "result_status": result.get("status")}, 200)

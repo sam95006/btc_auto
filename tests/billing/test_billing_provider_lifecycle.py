@@ -6,6 +6,17 @@ import pytest
 from flask import Flask
 
 from backend.nexus_billing.entitlements import resolve_entitlements
+from backend.nexus_billing.event_repository import (
+    DECISION_NEW,
+    DECISION_RETRY,
+    DECISION_TERMINAL_PROCESSED,
+    DECISION_TERMINAL_REJECTED,
+    STATUS_PROCESSED,
+    STATUS_PROCESSING,
+    STATUS_RECEIVED,
+    STATUS_REJECTED,
+    ProcessingClaim,
+)
 from backend.nexus_billing.mock_provider import MockPaymentProvider
 from backend.nexus_billing.plans import normalize_plan_code
 from backend.nexus_billing.provider import (
@@ -71,20 +82,30 @@ class MemEventRepo:
         self.by_key: dict[tuple[str, str], str] = {}
         self.by_id: dict[str, dict[str, Any]] = {}
 
-    def claim_event(self, event: ProviderEvent) -> tuple[str, bool]:
+    def begin_processing(self, event: ProviderEvent) -> ProcessingClaim:
         key = (event.provider, event.provider_event_id)
-        if key in self.by_key:
-            return self.by_key[key], False
-        bid = f"be_{len(self.by_id) + 1}"
-        self.by_key[key] = bid
-        self.by_id[bid] = {"status": "received", "event_type": event.event_type}
-        return bid, True
+        if key not in self.by_key:
+            bid = f"be_{len(self.by_id) + 1}"
+            self.by_key[key] = bid
+            self.by_id[bid] = {"status": STATUS_PROCESSING, "event_type": event.event_type}
+            return ProcessingClaim(bid, DECISION_NEW)
+        bid = self.by_key[key]
+        status = self.by_id[bid]["status"]
+        if status == STATUS_PROCESSED:
+            return ProcessingClaim(bid, DECISION_TERMINAL_PROCESSED)
+        if status == STATUS_REJECTED:
+            return ProcessingClaim(bid, DECISION_TERMINAL_REJECTED)
+        self.by_id[bid]["status"] = STATUS_PROCESSING
+        return ProcessingClaim(bid, DECISION_RETRY)
 
     def mark_processed(self, bid: str) -> None:
-        self.by_id[bid]["status"] = "processed"
+        self.by_id[bid]["status"] = STATUS_PROCESSED
 
     def mark_rejected(self, bid: str, error_class: str) -> None:
-        self.by_id[bid].update({"status": "rejected", "error": error_class})
+        self.by_id[bid].update({"status": STATUS_REJECTED, "error": error_class})
+
+    def record_transient_error(self, bid: str, error_class: str) -> None:
+        self.by_id[bid].update({"status": STATUS_RECEIVED, "error": error_class})
 
     def get_by_provider_event(self, provider: str, provider_event_id: str):
         bid = self.by_key.get((provider, provider_event_id))
