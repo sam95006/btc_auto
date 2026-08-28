@@ -83,6 +83,7 @@ def build_member_email_service(app: Flask) -> MemberEmailService:
 
     frontend_base = (
         app.config.get(FRONTEND_BASE_CONFIG_KEY)
+        or os.getenv("NEXUS_PUBLIC_WEB_BASE_URL")
         or os.getenv("NEXUS_MEMBER_FRONTEND_BASE_URL")
         or DEFAULT_FRONTEND_BASE
     )
