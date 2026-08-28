@@ -84,9 +84,14 @@ class FakeRepo:
                 n += 1
         return n
 
-    def mark_email_verified_and_activate(self, account_id: str) -> None:
+    def mark_email_verified_and_activate(self, account_id: str) -> bool:
+        # Only a PENDING account may transition to ACTIVE. DISABLED / already
+        # active accounts are never (re)activated by verification.
+        if self.accounts[account_id]["status"] != "pending_verification":
+            return False
         self.verified[account_id] = True
         self.accounts[account_id]["status"] = "active"
+        return True
 
     def set_account_pending(self, account_id: str) -> None:
         self.accounts[account_id]["status"] = "pending_verification"
@@ -142,6 +147,33 @@ def test_verification_success_moves_account_to_active() -> None:
     assert res.ok and res.code == "verified"
     assert repo.accounts[aid]["status"] == "active"
     assert repo.verified[aid] is True
+
+
+def test_disabled_account_cannot_reactivate_via_verification() -> None:
+    repo = FakeRepo()
+    aid = repo.add_account("a@example.com")  # pending
+    svc = _service(repo)
+    svc.issue_verification(account_id=aid, email="a@example.com")
+    raw = next(iter(repo.tokens))
+    # Account is disabled by an admin before the (valid) token is clicked.
+    repo.accounts[aid]["status"] = "disabled"
+    res = svc.verify_email(raw_token=raw)
+    assert res.ok is False and res.code == "invalid_token"
+    assert repo.accounts[aid]["status"] == "disabled"  # never reactivated
+    assert repo.verified[aid] is False
+
+
+def test_active_account_stale_verification_token_no_transition() -> None:
+    repo = FakeRepo()
+    aid = repo.add_account("a@example.com")  # pending
+    svc = _service(repo)
+    svc.issue_verification(account_id=aid, email="a@example.com")
+    raw = next(iter(repo.tokens))
+    repo.accounts[aid]["status"] = "active"  # already active
+    res = svc.verify_email(raw_token=raw)
+    # No unintended transition; generic fail-closed since not pending.
+    assert res.ok is False
+    assert repo.accounts[aid]["status"] == "active"
 
 
 def test_verification_replay_denied() -> None:

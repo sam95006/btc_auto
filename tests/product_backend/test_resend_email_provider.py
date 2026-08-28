@@ -135,11 +135,14 @@ def test_secret_and_link_never_in_audit_or_health() -> None:
 
 
 def test_missing_config_fails_closed_not_null_success() -> None:
-    # Named resend but missing key/from -> NullEmailProvider (fail closed).
+    # Named resend but missing key/from -> a Resend provider that reports
+    # NOT_CONFIGURED and fails closed (retains provider name for diagnostics).
     p1 = build_email_provider({"NEXUS_EMAIL_PROVIDER": "resend"})
-    assert isinstance(p1, NullEmailProvider)
+    assert isinstance(p1, ResendEmailProvider)
+    assert p1.configured is False
+    assert p1.health() == {"provider": "resend", "configured": False, "status": "NOT_CONFIGURED"}
     a = p1.send_verification_email(to_email=TO, verify_link=VERIFY_LINK)
-    assert a.delivered is False
+    assert a.delivered is False and a.status == "NOT_CONFIGURED"
     # Directly constructing without config reports NOT_CONFIGURED and fails closed.
     bare = ResendEmailProvider(api_key="", from_address="")
     assert bare.configured is False
@@ -169,7 +172,7 @@ def test_factory_builds_configured_resend_provider() -> None:
 
 
 def test_factory_requires_web_base_url_for_resend() -> None:
-    # Missing NEXUS_PUBLIC_WEB_BASE_URL -> fail closed to Null (never a send).
+    # Missing NEXUS_PUBLIC_WEB_BASE_URL -> fail closed (NOT_CONFIGURED), never a send.
     p = build_email_provider(
         {
             "NEXUS_EMAIL_PROVIDER": "resend",
@@ -177,4 +180,6 @@ def test_factory_requires_web_base_url_for_resend() -> None:
             "NEXUS_EMAIL_FROM": FROM,
         }
     )
-    assert isinstance(p, NullEmailProvider)
+    assert isinstance(p, ResendEmailProvider)
+    assert p.configured is False
+    assert p.health()["status"] == "NOT_CONFIGURED"

@@ -318,19 +318,32 @@ class ProductRepository:
         last = rows[0][0]
         return max(0.0, (_utcnow() - last).total_seconds())
 
-    def mark_email_verified_and_activate(self, account_id: str) -> None:
-        """Mark the account's email verified and move it to ACTIVE.
+    def mark_email_verified_and_activate(self, account_id: str) -> bool:
+        """Atomically move a PENDING account to ACTIVE and mark its email
+        verified. Returns True only when the activation actually happened.
 
-        Additive lifecycle update on existing tables; never destructive.
+        The transition is allowed ONLY from ``pending_verification``. A DISABLED
+        (or otherwise non-pending) account is never reactivated by this call, and
+        the email-verified flag is committed only together with a valid
+        activation (single statement, so the two never diverge).
         """
-        self.pool.execute(
-            "UPDATE nexus.email_identities SET verified = TRUE WHERE account_id = %s",
+        rows = self.pool.fetchall(
+            """
+            WITH activated AS (
+                UPDATE nexus.accounts
+                SET status = 'active'
+                WHERE account_id = %s AND status = 'pending_verification'
+                RETURNING account_id
+            )
+            UPDATE nexus.email_identities ei
+            SET verified = TRUE
+            FROM activated a
+            WHERE ei.account_id = a.account_id
+            RETURNING ei.account_id
+            """,
             (account_id,),
         )
-        self.pool.execute(
-            "UPDATE nexus.accounts SET status = 'active' WHERE account_id = %s",
-            (account_id,),
-        )
+        return bool(rows)
 
     def set_account_pending(self, account_id: str) -> None:
         self.pool.execute(

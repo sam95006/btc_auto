@@ -7,7 +7,19 @@ from flask import Flask
 
 from api_staging_app import email_enforcement_enabled
 from backend.nexus_product_backend.auth_alpha import AuthAlphaService
+from backend.nexus_product_backend.member_foundation import account_can_use_member_api
 from backend.nexus_product_backend.routes import register_product_alpha_routes
+
+
+def test_pending_and_disabled_accounts_cannot_use_member_api() -> None:
+    # Regression: only ACTIVE accounts may use the member API. Pending and
+    # disabled accounts are denied (this gates login / session usability).
+    assert account_can_use_member_api("active") is True
+    assert account_can_use_member_api("ACTIVE") is True
+    assert account_can_use_member_api("pending_verification") is False
+    assert account_can_use_member_api("PENDING_VERIFICATION") is False
+    assert account_can_use_member_api("disabled") is False
+    assert account_can_use_member_api(None) is False
 
 
 # --------------------------------------------------------------------------

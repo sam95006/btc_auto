@@ -48,7 +48,7 @@ class EmailTokenRepo(Protocol):
 
     def supersede_unconsumed_tokens(self, account_id: str, purpose: str) -> int: ...
 
-    def mark_email_verified_and_activate(self, account_id: str) -> None: ...
+    def mark_email_verified_and_activate(self, account_id: str) -> bool: ...
 
     def update_password_hash(self, account_id: str, password_hash: str) -> None: ...
 
@@ -115,7 +115,12 @@ class MemberEmailService:
         if not account_id:
             # Unknown, expired, already-used, or wrong-purpose token.
             return EmailActionResult(False, "invalid_token", 400, "invalid_or_expired_token")
-        self._repo.mark_email_verified_and_activate(account_id)
+        activated = self._repo.mark_email_verified_and_activate(account_id)
+        if not activated:
+            # The account is not in PENDING_VERIFICATION (e.g. DISABLED, or a
+            # stale token for an already-active account). Never reactivate; fail
+            # closed with a generic, non-enumerating response.
+            return EmailActionResult(False, "invalid_token", 400, "invalid_or_expired_token")
         return EmailActionResult(True, "verified", 200, "email_verified")
 
     def resend_verification(self, *, email: str) -> EmailActionResult:

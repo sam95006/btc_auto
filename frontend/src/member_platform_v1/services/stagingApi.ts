@@ -194,10 +194,26 @@ export async function stagingLogin(email: string, password: string) {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }),
   });
 }
+export type StagingRegisterResult = {
+  registered: boolean;
+  verification_required?: boolean;
+  account_status?: "ACTIVE" | "PENDING_VERIFICATION" | "DISABLED";
+  role?: "MEMBER" | "FOUNDER";
+  plan?: string;
+  tier?: string;
+  csrf_token?: string;
+};
+
+/** Pure decision helper: does this registration outcome require email
+ * verification (and therefore has no usable session yet)? */
+export function registrationRequiresVerification(result: StagingRegisterResult): boolean {
+  return Boolean(result.verification_required) || result.account_status === "PENDING_VERIFICATION";
+}
+
 export async function stagingRegister(input: {
   displayName: string; email: string; password: string; confirmPassword: string; founderClaimCode?: string;
-}) {
-  return getJson<{ registered: true; role: "MEMBER" | "FOUNDER"; tier: "FREE" | "ENTERPRISE" }>("/member/registration", {
+}): Promise<StagingRegisterResult> {
+  return getJson<StagingRegisterResult>("/member/registration", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

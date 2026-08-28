@@ -1,9 +1,10 @@
-import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { AuthFooter, MarketingFooter, MarketingHeader } from "../layout/Shells";
 import { useAuth } from "../context/AuthContext";
 import { memberApi } from "../services";
 import {
+  registrationRequiresVerification,
   stagingForgotPassword,
   stagingResendVerification,
   stagingResetPassword,
@@ -579,8 +580,14 @@ export function RegisterPage() {
     setErr("");
     setBusy(true);
     try {
-      await register({ email, password, confirmPassword: confirm, displayName, founderClaimCode: phone || undefined });
-      nav("/app");
+      const result = await register({ email, password, confirmPassword: confirm, displayName, founderClaimCode: phone || undefined });
+      if (registrationRequiresVerification(result)) {
+        // Pending verification: no usable session. Route to the check-email
+        // page, passing the email via router state only (never URL/storage).
+        nav("/check-email", { state: { email } });
+      } else {
+        nav("/app");
+      }
     } finally {
       setBusy(false);
     }
@@ -811,7 +818,9 @@ export function ForgotPasswordPage() {
 }
 
 export function PendingVerificationPage() {
-  const [email, setEmail] = useState("");
+  const location = useLocation();
+  const prefill = (location.state as { email?: string } | null)?.email || "";
+  const [email, setEmail] = useState(prefill);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   async function onResend(event: FormEvent) {
