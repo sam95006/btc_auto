@@ -8,7 +8,15 @@ import {
   type ReactNode,
 } from "react";
 import type { MembershipTier, MemberSession } from "../types/dto";
-import { getMemberEntitlements, getMemberSession, stagingLogin, stagingLogout, stagingRegister } from "../services/stagingApi";
+import {
+  getMemberEntitlements,
+  getMemberSession,
+  registrationRequiresVerification,
+  stagingLogin,
+  stagingLogout,
+  stagingRegister,
+  type StagingRegisterResult,
+} from "../services/stagingApi";
 
 type AuthCtx = {
   session: MemberSession | null;
@@ -24,7 +32,7 @@ type AuthCtx = {
     confirmPassword: string;
     displayName: string;
     founderClaimCode?: string;
-  }) => Promise<void>;
+  }) => Promise<StagingRegisterResult>;
   logout: () => Promise<void>;
 };
 
@@ -59,9 +67,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (input: {
     email: string; password: string; confirmPassword: string; displayName: string; founderClaimCode?: string;
-  }) => {
-    await stagingRegister(input);
+  }): Promise<StagingRegisterResult> => {
+    const result = await stagingRegister(input);
+    if (registrationRequiresVerification(result)) {
+      // Pending verification: there is no usable session yet. Do NOT hydrate.
+      setSession(null);
+      return result;
+    }
     await hydrate();
+    return result;
   }, [hydrate]);
 
   const logout = useCallback(async () => {

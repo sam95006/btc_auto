@@ -288,6 +288,91 @@ class ProductRepository:
         )
         return account_id
 
+    def supersede_unconsumed_tokens(self, account_id: str, purpose: str) -> int:
+        """Consume any prior unconsumed tokens of this purpose for the account.
+
+        Used when issuing a fresh verification/reset token so an older
+        outstanding one cannot be replayed. Returns the number superseded.
+        """
+        rows = self.pool.fetchall(
+            """
+            UPDATE nexus.one_time_tokens
+            SET consumed_at = NOW()
+            WHERE account_id = %s AND purpose = %s AND consumed_at IS NULL
+            RETURNING token_id
+            """,
+            (account_id, purpose),
+        )
+        return len(rows or [])
+
+    def seconds_since_last_token(self, account_id: str, purpose: str) -> float | None:
+        rows = self.pool.fetchall(
+            """
+            SELECT MAX(created_at) FROM nexus.one_time_tokens
+            WHERE account_id = %s AND purpose = %s
+            """,
+            (account_id, purpose),
+        )
+        if not rows or rows[0][0] is None:
+            return None
+        last = rows[0][0]
+        return max(0.0, (_utcnow() - last).total_seconds())
+
+    def mark_email_verified_and_activate(self, account_id: str) -> bool:
+        """Atomically move a PENDING account to ACTIVE and mark its email
+        verified. Returns True only when the activation actually happened.
+
+        The transition is allowed ONLY from ``pending_verification``. A DISABLED
+        (or otherwise non-pending) account is never reactivated by this call, and
+        the email-verified flag is committed only together with a valid
+        activation (single statement, so the two never diverge).
+        """
+        rows = self.pool.fetchall(
+            """
+            WITH activated AS (
+                UPDATE nexus.accounts
+                SET status = 'active'
+                WHERE account_id = %s AND status = 'pending_verification'
+                RETURNING account_id
+            )
+            UPDATE nexus.email_identities ei
+            SET verified = TRUE
+            FROM activated a
+            WHERE ei.account_id = a.account_id
+            RETURNING ei.account_id
+            """,
+            (account_id,),
+        )
+        return bool(rows)
+
+    def set_account_pending(self, account_id: str) -> None:
+        self.pool.execute(
+            "UPDATE nexus.accounts SET status = 'pending_verification' WHERE account_id = %s",
+            (account_id,),
+        )
+
+    def update_password_hash(self, account_id: str, password_hash: str) -> None:
+        self.pool.execute(
+            """
+            UPDATE nexus.password_credentials
+            SET password_hash = %s, updated_at = NOW()
+            WHERE account_id = %s
+            """,
+            (password_hash, account_id),
+        )
+
+    def revoke_all_sessions(self, account_id: str) -> int:
+        rows = self.pool.fetchall(
+            """
+            UPDATE nexus.auth_sessions
+            SET revoked_at = NOW()
+            WHERE account_id = %s AND revoked_at IS NULL
+            RETURNING session_id
+            """,
+            (account_id,),
+        )
+        return len(rows or [])
+
     def grant_entitlement(self, account_id: str, product_code: str) -> None:
         entitlement_id = f"ent_{uuid.uuid4().hex[:16]}"
         self.pool.execute(
