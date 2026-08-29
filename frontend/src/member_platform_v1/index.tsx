@@ -11,6 +11,7 @@ import {
   WatchlistPage as RealWatchlistPage,
 } from "./pages/RealAppPages";
 import { BillingCancelPage, BillingCenterPage, BillingSuccessPage } from "./pages/BillingPages";
+import { IntelligencePage } from "./pages/IntelligencePages";
 import {
   ForgotPasswordPage,
   LandingPage,
@@ -44,6 +45,7 @@ export function MemberPlatformV1App() {
           <Route path="/app" element={<AppShell />}>
             <Route index element={<RealDashboardPage />} />
             <Route path="markets" element={<RealMarketsPage />} />
+            <Route path="intelligence" element={<IntelligencePage />} />
             <Route path="market/:symbol" element={<RealMarketDetailPage />} />
             <Route path="watchlist" element={<RealWatchlistPage />} />
             <Route path="alerts" element={<RealAlertsPage />} />

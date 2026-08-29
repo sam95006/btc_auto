@@ -435,3 +435,144 @@ export type BillingUsage = {
 export async function getBillingUsage(): Promise<BillingUsage> {
   return getJson<BillingUsage>("/billing/usage");
 }
+
+// ---------------------------------------------------------------------------
+// Personal Market Intelligence product (PERSONAL-1). Every paid action is
+// gated on the backend by Authentication AND Entitlement AND (when metered)
+// Quota. The client only reflects the backend's authoritative decision; it
+// never fabricates entitlement, market data, signals, or risk.
+// ---------------------------------------------------------------------------
+
+export type PersonalFeature = {
+  key: string;
+  label: string;
+  entitlement: string;
+  entitled: boolean;
+  available: boolean;
+  locked: boolean;
+  quota_kind: "none" | "consumable" | "capacity";
+  quota_code: string | null;
+};
+
+export type PersonalFeatures = {
+  effective_plan_code: string;
+  features: PersonalFeature[];
+};
+
+export type PersonalAnalysis = {
+  data_class: "MEMBER_SAFE_ANALYSIS";
+  symbol: string;
+  points: number;
+  trend: "up" | "down" | "flat";
+  volatility: "high" | "moderate" | "low";
+  change_pct: number;
+  range_pct: number;
+};
+
+export type PersonalReport = {
+  data_class: "MEMBER_SAFE_REPORT";
+  symbol: string;
+  summary: string;
+  sections: Array<{ title: string; value: unknown }>;
+};
+
+export type PersonalActionResult<T> = { ok: boolean; status: number; body: T | null };
+
+export async function getPersonalFeatures(): Promise<PersonalFeatures> {
+  return getJson<PersonalFeatures>("/personal/features");
+}
+
+async function postPersonal<T>(path: string, body?: object): Promise<PersonalActionResult<T>> {
+  const response = await fetch(`${origin()}/api/v1${path}`, {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    credentials: "include",
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let parsed: T | null = null;
+  try {
+    parsed = (await response.json()) as T;
+  } catch {
+    parsed = null;
+  }
+  return { ok: response.ok, status: response.status, body: parsed };
+}
+
+/** Stable idempotency key so a retried request never double-charges quota. */
+export function newIdempotencyKey(prefix: string): string {
+  const rand = Math.random().toString(36).slice(2, 10);
+  return `${prefix}_${Date.now().toString(36)}_${rand}`;
+}
+
+export async function runPersonalAnalysis(
+  symbol: string,
+  idempotencyKey: string,
+): Promise<PersonalActionResult<{ ok: boolean; analysis: PersonalAnalysis; remaining: number }>> {
+  return postPersonal("/personal/analysis", { symbol, idempotency_key: idempotencyKey });
+}
+
+export async function runPersonalReport(
+  symbol: string,
+  idempotencyKey: string,
+): Promise<PersonalActionResult<{ ok: boolean; report: PersonalReport; remaining: number }>> {
+  return postPersonal("/personal/report", { symbol, idempotency_key: idempotencyKey });
+}
+
+export async function getPersonalWatchlist(): Promise<{ symbols: string[]; used: number; capacity: number }> {
+  return getJson<{ symbols: string[]; used: number; capacity: number }>("/personal/watchlist");
+}
+
+export async function addPersonalWatchlist(
+  symbol: string,
+): Promise<PersonalActionResult<{ ok: boolean; symbols: string[]; used: number; capacity: number }>> {
+  return postPersonal("/personal/watchlist", { symbol });
+}
+
+export async function removePersonalWatchlist(
+  symbol: string,
+): Promise<PersonalActionResult<{ ok: boolean; symbols: string[] }>> {
+  const response = await fetch(`${origin()}/api/v1/personal/watchlist/${encodeURIComponent(symbol)}`, {
+    method: "DELETE",
+    headers: { Accept: "application/json" },
+    credentials: "include",
+  });
+  let parsed: { ok: boolean; symbols: string[] } | null = null;
+  try {
+    parsed = (await response.json()) as { ok: boolean; symbols: string[] };
+  } catch {
+    parsed = null;
+  }
+  return { ok: response.ok, status: response.status, body: parsed };
+}
+
+export async function getPersonalHistory(
+  symbol: string,
+  days: number,
+): Promise<{ symbol: string; requested_days: number; effective_days: number; clamped: boolean; max_days: number }> {
+  const query = new URLSearchParams({ symbol, days: String(days) });
+  return getJson<{ symbol: string; requested_days: number; effective_days: number; clamped: boolean; max_days: number }>(
+    `/personal/history?${query}`,
+  );
+}
+
+export type PersonalSignals = {
+  data_class: "MEMBER_SAFE_SIGNALS";
+  available: boolean;
+  reason?: string;
+  signals: unknown[];
+};
+
+export type PersonalRisk = {
+  data_class: "MEMBER_SAFE_RISK";
+  available: boolean;
+  reason?: string;
+  risk: unknown[];
+};
+
+export async function getPersonalSignals(): Promise<PersonalSignals> {
+  return getJson<PersonalSignals>("/personal/signals");
+}
+
+export async function getPersonalRisk(): Promise<PersonalRisk> {
+  return getJson<PersonalRisk>("/personal/risk");
+}
