@@ -50,15 +50,48 @@ class CheckoutSession:
     target_plan_code: str
     status: str
     provider: str
+    checkout_url: Optional[str] = None
 
     def to_public_dict(self) -> dict[str, Any]:
-        # Member-facing: opaque checkout id + target plan + status. No provider
-        # secrets, no customer/subscription internal ids.
+        # Member-facing: opaque checkout id + target plan + status + the hosted
+        # checkout URL to redirect to. No provider secrets, no customer/
+        # subscription internal ids.
         return {
             "checkout_id": self.checkout_id,
             "target_plan_code": self.target_plan_code,
             "status": self.status,
             "provider": self.provider,
+            "checkout_url": self.checkout_url,
+        }
+
+
+@dataclass(frozen=True)
+class BillingPortalSession:
+    """A provider-hosted billing/customer portal session (member-safe)."""
+
+    portal_id: str
+    provider: str
+    portal_url: Optional[str] = None
+
+    def to_public_dict(self) -> dict[str, Any]:
+        return {"portal_id": self.portal_id, "provider": self.provider, "portal_url": self.portal_url}
+
+
+@dataclass(frozen=True)
+class CancellationResult:
+    """Provider-neutral outcome of a cancellation request. The authoritative
+    subscription state still follows a verified provider webhook; this only
+    records that a cancellation was requested (e.g. at period end)."""
+
+    provider: str
+    status: str  # e.g. "cancellation_requested"
+    cancel_at_period_end: bool = True
+    provider_subscription_id: Optional[str] = None
+
+    def to_public_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "cancel_at_period_end": self.cancel_at_period_end,
         }
 
 
@@ -96,8 +129,12 @@ class PaymentProvider(Protocol):
 
     def create_checkout_session(self, *, account_id: str, plan_code: str) -> CheckoutSession: ...
 
-    def cancel_subscription(
+    def request_subscription_cancellation(
         self, *, account_id: str, provider_subscription_id: Optional[str]
-    ) -> ProviderEvent: ...
+    ) -> CancellationResult: ...
 
-    def normalize_event(self, raw: Any) -> ProviderEvent: ...
+    def create_billing_portal_session(
+        self, *, account_id: str, provider_customer_id: Optional[str]
+    ) -> BillingPortalSession: ...
+
+    def normalize_event(self, raw: Any) -> Optional["ProviderEvent"]: ...

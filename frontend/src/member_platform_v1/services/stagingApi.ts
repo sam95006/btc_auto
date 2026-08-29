@@ -331,3 +331,87 @@ export async function stagingForgotPassword(email: string): Promise<EmailActionR
 export async function stagingResetPassword(token: string, newPassword: string): Promise<EmailActionResponse> {
   return postEmailAction("/product/auth/reset-password", { token, new_password: newPassword });
 }
+
+// ---------------------------------------------------------------------------
+// Billing (BILLING-5). Backend is the sole source of truth for plan /
+// subscription / entitlement state. The client only displays and initiates.
+// ---------------------------------------------------------------------------
+
+export type BillingPlan = {
+  code: string;
+  display_name: string;
+  description: string;
+  billing_interval: string | null;
+  price_amount: number | null;
+  currency: string | null;
+  active: boolean;
+  sort_order: number;
+};
+
+export type BillingSubscription = {
+  account_id: string;
+  plan_code: string;
+  status: string;
+  is_live: boolean;
+  cancel_at_period_end: boolean;
+  current_period_end: string | null;
+  started_at: string | null;
+  canceled_at: string | null;
+  ended_at: string | null;
+};
+
+export type BillingEntitlements = {
+  effective_plan_code: string;
+  subscription_status: string;
+  entitlements: string[];
+};
+
+export type BillingActionResult<T> = { ok: boolean; status: number; body: T | null };
+
+export async function getBillingPlans(): Promise<{ plans: BillingPlan[]; default_plan_code: string }> {
+  return getJson<{ plans: BillingPlan[]; default_plan_code: string }>("/billing/plans");
+}
+
+export async function getBillingSubscription(): Promise<{ subscription: BillingSubscription }> {
+  return getJson<{ subscription: BillingSubscription }>("/billing/subscription");
+}
+
+export async function getBillingEntitlements(): Promise<BillingEntitlements> {
+  return getJson<BillingEntitlements>("/billing/entitlements");
+}
+
+async function postBilling<T>(path: string, body?: object): Promise<BillingActionResult<T>> {
+  const response = await fetch(`${origin()}/api/v1${path}`, {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    credentials: "include",
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let parsed: T | null = null;
+  try {
+    parsed = (await response.json()) as T;
+  } catch {
+    parsed = null;
+  }
+  return { ok: response.ok, status: response.status, body: parsed };
+}
+
+export async function startBillingCheckout(
+  planCode: string,
+): Promise<BillingActionResult<{ checkout: { checkout_url: string | null; target_plan_code: string; status: string } }>> {
+  // The server chooses the price and hosted checkout URL; the client only sends
+  // the plan code.
+  return postBilling("/billing/checkout", { plan_code: planCode });
+}
+
+export async function cancelBillingSubscription(): Promise<
+  BillingActionResult<{ result: { status: string; cancel_at_period_end: boolean } }>
+> {
+  return postBilling("/billing/cancel");
+}
+
+export async function openBillingPortal(): Promise<
+  BillingActionResult<{ portal: { portal_url: string | null } }>
+> {
+  return postBilling("/billing/portal");
+}

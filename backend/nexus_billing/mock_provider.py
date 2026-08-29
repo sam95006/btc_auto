@@ -12,7 +12,8 @@ import threading
 from typing import Any, Optional
 
 from backend.nexus_billing.provider import (
-    EVENT_SUBSCRIPTION_CANCELED,
+    BillingPortalSession,
+    CancellationResult,
     CheckoutSession,
     ProviderEvent,
 )
@@ -35,12 +36,16 @@ class MockPaymentProvider:
             return f"mock_{prefix}_{self._counter:06d}"
 
     def create_checkout_session(self, *, account_id: str, plan_code: str) -> CheckoutSession:
+        checkout_id = self._next("checkout")
         return CheckoutSession(
-            checkout_id=self._next("checkout"),
+            checkout_id=checkout_id,
             account_id=account_id,
             target_plan_code=plan_code,
             status="open",
             provider=self.name,
+            # Deterministic, obviously-fake hosted checkout URL for the redirect
+            # contract. No secrets, no real payment page.
+            checkout_url=f"https://mock-checkout.local/{checkout_id}",
         )
 
     def make_event(
@@ -68,15 +73,26 @@ class MockPaymentProvider:
             target_plan_code=target_plan_code,
         )
 
-    def cancel_subscription(
+    def request_subscription_cancellation(
         self, *, account_id: str, provider_subscription_id: Optional[str]
-    ) -> ProviderEvent:
-        return ProviderEvent(
+    ) -> CancellationResult:
+        # Deterministic: request cancellation at period end. The authoritative
+        # state change still arrives as a normalized provider event later.
+        return CancellationResult(
             provider=self.name,
-            provider_event_id=self._next("event"),
-            event_type=EVENT_SUBSCRIPTION_CANCELED,
-            account_id=account_id,
+            status="cancellation_requested",
+            cancel_at_period_end=True,
             provider_subscription_id=provider_subscription_id,
+        )
+
+    def create_billing_portal_session(
+        self, *, account_id: str, provider_customer_id: Optional[str]
+    ) -> BillingPortalSession:
+        portal_id = self._next("portal")
+        return BillingPortalSession(
+            portal_id=portal_id,
+            provider=self.name,
+            portal_url=f"https://mock-portal.local/{portal_id}",
         )
 
     def normalize_event(self, raw: Any) -> ProviderEvent:

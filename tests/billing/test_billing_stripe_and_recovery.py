@@ -212,7 +212,8 @@ def test_factory_builds_test_stripe_provider() -> None:
 
 def test_stripe_adapter_implements_provider_contract() -> None:
     p = StripePaymentProvider(_config())
-    for m in ("create_checkout_session", "cancel_subscription", "normalize_event", "price_for_plan"):
+    for m in ("create_checkout_session", "request_subscription_cancellation",
+              "create_billing_portal_session", "normalize_event", "price_for_plan"):
         assert hasattr(p, m)
 
 

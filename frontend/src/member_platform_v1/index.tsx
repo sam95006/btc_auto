@@ -8,9 +8,9 @@ import {
   DashboardPage as RealDashboardPage,
   MarketDetailPage as RealMarketDetailPage,
   MarketsPage as RealMarketsPage,
-  MembershipPage as RealMembershipPage,
   WatchlistPage as RealWatchlistPage,
 } from "./pages/RealAppPages";
+import { BillingCancelPage, BillingCenterPage, BillingSuccessPage } from "./pages/BillingPages";
 import {
   ForgotPasswordPage,
   LandingPage,
@@ -38,6 +38,8 @@ export function MemberPlatformV1App() {
             <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route path="/check-email" element={<PendingVerificationPage />} />
             <Route path="/plans" element={<PlansPage />} />
+            <Route path="/billing/success" element={<BillingSuccessPage />} />
+            <Route path="/billing/cancel" element={<BillingCancelPage />} />
           </Route>
           <Route path="/app" element={<AppShell />}>
             <Route index element={<RealDashboardPage />} />
@@ -45,7 +47,7 @@ export function MemberPlatformV1App() {
             <Route path="market/:symbol" element={<RealMarketDetailPage />} />
             <Route path="watchlist" element={<RealWatchlistPage />} />
             <Route path="alerts" element={<RealAlertsPage />} />
-            <Route path="membership" element={<RealMembershipPage />} />
+            <Route path="membership" element={<BillingCenterPage />} />
             <Route path="account" element={<RealAccountPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

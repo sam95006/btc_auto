@@ -85,6 +85,7 @@ class Subscription:
     cancel_at: Optional[datetime] = None
     canceled_at: Optional[datetime] = None
     ended_at: Optional[datetime] = None
+    cancel_at_period_end: bool = False
     created_at: Optional[datetime] = field(default=None)
     updated_at: Optional[datetime] = field(default=None)
 
@@ -118,6 +119,7 @@ class Subscription:
             "cancel_at": _iso(self.cancel_at),
             "canceled_at": _iso(self.canceled_at),
             "ended_at": _iso(self.ended_at),
+            "cancel_at_period_end": bool(self.cancel_at_period_end),
             "created_at": _iso(self.created_at),
             "updated_at": _iso(self.updated_at),
         }
