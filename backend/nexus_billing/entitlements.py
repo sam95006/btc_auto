@@ -124,3 +124,13 @@ def resolve_entitlements(subscription: Optional[Subscription]) -> EntitlementRes
 
 def has_entitlement(subscription: Optional[Subscription], feature_code: str) -> bool:
     return resolve_entitlements(subscription).has(feature_code)
+
+
+def plan_has_entitlement(plan_code: str, feature_code: str) -> bool:
+    """Whether a plan (by code) includes a feature — used by usage metering to
+    keep quota display/enforcement consistent with entitlements."""
+    if not is_valid_feature(feature_code):
+        return False
+    entitlements = PLAN_ENTITLEMENTS.get(plan_code, PLAN_ENTITLEMENTS[DEFAULT_PLAN_CODE])
+    value = entitlements.get(feature_code)
+    return value is True or (isinstance(value, int) and not isinstance(value, bool) and value > 0)

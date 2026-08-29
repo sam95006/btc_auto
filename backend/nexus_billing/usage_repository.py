@@ -68,12 +68,12 @@ class UsageRepository:
                         cur.execute(
                             """
                             INSERT INTO nexus.usage_events
-                                (usage_event_id, account_id, quota_code, idempotency_key, amount)
-                            VALUES (%s, %s, %s, %s, %s)
-                            ON CONFLICT (account_id, quota_code, idempotency_key) DO NOTHING
+                                (usage_event_id, account_id, quota_code, idempotency_key, amount, window_start)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                            ON CONFLICT (account_id, quota_code, window_start, idempotency_key) DO NOTHING
                             RETURNING usage_event_id
                             """,
-                            (usage_event_id, account_id, quota_code, idempotency_key, amount),
+                            (usage_event_id, account_id, quota_code, idempotency_key, amount, window_start),
                         )
                         claimed = cur.fetchone()
                         if not claimed:

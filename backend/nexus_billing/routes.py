@@ -187,11 +187,26 @@ def enforce_quota(
     if svc is None:
         return _json_no_store({"error": "usage_unavailable", "classification": "UNAVAILABLE"}, 503), None
     decision = svc.consume(account_id=account_id, quota_code=quota_code, amount=amount, idempotency_key=idempotency_key)
-    if not decision.allowed:
+    if decision.allowed:
+        return None, decision
+    # Consistent, distinct error semantics by reason (fail closed; never dress an
+    # internal error up as "quota exhausted").
+    reason = decision.reason or "quota_exceeded"
+    if reason == "quota_exceeded":
         payload = {"error": "usage_limit_exceeded", "classification": "USAGE_LIMIT_EXCEEDED"}
         payload.update(decision.to_public_dict())
         return _json_no_store(payload, 429), None
-    return None, decision
+    if reason == "usage_unavailable":
+        return _json_no_store({"error": "usage_unavailable", "classification": "UNAVAILABLE"}, 503), None
+    if reason in ("invalid_amount", "missing_idempotency_key"):
+        return _json_no_store({"error": reason, "classification": "BAD_REQUEST"}, 400), None
+    if reason in ("entitlement_required", "no_quota"):
+        return _json_no_store(
+            {"error": "entitlement_required", "classification": "ENTITLEMENT_REQUIRED", "required_quota": quota_code},
+            403,
+        ), None
+    # unknown_quota / not_consumable / anything else -> fail closed as bad request.
+    return _json_no_store({"error": "invalid_quota", "classification": "BAD_REQUEST"}, 400), None
 
 
 def enforce_entitlement(app: Flask, feature_code: str) -> Optional[Response]:

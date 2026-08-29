@@ -1,18 +1,14 @@
 /**
- * NEXUS Member Platform shell — React (not Flutter).
- * Public Decision Integrity pages. No private trading controls.
- * Forbidden routes: /trade, /orders, /arm, /routing-edit
+ * PERSONAL surface — the individual Market Intelligence member SaaS.
+ * React (not Flutter). Public Decision Integrity pages. No private trading controls.
+ * Forbidden routes: /trade, /orders, /arm, /routing-edit.
  *
- * PUB-E: Founder private operator mounts in a separate shell (never inside member SidebarNav).
- * Member Platform UI V1 (mock, local review) is the default member-facing surface.
- * Product V2 remains mounted for generation checks / legacy preview.
+ * PLATFORM-1 boundary: this personal entry does NOT import or mount the Founder
+ * private operator tree. Founder surfaces live only in the founder-private build
+ * (src/surfaces/FounderApp.tsx via src/entries/founderMain.tsx). Corporate and
+ * Enterprise are separate build surfaces too.
  */
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { FounderDiagnosticsPage } from "./founder/FounderDiagnosticsPage";
-import { FounderLiveOpsPage } from "./founder/FounderLiveOpsPage";
-import { FounderOperatorShell } from "./founder/FounderOperatorShell";
-import { FounderOperatorPage } from "./founder/FounderOperatorPage";
-import { FounderRuntimePage } from "./pages/FounderRuntimePage";
 import { NexusMemberProductV2 } from "./app/NexusMemberProductV2";
 import { MemberPlatformApp } from "./app/MemberPlatformApp";
 import { MemberPlatformV1App } from "./member_platform_v1";
@@ -33,23 +29,12 @@ function ActualPanelPreviewRedirect() {
 }
 
 /**
- * Member Platform (PUB-D) + Founder Private Operator (PUB-E).
- * Founder operator never mounts inside member nav.
- * Default member surface = Member Platform UI V1 (mock data).
+ * Personal Member Platform. Default member surface = Member Platform UI V1.
+ * Founder operator is intentionally absent from this surface.
  */
 export default function App() {
   return (
     <Routes>
-      <Route path="/founder/operator" element={<FounderOperatorShell />}>
-        <Route index element={<FounderOperatorPage />} />
-      </Route>
-      <Route path="/founder/diagnostics" element={<FounderOperatorShell />}>
-        <Route index element={<FounderDiagnosticsPage />} />
-      </Route>
-      <Route path="/founder/live-ops" element={<FounderOperatorShell />}>
-        <Route index element={<FounderLiveOpsPage />} />
-      </Route>
-      <Route path="/founder/runtime" element={<FounderRuntimePage />} />
       <Route path="/preview/v18_2_1/*" element={<ActualPanelPreviewRedirect />} />
       <Route path="/member-platform/*" element={<MemberPlatformApp />} />
       <Route path="/product-v2/*" element={<NexusMemberProductV2 />} />

@@ -62,8 +62,11 @@ _PLAN_QUOTAS: dict[str, dict[str, int]] = {
         QUOTA_HISTORY_DAYS: 7,
     },
     "starter": {
-        QUOTA_ANALYSIS_DAILY: 20,
-        QUOTA_REPORTS_MONTHLY: 2,
+        # Starter does not hold the advanced_analysis / report_generation
+        # entitlements (those are pro+), so their quotas are 0 to stay consistent
+        # with BILLING-2 entitlements.
+        QUOTA_ANALYSIS_DAILY: 0,
+        QUOTA_REPORTS_MONTHLY: 0,
         QUOTA_WATCHLIST_ITEMS: 20,
         QUOTA_HISTORY_DAYS: 30,
     },

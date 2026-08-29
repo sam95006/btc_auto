@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Callable, Optional
 
-from backend.nexus_billing.entitlements import effective_plan_code
+from backend.nexus_billing.entitlements import effective_plan_code, plan_has_entitlement
 from backend.nexus_billing.usage_policy import (
     QUOTA_CATALOG,
     TYPE_CONSUMABLE,
@@ -71,6 +71,10 @@ class UsageService:
         for code in plan_quota_codes(plan):
             spec = QUOTA_CATALOG[code]
             limit = quota_limit(plan, code) or 0
+            # Consistency: a quota is only presented as usable when the effective
+            # plan actually holds the gating entitlement (BILLING-2). Otherwise it
+            # is shown as unavailable rather than as a usable allowance.
+            entitled = plan_has_entitlement(plan, spec.entitlement)
             if spec.quota_type == TYPE_CONSUMABLE:
                 window_start = window_start_for(spec.window, now)
                 used = self._usage.get_used(account_id, code, spec.window, window_start)
@@ -85,9 +89,10 @@ class UsageService:
                     "label": spec.label,
                     "quota_type": spec.quota_type,
                     "window": spec.window,
-                    "limit": limit,
+                    "entitled": entitled,
+                    "limit": limit if entitled else 0,
                     "used": used,
-                    "remaining": max(0, limit - used),
+                    "remaining": max(0, (limit if entitled else 0) - used),
                     "reset_at": _iso(reset_at),
                 }
             )
@@ -110,6 +115,10 @@ class UsageService:
             return UsageDecision(False, quota_code, 0, 0, 0, reason="not_consumable")
 
         plan = self._effective_plan(account_id)
+        # Entitlement AND Quota: without the gating entitlement there is no usable
+        # quota, regardless of any numeric limit.
+        if not plan_has_entitlement(plan, spec.entitlement):
+            return UsageDecision(False, quota_code, 0, 0, 0, reason="entitlement_required")
         limit = quota_limit(plan, quota_code)
         if limit is None or limit <= 0:
             # No paid allowance under the effective plan.
