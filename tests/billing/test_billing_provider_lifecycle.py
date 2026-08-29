@@ -269,10 +269,10 @@ def test_start_checkout_rejects_unknown_and_free_plan() -> None:
 
 def test_start_checkout_returns_opaque_mock_session() -> None:
     svc, *_ = _service()
-    s = svc.start_checkout(account_id="a", plan_code="enterprise")
+    s = svc.start_checkout(account_id="a", plan_code="advanced")
     d = s.to_public_dict()
     assert d["checkout_id"].startswith("mock_checkout_")
-    assert d["target_plan_code"] == "enterprise"
+    assert d["target_plan_code"] == "advanced"
     # No card/secret fields.
     for banned in ("card", "cvv", "secret", "api_key", "provider_customer_id"):
         assert banned not in d

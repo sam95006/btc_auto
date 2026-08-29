@@ -19,7 +19,7 @@ from backend.nexus_billing.event_repository import (
     DECISION_TERMINAL_PROCESSED,
     DECISION_TERMINAL_REJECTED,
 )
-from backend.nexus_billing.plans import PLAN_FREE, get_plan
+from backend.nexus_billing.plans import PLAN_ENTERPRISE, PLAN_FREE, get_plan
 from backend.nexus_billing.provider import (
     EVENT_CHECKOUT_COMPLETED,
     EVENT_PAYMENT_FAILED,
@@ -73,19 +73,35 @@ class BillingService:
         rejected here (checkout is an action, not a fail-safe read): an unknown
         requested plan must never be normalized to free and continue."""
         plan = get_plan(plan_code)
-        if plan is None or plan.code == PLAN_FREE:
+        # Free is not a checkout; Enterprise is not self-service (contract sales).
+        if plan is None or plan.code in (PLAN_FREE, PLAN_ENTERPRISE):
             raise BillingError("invalid_checkout_plan")
         logger.info("billing.checkout_initiated", extra={"account_id": account_id, "plan_code": plan.code})
         return self._provider.create_checkout_session(account_id=account_id, plan_code=plan.code)
 
-    # ----- cancellation -----
+    # ----- cancellation (provider-neutral; authoritative state via webhook) -----
     def request_cancellation(self, *, account_id: str) -> dict[str, Any]:
         subscription = self._subs.get_by_account(account_id)
-        provider_subscription_id = subscription.provider_subscription_id if subscription else None
-        event = self._provider.cancel_subscription(
-            account_id=account_id, provider_subscription_id=provider_subscription_id
+        if subscription is None or subscription.status not in ("trialing", "active", "past_due"):
+            # Nothing cancelable; safe no-op response (never mutates).
+            return {"status": "no_active_subscription", "cancel_at_period_end": False}
+        result = self._provider.request_subscription_cancellation(
+            account_id=account_id, provider_subscription_id=subscription.provider_subscription_id
         )
-        return self.process_provider_event(event)
+        # Record ONLY the "cancellation requested" intent. We do NOT fake the
+        # lifecycle transition here — the authoritative canceled/expired state
+        # arrives later as a verified provider webhook event.
+        if hasattr(self._subs, "set_cancel_at_period_end"):
+            self._subs.set_cancel_at_period_end(account_id, True)
+        logger.info("billing.cancellation_requested", extra={"account_id": account_id})
+        return {"status": result.status, "cancel_at_period_end": result.cancel_at_period_end}
+
+    def create_billing_portal(self, *, account_id: str):
+        subscription = self._subs.get_by_account(account_id)
+        customer = subscription.provider_customer_id if subscription else None
+        return self._provider.create_billing_portal_session(
+            account_id=account_id, provider_customer_id=customer
+        )
 
     # ----- event processing (idempotent + crash-recovery + state-safe) -----
     def process_provider_event(self, event: ProviderEvent) -> dict[str, Any]:

@@ -37,6 +37,7 @@ _COLUMNS = (
     "cancel_at",
     "canceled_at",
     "ended_at",
+    "cancel_at_period_end",
     "created_at",
     "updated_at",
 )
@@ -65,6 +66,7 @@ class SubscriptionRepository:
             cancel_at=data["cancel_at"],
             canceled_at=data["canceled_at"],
             ended_at=data["ended_at"],
+            cancel_at_period_end=bool(data.get("cancel_at_period_end")),
             created_at=data["created_at"],
             updated_at=data["updated_at"],
         )
@@ -164,6 +166,8 @@ class SubscriptionRepository:
             sets.append("current_period_end = NOW() + INTERVAL '30 days'")
             sets.append("canceled_at = NULL")
             sets.append("ended_at = NULL")
+            # Reactivation clears any pending "cancel at period end".
+            sets.append("cancel_at_period_end = FALSE")
         elif to_status == STATUS_CANCELED:
             sets.append("canceled_at = NOW()")
         elif to_status == STATUS_EXPIRED:
@@ -177,3 +181,9 @@ class SubscriptionRepository:
         updated = self.get_by_account(account_id)
         assert updated is not None
         return updated
+
+    def set_cancel_at_period_end(self, account_id: str, value: bool) -> None:
+        self.pool.execute(
+            "UPDATE nexus.subscriptions SET cancel_at_period_end = %s, updated_at = NOW() WHERE account_id = %s",
+            (bool(value), account_id),
+        )

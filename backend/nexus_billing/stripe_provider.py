@@ -28,6 +28,8 @@ from backend.nexus_billing.provider import (
     EVENT_SUBSCRIPTION_EXPIRED,
     EVENT_SUBSCRIPTION_PAST_DUE,
     EVENT_SUBSCRIPTION_TRIALING,
+    BillingPortalSession,
+    CancellationResult,
     CheckoutSession,
     ProviderEvent,
 )
@@ -274,24 +276,57 @@ class StripePaymentProvider:
             raise StripeConfigError("stripe_sdk_not_installed") from exc
         stripe.api_key = self._config.secret_key
         session = stripe.checkout.Session.create(**params)  # pragma: no cover - needs sandbox creds
+        checkout_url = session.get("url")
+        if not checkout_url:
+            # Never hand the frontend a missing/malformed redirect to guess at.
+            raise StripeConfigError("stripe_checkout_url_missing")
         return CheckoutSession(
             checkout_id=str(session.get("id")),
             account_id=account_id,
             target_plan_code=get_plan(plan_code).code,  # type: ignore[union-attr]
             status=str(session.get("status") or "open"),
             provider=self.name,
+            checkout_url=str(checkout_url),
         )
 
-    def cancel_subscription(self, *, account_id: str, provider_subscription_id: Optional[str]) -> ProviderEvent:
-        # Cancellation is normally driven by Stripe webhooks; a real
-        # implementation would call stripe.Subscription.delete here. For the
-        # neutral contract we emit the normalized cancellation event.
-        return ProviderEvent(
+    def request_subscription_cancellation(
+        self, *, account_id: str, provider_subscription_id: Optional[str]
+    ) -> CancellationResult:
+        # Provider-authoritative cancellation at period end. Stripe remains the
+        # source of truth: the resulting subscription lifecycle change arrives as
+        # a verified webhook; we do not fake it locally.
+        if not provider_subscription_id:
+            return CancellationResult(provider=self.name, status="no_subscription", cancel_at_period_end=False)
+        try:
+            import stripe  # type: ignore
+        except ImportError as exc:  # pragma: no cover - environment dependent
+            raise StripeConfigError("stripe_sdk_not_installed") from exc
+        stripe.api_key = self._config.secret_key
+        stripe.Subscription.modify(  # pragma: no cover - needs sandbox creds
+            provider_subscription_id, cancel_at_period_end=True
+        )
+        return CancellationResult(
             provider=self.name,
-            provider_event_id=f"stripe_cancel_{account_id}",
-            event_type=EVENT_SUBSCRIPTION_CANCELED,
-            account_id=account_id,
+            status="cancellation_requested",
+            cancel_at_period_end=True,
             provider_subscription_id=provider_subscription_id,
+        )
+
+    def create_billing_portal_session(
+        self, *, account_id: str, provider_customer_id: Optional[str]
+    ) -> BillingPortalSession:
+        if not provider_customer_id:
+            raise StripeConfigError("no_customer_for_portal")
+        try:
+            import stripe  # type: ignore
+        except ImportError as exc:  # pragma: no cover - environment dependent
+            raise StripeConfigError("stripe_sdk_not_installed") from exc
+        stripe.api_key = self._config.secret_key
+        portal = stripe.billing_portal.Session.create(  # pragma: no cover - needs sandbox creds
+            customer=provider_customer_id, return_url=self._config.success_url
+        )
+        return BillingPortalSession(
+            portal_id=str(portal.get("id")), provider=self.name, portal_url=str(portal.get("url"))
         )
 
     def normalize_event(self, raw: Any) -> Optional[ProviderEvent]:

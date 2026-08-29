@@ -313,6 +313,46 @@ def register_billing_routes(app: Flask) -> None:
             return _json_no_store({"error": "billing_provider_unavailable", "classification": "UNAVAILABLE"}, 503)
         return _json_no_store({"checkout": session.to_public_dict()})
 
+    def _active_service(app: Flask) -> Optional[BillingService]:
+        # Prefer the configured real provider (Stripe); fall back to the mock
+        # service only when mock is explicitly enabled.
+        svc = _stripe_service(app)
+        if svc is not None:
+            return svc
+        if _mock_enabled(app):
+            return _billing_service(app)
+        return None
+
+    @app.post("/api/v1/billing/cancel")
+    def billing_cancel():
+        account_id = _authenticated_account_id(app)
+        if not account_id:
+            return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
+        service = _active_service(app)
+        if service is None:
+            return _json_no_store({"error": "billing_provider_unavailable", "classification": "UNAVAILABLE"}, 503)
+        try:
+            # Account/subscription reference come from the server's own repo,
+            # never from the client.
+            result = service.request_cancellation(account_id=account_id)
+        except StripeConfigError:
+            return _json_no_store({"error": "billing_provider_unavailable", "classification": "UNAVAILABLE"}, 503)
+        return _json_no_store({"result": result})
+
+    @app.post("/api/v1/billing/portal")
+    def billing_portal():
+        account_id = _authenticated_account_id(app)
+        if not account_id:
+            return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
+        service = _active_service(app)
+        if service is None:
+            return _json_no_store({"error": "billing_provider_unavailable", "classification": "UNAVAILABLE"}, 503)
+        try:
+            portal = service.create_billing_portal(account_id=account_id)
+        except StripeConfigError:
+            return _json_no_store({"error": "portal_unavailable", "classification": "UNAVAILABLE"}, 503)
+        return _json_no_store({"portal": portal.to_public_dict()})
+
     # ----- Stripe webhook (no member session; signature-verified) -----
     @app.post("/api/v1/billing/webhook/stripe")
     def billing_webhook_stripe():
