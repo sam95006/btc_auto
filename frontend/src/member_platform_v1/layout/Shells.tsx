@@ -115,6 +115,7 @@ export function PublicShell() {
 const SIDE = [
   { to: "/app", label: "總覽", Icon: IconOverview, end: true },
   { to: "/app/markets", label: "市場排行", Icon: IconChart },
+  { to: "/app/intelligence", label: "智慧分析", Icon: IconOverview },
   { to: "/app/watchlist", label: "我的觀察", Icon: IconStar },
   { to: "/app/alerts", label: "風險提醒", Icon: IconBell },
   { to: "/app/membership", label: "會員方案", Icon: IconCrown },

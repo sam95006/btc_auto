@@ -21,6 +21,7 @@ from backend.nexus_product_backend.repository import ProductRepository
 from backend.nexus_product_backend.routes import register_product_alpha_routes
 from backend.nexus_product_backend.email_routes import register_member_email_routes
 from backend.nexus_billing.routes import register_billing_routes
+from backend.nexus_personal.routes import register_personal_routes
 from backend.nexus_public_realtime_transport.routes import register_public_realtime_routes
 
 
@@ -126,6 +127,7 @@ def create_app() -> Flask:
     register_product_alpha_routes(app)
     register_member_email_routes(app)
     register_billing_routes(app)
+    register_personal_routes(app)
     register_public_realtime_routes(app)
 
     @app.after_request
