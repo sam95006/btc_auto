@@ -88,7 +88,7 @@ class MemSubRepo:
         return s
 
     def apply_provider_transition(self, account_id, to_status, *, plan_code=None, provider=None,
-                                  provider_customer_id=None, provider_subscription_id=None):
+                                  provider_customer_id=None, provider_subscription_id=None, cancel_at_period_end=None):
         if self.fail_next > 0:
             self.fail_next -= 1
             raise RuntimeError("transient_db_error")
@@ -103,6 +103,8 @@ class MemSubRepo:
             cur.provider_customer_id = provider_customer_id
         if provider_subscription_id is not None:
             cur.provider_subscription_id = provider_subscription_id
+        if cancel_at_period_end is not None:
+            cur.cancel_at_period_end = bool(cancel_at_period_end)
         return cur
 
 

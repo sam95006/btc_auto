@@ -105,6 +105,11 @@ def create_app() -> Flask:
         os.getenv("NEXUS_BILLING_MOCK_ENABLED", "").strip().lower() == "true"
         and (os.getenv("NEXUS_ENV") or os.getenv("NEXUS_DEPLOYMENT_ENV") or "").strip().lower() == "staging"
     )
+    # Representative quota-enforced demo endpoint: opt-in, staging-only, default off.
+    app.config["NEXUS_BILLING_USAGE_DEMO_ENABLED"] = (
+        os.getenv("NEXUS_BILLING_USAGE_DEMO_ENABLED", "").strip().lower() == "true"
+        and (os.getenv("NEXUS_ENV") or os.getenv("NEXUS_DEPLOYMENT_ENV") or "").strip().lower() == "staging"
+    )
     _provision_staging_seed(app.config["NEXUS_PRODUCT_ALPHA_SERVICES"])
 
     @app.get("/health")

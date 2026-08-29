@@ -88,13 +88,15 @@ class BillingService:
         result = self._provider.request_subscription_cancellation(
             account_id=account_id, provider_subscription_id=subscription.provider_subscription_id
         )
-        # Record ONLY the "cancellation requested" intent. We do NOT fake the
-        # lifecycle transition here — the authoritative canceled/expired state
-        # arrives later as a verified provider webhook event.
-        if hasattr(self._subs, "set_cancel_at_period_end"):
+        # Record the "cancellation requested" intent ONLY when the provider
+        # actually accepted it. A no_subscription / unavailable / error / invalid
+        # response must NOT set the local pending flag. We never fake the
+        # lifecycle transition — the authoritative state arrives via webhook.
+        accepted = result.status == "cancellation_requested" and bool(result.cancel_at_period_end)
+        if accepted and hasattr(self._subs, "set_cancel_at_period_end"):
             self._subs.set_cancel_at_period_end(account_id, True)
-        logger.info("billing.cancellation_requested", extra={"account_id": account_id})
-        return {"status": result.status, "cancel_at_period_end": result.cancel_at_period_end}
+            logger.info("billing.cancellation_requested", extra={"account_id": account_id})
+        return {"status": result.status, "cancel_at_period_end": bool(accepted)}
 
     def create_billing_portal(self, *, account_id: str):
         subscription = self._subs.get_by_account(account_id)
@@ -135,7 +137,13 @@ class BillingService:
             # already holds the event's target state (and metadata agrees),
             # mark the event processed instead of falsely rejecting active->active.
             if current.status == target_status and self._converges(current, event):
+                # Already at the target state (e.g. a Stripe subscription.updated
+                # that only changes the cancel schedule). Still sync the
+                # provider-authoritative cancel_at_period_end when present.
+                if event.cancel_at_period_end is not None and hasattr(self._subs, "set_cancel_at_period_end"):
+                    self._subs.set_cancel_at_period_end(event.account_id, bool(event.cancel_at_period_end))
                 self._events.mark_processed(bid)
+                current = self._subs.ensure_subscription(event.account_id)
                 return {
                     "status": "processed",
                     "converged": True,
@@ -170,6 +178,7 @@ class BillingService:
                 provider=event.provider,
                 provider_customer_id=event.provider_customer_id,
                 provider_subscription_id=event.provider_subscription_id,
+                cancel_at_period_end=event.cancel_at_period_end,
             )
             self._events.mark_processed(bid)
             logger.info(

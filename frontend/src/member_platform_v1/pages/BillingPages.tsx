@@ -7,11 +7,13 @@ import {
   getBillingEntitlements,
   getBillingPlans,
   getBillingSubscription,
+  getBillingUsage,
   openBillingPortal,
   startBillingCheckout,
   type BillingEntitlements,
   type BillingPlan,
   type BillingSubscription,
+  type BillingUsage,
 } from "../services/stagingApi";
 import { entitlementLabel, isSelfServicePlan, planTagline, statusLabel } from "../billing/presentation";
 
@@ -39,6 +41,8 @@ function BillingCenterInner() {
   const [plans, setPlans] = useState<BillingPlan[]>([]);
   const [subscription, setSubscription] = useState<BillingSubscription | null>(null);
   const [entitlements, setEntitlements] = useState<BillingEntitlements | null>(null);
+  const [usage, setUsage] = useState<BillingUsage | null>(null);
+  const [usageError, setUsageError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyPlan, setBusyPlan] = useState<string | null>(null);
@@ -60,6 +64,14 @@ function BillingCenterInner() {
       setError("目前無法載入帳務資訊，請稍後再試。");
     } finally {
       setLoading(false);
+    }
+    // Usage is loaded separately so a metering outage does not break the page.
+    try {
+      setUsage(await getBillingUsage());
+      setUsageError(false);
+    } catch {
+      setUsage(null);
+      setUsageError(true);
     }
   }, []);
 
@@ -183,6 +195,58 @@ function BillingCenterInner() {
         </div>
       </section>
 
+      <section className="mpv1-card" data-testid="usage-summary">
+        <h2 className="mpv1-card-title">使用額度</h2>
+        {usageError ? (
+          <p className="mpv1-muted" role="status">
+            使用額度目前無法取得，請稍後再試。
+          </p>
+        ) : usage ? (
+          (() => {
+            const metered = usage.quotas.filter((q) => q.quota_type === "consumable" && q.limit > 0);
+            if (!metered.length) {
+              return <p className="mpv1-muted">目前方案沒有計量額度。</p>;
+            }
+            return (
+              <div style={{ display: "grid", gap: "0.75rem" }}>
+                {metered.map((q) => {
+                  const pct = q.limit > 0 ? Math.min(100, Math.round((q.used / q.limit) * 100)) : 0;
+                  return (
+                    <div key={q.quota_code} data-testid={`usage-${q.quota_code}`}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+                        <span>{q.label}</span>
+                        <span aria-label={`${q.used} / ${q.limit}`}>
+                          {q.used} / {q.limit}（剩餘 {q.remaining}）
+                        </span>
+                      </div>
+                      <div
+                        className="mpv1-usage-bar"
+                        role="progressbar"
+                        aria-valuenow={q.used}
+                        aria-valuemin={0}
+                        aria-valuemax={q.limit}
+                        style={{ background: "var(--mp-border,#243)", borderRadius: "6px", height: "8px", overflow: "hidden", marginTop: "0.25rem" }}
+                      >
+                        <div style={{ width: `${pct}%`, height: "100%", background: q.remaining === 0 ? "#c0392b" : "#2d7" }} />
+                      </div>
+                      {q.remaining === 0 ? (
+                        <p className="mpv1-muted" style={{ marginTop: "0.25rem" }}>
+                          本期額度已用完。
+                        </p>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()
+        ) : (
+          <p className="mpv1-muted" aria-busy="true">
+            載入使用額度中…
+          </p>
+        )}
+      </section>
+
       <div className="mpv1-plan-grid" data-classification="STATIC_PRODUCT_CONFIG">
         {plans.map((plan) => {
           const current = plan.code === effectivePlan;
@@ -196,9 +260,11 @@ function BillingCenterInner() {
                   目前方案
                 </span>
               ) : plan.code === "enterprise" ? (
-                <a className="mpv1-btn mpv1-btn-outline" href="mailto:enterprise@nexus.local">
-                  聯絡企業方案
-                </a>
+                // Enterprise is contact-sales, not self-service. No hardcoded
+                // email/domain until branding + contact are configured.
+                <button type="button" className="mpv1-btn mpv1-btn-outline" disabled data-testid="enterprise-contact">
+                  企業方案即將開放
+                </button>
               ) : selfService ? (
                 <button
                   type="button"

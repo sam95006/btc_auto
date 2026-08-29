@@ -113,6 +113,9 @@ class ProviderEvent:
     provider_customer_id: Optional[str] = None
     provider_subscription_id: Optional[str] = None
     target_plan_code: Optional[str] = None
+    # Provider-authoritative "scheduled to cancel at period end" flag. None means
+    # the event does not carry this information (leave internal state unchanged).
+    cancel_at_period_end: Optional[bool] = None
     effective_at: datetime = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:

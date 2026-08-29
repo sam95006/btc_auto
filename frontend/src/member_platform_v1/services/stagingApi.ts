@@ -415,3 +415,23 @@ export async function openBillingPortal(): Promise<
 > {
   return postBilling("/billing/portal");
 }
+
+export type BillingUsageQuota = {
+  quota_code: string;
+  label: string;
+  quota_type: string;
+  window: string;
+  limit: number;
+  used: number;
+  remaining: number;
+  reset_at: string | null;
+};
+
+export type BillingUsage = {
+  effective_plan_code: string;
+  quotas: BillingUsageQuota[];
+};
+
+export async function getBillingUsage(): Promise<BillingUsage> {
+  return getJson<BillingUsage>("/billing/usage");
+}

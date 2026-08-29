@@ -52,7 +52,7 @@ class MemSubRepo:
         return s
 
     def apply_provider_transition(self, aid, to_status, *, plan_code=None, provider=None,
-                                  provider_customer_id=None, provider_subscription_id=None):
+                                  provider_customer_id=None, provider_subscription_id=None, cancel_at_period_end=None):
         cur = self.ensure_subscription(aid)
         assert_transition(cur.status, to_status)
         cur.status = to_status
@@ -64,8 +64,8 @@ class MemSubRepo:
             cur.provider_customer_id = provider_customer_id
         if provider_subscription_id is not None:
             cur.provider_subscription_id = provider_subscription_id
-        if to_status == STATUS_ACTIVE:
-            cur.cancel_at_period_end = False
+        if cancel_at_period_end is not None:
+            cur.cancel_at_period_end = bool(cancel_at_period_end)
         return cur
 
     def set_cancel_at_period_end(self, aid, value):
@@ -175,16 +175,27 @@ def test_webhook_deletion_after_cancel_request_finalizes_state() -> None:
     assert resolve_entitlements(subs.get_by_account("acct_f")).has("advanced_signals") is False
 
 
-def test_reactivation_clears_cancel_at_period_end() -> None:
+def test_cancel_flag_is_provider_authoritative_not_cleared_by_recovery() -> None:
     svc, subs, _, provider = _mock_service()
     _activate(svc, subs, provider, "acct_r")
     svc.request_cancellation(account_id="acct_r")
     assert subs.get_by_account("acct_r").cancel_at_period_end is True
-    # payment failure then recovery reactivates and clears the pending flag.
-    from backend.nexus_billing.provider import EVENT_PAYMENT_FAILED, EVENT_PAYMENT_RECOVERED
+    # Payment failure + recovery does NOT by itself clear a scheduled cancel.
+    from backend.nexus_billing.provider import (
+        EVENT_PAYMENT_FAILED,
+        EVENT_PAYMENT_RECOVERED,
+        EVENT_SUBSCRIPTION_ACTIVE,
+        ProviderEvent,
+    )
     svc.process_provider_event(provider.make_event(account_id="acct_r", event_type=EVENT_PAYMENT_FAILED))
     svc.process_provider_event(provider.make_event(account_id="acct_r", event_type=EVENT_PAYMENT_RECOVERED))
     assert subs.get_by_account("acct_r").status == "active"
+    assert subs.get_by_account("acct_r").cancel_at_period_end is True  # still scheduled
+    # Only an explicit provider signal (cancel_at_period_end=False) clears it.
+    resume = ProviderEvent(provider="mock", provider_event_id="resume_1",
+                           event_type=EVENT_SUBSCRIPTION_ACTIVE, account_id="acct_r",
+                           target_plan_code="pro", cancel_at_period_end=False)
+    svc.process_provider_event(resume)
     assert subs.get_by_account("acct_r").cancel_at_period_end is False
 
 
