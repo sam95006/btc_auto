@@ -135,6 +135,7 @@ class SubscriptionRepository:
         provider: Optional[str] = None,
         provider_customer_id: Optional[str] = None,
         provider_subscription_id: Optional[str] = None,
+        cancel_at_period_end: Optional[bool] = None,
     ) -> Subscription:
         """Apply a provider-authoritative lifecycle transition with validation.
 
@@ -160,14 +161,18 @@ class SubscriptionRepository:
         if provider_subscription_id is not None:
             sets.append("provider_subscription_id = %s")
             params.append(provider_subscription_id)
+        # cancel_at_period_end is provider-authoritative: only change it when the
+        # event explicitly carries a value. Reaching 'active' does NOT by itself
+        # clear a scheduled cancellation.
+        if cancel_at_period_end is not None:
+            sets.append("cancel_at_period_end = %s")
+            params.append(bool(cancel_at_period_end))
         if to_status == STATUS_ACTIVE:
             sets.append("started_at = COALESCE(started_at, NOW())")
             sets.append("current_period_start = NOW()")
             sets.append("current_period_end = NOW() + INTERVAL '30 days'")
             sets.append("canceled_at = NULL")
             sets.append("ended_at = NULL")
-            # Reactivation clears any pending "cancel at period end".
-            sets.append("cancel_at_period_end = FALSE")
         elif to_status == STATUS_CANCELED:
             sets.append("canceled_at = NOW()")
         elif to_status == STATUS_EXPIRED:

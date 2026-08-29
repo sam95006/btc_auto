@@ -53,7 +53,10 @@ def test_cancel_return_page_does_no_mutation() -> None:
 def test_enterprise_is_contact_not_self_checkout() -> None:
     src = _read(BILLING_PAGES)
     assert 'plan.code === "enterprise"' in src
-    assert "聯絡企業方案" in src
+    assert "企業方案即將開放" in src
+    # No hardcoded email / unregistered domain / branding placeholder anywhere.
+    for banned in ("nexus.local", "mailto:", "ELVUMO", "KELYVORA", "TELYVOR", "NAVELYR"):
+        assert banned not in src
     pres = _read(PRESENTATION)
     assert '"starter", "pro", "advanced"' in pres  # enterprise absent from self-service
     assert "enterprise" not in pres.split("SELF_SERVICE_PLANS")[1].split("]")[0]
@@ -81,3 +84,24 @@ def test_billing_ui_handles_loading_error_unavailable() -> None:
     assert "無法載入帳務資訊" in src  # error
     assert "res.status === 503" in src  # provider unavailable handled
     assert "付款出現問題" in src  # past_due UI
+
+
+def test_usage_summary_ui_present() -> None:
+    api = _read(API)
+    assert "getBillingUsage" in api
+    src = _read(BILLING_PAGES)
+    assert '"usage-summary"' in src
+    assert "使用額度" in src
+    assert "剩餘" in src  # remaining shown
+    assert "本期額度已用完" in src  # exhausted state
+    assert "使用額度目前無法取得" in src  # unavailable state (fail-safe, not unlimited)
+    # UI is not security: no localStorage authority anywhere in billing pages.
+    assert "localStorage" not in src
+    assert "sessionStorage" not in src
+
+
+def test_no_hardcoded_enterprise_email_anywhere() -> None:
+    for p in (BILLING_PAGES, PRESENTATION):
+        text = _read(p)
+        assert "nexus.local" not in text
+        assert "mailto:" not in text

@@ -188,7 +188,8 @@ def normalize_stripe_event(event: dict[str, Any]) -> Optional[ProviderEvent]:
     if not provider_event_id or not isinstance(data_object, dict):
         return None
 
-    def _make(internal_type: str, *, plan_code: Optional[str], customer, subscription) -> ProviderEvent:
+    def _make(internal_type: str, *, plan_code: Optional[str], customer, subscription,
+              cancel_at_period_end: Optional[bool] = None) -> ProviderEvent:
         return ProviderEvent(
             provider=STRIPE_PROVIDER_NAME,
             provider_event_id=provider_event_id,
@@ -197,6 +198,7 @@ def normalize_stripe_event(event: dict[str, Any]) -> Optional[ProviderEvent]:
             provider_customer_id=str(customer) if customer else None,
             provider_subscription_id=str(subscription) if subscription else None,
             target_plan_code=plan_code,
+            cancel_at_period_end=cancel_at_period_end,
         )
 
     if event_type == "checkout.session.completed":
@@ -215,11 +217,13 @@ def normalize_stripe_event(event: dict[str, Any]) -> Optional[ProviderEvent]:
         internal = map_stripe_subscription_status(data_object.get("status"))
         if internal is None:
             return None  # unknown status -> fail closed / ignore
+        cape = data_object.get("cancel_at_period_end")
         return _make(
             internal,
             plan_code=md.get("plan_code") if internal in (EVENT_SUBSCRIPTION_ACTIVE, EVENT_SUBSCRIPTION_TRIALING) else None,
             customer=data_object.get("customer"),
             subscription=data_object.get("id"),
+            cancel_at_period_end=bool(cape) if isinstance(cape, bool) else None,
         )
 
     if event_type == "customer.subscription.deleted":
@@ -325,9 +329,12 @@ class StripePaymentProvider:
         portal = stripe.billing_portal.Session.create(  # pragma: no cover - needs sandbox creds
             customer=provider_customer_id, return_url=self._config.success_url
         )
-        return BillingPortalSession(
-            portal_id=str(portal.get("id")), provider=self.name, portal_url=str(portal.get("url"))
-        )
+        portal_id = portal.get("id")
+        portal_url = portal.get("url")
+        if not portal_id or not portal_url:
+            # Never hand the frontend a "None"/empty portal to guess at.
+            raise StripeConfigError("stripe_portal_url_missing")
+        return BillingPortalSession(portal_id=str(portal_id), provider=self.name, portal_url=str(portal_url))
 
     def normalize_event(self, raw: Any) -> Optional[ProviderEvent]:
         if isinstance(raw, ProviderEvent):

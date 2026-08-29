@@ -62,7 +62,8 @@ class MemSubRepo:
         return sub
 
     def apply_provider_transition(self, account_id, to_status, *, plan_code=None, provider=None,
-                                  provider_customer_id=None, provider_subscription_id=None) -> Subscription:
+                                  provider_customer_id=None, provider_subscription_id=None,
+                                  cancel_at_period_end=None) -> Subscription:
         cur = self.ensure_subscription(account_id)
         assert_transition(cur.status, to_status)
         cur.status = to_status
@@ -74,6 +75,8 @@ class MemSubRepo:
             cur.provider_customer_id = provider_customer_id
         if provider_subscription_id is not None:
             cur.provider_subscription_id = provider_subscription_id
+        if cancel_at_period_end is not None:
+            cur.cancel_at_period_end = bool(cancel_at_period_end)
         return cur
 
 

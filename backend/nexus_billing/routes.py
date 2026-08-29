@@ -40,10 +40,15 @@ from backend.nexus_billing.stripe_provider import (
 )
 from backend.nexus_billing.subscription import Subscription, default_subscription
 
+from backend.nexus_billing.usage_repository import UsageRepository
+from backend.nexus_billing.usage_service import UsageDecision, UsageService
+
 MOCK_ENABLED_CONFIG_KEY = "NEXUS_BILLING_MOCK_ENABLED"
 BILLING_SERVICE_CONFIG_KEY = "NEXUS_BILLING_SERVICE"
 STRIPE_CONFIG_CONFIG_KEY = "NEXUS_BILLING_STRIPE_CONFIG"
 STRIPE_SERVICE_CONFIG_KEY = "NEXUS_BILLING_STRIPE_SERVICE"
+USAGE_SERVICE_CONFIG_KEY = "NEXUS_BILLING_USAGE_SERVICE"
+USAGE_DEMO_ENABLED_CONFIG_KEY = "NEXUS_BILLING_USAGE_DEMO_ENABLED"
 
 SUBSCRIPTION_REPO_CONFIG_KEY = "NEXUS_BILLING_SUBSCRIPTION_REPO"
 
@@ -158,6 +163,35 @@ def _stripe_service(app: Flask) -> Optional[BillingService]:
     )
     app.config[STRIPE_SERVICE_CONFIG_KEY] = svc
     return svc
+
+
+def _usage_service(app: Flask) -> Optional[UsageService]:
+    svc = app.config.get(USAGE_SERVICE_CONFIG_KEY)
+    if svc is not None:
+        return svc
+    pool = _services(app).get("pool")
+    if pool is None:
+        return None
+    svc = UsageService(usage_repo=UsageRepository(pool), subscription_repo=SubscriptionRepository(pool))
+    app.config[USAGE_SERVICE_CONFIG_KEY] = svc
+    return svc
+
+
+def enforce_quota(
+    app: Flask, account_id: str, quota_code: str, *, amount: int = 1, idempotency_key: str
+) -> tuple[Optional[Response], Optional[UsageDecision]]:
+    """Central quota gate. Returns (error_response, None) on deny/unavailable, or
+    (None, decision) on success. 429 with a consistent USAGE_LIMIT_EXCEEDED
+    classification when the quota is exhausted; fail closed otherwise."""
+    svc = _usage_service(app)
+    if svc is None:
+        return _json_no_store({"error": "usage_unavailable", "classification": "UNAVAILABLE"}, 503), None
+    decision = svc.consume(account_id=account_id, quota_code=quota_code, amount=amount, idempotency_key=idempotency_key)
+    if not decision.allowed:
+        payload = {"error": "usage_limit_exceeded", "classification": "USAGE_LIMIT_EXCEEDED"}
+        payload.update(decision.to_public_dict())
+        return _json_no_store(payload, 429), None
+    return None, decision
 
 
 def enforce_entitlement(app: Flask, feature_code: str) -> Optional[Response]:
@@ -291,6 +325,47 @@ def register_billing_routes(app: Flask) -> None:
         if service is None:
             return _json_no_store({"error": "billing_unavailable", "classification": "UNAVAILABLE"}, 503)
         return _json_no_store({"result": service.request_cancellation(account_id=account_id)})
+
+    # ----- member usage (read-only; own account only) -----
+    @app.get("/api/v1/billing/usage")
+    def billing_usage():
+        account_id = _authenticated_account_id(app)
+        if not account_id:
+            return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
+        svc = _usage_service(app)
+        if svc is None:
+            return _json_no_store({"error": "usage_unavailable", "classification": "UNAVAILABLE"}, 503)
+        try:
+            data = svc.resolve_usage(account_id)
+        except Exception:  # noqa: BLE001 - never expose internals; UI shows unavailable
+            return _json_no_store({"error": "usage_unavailable", "classification": "UNAVAILABLE"}, 503)
+        return _json_no_store(data)
+
+    # ----- representative non-trading quota-enforced endpoint (disabled default) -----
+    @app.post("/api/v1/billing/usage/consume-demo")
+    def billing_usage_consume_demo():
+        if not app.config.get(USAGE_DEMO_ENABLED_CONFIG_KEY):
+            return _json_no_store({"error": "not_found", "classification": "DISABLED"}, 404)
+        account_id = _authenticated_account_id(app)
+        if not account_id:
+            return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
+        # Access = Authentication AND Entitlement AND Quota. Entitlement first.
+        denied_entitlement = enforce_entitlement(app, "advanced_analysis")
+        if denied_entitlement is not None:
+            return denied_entitlement
+        body = request.get_json(silent=True) or {}
+        idempotency_key = str(body.get("idempotency_key") or "").strip()
+        if not idempotency_key:
+            return _json_no_store({"error": "missing_idempotency_key", "classification": "BAD_REQUEST"}, 400)
+        err, decision = enforce_quota(
+            app, account_id, "advanced_analysis_requests_daily", amount=1, idempotency_key=idempotency_key
+        )
+        if err is not None:
+            return err
+        assert decision is not None
+        return _json_no_store(
+            {"ok": True, "data_class": "USAGE_DEMO_READ_ONLY", "remaining": decision.remaining}
+        )
 
     # ----- provider-neutral real checkout (Stripe when configured) -----
     @app.post("/api/v1/billing/checkout")
