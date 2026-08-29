@@ -94,7 +94,7 @@ class MemUsageRepo:
             raise ValueError("invalid_amount")
         ckey = (account_id, quota_code, window_type, window_start)
         used = self.counters.get(ckey, 0)
-        idem = (account_id, quota_code, idempotency_key)
+        idem = (account_id, quota_code, window_type, window_start, idempotency_key)
         if idem in self.events:
             return True, used  # idempotent no-op
         if used + amount <= limit:
@@ -155,19 +155,18 @@ def test_daily_and_monthly_windows_reset() -> None:
 
 
 def test_cannot_exceed_limit_and_exact_last_unit() -> None:
-    # Use starter (analysis daily = 20) for a small ceiling.
-    svc, usage, _ = _svc(sub_plan="starter")
-    for i in range(20):
-        r = svc.consume(account_id="acct", quota_code=QUOTA_ANALYSIS_DAILY, idempotency_key=f"k{i}")
-        assert r.allowed
-    assert svc.consume(account_id="acct", quota_code=QUOTA_ANALYSIS_DAILY, idempotency_key="k20").used == 20
-    denied = svc.consume(account_id="acct", quota_code=QUOTA_ANALYSIS_DAILY, idempotency_key="k21")
+    # Pro holds the advanced_analysis entitlement; daily limit is 100.
+    svc, usage, _ = _svc(sub_plan="pro")
+    assert svc.consume(account_id="acct", quota_code=QUOTA_ANALYSIS_DAILY, amount=99, idempotency_key="a").used == 99
+    last = svc.consume(account_id="acct", quota_code=QUOTA_ANALYSIS_DAILY, amount=1, idempotency_key="b")
+    assert last.allowed and last.used == 100 and last.remaining == 0
+    denied = svc.consume(account_id="acct", quota_code=QUOTA_ANALYSIS_DAILY, amount=1, idempotency_key="c")
     assert denied.allowed is False and denied.remaining == 0 and denied.reason == "quota_exceeded"
 
 
 def test_amount_greater_than_remaining_denied_atomically() -> None:
-    svc, usage, _ = _svc(sub_plan="starter")  # limit 20
-    d = svc.consume(account_id="acct", quota_code=QUOTA_ANALYSIS_DAILY, amount=25, idempotency_key="big")
+    svc, usage, _ = _svc(sub_plan="pro")  # limit 100
+    d = svc.consume(account_id="acct", quota_code=QUOTA_ANALYSIS_DAILY, amount=150, idempotency_key="big")
     assert d.allowed is False and d.used == 0  # nothing consumed
 
 
@@ -332,3 +331,59 @@ def test_quota_never_grants_trading() -> None:
     # trading codes.
     banned = {"trading", "auto_trade", "order_execution", "exchange_write", "arm"}
     assert not (set(QUOTA_CATALOG) & banned)
+
+
+# --------------------------------------------------------------------------
+# PLATFORM-1 carry-forward FIX A/B/C
+# --------------------------------------------------------------------------
+
+def test_fix_a_same_key_different_window_is_not_free_duplicate() -> None:
+    day1 = datetime(2026, 3, 15, 12, 0, tzinfo=timezone.utc)
+    day2 = datetime(2026, 3, 16, 12, 0, tzinfo=timezone.utc)
+    clock = {"now": day1}
+    svc, usage, _ = _svc(sub_plan="pro", clock=lambda: clock["now"])
+    a = svc.consume(account_id="acct", quota_code=QUOTA_ANALYSIS_DAILY, idempotency_key="same")
+    assert a.allowed and a.used == 1
+    # Same key, SAME window -> idempotent no-op.
+    dup = svc.consume(account_id="acct", quota_code=QUOTA_ANALYSIS_DAILY, idempotency_key="same")
+    assert dup.used == 1
+    # Same key, NEW window -> must count (not mistaken for a duplicate).
+    clock["now"] = day2
+    nxt = svc.consume(account_id="acct", quota_code=QUOTA_ANALYSIS_DAILY, idempotency_key="same")
+    assert nxt.allowed and nxt.used == 1  # fresh window counter
+
+
+def test_fix_b_non_entitled_quota_not_usable() -> None:
+    # Starter has an analysis quota code but NOT the advanced_analysis entitlement.
+    svc, usage, _ = _svc(sub_plan="starter", sub_status=STATUS_ACTIVE)
+    resolved = svc.resolve_usage("acct")
+    analysis = next(q for q in resolved["quotas"] if q["quota_code"] == QUOTA_ANALYSIS_DAILY)
+    assert analysis["entitled"] is False and analysis["limit"] == 0  # not presented as usable
+    d = svc.consume(account_id="acct", quota_code=QUOTA_ANALYSIS_DAILY, idempotency_key="k")
+    assert d.allowed is False and d.reason == "entitlement_required"
+
+
+def test_fix_c_error_semantics_distinct() -> None:
+    app, auth, subs, usage = _app(plan="pro")
+    auth.sessions["sid"] = "acct"
+    c = app.test_client()
+    # missing idempotency key -> 400
+    assert c.post("/api/v1/billing/usage/consume-demo", json={}, headers={"X-Nexus-Session": "sid"}).status_code == 400
+
+
+def test_fix_c_usage_unavailable_is_503() -> None:
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    auth = FakeAuth()
+    auth.sessions["sid"] = "acct"
+    subs = MemSubRepo()
+    subs.set("acct", "pro", STATUS_ACTIVE)
+    from backend.nexus_billing.routes import SUBSCRIPTION_REPO_CONFIG_KEY
+    app.config["NEXUS_PRODUCT_ALPHA_SERVICES"] = {"auth": auth}
+    app.config[SUBSCRIPTION_REPO_CONFIG_KEY] = subs
+    app.config[USAGE_SERVICE_CONFIG_KEY] = None  # no usage service available
+    app.config[USAGE_DEMO_ENABLED_CONFIG_KEY] = True
+    register_billing_routes(app)
+    r = app.test_client().post("/api/v1/billing/usage/consume-demo",
+                               json={"idempotency_key": "k"}, headers={"X-Nexus-Session": "sid"})
+    assert r.status_code == 503

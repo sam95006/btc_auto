@@ -12,7 +12,7 @@ import "./styles/memberPlatform.css";
 /* V18.2.12 Product V2: legacy v1827/v1828/v1829/v18210 layout CSS intentionally NOT loaded */
 import "./styles/v18211MemberProductV2.css";
 import "./styles/a11yPerf.css";
-import "./styles/founderOperator.css";
+/* PLATFORM-1: founderOperator.css belongs to the founder-private build only. */
 
 installAssetLoadRecovery();
 
