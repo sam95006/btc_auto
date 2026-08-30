@@ -62,14 +62,19 @@ def _get_pool(app: Flask) -> Any:
     pool = app.config.get("NEXUS_PRIVATE_CERT_POOL")
     if pool is not None:
         return pool
+    # Canonical private binding: the certified trading runtime connects its
+    # durable ledger via PostgresPool(NEXUS_POSTGRES_URL) directly. The
+    # certifier reads the SAME source-of-truth over the Zeabur private network,
+    # independent of the product-alpha NEXUS_PG_RUNTIME_ENABLED gate (which the
+    # private service keeps false). No second DB, no public networking, no DSN
+    # exposure — the connection string is read from env and never returned.
+    dsn = (os.environ.get("NEXUS_POSTGRES_URL") or os.environ.get("DATABASE_URL") or "").strip()
+    if not dsn:
+        return None
     try:
         from backend.nexus_persistence_pg.pool import PostgresPool
-        from backend.nexus_persistence_pg.runtime import PostgresRuntimeConfig
 
-        cfg = PostgresRuntimeConfig.from_env()
-        if not cfg.enabled or not cfg.database_url:
-            return None
-        pool = PostgresPool(cfg.database_url)
+        pool = PostgresPool(dsn)
         pool.open()
         app.config["NEXUS_PRIVATE_CERT_POOL"] = pool
         return pool
