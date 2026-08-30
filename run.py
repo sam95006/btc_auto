@@ -32,6 +32,7 @@ from backend.nexus_paid_beta_retention.routes import register_paid_beta_retentio
 from backend.nexus_customer_validation_concierge.routes import (
     register_customer_validation_concierge_routes,
 )
+from backend.nexus_private_cert.routes import register_private_cert_routes
 from backend.core.env_loader import load_env_file
 from backend.runtime.single_instance_guard import SingleInstanceError, SingleInstanceGuard
 from backend.security.validation_public_guard import install_validation_public_guard
@@ -68,6 +69,7 @@ register_pub18_live_funnel_routes(app)  # PUB18-A: Live Funnel + Market Pulse (r
 register_runtime_snapshot_routes(app)  # V18.1 Phase B: Runtime Snapshot live binding (read-only)
 register_public_entitlements_v18_2_routes(app)  # V18.2 Track B: capability entitlements (read-only)
 register_paid_beta_retention_routes(app)  # V18.2.22: closed-beta retention gates
+register_private_cert_routes(app)  # PRIVATE-ENV-2R: read-only certification (auth-gated, fail-closed)
 try:
     from backend.nexus_product_analytics.routes import register_product_analytics_routes
 
