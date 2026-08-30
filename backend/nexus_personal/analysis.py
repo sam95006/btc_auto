@@ -55,8 +55,18 @@ def analyze_series(symbol: str, series: Optional[Sequence[float]]) -> dict[str, 
     }
 
 
-def build_report(symbol: str, analysis: dict[str, Any]) -> dict[str, Any]:
-    """A deterministic member-safe report derived from a completed analysis."""
+def build_report(
+    symbol: str,
+    analysis: dict[str, Any],
+    metadata: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """A deterministic member-safe report derived from a completed analysis.
+
+    `metadata` carries member-safe provenance only (symbol, interval, provider,
+    source_class, freshness, data/analysis timestamps, points). It must never
+    include exchange keys, order IDs, routing, ARM, or position sizing.
+    """
+    meta = dict(metadata or {})
     return {
         "data_class": "MEMBER_SAFE_REPORT",
         "symbol": symbol,
@@ -66,4 +76,37 @@ def build_report(symbol: str, analysis: dict[str, Any]) -> dict[str, Any]:
             {"title": "波動度", "value": analysis.get("volatility")},
             {"title": "區間變化 %", "value": analysis.get("range_pct")},
         ],
+        "provenance": {
+            "provider": meta.get("provider"),
+            "source_class": meta.get("source_class"),
+            "freshness": meta.get("freshness"),
+            "data_timestamp": meta.get("data_timestamp"),
+            "analysis_timestamp": meta.get("analysis_timestamp"),
+            "interval": meta.get("interval"),
+        },
+    }
+
+
+def assess_risk(analysis: dict[str, Any]) -> dict[str, Any]:
+    """Deterministic member-safe *market* risk descriptor from real volatility.
+
+    This is read-only market-risk information (a volatility band), explicitly
+    NOT Risk Guard, position sizing, leverage authority, routing, ARM, or any
+    private trade state. It only reflects the observed public price range.
+    """
+    range_pct = float(analysis.get("range_pct") or 0.0)
+    volatility = str(analysis.get("volatility") or "low")
+    if range_pct >= 8.0:
+        level = "elevated"
+    elif range_pct >= 3.0:
+        level = "moderate"
+    else:
+        level = "contained"
+    return {
+        "data_class": "MEMBER_SAFE_RISK",
+        "symbol": analysis.get("symbol"),
+        "risk_level": level,
+        "volatility": volatility,
+        "range_pct": round(range_pct, 4),
+        "basis": "observed_public_price_range",
     }

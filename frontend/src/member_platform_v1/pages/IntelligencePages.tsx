@@ -29,8 +29,41 @@ import {
   type PersonalAnalysis,
   type PersonalFeature,
   type PersonalFeatures,
+  type PersonalHistory,
+  type PersonalProvenance,
   type PersonalReport,
+  type PersonalRiskDescriptor,
 } from "../services/stagingApi";
+
+/** Truthful freshness badge — never shows live/fresh unless the backend says so. */
+function FreshnessBadge({ provenance }: { provenance?: PersonalProvenance }) {
+  const freshness = (provenance?.freshness || "").toUpperCase();
+  if (!freshness) return null;
+  const stale = freshness === "STALE" || freshness === "DATA_DELAYED";
+  const label =
+    freshness === "FRESH" || freshness === "LIVE"
+      ? "即時"
+      : stale
+        ? "延遲資料"
+        : freshness === "FIXTURE"
+          ? "測試資料"
+          : freshness;
+  return (
+    <span className="mpv1-chip" data-testid="freshness-badge" style={{ color: stale ? "#fbbf24" : "#2d7" }}>
+      {label}
+    </span>
+  );
+}
+
+function ProvenanceLine({ provenance }: { provenance?: PersonalProvenance }) {
+  if (!provenance) return null;
+  return (
+    <p className="mpv1-muted" data-testid="provenance">
+      來源 {provenance.provider || "—"}（{provenance.source_class || "—"}）
+      {provenance.data_timestamp ? ` · 資料時間 ${provenance.data_timestamp}` : ""}
+    </p>
+  );
+}
 
 function RequireSession({ children }: { children: ReactNode }) {
   const { session, ready } = useAuth();
@@ -117,7 +150,7 @@ function IntelligenceInner() {
         onRefreshUsage={refreshUsage}
         usage={usage}
         run={runPersonalAnalysis}
-        render={(r) => <AnalysisResult analysis={r.analysis} remaining={r.remaining} />}
+        render={(r) => <AnalysisResult analysis={r.analysis} provenance={r.provenance} remaining={r.remaining} />}
       />
       <MeteredAction
         title="報告產生"
@@ -130,19 +163,12 @@ function IntelligenceInner() {
       />
       <WatchlistPanel entitled={entitled("watchlists")} />
       <HistoryPanel entitled={entitled("extended_market_history")} />
+      <RiskPanel entitled={entitled("risk_intelligence")} />
       <UnavailablePanel
         title="進階訊號"
         entitled={entitled("advanced_signals")}
         load={async () => {
           const r = await getPersonalSignals();
-          return r.available;
-        }}
-      />
-      <UnavailablePanel
-        title="風險情報"
-        entitled={entitled("risk_intelligence")}
-        load={async () => {
-          const r = await getPersonalRisk();
           return r.available;
         }}
       />
@@ -301,15 +327,27 @@ function MeteredAction<T>({
   );
 }
 
-function AnalysisResult({ analysis, remaining }: { analysis: PersonalAnalysis; remaining: number }) {
+function AnalysisResult({
+  analysis,
+  provenance,
+  remaining,
+}: {
+  analysis: PersonalAnalysis;
+  provenance?: PersonalProvenance;
+  remaining: number;
+}) {
   return (
     <div data-testid="analysis-result" data-classification={analysis.data_class}>
-      <p>
-        {analysis.symbol}：趨勢 <strong>{analysis.trend}</strong>，波動度 <strong>{analysis.volatility}</strong>
+      <p style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+        <span>
+          {analysis.symbol}：趨勢 <strong>{analysis.trend}</strong>，波動度 <strong>{analysis.volatility}</strong>
+        </span>
+        <FreshnessBadge provenance={provenance} />
       </p>
       <p className="mpv1-muted">
         變化 {analysis.change_pct}%、區間 {analysis.range_pct}%、樣本 {analysis.points} 筆 · 剩餘額度 {remaining}
       </p>
+      <ProvenanceLine provenance={provenance} />
     </div>
   );
 }
@@ -317,7 +355,10 @@ function AnalysisResult({ analysis, remaining }: { analysis: PersonalAnalysis; r
 function ReportResult({ report, remaining }: { report: PersonalReport; remaining: number }) {
   return (
     <div data-testid="report-result" data-classification={report.data_class}>
-      <p>{report.summary}</p>
+      <p style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+        <span>{report.summary}</span>
+        <FreshnessBadge provenance={report.provenance} />
+      </p>
       <ul className="mpv1-muted">
         {report.sections.map((s, i) => (
           <li key={i}>
@@ -325,8 +366,66 @@ function ReportResult({ report, remaining }: { report: PersonalReport; remaining
           </li>
         ))}
       </ul>
+      <ProvenanceLine provenance={report.provenance} />
       <p className="mpv1-muted">剩餘額度 {remaining}</p>
     </div>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Risk Intelligence — member-safe market risk from real volatility
+// --------------------------------------------------------------------------
+
+function RiskPanel({ entitled }: { entitled: boolean }) {
+  const [state, setState] = useState<"loading" | "available" | "unavailable" | "error">("loading");
+  const [risk, setRisk] = useState<PersonalRiskDescriptor | null>(null);
+  const [provenance, setProvenance] = useState<PersonalProvenance | undefined>(undefined);
+
+  useEffect(() => {
+    if (!entitled) return;
+    getPersonalRisk("BTCUSDT")
+      .then((r) => {
+        if (r.available && r.risk) {
+          setRisk(r.risk);
+          setProvenance(r.provenance);
+          setState("available");
+        } else {
+          setState("unavailable");
+        }
+      })
+      .catch(() => setState("error"));
+  }, [entitled]);
+
+  if (!entitled) return <LockedCard title="風險情報" testid="risk_intelligence" />;
+
+  const LEVEL_LABEL: Record<string, string> = { contained: "受控", moderate: "中等", elevated: "偏高" };
+
+  return (
+    <section className="mpv1-card" data-testid="action-risk_intelligence">
+      <h2 className="mpv1-card-title">風險情報</h2>
+      {state === "loading" ? (
+        <p className="mpv1-muted" aria-busy="true">載入中…</p>
+      ) : state === "available" && risk ? (
+        <div data-testid="risk-result" data-classification={risk.data_class}>
+          <p style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+            <span>
+              {risk.symbol}：市場風險 <strong data-testid="risk-level">{LEVEL_LABEL[risk.risk_level] || risk.risk_level}</strong>
+            </span>
+            <FreshnessBadge provenance={provenance} />
+          </p>
+          <p className="mpv1-muted">
+            波動度 {risk.volatility}、區間 {risk.range_pct}%（僅市場資訊，非交易建議）
+          </p>
+          <ProvenanceLine provenance={provenance} />
+        </div>
+      ) : state === "unavailable" ? (
+        <p className="mpv1-muted" role="status" data-testid="unavailable">
+          目前市場風險資料無法取得。不會顯示任何模擬或推測風險。
+        </p>
+      ) : (
+        <p className="mpv1-muted" role="status">目前無法載入，請稍後再試。</p>
+      )}
+    </section>
   );
 }
 
@@ -440,14 +539,19 @@ function WatchlistPanel({ entitled }: { entitled: boolean }) {
 // --------------------------------------------------------------------------
 
 function HistoryPanel({ entitled }: { entitled: boolean }) {
-  const [info, setInfo] = useState<{ effective_days: number; max_days: number; clamped: boolean } | null>(null);
+  const [state, setState] = useState<"loading" | "ready" | "unavailable">("loading");
+  const [info, setInfo] = useState<PersonalHistory | null>(null);
 
   useEffect(() => {
     if (!entitled) return;
-    // Request more than any plan grants; the backend clamps to plan policy.
+    // Request more than any plan grants; the backend clamps to plan policy and
+    // returns REAL bounded market records.
     getPersonalHistory("BTCUSDT", 3650)
-      .then((r) => setInfo({ effective_days: r.effective_days, max_days: r.max_days, clamped: r.clamped }))
-      .catch(() => setInfo(null));
+      .then((r) => {
+        setInfo(r);
+        setState("ready");
+      })
+      .catch(() => setState("unavailable"));
   }, [entitled]);
 
   if (!entitled) return <LockedCard title="延伸歷史" testid="extended_market_history" />;
@@ -455,13 +559,23 @@ function HistoryPanel({ entitled }: { entitled: boolean }) {
   return (
     <section className="mpv1-card" data-testid="action-extended_market_history">
       <h2 className="mpv1-card-title">延伸歷史</h2>
-      {info ? (
-        <p className="mpv1-muted" data-testid="history-range">
-          方案可查詢範圍：最多 {info.max_days} 天（本次生效 {info.effective_days} 天{info.clamped ? "，已依方案上限裁切" : ""}）。
-        </p>
+      {state === "loading" ? (
+        <p className="mpv1-muted" aria-busy="true">載入中…</p>
+      ) : state === "ready" && info ? (
+        <>
+          <p style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+            <span data-testid="history-range">
+              方案可查詢範圍：最多 {info.max_days} 天（本次生效 {info.effective_days} 天{info.clamped ? "，已依方案上限裁切" : ""}）。
+            </span>
+            <FreshnessBadge provenance={{ freshness: info.freshness, provider: info.provider }} />
+          </p>
+          <p className="mpv1-muted" data-testid="history-points">
+            實際取得 {info.data_points} 筆日線資料（來源上限 {info.provider_window_max} 筆）。
+          </p>
+        </>
       ) : (
-        <p className="mpv1-muted" aria-busy="true">
-          載入中…
+        <p className="mpv1-muted" role="status" data-testid="unavailable">
+          目前歷史市場資料無法取得，請稍後再試。
         </p>
       )}
     </section>

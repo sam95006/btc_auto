@@ -99,3 +99,18 @@ def test_staging_api_exposes_personal_client() -> None:
         assert fn in src, fn
     # Metered POSTs must send an idempotency key so retries do not double-charge.
     assert "idempotency_key" in src
+    # PERSONAL-2: real-data provenance + closed-beta health client.
+    assert "export async function getPersonalClosedBetaHealth" in src
+    assert "PersonalProvenance" in src and "PersonalHistory" in src
+
+
+def test_intelligence_page_shows_real_provenance_and_freshness() -> None:
+    src = _read(PAGE)
+    # Truthful data states: freshness badge + provenance + real history points.
+    assert "FreshnessBadge" in src and "ProvenanceLine" in src
+    assert "provenance" in src
+    assert "history-points" in src  # real record count, not a static claim
+    # Risk is now a member-safe descriptor panel bound to real volatility.
+    assert "risk-level" in src and "非交易建議" in src
+    # Truthful states enumerated: loading / available / unavailable.
+    assert '"loading"' in src and '"unavailable"' in src

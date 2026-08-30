@@ -469,11 +469,24 @@ export type PersonalAnalysis = {
   range_pct: number;
 };
 
+/** Member-safe provenance for real market-bound results (no secret fields). */
+export type PersonalProvenance = {
+  symbol?: string;
+  interval?: string;
+  provider?: string;
+  source_class?: string;
+  freshness?: string;
+  data_timestamp?: string | null;
+  analysis_timestamp?: string | null;
+  points?: number;
+};
+
 export type PersonalReport = {
   data_class: "MEMBER_SAFE_REPORT";
   symbol: string;
   summary: string;
   sections: Array<{ title: string; value: unknown }>;
+  provenance?: PersonalProvenance;
 };
 
 export type PersonalActionResult<T> = { ok: boolean; status: number; body: T | null };
@@ -507,7 +520,7 @@ export function newIdempotencyKey(prefix: string): string {
 export async function runPersonalAnalysis(
   symbol: string,
   idempotencyKey: string,
-): Promise<PersonalActionResult<{ ok: boolean; analysis: PersonalAnalysis; remaining: number }>> {
+): Promise<PersonalActionResult<{ ok: boolean; analysis: PersonalAnalysis; provenance: PersonalProvenance; remaining: number }>> {
   return postPersonal("/personal/analysis", { symbol, idempotency_key: idempotencyKey });
 }
 
@@ -545,14 +558,32 @@ export async function removePersonalWatchlist(
   return { ok: response.ok, status: response.status, body: parsed };
 }
 
-export async function getPersonalHistory(
-  symbol: string,
-  days: number,
-): Promise<{ symbol: string; requested_days: number; effective_days: number; clamped: boolean; max_days: number }> {
+export type PersonalHistoryCandle = {
+  open?: number;
+  high?: number;
+  low?: number;
+  close?: number;
+  volume?: number;
+  close_time_ms?: number | null;
+};
+
+export type PersonalHistory = {
+  symbol: string;
+  requested_days: number;
+  effective_days: number;
+  clamped: boolean;
+  max_days: number;
+  provider_window_max: number;
+  data_points: number;
+  data: PersonalHistoryCandle[];
+  freshness?: string;
+  provider?: string;
+  source_class?: string;
+};
+
+export async function getPersonalHistory(symbol: string, days: number): Promise<PersonalHistory> {
   const query = new URLSearchParams({ symbol, days: String(days) });
-  return getJson<{ symbol: string; requested_days: number; effective_days: number; clamped: boolean; max_days: number }>(
-    `/personal/history?${query}`,
-  );
+  return getJson<PersonalHistory>(`/personal/history?${query}`);
 }
 
 export type PersonalSignals = {
@@ -562,17 +593,38 @@ export type PersonalSignals = {
   signals: unknown[];
 };
 
+export type PersonalRiskDescriptor = {
+  data_class: "MEMBER_SAFE_RISK";
+  symbol?: string;
+  risk_level: "contained" | "moderate" | "elevated";
+  volatility: string;
+  range_pct: number;
+  basis: string;
+};
+
 export type PersonalRisk = {
   data_class: "MEMBER_SAFE_RISK";
   available: boolean;
   reason?: string;
-  risk: unknown[];
+  risk?: PersonalRiskDescriptor;
+  provenance?: PersonalProvenance;
 };
 
 export async function getPersonalSignals(): Promise<PersonalSignals> {
   return getJson<PersonalSignals>("/personal/signals");
 }
 
-export async function getPersonalRisk(): Promise<PersonalRisk> {
-  return getJson<PersonalRisk>("/personal/risk");
+export async function getPersonalRisk(symbol = "BTCUSDT"): Promise<PersonalRisk> {
+  return getJson<PersonalRisk>(`/personal/risk?symbol=${encodeURIComponent(symbol)}`);
+}
+
+export type PersonalClosedBetaHealth = {
+  data_class: "MEMBER_SAFE_HEALTH";
+  overall: "healthy" | "degraded" | "unavailable";
+  critical_unavailable: string[];
+  dependencies: Record<string, { status: "ok" | "unavailable" | "unknown"; detail?: string }>;
+};
+
+export async function getPersonalClosedBetaHealth(): Promise<PersonalClosedBetaHealth> {
+  return getJson<PersonalClosedBetaHealth>("/personal/closed-beta-health");
 }

@@ -1,6 +1,12 @@
 # NEXUS V18.2.30.1 Unified Zeabur Runtime
 # ONE service: Web (Gunicorn) + ResearchAutonomyService (24/7)
-# Canonical deploy path for nexus-member-preview-v18-2-1
+#
+# OWNERSHIP (PLATFORM-1 / PERSONAL-2 correction): this is the PRIVATE unified
+# trading + research runtime. Under the four-surface separation it is NOT the
+# canonical deployment for the Personal Market Intelligence frontend. The
+# Personal frontend is a static SPA artifact served by
+# deploy/zeabur_personal_v1 (dist/personal). Do NOT treat this unified trading
+# container as the Personal frontend runtime. Trading logic is unchanged.
 FROM python:3.11-slim-bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive \
