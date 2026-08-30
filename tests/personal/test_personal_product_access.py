@@ -66,8 +66,18 @@ class MemUsageRepo:
 
 
 class MemWatchlistRepo:
+    """In-memory double whose try_add_symbol mirrors the atomic DB contract.
+
+    A single threading.Lock serializes the check-then-insert critical section,
+    exactly as SELECT ... FOR UPDATE serializes it in Postgres. This lets the
+    concurrency tests prove the capacity invariant deterministically.
+    """
+
     def __init__(self):
+        import threading
+
         self.by_account: dict[str, list[str]] = {}
+        self._lock = threading.Lock()
 
     def list_symbols(self, account_id):
         return list(self.by_account.get(account_id, []))
@@ -78,13 +88,22 @@ class MemWatchlistRepo:
     def contains(self, account_id, symbol):
         return symbol.upper() in [s.upper() for s in self.by_account.get(account_id, [])]
 
-    def add_symbol(self, account_id, symbol):
-        self.by_account.setdefault(account_id, [])
-        if symbol.upper() not in [s.upper() for s in self.by_account[account_id]]:
-            self.by_account[account_id].append(symbol.upper())
+    def try_add_symbol(self, account_id, symbol, capacity):
+        symbol = symbol.upper()
+        with self._lock:
+            items = self.by_account.setdefault(account_id, [])
+            if symbol in [s.upper() for s in items]:
+                return "DUPLICATE"
+            if len(items) >= max(0, int(capacity)):
+                return "CAPACITY"
+            items.append(symbol)
+            return "ADDED"
 
     def remove_symbol(self, account_id, symbol):
         self.by_account[account_id] = [s for s in self.by_account.get(account_id, []) if s.upper() != symbol.upper()]
+
+    def active_watchlist_count(self, account_id):
+        return 1 if self.by_account.get(account_id) else 0
 
 
 def _app(plan="pro", status=STATUS_ACTIVE, market=True):
