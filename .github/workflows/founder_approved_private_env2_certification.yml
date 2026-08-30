@@ -1,0 +1,73 @@
+name: founder-approved-private-env2-certification
+
+# PRIVATE-ENV-2R read-only certification.
+# GitHub authenticates to the private validation runtime with an EXISTING
+# runtime control secret and receives ONLY a redacted PASS/FAIL result. GitHub
+# never receives (and this workflow MUST NOT use): a PostgreSQL DSN/password,
+# the Bybit API secret, or any AI provider key. All credentialed checks run
+# INSIDE the private service using its own environment-held secrets.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type RUN_PRIVATE_ENV2_READONLY_CERT"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founder-private-env2-certification
+  cancel-in-progress: false
+
+env:
+  CERT_URL: https://nexus-bybit-demo-learning-validation.zeabur.app/api/v1/private/cert/run
+
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Validate Founder dispatch contract
+        run: test "${{ inputs.confirm }}" = "RUN_PRIVATE_ENV2_READONLY_CERT"
+
+      - name: Call private read-only certifier (control-secret auth only)
+        env:
+          # ONLY an existing control secret is used to authenticate. No DB DSN,
+          # no Bybit secret, no AI provider key is present in this workflow.
+          NEXUS_CONTROL: ${{ secrets.NEXUS_BOUNDED_SESSION_CONTROL_SECRET }}
+        run: |
+          set -euo pipefail
+          test -n "$NEXUS_CONTROL"
+          code=$(curl -s -o cert.json -w "%{http_code}" --max-time 120 \
+            -X POST "$CERT_URL" \
+            -H "X-Nexus-Control: $NEXUS_CONTROL" \
+            -H "Content-Type: application/json")
+          echo "HTTP $code"
+          # Redacted result only (the service never returns secrets/DSN/keys).
+          python - <<'PY'
+          import json,sys
+          d=json.load(open("cert.json"))
+          # Never echo any auth material; body is already redacted by design.
+          print(json.dumps({k:d.get(k) for k in (
+            "private_env2_pass","safety","ai","ai_routing","bybit_demo","postgres",
+            "orders_submitted","cancels","position_mutations","blocked_reason")}, indent=1))
+          fail=[]
+          if d.get("private_env2_pass") is not True: fail.append("private_env2_pass!=true")
+          if d.get("orders_submitted") not in (0,None): fail.append("orders_submitted!=0")
+          if d.get("cancels") not in (0,None): fail.append("cancels!=0")
+          if d.get("position_mutations") not in (0,None): fail.append("position_mutations!=0")
+          if fail:
+            print("CERT_FAIL:", ",".join(fail)); sys.exit(1)
+          print("CERT_PASS")
+          PY
+
+      - name: Store redacted certification artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: private-env2-certification
+          path: cert.json
+          if-no-files-found: ignore
