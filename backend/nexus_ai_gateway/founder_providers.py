@@ -34,54 +34,96 @@ from config.llm_config import (
     SAMBANOVA_CHAT_COMPLETIONS_URL,
 )
 
+# PRIVATE-AI-3 no-new-paid-provider runtime routing: Groq (proven) for
+# main + reflection, Gemini (native) for research-normalizer + independent
+# critic. The paid Cerebras/SambaNova providers are DEFERRED_BILLING_NOT_ENABLED;
+# their legacy profile constants remain as COMPATIBILITY ALIASES that route to
+# the Gemini role providers, so no reflection/research consumer needs editing.
+from backend.nexus_ai_gateway.gemini_provider import (  # noqa: E402
+    CRITIC_DEFAULT_MODEL,
+    CRITIC_MODEL_ENV,
+    GEMINI_API_BASE,
+    GeminiProvider,
+    NORMALIZER_DEFAULT_MODEL,
+    NORMALIZER_MODEL_ENV,
+)
+
+GEMINI_RESEARCH_NORMALIZER = "GEMINI_RESEARCH_NORMALIZER"
+GEMINI_INDEPENDENT_CRITIC = "GEMINI_INDEPENDENT_CRITIC"
+# Legacy provider-specific profile constants (kept as compatibility aliases).
+CEREBRAS_RESEARCH_NORMALIZER = "CEREBRAS_RESEARCH_NORMALIZER"
+SAMBANOVA_INDEPENDENT_CRITIC = "SAMBANOVA_INDEPENDENT_CRITIC"
+
 ACTIVE_PROFILES = (
     "GROQ_MAIN_REASONER",
     "GROQ_REFLECTION_REASONER",
-    "CEREBRAS_RESEARCH_NORMALIZER",
-    "SAMBANOVA_INDEPENDENT_CRITIC",
+    GEMINI_RESEARCH_NORMALIZER,
+    GEMINI_INDEPENDENT_CRITIC,
 )
+
+# Legacy role constant -> active role provider (compatibility aliases).
+ALIAS_PROFILES = {
+    CEREBRAS_RESEARCH_NORMALIZER: GEMINI_RESEARCH_NORMALIZER,
+    SAMBANOVA_INDEPENDENT_CRITIC: GEMINI_INDEPENDENT_CRITIC,
+}
 
 INACTIVE_PROVIDERS = {
     "OLLAMA": "INACTIVE_NOT_FOUNDER_CONFIGURED",
-    "GEMINI": "INACTIVE_NOT_FOUNDER_CONFIGURED",
     "CLOUDFLARE_WORKERS_AI": "INACTIVE_NOT_FOUNDER_CONFIGURED",
     "OPENROUTER": "INACTIVE_NOT_FOUNDER_CONFIGURED",
+    # Paid providers deferred for the current Demo runtime (roles now Gemini).
+    "CEREBRAS": "DEFERRED_BILLING_NOT_ENABLED",
+    "SAMBANOVA": "DEFERRED_BILLING_NOT_ENABLED",
 }
 
 # Env var names (never log values)
 ENV_GROQ_MAIN = "GROQ_API_KEY_PRIMARY"
 ENV_GROQ_REFLECTION = "GROQ_API_KEY_SECONDARY"
+ENV_GEMINI = "GEMINI_API_KEY"
+# Legacy env-name constants kept for import compatibility (paid providers
+# deferred; their roles are Gemini-backed).
 ENV_CEREBRAS = "CEREBRAS_API_KEY"
 ENV_SAMBANOVA = "SAMBANOVA_API_KEY"
 
 DEFAULT_MODELS = {
-    "GROQ_MAIN_REASONER": os.getenv("NEXUS_GROQ_MAIN_MODEL", "llama-3.3-70b-versatile"),
-    "GROQ_REFLECTION_REASONER": os.getenv("NEXUS_GROQ_REFLECTION_MODEL", "llama-3.3-70b-versatile"),
-    # Cerebras catalog rotated; llama-3.3-70b may 404 — override via NEXUS_CEREBRAS_MODEL
-    "CEREBRAS_RESEARCH_NORMALIZER": os.getenv("NEXUS_CEREBRAS_MODEL", "gemma-4-31b"),
-    "SAMBANOVA_INDEPENDENT_CRITIC": os.getenv("NEXUS_SAMBANOVA_MODEL", "Meta-Llama-3.3-70B-Instruct"),
+    "GROQ_MAIN_REASONER": os.getenv("NEXUS_GROQ_MAIN_MODEL", "openai/gpt-oss-120b"),
+    "GROQ_REFLECTION_REASONER": os.getenv("NEXUS_GROQ_REFLECTION_MODEL", "openai/gpt-oss-120b"),
+    GEMINI_RESEARCH_NORMALIZER: os.getenv(NORMALIZER_MODEL_ENV, NORMALIZER_DEFAULT_MODEL),
+    GEMINI_INDEPENDENT_CRITIC: os.getenv(CRITIC_MODEL_ENV, CRITIC_DEFAULT_MODEL),
 }
+# Aliases resolve to the same models.
+DEFAULT_MODELS[CEREBRAS_RESEARCH_NORMALIZER] = DEFAULT_MODELS[GEMINI_RESEARCH_NORMALIZER]
+DEFAULT_MODELS[SAMBANOVA_INDEPENDENT_CRITIC] = DEFAULT_MODELS[GEMINI_INDEPENDENT_CRITIC]
 
 PROFILE_ENV = {
     "GROQ_MAIN_REASONER": ENV_GROQ_MAIN,
     "GROQ_REFLECTION_REASONER": ENV_GROQ_REFLECTION,
-    "CEREBRAS_RESEARCH_NORMALIZER": ENV_CEREBRAS,
-    "SAMBANOVA_INDEPENDENT_CRITIC": ENV_SAMBANOVA,
+    GEMINI_RESEARCH_NORMALIZER: ENV_GEMINI,
+    GEMINI_INDEPENDENT_CRITIC: ENV_GEMINI,
+    CEREBRAS_RESEARCH_NORMALIZER: ENV_GEMINI,
+    SAMBANOVA_INDEPENDENT_CRITIC: ENV_GEMINI,
 }
 
+_GEMINI_ENDPOINT = f"{GEMINI_API_BASE}/models"
 PROFILE_ENDPOINT = {
     "GROQ_MAIN_REASONER": GROQ_CHAT_COMPLETIONS_URL,
     "GROQ_REFLECTION_REASONER": GROQ_CHAT_COMPLETIONS_URL,
-    "CEREBRAS_RESEARCH_NORMALIZER": CEREBRAS_CHAT_COMPLETIONS_URL,
-    "SAMBANOVA_INDEPENDENT_CRITIC": SAMBANOVA_CHAT_COMPLETIONS_URL,
+    GEMINI_RESEARCH_NORMALIZER: _GEMINI_ENDPOINT,
+    GEMINI_INDEPENDENT_CRITIC: _GEMINI_ENDPOINT,
+    CEREBRAS_RESEARCH_NORMALIZER: _GEMINI_ENDPOINT,
+    SAMBANOVA_INDEPENDENT_CRITIC: _GEMINI_ENDPOINT,
 }
 
+# Only the main reasoner is order-critical; every other role can NEVER approve
+# an order.
 ORDER_CRITICAL_PROFILES = frozenset({"GROQ_MAIN_REASONER"})
 CANNOT_APPROVE_ORDER = frozenset(
     {
-        "CEREBRAS_RESEARCH_NORMALIZER",
-        "SAMBANOVA_INDEPENDENT_CRITIC",
         "GROQ_REFLECTION_REASONER",
+        GEMINI_RESEARCH_NORMALIZER,
+        GEMINI_INDEPENDENT_CRITIC,
+        CEREBRAS_RESEARCH_NORMALIZER,
+        SAMBANOVA_INDEPENDENT_CRITIC,
     }
 )
 
@@ -446,9 +488,11 @@ class FounderAIGateway:
                         },
                     },
                 )
-                for pid in ACTIVE_PROFILES
+                for pid in (*ACTIVE_PROFILES, *ALIAS_PROFILES.keys())
             }
         else:
+            normalizer = GeminiProvider(GEMINI_RESEARCH_NORMALIZER, NORMALIZER_MODEL_ENV, NORMALIZER_DEFAULT_MODEL)
+            critic = GeminiProvider(GEMINI_INDEPENDENT_CRITIC, CRITIC_MODEL_ENV, CRITIC_DEFAULT_MODEL)
             providers = {
                 "GROQ_MAIN_REASONER": OpenAICompatProvider(
                     "GROQ_MAIN_REASONER",
@@ -464,27 +508,20 @@ class FounderAIGateway:
                     "groq",
                     can_approve_order=False,
                 ),
-                "CEREBRAS_RESEARCH_NORMALIZER": OpenAICompatProvider(
-                    "CEREBRAS_RESEARCH_NORMALIZER",
-                    ENV_CEREBRAS,
-                    CEREBRAS_CHAT_COMPLETIONS_URL,
-                    "cerebras",
-                    can_approve_order=False,
-                ),
-                "SAMBANOVA_INDEPENDENT_CRITIC": OpenAICompatProvider(
-                    "SAMBANOVA_INDEPENDENT_CRITIC",
-                    ENV_SAMBANOVA,
-                    SAMBANOVA_CHAT_COMPLETIONS_URL,
-                    "sambanova",
-                    can_approve_order=False,
-                ),
+                # Research-normalizer + independent-critic roles are Gemini-backed
+                # (no new paid provider). Legacy constants alias to the same
+                # providers so existing consumers route to Gemini unchanged.
+                GEMINI_RESEARCH_NORMALIZER: normalizer,
+                GEMINI_INDEPENDENT_CRITIC: critic,
+                CEREBRAS_RESEARCH_NORMALIZER: normalizer,
+                SAMBANOVA_INDEPENDENT_CRITIC: critic,
             }
         role_map = {
             "main_market_reasoner": "GROQ_MAIN_REASONER",
             "reflection_reasoner": "GROQ_REFLECTION_REASONER",
-            "lesson_normalizer": "CEREBRAS_RESEARCH_NORMALIZER",
-            "bulk_research_summarizer": "CEREBRAS_RESEARCH_NORMALIZER",
-            "independent_reflection_critic": "SAMBANOVA_INDEPENDENT_CRITIC",
+            "lesson_normalizer": GEMINI_RESEARCH_NORMALIZER,
+            "bulk_research_summarizer": GEMINI_RESEARCH_NORMALIZER,
+            "independent_reflection_critic": GEMINI_INDEPENDENT_CRITIC,
         }
         return cls(providers=providers, role_map=role_map)
 
@@ -670,24 +707,26 @@ def provider_alignment_summary(gw: FounderAIGateway, smoke: list[dict[str, Any]]
         "groq_main_model_id": DEFAULT_MODELS["GROQ_MAIN_REASONER"],
         "groq_reflection_model_id": DEFAULT_MODELS["GROQ_REFLECTION_REASONER"],
         "groq_quota_pool_relation": gw.groq_quota_pool_relation,
-        "cerebras_model_id": DEFAULT_MODELS["CEREBRAS_RESEARCH_NORMALIZER"],
-        "sambanova_model_id": DEFAULT_MODELS["SAMBANOVA_INDEPENDENT_CRITIC"],
+        "research_normalizer_model_id": DEFAULT_MODELS[GEMINI_RESEARCH_NORMALIZER],
+        "independent_critic_model_id": DEFAULT_MODELS[GEMINI_INDEPENDENT_CRITIC],
         "role_map": gw.role_map,
         "env_var_names": {
             "GROQ_MAIN_REASONER": ENV_GROQ_MAIN,
             "GROQ_REFLECTION_REASONER": ENV_GROQ_REFLECTION,
-            "CEREBRAS_RESEARCH_NORMALIZER": ENV_CEREBRAS,
-            "SAMBANOVA_INDEPENDENT_CRITIC": ENV_SAMBANOVA,
+            GEMINI_RESEARCH_NORMALIZER: ENV_GEMINI,
+            GEMINI_INDEPENDENT_CRITIC: ENV_GEMINI,
         },
-        "cerebras_cannot_approve_orders": True,
-        "sambanova_cannot_approve_orders": True,
+        "deferred_paid_providers": {"CEREBRAS": "DEFERRED_BILLING_NOT_ENABLED",
+                                    "SAMBANOVA": "DEFERRED_BILLING_NOT_ENABLED"},
+        "research_normalizer_cannot_approve_orders": True,
+        "independent_critic_cannot_approve_orders": True,
         "hard_risk_override_forbidden": True,
         "main_reasoner_failover_forbidden": True,
         "smoke": {
             "groq_main_status": (by.get("GROQ_MAIN_REASONER") or {}).get("result_status"),
             "groq_reflection_status": (by.get("GROQ_REFLECTION_REASONER") or {}).get("result_status"),
-            "cerebras_status": (by.get("CEREBRAS_RESEARCH_NORMALIZER") or {}).get("result_status"),
-            "sambanova_status": (by.get("SAMBANOVA_INDEPENDENT_CRITIC") or {}).get("result_status"),
+            "research_normalizer_status": (by.get(GEMINI_RESEARCH_NORMALIZER) or {}).get("result_status"),
+            "independent_critic_status": (by.get(GEMINI_INDEPENDENT_CRITIC) or {}).get("result_status"),
         },
         "external_secret_redaction_status": "IMPLEMENTED",
         "provider_fail_closed_status": "IMPLEMENTED",

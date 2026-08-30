@@ -7,7 +7,7 @@ from urllib.error import HTTPError
 import pytest
 
 from backend.nexus_private_cert import gemini_provider as gp
-from backend.nexus_private_cert.certifier import AI_PROFILES, GEMINI_PROFILE
+from backend.nexus_private_cert.certifier import AI_PROFILES
 
 
 class _Resp:
@@ -131,11 +131,12 @@ def test_gemini_key_never_in_url(monkeypatch):
 # Required active set: Gemini is the critic; SambaNova is not required.
 # --------------------------------------------------------------------------
 
-def test_required_set_has_gemini_not_sambanova():
-    assert GEMINI_PROFILE == "GEMINI_INDEPENDENT_CRITIC"
+def test_required_set_is_gemini_roles_not_paid_providers():
     assert "GEMINI_INDEPENDENT_CRITIC" in AI_PROFILES
+    assert "GEMINI_RESEARCH_NORMALIZER" in AI_PROFILES
     assert "SAMBANOVA_INDEPENDENT_CRITIC" not in AI_PROFILES
+    assert "CEREBRAS_RESEARCH_NORMALIZER" not in AI_PROFILES
     assert set(AI_PROFILES) == {
         "GROQ_MAIN_REASONER", "GROQ_REFLECTION_REASONER",
-        "CEREBRAS_RESEARCH_NORMALIZER", "GEMINI_INDEPENDENT_CRITIC",
+        "GEMINI_RESEARCH_NORMALIZER", "GEMINI_INDEPENDENT_CRITIC",
     }
