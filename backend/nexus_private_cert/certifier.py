@@ -7,27 +7,25 @@ from typing import Any
 
 from backend.nexus_private_cert.safety import safety_gate
 
-# Required active certification set (PRIVATE-AI-2): SambaNova is deferred
-# (billing not enabled) and replaced by the Gemini independent critic.
-GROQ_CEREBRAS_PROFILES = (
+# Required active certification set (PRIVATE-AI-3): matches the ACTUAL runtime
+# roles. Groq main+reflection (proven); Gemini research-normalizer + independent
+# critic (no new paid provider). Cerebras + SambaNova are
+# DEFERRED_BILLING_NOT_ENABLED and not required.
+AI_PROFILES = (
     "GROQ_MAIN_REASONER",
     "GROQ_REFLECTION_REASONER",
-    "CEREBRAS_RESEARCH_NORMALIZER",
+    "GEMINI_RESEARCH_NORMALIZER",
+    "GEMINI_INDEPENDENT_CRITIC",
 )
-GEMINI_PROFILE = "GEMINI_INDEPENDENT_CRITIC"
-AI_PROFILES = GROQ_CEREBRAS_PROFILES + (GEMINI_PROFILE,)
 
 
 def _run_ai_smoke(gateway: Any | None) -> dict[str, Any]:
-    """Bounded, sanitized real-API smoke per required profile (read-only).
+    """Bounded, sanitized real-API smoke over the gateway's active roles.
 
-    Groq main/reflection + Cerebras run via the existing FounderAIGateway;
-    the independent critic runs via the dedicated native Gemini adapter.
-    SambaNova is NOT part of the required set (DEFERRED_BILLING_NOT_ENABLED).
+    The gateway now routes research-normalizer + independent-critic to Gemini,
+    so smoking its ACTIVE_PROFILES exercises the ACTUAL runtime provider routing
+    (not a certifier-only shortcut).
     """
-    statuses: dict[str, Any] = {}
-    models: dict[str, Any] = {}
-    detail: dict[str, Any] = {}
     try:
         if gateway is None:
             from backend.nexus_ai_gateway.founder_providers import FounderAIGateway
@@ -40,49 +38,28 @@ def _run_ai_smoke(gateway: Any | None) -> dict[str, Any]:
 
         smoke = run_real_provider_smoke_tests(gateway)
         by = {r["provider_profile"]: r for r in smoke}
-        for p in GROQ_CEREBRAS_PROFILES:
-            statuses[p] = (by.get(p) or {}).get("result_status", "PROVIDER_ERROR")
-            models[p] = DEFAULT_MODELS.get(p)
+        statuses = {p: (by.get(p) or {}).get("result_status", "PROVIDER_ERROR") for p in AI_PROFILES}
+        models = {p: DEFAULT_MODELS.get(p) for p in AI_PROFILES}
+        detail: dict[str, Any] = {}
         for rec in getattr(gateway, "records", []) or []:
             pid = rec.get("provider_profile")
-            if pid in GROQ_CEREBRAS_PROFILES:
+            if pid in AI_PROFILES:
                 detail[pid] = {
                     "http_status": rec.get("http_status"),
                     "smoke_map": rec.get("smoke_map"),
                     "error": rec.get("error_snippet_redacted"),
                     "verified_model_id": rec.get("verified_model_id"),
                 }
+        return {"statuses": statuses, "models": models, "detail": detail, "all_pass": all(
+            statuses[p] == "REAL_API_PASS" for p in AI_PROFILES
+        )}
     except Exception as exc:  # noqa: BLE001 - never leak internals
-        for p in GROQ_CEREBRAS_PROFILES:
-            statuses.setdefault(p, "PROVIDER_ERROR")
-            models.setdefault(p, None)
-        detail["_gateway_error"] = type(exc).__name__
-
-    # Independent critic via the dedicated Gemini adapter (never SambaNova code).
-    try:
-        from backend.nexus_private_cert.gemini_provider import gemini_smoke
-
-        g = gemini_smoke()
-        statuses[GEMINI_PROFILE] = g.get("result_status", "PROVIDER_ERROR")
-        models[GEMINI_PROFILE] = g.get("verified_model_id")
-        detail[GEMINI_PROFILE] = {
-            "http_status": g.get("http_status"),
-            "smoke_map": g.get("smoke_map"),
-            "error": g.get("error"),
-            "verified_model_id": g.get("verified_model_id"),
-            "can_approve_order": False,
+        return {
+            "statuses": {p: "PROVIDER_ERROR" for p in AI_PROFILES},
+            "models": {p: None for p in AI_PROFILES},
+            "all_pass": False,
+            "error": type(exc).__name__,
         }
-    except Exception as exc:  # noqa: BLE001
-        statuses[GEMINI_PROFILE] = "PROVIDER_ERROR"
-        models[GEMINI_PROFILE] = None
-        detail[GEMINI_PROFILE] = {"error": type(exc).__name__}
-
-    return {
-        "statuses": statuses,
-        "models": models,
-        "detail": detail,
-        "all_pass": all(statuses.get(p) == "REAL_API_PASS" for p in AI_PROFILES),
-    }
 
 
 def run_certification(
@@ -168,9 +145,10 @@ def run_certification(
     base["ai_routing"] = {
         "main_market_reasoner": "GROQ_MAIN_REASONER",
         "reflection_reasoner": "GROQ_REFLECTION_REASONER",
-        "lesson_normalizer": "CEREBRAS_RESEARCH_NORMALIZER",
-        "bulk_research_summarizer": "CEREBRAS_RESEARCH_NORMALIZER",
+        "lesson_normalizer": "GEMINI_RESEARCH_NORMALIZER",
+        "bulk_research_summarizer": "GEMINI_RESEARCH_NORMALIZER",
         "independent_reflection_critic": "GEMINI_INDEPENDENT_CRITIC",
+        "cerebras": "DEFERRED_BILLING_NOT_ENABLED",
         "sambanova": "DEFERRED_BILLING_NOT_ENABLED",
         "main_reasoner_failover_forbidden": True,
         "only_main_reasoner_order_critical": True,

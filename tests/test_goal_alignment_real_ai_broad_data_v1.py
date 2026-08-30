@@ -35,17 +35,21 @@ from backend.nexus_learning.integration_drill import load_existing_sim_trade_sam
 
 
 def test_active_provider_profiles_exactly_founder_four():
+    # PRIVATE-AI-3: Groq (main+reflection) + Gemini (research-normalizer +
+    # independent-critic). Cerebras/SambaNova are DEFERRED_BILLING_NOT_ENABLED.
     assert len(ACTIVE_PROFILES) == 4
     assert set(ACTIVE_PROFILES) == {
         "GROQ_MAIN_REASONER",
         "GROQ_REFLECTION_REASONER",
-        "CEREBRAS_RESEARCH_NORMALIZER",
-        "SAMBANOVA_INDEPENDENT_CRITIC",
+        "GEMINI_RESEARCH_NORMALIZER",
+        "GEMINI_INDEPENDENT_CRITIC",
     }
     gw = FounderAIGateway.from_env(mock_for_ci=True)
     assert gw.active_profile_count() == 4
     assert gw.role_map["main_market_reasoner"] == "GROQ_MAIN_REASONER"
     assert gw.role_map["reflection_reasoner"] == "GROQ_REFLECTION_REASONER"
+    assert gw.role_map["lesson_normalizer"] == "GEMINI_RESEARCH_NORMALIZER"
+    assert gw.role_map["independent_reflection_critic"] == "GEMINI_INDEPENDENT_CRITIC"
 
 
 def test_groq_main_and_reflection_separate_roles():
@@ -61,7 +65,7 @@ def test_cerebras_and_sambanova_cannot_approve_orders():
 
 def test_inactive_providers_not_selected():
     gw = FounderAIGateway.from_env(mock_for_ci=True)
-    for name in ("OLLAMA", "GEMINI", "CLOUDFLARE_WORKERS_AI", "OPENROUTER"):
+    for name in ("OLLAMA", "CLOUDFLARE_WORKERS_AI", "OPENROUTER"):
         assert INACTIVE_PROVIDERS[name] == "INACTIVE_NOT_FOUNDER_CONFIGURED"
         parsed, rec, perm = gw.invoke_profile(
             profile_id=name,
