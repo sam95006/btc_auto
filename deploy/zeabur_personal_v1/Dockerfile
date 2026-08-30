@@ -12,10 +12,13 @@
 # ---- build stage: produce the Personal-only artifact --------------------
 FROM node:20-slim AS build
 WORKDIR /src
-# Copy the whole frontend before install: package.json has a local file:
-# tarball dependency (lightweight-charts-*.tgz) that must be present for
-# `npm ci`, so the source cannot be split from the manifest here.
-COPY frontend ./frontend
+# The whole repo is the build context: build:personal runs repo-root boundary
+# checks (check_frontend_runtime_boundary reads deploy/**, etc.) and the
+# frontend package.json has a local file: tarball dependency, so the build
+# stage needs the full source tree. This stage is discarded — only
+# dist/personal is copied into the runtime image below, so no backend/trading
+# code ships in the served artifact.
+COPY . .
 RUN cd frontend && npm ci
 # build:personal runs the surface-boundary + frontend-runtime-boundary checks
 # and emits dist/personal (index.html + assets/) — Personal surface only.
