@@ -121,6 +121,7 @@ def test_D_no_mutating_calls_in_source() -> None:
 
 def test_EFG_no_secret_material_in_output(monkeypatch) -> None:
     _no_ai_keys(monkeypatch)
+    monkeypatch.setenv("NEXUS_POSTGRES_URL", "")
     r = run_certification(pool=FakePool(), env=SAFE_ENV, bybit_reader=FakeReaderFail())
     blob = repr(r).lower()
     for banned in ("api_key", "api_secret", "authorization", "x-bapi-sign", "password",
@@ -186,3 +187,65 @@ def test_K_unresolved_ledger_fails(monkeypatch) -> None:
 def test_safety_gate_ok() -> None:
     ok, detail = safety_gate(SAFE_ENV)
     assert ok is True and detail["violations"] == []
+
+
+# --------------------------------------------------------------------------
+# PRIVATE-ENV-2F hardening
+# --------------------------------------------------------------------------
+
+def test_unset_critical_safety_flag_fails_closed() -> None:
+    # An unset REAL_MONEY must NOT silently count as an explicit false.
+    env = dict(SAFE_ENV)
+    del env["REAL_MONEY"]
+    ok, detail = safety_gate(env)
+    assert ok is False and any("REAL_MONEY" in v for v in detail["violations"])
+    r = run_certification(pool=FakePool(), env=env, bybit_reader=FakeReaderFail())
+    assert r["private_env2_pass"] is False and r["blocked_reason"] == "SAFETY_BLOCK"
+
+
+def test_uid_skipped_does_not_certify(monkeypatch) -> None:
+    _no_ai_keys(monkeypatch)
+    monkeypatch.setenv("NEXUS_POSTGRES_URL", "")
+    # Everything green except UID = SKIPPED.
+    monkeypatch.setattr(
+        "backend.nexus_private_cert.bybit_readonly.bybit_readonly_preflight",
+        lambda **kw: {"auth": "PASS", "uid_binding": "SKIPPED", "balance_read": "PASS",
+                      "positions_read": "PASS", "instrument_read": "PASS", "clock_skew_ok": "PASS",
+                      "account_flat": True, "orders_submitted": 0, "cancels": 0, "position_mutations": 0},
+    )
+    monkeypatch.setattr("backend.nexus_private_cert.certifier._run_ai_smoke",
+                        lambda gw: {"statuses": {p: "REAL_API_PASS" for p in
+                                    ("GROQ_MAIN_REASONER", "GROQ_REFLECTION_REASONER",
+                                     "CEREBRAS_RESEARCH_NORMALIZER", "SAMBANOVA_INDEPENDENT_CRITIC")},
+                                    "models": {}, "all_pass": True})
+    r = run_certification(pool=FakePool(), env=SAFE_ENV)
+    assert r["bybit_demo"]["uid_binding"] == "SKIPPED"
+    assert r["private_env2_pass"] is False
+    assert "BYBIT_READONLY_INCOMPLETE" in r["blocked_reason"]
+
+
+def test_certifier_uses_canonical_postgres_url_binding() -> None:
+    # The certifier pool binding reads NEXUS_POSTGRES_URL directly and does not
+    # gate on the product-alpha NEXUS_PG_RUNTIME_ENABLED flag.
+    src = (REPO / "backend" / "nexus_private_cert" / "routes.py").read_text(encoding="utf-8")
+    assert "NEXUS_POSTGRES_URL" in src
+    assert "cfg.enabled" not in src and "PostgresRuntimeConfig" not in src
+
+
+def test_full_pass_path(monkeypatch) -> None:
+    _no_ai_keys(monkeypatch)
+    monkeypatch.setenv("NEXUS_POSTGRES_URL", "")
+    monkeypatch.setattr(
+        "backend.nexus_private_cert.bybit_readonly.bybit_readonly_preflight",
+        lambda **kw: {"auth": "PASS", "uid_binding": "PASS", "balance_read": "PASS",
+                      "positions_read": "PASS", "instrument_read": "PASS", "clock_skew_ok": "PASS",
+                      "account_flat": True, "orders_submitted": 0, "cancels": 0, "position_mutations": 0},
+    )
+    monkeypatch.setattr("backend.nexus_private_cert.certifier._run_ai_smoke",
+                        lambda gw: {"statuses": {p: "REAL_API_PASS" for p in
+                                    ("GROQ_MAIN_REASONER", "GROQ_REFLECTION_REASONER",
+                                     "CEREBRAS_RESEARCH_NORMALIZER", "SAMBANOVA_INDEPENDENT_CRITIC")},
+                                    "models": {}, "all_pass": True})
+    r = run_certification(pool=FakePool(unresolved=0), env=SAFE_ENV)
+    assert r["private_env2_pass"] is True and "blocked_reason" not in r
+    assert r["orders_submitted"] == 0 and r["cancels"] == 0 and r["position_mutations"] == 0

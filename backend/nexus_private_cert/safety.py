@@ -22,9 +22,10 @@ def _is_true(value: str | None) -> bool:
 
 
 def _is_false(value: str | None) -> bool:
-    # Unset defaults to false (fail-safe), but an explicit non-false is a block.
-    v = (value or "").strip().lower()
-    return v in ("", "false", "0", "no")
+    # A safety-critical FALSE flag must be EXPLICITLY false. An unset flag is a
+    # violation (fail-closed) — it must never silently count as a certified
+    # explicit false.
+    return (value or "").strip().lower() in ("false", "0", "no")
 
 
 def read_safety_flags(env: dict[str, str] | None = None) -> dict[str, str]:

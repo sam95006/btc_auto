@@ -74,6 +74,15 @@ def run_certification(
 
     ai = _run_ai_smoke(ai_gateway)
 
+    # Redacted provider model catalog (model IDs only) so a stale configured
+    # model can be corrected against the provider's live catalog.
+    try:
+        from backend.nexus_private_cert.ai_catalog import ai_model_catalog
+
+        ai_catalog = ai_model_catalog()
+    except Exception:  # noqa: BLE001
+        ai_catalog = {}
+
     from backend.nexus_private_cert.bybit_readonly import bybit_readonly_preflight
 
     expected_uid = (src.get("BYBIT_DEMO_UID_EXPECTED") or src.get("BYBIT_DEMO_UID") or "").strip() or None
@@ -84,13 +93,15 @@ def run_certification(
     postgres = postgres_durability_preflight(pool)
 
     ai_ok = ai["all_pass"]
+    # UID binding must be an explicit PASS: SKIPPED (no expected UID configured)
+    # does NOT qualify as certified account-identity readiness.
     bybit_ok = (
         bybit["auth"] == "PASS"
         and bybit["balance_read"] == "PASS"
         and bybit["positions_read"] == "PASS"
         and bybit["instrument_read"] == "PASS"
         and bybit["clock_skew_ok"] == "PASS"
-        and bybit["uid_binding"] in ("PASS", "SKIPPED")
+        and bybit["uid_binding"] == "PASS"
     )
     postgres_ok = all(
         postgres.get(k) is True
@@ -110,6 +121,7 @@ def run_certification(
 
     base["ai"] = ai["statuses"]
     base["ai_models"] = ai["models"]
+    base["ai_catalog"] = ai_catalog
     base["ai_routing"] = {
         "main_market_reasoner": "GROQ_MAIN_REASONER",
         "reflection_reasoner": "GROQ_REFLECTION_REASONER",
