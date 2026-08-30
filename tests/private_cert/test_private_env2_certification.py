@@ -216,7 +216,7 @@ def test_uid_skipped_does_not_certify(monkeypatch) -> None:
     monkeypatch.setattr("backend.nexus_private_cert.certifier._run_ai_smoke",
                         lambda gw: {"statuses": {p: "REAL_API_PASS" for p in
                                     ("GROQ_MAIN_REASONER", "GROQ_REFLECTION_REASONER",
-                                     "CEREBRAS_RESEARCH_NORMALIZER", "SAMBANOVA_INDEPENDENT_CRITIC")},
+                                     "CEREBRAS_RESEARCH_NORMALIZER", "GEMINI_INDEPENDENT_CRITIC")},
                                     "models": {}, "all_pass": True})
     r = run_certification(pool=FakePool(), env=SAFE_ENV)
     assert r["bybit_demo"]["uid_binding"] == "SKIPPED"
@@ -244,7 +244,7 @@ def test_full_pass_path(monkeypatch) -> None:
     monkeypatch.setattr("backend.nexus_private_cert.certifier._run_ai_smoke",
                         lambda gw: {"statuses": {p: "REAL_API_PASS" for p in
                                     ("GROQ_MAIN_REASONER", "GROQ_REFLECTION_REASONER",
-                                     "CEREBRAS_RESEARCH_NORMALIZER", "SAMBANOVA_INDEPENDENT_CRITIC")},
+                                     "CEREBRAS_RESEARCH_NORMALIZER", "GEMINI_INDEPENDENT_CRITIC")},
                                     "models": {}, "all_pass": True})
     r = run_certification(pool=FakePool(unresolved=0), env=SAFE_ENV)
     assert r["private_env2_pass"] is True and "blocked_reason" not in r
