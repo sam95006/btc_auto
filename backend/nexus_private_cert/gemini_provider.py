@@ -68,6 +68,10 @@ class GeminiCriticProvider:
                 "responseMimeType": "application/json",
                 "temperature": 0.1,
                 "maxOutputTokens": 800,
+                # Gemini 2.5+/3.x enable "thinking" by default, which can make a
+                # simple structured call exceed the timeout. Disable it for this
+                # bounded critique smoke so responses are fast and deterministic.
+                "thinkingConfig": {"thinkingBudget": 0},
             },
         }
         req = Request(
