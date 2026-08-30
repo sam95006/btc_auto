@@ -18,8 +18,18 @@ from flask import Flask, Response, jsonify, request
 from backend.nexus_private_cert.certifier import run_certification
 
 CONTROL_HEADER = "X-Nexus-Control"
-# Either runtime control secret may authorize the read-only certification.
+# Primary auth matches the service-wide validation guard:
+#   Authorization: Bearer <NEXUS_VALIDATION_CONTROL_TOKEN>
+# X-Nexus-Control (either control secret) is a local/testing fallback.
+PRIMARY_CONTROL_ENV = "NEXUS_VALIDATION_CONTROL_TOKEN"
 CONTROL_ENV_KEYS = ("NEXUS_VALIDATION_CONTROL_TOKEN", "NEXUS_BOUNDED_SESSION_CONTROL_SECRET")
+
+
+def _bearer_token(header_value: str) -> str:
+    parts = (header_value or "").strip().split()
+    if len(parts) == 2 and parts[0].lower() == "bearer" and parts[1].strip():
+        return parts[1].strip()
+    return ""
 
 
 def _json_no_store(payload: dict[str, Any], status: int = 200) -> Response:
@@ -73,7 +83,9 @@ def register_private_cert_routes(app: Flask) -> None:
         if not _control_configured():
             # Fail-closed: without a control secret the endpoint is inert.
             return _json_no_store({"error": "control_secret_not_configured"}, 503)
-        if not _authorized(request.headers.get(CONTROL_HEADER, "")):
+        # Accept Authorization: Bearer <token> (guard contract) or X-Nexus-Control.
+        provided = _bearer_token(request.headers.get("Authorization", "")) or request.headers.get(CONTROL_HEADER, "")
+        if not _authorized(provided):
             return _json_no_store({"error": "unauthorized"}, 401)
         result = run_certification(pool=_get_pool(app))
         if result.get("blocked_reason") == "SAFETY_BLOCK":

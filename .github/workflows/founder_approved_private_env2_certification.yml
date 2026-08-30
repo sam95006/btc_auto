@@ -35,15 +35,23 @@ jobs:
 
       - name: Call private read-only certifier (control-secret auth only)
         env:
-          # ONLY an existing control secret is used to authenticate. No DB DSN,
-          # no Bybit secret, no AI provider key is present in this workflow.
-          NEXUS_CONTROL: ${{ secrets.NEXUS_BOUNDED_SESSION_CONTROL_SECRET }}
+          # ONLY an existing control secret authenticates to the private runtime.
+          # The service-wide validation guard expects
+          #   Authorization: Bearer <NEXUS_VALIDATION_CONTROL_TOKEN>.
+          # Falls back to the bounded-session control secret if the validation
+          # token is not configured as a GitHub secret. No DB DSN, no Bybit
+          # secret, and no AI provider key is present in this workflow.
+          NEXUS_CONTROL: ${{ secrets.NEXUS_VALIDATION_CONTROL_TOKEN }}
+          NEXUS_CONTROL_FALLBACK: ${{ secrets.NEXUS_BOUNDED_SESSION_CONTROL_SECRET }}
         run: |
           set -euo pipefail
-          test -n "$NEXUS_CONTROL"
+          TOKEN="${NEXUS_CONTROL:-$NEXUS_CONTROL_FALLBACK}"
+          if [ -z "$TOKEN" ]; then
+            echo "CERT_BLOCKED: no control secret configured in GitHub (add NEXUS_VALIDATION_CONTROL_TOKEN)"; exit 1
+          fi
           code=$(curl -s -o cert.json -w "%{http_code}" --max-time 120 \
             -X POST "$CERT_URL" \
-            -H "X-Nexus-Control: $NEXUS_CONTROL" \
+            -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json")
           echo "HTTP $code"
           # Redacted result only (the service never returns secrets/DSN/keys).
