@@ -12,9 +12,11 @@
 # ---- build stage: produce the Personal-only artifact --------------------
 FROM node:20-slim AS build
 WORKDIR /src
-COPY frontend/package.json frontend/package-lock.json* ./frontend/
-RUN cd frontend && npm ci
+# Copy the whole frontend before install: package.json has a local file:
+# tarball dependency (lightweight-charts-*.tgz) that must be present for
+# `npm ci`, so the source cannot be split from the manifest here.
 COPY frontend ./frontend
+RUN cd frontend && npm ci
 # build:personal runs the surface-boundary + frontend-runtime-boundary checks
 # and emits dist/personal (index.html + assets/) — Personal surface only.
 RUN cd frontend && npm run build:personal
