@@ -31,7 +31,19 @@ def _run_ai_smoke(gateway: Any | None) -> dict[str, Any]:
         by = {r["provider_profile"]: r for r in smoke}
         statuses = {p: (by.get(p) or {}).get("result_status", "PROVIDER_ERROR") for p in AI_PROFILES}
         models = {p: DEFAULT_MODELS.get(p) for p in AI_PROFILES}
-        return {"statuses": statuses, "models": models, "all_pass": all(
+        # Redacted per-profile diagnostics (HTTP status + already-redacted error
+        # snippet) so a precise cause can be classified without leaking secrets.
+        records: dict[str, Any] = {}
+        for rec in getattr(gateway, "records", []) or []:
+            pid = rec.get("provider_profile")
+            if pid in AI_PROFILES:
+                records[pid] = {
+                    "http_status": rec.get("http_status"),
+                    "smoke_map": rec.get("smoke_map"),
+                    "error": rec.get("error_snippet_redacted"),
+                    "verified_model_id": rec.get("verified_model_id"),
+                }
+        return {"statuses": statuses, "models": models, "detail": records, "all_pass": all(
             statuses[p] == "REAL_API_PASS" for p in AI_PROFILES
         )}
     except Exception as exc:  # noqa: BLE001 - never leak internals
@@ -121,6 +133,7 @@ def run_certification(
 
     base["ai"] = ai["statuses"]
     base["ai_models"] = ai["models"]
+    base["ai_detail"] = ai.get("detail", {})
     base["ai_catalog"] = ai_catalog
     base["ai_routing"] = {
         "main_market_reasoner": "GROQ_MAIN_REASONER",
