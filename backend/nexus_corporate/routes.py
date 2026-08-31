@@ -22,6 +22,11 @@ MARKET_SNAPSHOT_CONFIG_KEY = "NEXUS_CORPORATE_MARKET_SNAPSHOT"
 
 SESSION_HEADER = "X-Corp-Session"
 CSRF_HEADER = "X-Corp-CSRF"
+# Allow-listed, non-identifying product analytics events.
+ANALYTICS_EVENTS = frozenset({
+    "page_view", "cta_primary", "cta_personal", "cta_enterprise",
+    "personal_interest", "enterprise_interest", "contact_submit",
+})
 # Browser-managed session (HttpOnly) + readable double-submit CSRF cookie.
 SESSION_COOKIE = "corp_session"
 CSRF_COOKIE = "corp_csrf"
@@ -191,6 +196,25 @@ def register_corporate_routes(app: Flask) -> None:
         repo.add_audit(admin_id=None, action="lead.create", target=email, ip=_client_ip())
         return _json({"ok": True, "lead_id": lead_id})
 
+    # Privacy-conscious first-party analytics. Allow-listed event names only, no
+    # PII, no fingerprinting. Stored in the audit log (backend-collected); the
+    # admin Analytics view reads only what was actually recorded (never fabricated).
+    @app.post("/api/corporate/v1/analytics/event")
+    def corp_analytics_event():
+        if _rate_limited("analytics", _client_ip(), limit=60):
+            return _json({"ok": True}, 202)  # silently drop; never error the page
+        repo = _repo(app)
+        if repo is None:
+            return _json({"ok": True}, 202)
+        body = request.get_json(silent=True) or {}
+        event = str(body.get("event") or "").strip()
+        if event not in ANALYTICS_EVENTS:
+            return _json({"error": "unknown_event", "classification": "BAD_REQUEST"}, 400)
+        path = str(body.get("path") or "")[:120]
+        label = str(body.get("label") or "")[:64]
+        repo.add_audit(admin_id=None, action=f"analytics.{event}", target=path, meta={"label": label} if label else None)
+        return _json({"ok": True})
+
     # ================= OWNER BOOTSTRAP =================
     @app.post("/owner/setup")
     def owner_setup():
@@ -307,6 +331,59 @@ def register_corporate_routes(app: Flask) -> None:
         except ValueError:
             return _json({"error": "unknown_slug"}, 404)
         return _json({"ok": True, **result})
+
+    @app.get("/admin/analytics")
+    def admin_analytics():
+        ctx = _guard(app, "analytics.read")
+        if isinstance(ctx, Response):
+            return ctx
+        # Real counts from the audit log — backend-collected, never fabricated.
+        rows = _repo(app).list_audit(limit=500)
+        counts: dict[str, int] = {}
+        for r in rows:
+            act = str(r.get("action") or "")
+            if act.startswith("analytics."):
+                counts[act[len("analytics."):]] = counts.get(act[len("analytics."):], 0) + 1
+        total = sum(counts.values())
+        return _json({
+            "availability": "READY" if total else "UNAVAILABLE",
+            "note": "First-party events collected in the audit log (recent window). No PII, no fingerprinting.",
+            "total": total,
+            "events": [{"event": e, "count": counts[e]} for e in sorted(counts)],
+        })
+
+    @app.get("/admin/preview/<path:slug>")
+    def admin_preview(slug: str):
+        # Authenticated draft preview — returns the DRAFT body shaped like the
+        # public content envelope. Drafts are NEVER exposed on the public API.
+        ctx = _guard(app, "content.read")
+        if isinstance(ctx, Response):
+            return ctx
+        item = _repo(app).get_content(slug)
+        if item is None:
+            return _json({"slug": slug, "availability": "UNAVAILABLE", "reason": "unknown_slug"}, 404)
+        draft = item.get("draft") if isinstance(item.get("draft"), dict) else item.get("published")
+        return _json({"slug": slug, "availability": "READY", "source": "draft", "data": draft or {}})
+
+    @app.get("/admin/settings/<path:key>")
+    def admin_setting_get(key: str):
+        ctx = _guard(app, "settings.read")
+        if isinstance(ctx, Response):
+            return ctx
+        return _json({"key": key, "value": _repo(app).get_setting(key)})
+
+    @app.put("/admin/settings/<path:key>")
+    def admin_setting_set(key: str):
+        ctx = _guard(app, "settings.write", csrf=True)
+        if isinstance(ctx, Response):
+            return ctx
+        body = request.get_json(silent=True) or {}
+        value = body.get("value")
+        if not isinstance(value, dict):
+            return _json({"error": "value_object_required", "classification": "BAD_REQUEST"}, 400)
+        _repo(app).set_setting(key, value)
+        _repo(app).add_audit(admin_id=ctx["admin_id"], action="settings.write", target=key)
+        return _json({"ok": True, "key": key})
 
     @app.get("/admin/leads")
     def admin_leads():

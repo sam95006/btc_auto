@@ -1,0 +1,397 @@
+/* ============================================================================
+   CORPORATE-2 — Cinematic design system (additive, corporate-scoped).
+   Loaded AFTER corporate.css. Character: institutional / global / financial /
+   future-facing / high-trust / intelligent / premium / minimal / cinematic.
+   No external assets (CSP-safe). Reduced-motion first-class. Avoids CLS.
+
+   Motion is frontend-driven; the STATE it animates (regime, availability) is
+   always backend-provided — this stylesheet never encodes a market value.
+   ========================================================================== */
+
+.corp-root {
+  /* ---- palette (deep space institutional, restrained accents) ---- */
+  --bg: #04060c;
+  --bg-2: #070b16;
+  --bg-3: #0b1120;
+  --ink: #eef3ff;
+  --ink-dim: #b7c4e0;
+  --muted: #8496b8;
+  --muted-2: #61708f;
+  --line: rgba(126, 154, 214, 0.14);
+  --line-strong: rgba(126, 154, 214, 0.28);
+  --panel: rgba(16, 24, 42, 0.55);
+  --panel-2: rgba(20, 30, 52, 0.72);
+  --brand: #5b8cff;
+  --brand-2: #35e0c0;
+  --brand-3: #9a7bff;
+  /* data-state visual mappings — these are VISUAL tokens, not data values.
+     The component chooses which one via the backend's regime/availability. */
+  --state-riskon: #2dd48a;
+  --state-riskoff: #ff6b81;
+  --state-neutral: #6ea0ff;
+  --state-unavailable: #f4b740;
+  --state-error: #ff5d73;
+  --up: #2dd48a;
+  --down: #ff6b81;
+
+  /* ---- depth / elevation ---- */
+  --z-field: 0;
+  --z-content: 1;
+  --z-nav: 30;
+  --elev-1: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 8px 30px rgba(3, 7, 18, 0.5);
+  --elev-2: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 18px 60px rgba(3, 7, 18, 0.6);
+  --glass: saturate(140%) blur(14px);
+
+  /* ---- motion tokens ---- */
+  --dur-1: 0.18s;
+  --dur-2: 0.34s;
+  --dur-3: 0.62s;
+  --dur-4: 0.9s;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --radius-1: 12px;
+  --radius-2: 18px;
+  --radius-3: 26px;
+  --maxw: 1180px;
+
+  background:
+    radial-gradient(1300px 780px at 72% -12%, rgba(60, 104, 224, 0.16), transparent 60%),
+    radial-gradient(1000px 640px at 6% 8%, rgba(53, 224, 192, 0.07), transparent 56%),
+    radial-gradient(900px 900px at 90% 100%, rgba(154, 123, 255, 0.06), transparent 60%),
+    var(--bg);
+  font-feature-settings: "cv02", "cv03", "ss01";
+}
+
+/* Global smooth-but-not-hijacked scrolling; disabled under reduced motion. */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* ---- accessibility helpers ---- */
+.corp-skip-link {
+  position: absolute; left: -999px; top: 0; z-index: 100;
+  background: var(--brand); color: #04101a; padding: 0.6rem 1rem; border-radius: 0 0 10px 0; font-weight: 700;
+}
+.corp-skip-link:focus { left: 0; }
+.corp-sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.corp-root :focus-visible { outline: 2px solid var(--brand-2); outline-offset: 3px; border-radius: 6px; }
+
+/* ---- refined nav ---- */
+.corp-nav {
+  -webkit-backdrop-filter: var(--glass);
+  backdrop-filter: var(--glass);
+}
+.corp-nav.is-scrolled {
+  background: linear-gradient(to bottom, rgba(4, 6, 12, 0.92), rgba(4, 6, 12, 0.62));
+  border-bottom-color: var(--line-strong);
+}
+.corp-brand-mark {
+  display: inline-flex; align-items: center; gap: 0.55rem; text-decoration: none; color: var(--ink);
+}
+.corp-brand-glyph {
+  width: 26px; height: 26px; border-radius: 8px; position: relative; display: inline-block;
+  background: conic-gradient(from 210deg, var(--brand-2), var(--brand), var(--brand-3), var(--brand-2));
+  box-shadow: 0 0 20px rgba(60, 120, 255, 0.35);
+}
+.corp-brand-glyph::after {
+  content: ""; position: absolute; inset: 6px; border-radius: 4px; background: var(--bg-2);
+}
+
+/* ============================================================================
+   HERO — intelligence universe
+   ========================================================================== */
+.corp-hero {
+  position: relative;
+  min-height: min(100svh, 900px);
+  display: grid;
+  align-items: center;
+  padding: clamp(4rem, 12vh, 9rem) clamp(1rem, 5vw, 3rem) clamp(3rem, 8vh, 6rem);
+  overflow: hidden;
+}
+.corp-hero-canvas {
+  position: absolute; inset: 0; z-index: var(--z-field);
+  width: 100%; height: 100%; display: block; pointer-events: none;
+}
+.corp-hero-veil {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 50% 0%, transparent 40%, rgba(4, 6, 12, 0.55) 100%),
+    linear-gradient(to bottom, transparent 55%, var(--bg) 98%);
+}
+.corp-hero-inner { position: relative; z-index: var(--z-content); max-width: var(--maxw); margin: 0 auto; width: 100%; }
+.corp-hero-kicker {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  color: var(--brand-2); letter-spacing: 0.26em; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  margin-bottom: 1.1rem;
+}
+.corp-hero-kicker::before {
+  content: ""; width: 26px; height: 1px; background: linear-gradient(90deg, transparent, var(--brand-2));
+}
+.corp-hero-title {
+  font-size: clamp(2.3rem, 6.6vw, 4.6rem); line-height: 1.02; margin: 0 0 1rem;
+  font-weight: 800; letter-spacing: -0.02em; max-width: 18ch;
+  background: linear-gradient(180deg, #ffffff, #b9cbf2 92%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.corp-hero-sub { color: var(--ink-dim); font-size: clamp(1.05rem, 2.1vw, 1.35rem); max-width: 44ch; line-height: 1.55; }
+.corp-hero-cta { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.75rem; }
+.corp-hero-status {
+  margin-top: 2rem; display: inline-flex; align-items: center; gap: 0.7rem;
+  padding: 0.5rem 0.9rem; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--panel); font-size: 0.82rem; color: var(--muted);
+  -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
+}
+.corp-hero-status[data-state="RISK_ON"] { border-color: color-mix(in oklab, var(--state-riskon) 45%, var(--line)); }
+.corp-hero-status[data-state="RISK_OFF"] { border-color: color-mix(in oklab, var(--state-riskoff) 45%, var(--line)); }
+.corp-hero-status[data-state="NEUTRAL"] { border-color: color-mix(in oklab, var(--state-neutral) 45%, var(--line)); }
+.corp-hero-status[data-state="UNAVAILABLE"],
+.corp-hero-status[data-state="LOADING"] { border-color: color-mix(in oklab, var(--state-unavailable) 40%, var(--line)); }
+.corp-state-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none;
+  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+.corp-hero-status[data-state="RISK_ON"] .corp-state-dot { background: var(--state-riskon); animation: corp-pulse 2.4s var(--ease-inout) infinite; }
+.corp-hero-status[data-state="RISK_OFF"] .corp-state-dot { background: var(--state-riskoff); animation: corp-pulse 3.6s var(--ease-inout) infinite; }
+.corp-hero-status[data-state="NEUTRAL"] .corp-state-dot { background: var(--state-neutral); animation: corp-pulse 3s var(--ease-inout) infinite; }
+.corp-hero-status[data-state="UNAVAILABLE"] .corp-state-dot,
+.corp-hero-status[data-state="LOADING"] .corp-state-dot { background: var(--state-unavailable); opacity: 0.7; }
+@keyframes corp-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  50% { box-shadow: 0 0 0 5px rgba(0, 0, 0, 0); opacity: 0.55; }
+}
+
+/* ============================================================================
+   SECTION rhythm + scroll-linked reveal (driven by a JS scroll engine that
+   sets --p 0..1 on each section; CSS maps that to transform/opacity)
+   ========================================================================== */
+.corp-section { position: relative; z-index: var(--z-content); padding: clamp(3.5rem, 11vh, 8rem) clamp(1rem, 5vw, 3rem); }
+.corp-section-inner { max-width: var(--maxw); margin: 0 auto; }
+.corp-eyebrow { color: var(--brand-2); letter-spacing: 0.24em; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.7rem; }
+.corp-h2 { font-size: clamp(1.7rem, 4.6vw, 3rem); line-height: 1.08; font-weight: 800; letter-spacing: -0.015em; margin: 0 0 0.7rem; max-width: 22ch; }
+.corp-lead { color: var(--ink-dim); font-size: clamp(1rem, 1.8vw, 1.2rem); line-height: 1.6; max-width: 52ch; }
+
+.corp-reveal {
+  --p: 0;
+  opacity: calc(0.15 + 0.85 * var(--p));
+  transform: translateY(calc((1 - var(--p)) * 26px));
+  will-change: opacity, transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .corp-reveal { opacity: 1 !important; transform: none !important; }
+}
+
+/* ============================================================================
+   MARKET STRUCTURE scroll story — price is one layer
+   ========================================================================== */
+.corp-structure { position: relative; }
+.corp-structure-stage {
+  position: relative; display: grid; gap: 1rem; margin-top: 2rem;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); align-items: stretch;
+}
+.corp-structure-visual {
+  position: relative; min-height: 340px; border: 1px solid var(--line); border-radius: var(--radius-3);
+  background: linear-gradient(180deg, var(--panel-2), var(--panel)); overflow: hidden;
+}
+.corp-structure-visual canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* layered "strata" depth visual — illuminates as the active layer advances */
+.corp-strata { position: absolute; inset: 12% 10%; display: grid; gap: 6px; align-content: center; }
+.corp-stratum {
+  height: 26px; border-radius: 8px;
+  background: linear-gradient(90deg, rgba(91, 140, 255, 0.35), rgba(53, 224, 192, 0.16) 60%, transparent);
+  border: 1px solid var(--line);
+  transition: opacity var(--dur-3) var(--ease-out), transform var(--dur-3) var(--ease-out);
+}
+.corp-strata[data-regime="RISK_ON"] .corp-stratum { background: linear-gradient(90deg, rgba(45, 212, 138, 0.4), rgba(45, 212, 138, 0.12) 60%, transparent); }
+.corp-strata[data-regime="RISK_OFF"] .corp-stratum { background: linear-gradient(90deg, rgba(255, 107, 129, 0.4), rgba(255, 107, 129, 0.1) 60%, transparent); }
+
+.corp-layers { display: grid; gap: 0.6rem; align-content: start; }
+.corp-layer {
+  --p: 0;
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.9rem;
+  padding: 0.85rem 1.05rem; border: 1px solid var(--line); border-radius: var(--radius-1);
+  background: var(--panel); transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2), transform var(--dur-2) var(--ease-out);
+}
+.corp-layer.is-active { border-color: var(--line-strong); background: var(--panel-2); transform: translateX(2px); }
+.corp-layer-idx { font-variant-numeric: tabular-nums; color: var(--muted-2); font-size: 0.78rem; width: 2ch; }
+.corp-layer-name { font-weight: 700; letter-spacing: 0.01em; }
+.corp-layer-desc { color: var(--muted); font-size: 0.82rem; margin-top: 0.1rem; }
+.corp-layer-tag {
+  font-size: 0.64rem; letter-spacing: 0.12em; font-weight: 700; text-transform: uppercase;
+  padding: 0.2rem 0.5rem; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--muted);
+}
+.corp-layer-tag.is-live { color: var(--brand-2); border-color: color-mix(in oklab, var(--brand-2) 45%, var(--line)); }
+.corp-layer-tag.is-concept { color: var(--muted-2); }
+
+/* ============================================================================
+   LIVE SHOWCASE — real BTC/ETH/SOL with explicit states + transitions
+   ========================================================================== */
+.corp-showcase { display: grid; gap: 1.1rem; }
+.corp-showcase-head { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: center; justify-content: space-between; }
+.corp-regime-chip {
+  display: inline-flex; align-items: center; gap: 0.7rem; padding: 0.55rem 0.95rem;
+  border: 1px solid var(--line-strong); border-radius: 999px; background: var(--panel); font-weight: 700;
+}
+.corp-regime-chip[data-state="RISK_ON"] { color: var(--state-riskon); border-color: color-mix(in oklab, var(--state-riskon) 50%, var(--line)); }
+.corp-regime-chip[data-state="RISK_OFF"] { color: var(--state-riskoff); border-color: color-mix(in oklab, var(--state-riskoff) 50%, var(--line)); }
+.corp-regime-chip[data-state="NEUTRAL"] { color: var(--state-neutral); border-color: color-mix(in oklab, var(--state-neutral) 50%, var(--line)); }
+.corp-regime-chip[data-state="UNAVAILABLE"] { color: var(--state-unavailable); }
+.corp-grid-assets { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.9rem; }
+.corp-asset {
+  position: relative; border: 1px solid var(--line); border-radius: var(--radius-2); padding: 1.1rem 1.15rem;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel)); overflow: hidden;
+  transition: border-color var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out);
+}
+.corp-asset:hover { transform: translateY(-3px); border-color: var(--line-strong); }
+.corp-asset[data-avail="UNAVAILABLE"], .corp-asset[data-avail="ERROR"] { opacity: 0.72; }
+.corp-asset-spark { position: absolute; inset: auto 0 0 0; height: 40%; opacity: 0.5; pointer-events: none; }
+.corp-asset-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.corp-asset-sym { font-weight: 800; letter-spacing: 0.04em; }
+.corp-asset-badge { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-2); border: 1px solid var(--line); border-radius: 999px; padding: 0.12rem 0.45rem; }
+.corp-asset-badge.is-fresh { color: var(--brand-2); border-color: color-mix(in oklab, var(--brand-2) 40%, var(--line)); }
+.corp-asset-badge.is-stale { color: var(--state-unavailable); border-color: color-mix(in oklab, var(--state-unavailable) 40%, var(--line)); }
+.corp-asset-price {
+  font-variant-numeric: tabular-nums; font-size: 1.7rem; font-weight: 800; margin: 0.55rem 0 0.15rem; letter-spacing: -0.01em;
+  transition: color var(--dur-2) var(--ease-out);
+}
+.corp-asset-price.tick-up { color: var(--up); } .corp-asset-price.tick-down { color: var(--down); }
+.corp-asset-row { display: flex; align-items: baseline; gap: 0.6rem; font-size: 0.88rem; }
+.corp-chg.up { color: var(--up); } .corp-chg.down { color: var(--down); } .corp-chg { font-weight: 700; }
+.corp-asset-meta { color: var(--muted); font-size: 0.76rem; margin-top: 0.5rem; }
+.corp-asset-unavail { color: var(--state-unavailable); font-size: 0.86rem; margin-top: 0.6rem; }
+
+.corp-provenance-bar {
+  display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; align-items: center;
+  padding: 0.7rem 1rem; border: 1px solid var(--line); border-radius: var(--radius-1); background: var(--panel);
+  color: var(--muted); font-size: 0.78rem;
+}
+.corp-provenance-bar b { color: var(--ink-dim); font-weight: 700; }
+.corp-dot-sep { width: 3px; height: 3px; border-radius: 50%; background: var(--muted-2); }
+
+/* ============================================================================
+   INTELLIGENCE ENGINE — architecture flow + Personal/Enterprise split
+   ========================================================================== */
+.corp-engine { display: grid; gap: 1rem; margin-top: 2rem; }
+.corp-pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.6rem; }
+.corp-pipe-node {
+  --p: 0; text-align: center; padding: 1rem 0.7rem; border: 1px solid var(--line); border-radius: var(--radius-1);
+  background: var(--panel); position: relative; transition: border-color var(--dur-2), transform var(--dur-2) var(--ease-out);
+}
+.corp-pipe-node.is-lit { border-color: color-mix(in oklab, var(--brand) 45%, var(--line)); transform: translateY(-2px); }
+.corp-pipe-node .k { color: var(--brand-2); font-size: 0.64rem; letter-spacing: 0.14em; font-weight: 700; }
+.corp-pipe-node .t { font-weight: 700; margin-top: 0.3rem; font-size: 0.95rem; }
+.corp-pipe-node .d { color: var(--muted); font-size: 0.74rem; margin-top: 0.25rem; }
+.corp-branch { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.corp-branch-card {
+  border: 1px solid var(--line); border-radius: var(--radius-2); padding: 1.4rem; background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  display: grid; gap: 0.6rem; align-content: start; transition: border-color var(--dur-2), transform var(--dur-2) var(--ease-out);
+}
+.corp-branch-card:hover { transform: translateY(-3px); border-color: var(--line-strong); }
+.corp-branch-card h3 { margin: 0; font-size: 1.25rem; }
+.corp-branch-card .sub { color: var(--muted); font-size: 0.88rem; }
+.corp-feat { display: grid; gap: 0.4rem; margin: 0.5rem 0 0; padding: 0; list-style: none; }
+.corp-feat li { display: flex; align-items: center; gap: 0.55rem; color: var(--ink-dim); font-size: 0.9rem; }
+.corp-avail {
+  font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+  padding: 0.12rem 0.44rem; border-radius: 999px; border: 1px solid var(--line-strong); flex: none;
+}
+.corp-avail.available { color: var(--brand-2); border-color: color-mix(in oklab, var(--brand-2) 45%, var(--line)); }
+.corp-avail.planned { color: var(--state-unavailable); border-color: color-mix(in oklab, var(--state-unavailable) 40%, var(--line)); }
+.corp-avail.contact { color: var(--brand); border-color: color-mix(in oklab, var(--brand) 45%, var(--line)); }
+
+/* ---- capability (signal/anomaly/risk) cards — honest availability ---- */
+.corp-caps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.9rem; margin-top: 1.75rem; }
+.corp-cap {
+  border: 1px solid var(--line); border-radius: var(--radius-2); padding: 1.2rem; background: var(--panel);
+  display: grid; gap: 0.5rem; align-content: start;
+}
+.corp-cap h3 { margin: 0; font-size: 1.05rem; }
+.corp-cap p { margin: 0; color: var(--muted); font-size: 0.86rem; line-height: 1.55; }
+.corp-cap-state {
+  justify-self: start; margin-top: 0.3rem; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+  padding: 0.18rem 0.5rem; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--muted);
+}
+.corp-cap-state.live { color: var(--brand-2); border-color: color-mix(in oklab, var(--brand-2) 45%, var(--line)); }
+.corp-cap-state.capability { color: var(--muted-2); }
+
+/* ---- trust layer ---- */
+.corp-trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.9rem; margin-top: 1.75rem; }
+.corp-trust-item { border: 1px solid var(--line); border-radius: var(--radius-2); padding: 1.2rem; background: var(--panel); }
+.corp-trust-item h3 { margin: 0 0 0.35rem; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+.corp-trust-item p { margin: 0; color: var(--muted); font-size: 0.86rem; line-height: 1.55; }
+.corp-trust-ico { color: var(--brand-2); flex: none; }
+
+/* ============================================================================
+   ADMIN CONSOLE upgrade
+   ========================================================================== */
+.corp-admin-topbar {
+  display: flex; align-items: center; gap: 1rem; padding: 0.8rem 1.25rem;
+  border-bottom: 1px solid var(--line); background: var(--panel-2);
+  position: sticky; top: 0; z-index: 5; -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
+}
+.corp-admin-topbar .sp { flex: 1; }
+.corp-admin-dirty {
+  font-size: 0.72rem; color: var(--state-unavailable); border: 1px solid color-mix(in oklab, var(--state-unavailable) 40%, var(--line));
+  padding: 0.2rem 0.55rem; border-radius: 999px;
+}
+.corp-admin-nav { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.corp-admin-nav a {
+  color: var(--muted); text-decoration: none; padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.86rem;
+  border: 1px solid transparent;
+}
+.corp-admin-nav a.is-active { color: var(--ink); background: rgba(91, 140, 255, 0.12); border-color: var(--line); }
+.corp-admin-section { display: grid; gap: 1rem; max-width: 1000px; }
+.corp-admin-section h2 { margin: 0; font-size: 1.35rem; }
+.corp-metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.8rem; }
+.corp-metric { border: 1px solid var(--line); border-radius: var(--radius-1); padding: 1rem 1.15rem; background: var(--panel); }
+.corp-metric .v { font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.corp-metric .l { color: var(--muted); font-size: 0.78rem; margin-top: 0.15rem; }
+.corp-metric .u { color: var(--state-unavailable); font-size: 1rem; font-weight: 700; }
+
+.corp-editor { display: grid; gap: 1rem; border: 1px solid var(--line); border-radius: var(--radius-2); padding: 1.25rem; background: var(--panel); }
+.corp-editor-row { display: grid; gap: 0.35rem; }
+.corp-editor-row > label { font-size: 0.82rem; color: var(--muted); font-weight: 600; }
+.corp-editor input, .corp-editor textarea, .corp-editor select {
+  background: rgba(6, 10, 20, 0.8); border: 1px solid var(--line); border-radius: 10px; color: var(--ink);
+  padding: 0.55rem 0.7rem; font: inherit; width: 100%;
+}
+.corp-editor input:focus, .corp-editor textarea:focus { border-color: var(--brand); outline: none; }
+.corp-editor .invalid { border-color: var(--down); }
+.corp-editor-hint { color: var(--muted-2); font-size: 0.74rem; }
+.corp-editor-err { color: var(--down); font-size: 0.76rem; }
+.corp-repeat { display: grid; gap: 0.75rem; }
+.corp-repeat-item { display: grid; gap: 0.5rem; border: 1px dashed var(--line); border-radius: var(--radius-1); padding: 0.9rem; position: relative; }
+.corp-repeat-item .rm { position: absolute; top: 0.5rem; right: 0.5rem; }
+.corp-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+.corp-published-tag { font-size: 0.74rem; color: var(--brand-2); }
+.corp-btn-sm { padding: 0.45rem 0.85rem; font-size: 0.82rem; border-radius: 9px; }
+.corp-btn-danger { color: var(--down); background: transparent; border: 1px solid color-mix(in oklab, var(--down) 40%, var(--line)); }
+.corp-preview-frame { border: 1px solid var(--line); border-radius: var(--radius-2); overflow: auto; background: var(--bg); min-height: 360px; }
+.corp-muted { color: var(--muted-2); }
+.corp-admin-main { min-height: 60vh; }
+
+/* ============================================================================
+   Responsive — mobile is designed, not just shrunk
+   ========================================================================== */
+@media (max-width: 900px) {
+  .corp-structure-stage { grid-template-columns: 1fr; }
+  .corp-branch { grid-template-columns: 1fr; }
+  .corp-pipe { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .corp-pipe { grid-template-columns: 1fr; }
+  .corp-hero { min-height: auto; padding-top: clamp(3rem, 14vh, 6rem); }
+  .corp-asset-price { font-size: 1.5rem; }
+}
+
+/* ============================================================================
+   Reduced motion — no continuous animation, no large transforms, full content
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .corp-root *,
+  .corp-hero-status .corp-state-dot { animation: none !important; }
+  .corp-layer, .corp-asset, .corp-branch-card, .corp-pipe-node { transition: none !important; transform: none !important; }
+}

@@ -63,3 +63,46 @@ def test_corporate_states_and_reduced_motion() -> None:
         assert state in ds
     css = _read(FE / "src" / "styles" / "corporate.css")
     assert "prefers-reduced-motion" in css
+
+
+# ---- CORPORATE-2 cinematic layer ----
+
+def test_hero_is_backend_driven_with_fallback() -> None:
+    hero = _read(CORP / "components" / "hero" / "IntelligenceHero.tsx")
+    # Motion/colour come from backend regime/energy props — not decided here.
+    assert "regime" in hero and "energy" in hero and "available" in hero
+    # A static fallback exists for reduced-motion / no-canvas / Suspense.
+    assert (CORP / "components" / "hero" / "HeroFallback.tsx").exists()
+    home = _read(CORP / "pages" / "Home.tsx")
+    assert "reducedMotion" in home and "HeroFallback" in home and "lazy(" in home
+
+
+def test_live_showcase_has_explicit_states() -> None:
+    sc = _read(CORP / "components" / "LiveShowcase.tsx")
+    for token in ("LOADING", "ERROR", "UNAVAILABLE", "provenance", "freshness"):
+        assert token.lower() in sc.lower(), token
+    # no fabricated interpolation — flashes on real value change only
+    assert "tick-up" in sc and "prev" in sc
+
+
+def test_scroll_engine_and_cinematic_css_respect_reduced_motion() -> None:
+    scroll = _read(CORP / "hooks" / "useScrollScene.ts")
+    assert "prefers-reduced-motion" in scroll
+    css = _read(FE / "src" / "styles" / "corporate-cinematic.css")
+    assert "prefers-reduced-motion" in css and "corp-skip-link" in css
+
+
+def test_market_context_polls_backend_only() -> None:
+    ctx = _read(CORP / "context" / "MarketContext.tsx")
+    assert "getMarket" in ctx and "UNAVAILABLE" in ctx and "ERROR" in ctx
+    # energy is derived from the backend regime/risk (motion only), not invented
+    assert "energyOf" in ctx and "regimeOf" in ctx
+
+
+def test_static_server_sets_csp_and_security_headers() -> None:
+    srv = _read(Path("deploy") / "zeabur_corporate_v1" / "server.py")
+    for token in ("Content-Security-Policy", "frame-ancestors 'none'", "X-Content-Type-Options",
+                  "Referrer-Policy", "Permissions-Policy", "/robots.txt", "/sitemap.xml"):
+        assert token in srv, token
+    # CSP must not permit inline scripts.
+    assert "script-src 'self'" in srv and "'unsafe-inline'" not in srv.split("script-src", 1)[1].split(";", 1)[0]

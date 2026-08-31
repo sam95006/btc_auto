@@ -151,6 +151,17 @@ def create_app() -> Flask:
             response.headers["Access-Control-Allow-Credentials"] = "true"
         return response
 
+    @app.after_request
+    def security_headers(response):
+        """Baseline hardening on every API response (JSON API; the SPA carries
+        its own full CSP). These never weaken the HttpOnly session boundary."""
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()")
+        response.headers.setdefault("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
+        return response
+
     return app
 
 

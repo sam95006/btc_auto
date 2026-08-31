@@ -97,3 +97,23 @@ export const adminPublish = (slug: string) => adminFetch(`/admin/content/${slug}
 export const adminLeads = () => adminFetch("/admin/leads");
 export const adminAudit = () => adminFetch("/admin/audit");
 export const adminOverview = () => adminFetch("/admin/overview");
+export const adminAnalytics = () => adminFetch("/admin/analytics");
+export const adminCreateAdmin = (input: { email: string; password: string; display_name?: string; role?: string }) =>
+  adminFetch("/admin/admins", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+// Authenticated draft preview — returns the DRAFT body shaped like the public
+// content envelope so the same site components can render it. Never public.
+export const adminPreview = (slug: string) => adminFetch(`/admin/preview/${slug}`);
+export const adminGetSetting = (key: string) => adminFetch(`/admin/settings/${key}`);
+export const adminSetSetting = (key: string, value: Record<string, unknown>) =>
+  adminFetch(`/admin/settings/${key}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ value }) });
+
+// ---- privacy-conscious first-party analytics (no PII, allow-listed events) ----
+export async function postAnalyticsEvent(input: { event: string; path?: string; label?: string }) {
+  const res = await fetch(`${origin()}/api/corporate/v1/analytics/event`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(input),
+    keepalive: true,
+  });
+  return { ok: res.ok, status: res.status };
+}
