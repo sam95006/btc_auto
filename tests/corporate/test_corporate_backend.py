@@ -188,40 +188,52 @@ def test_login_wrong_password_401():
 
 
 def test_admin_requires_session_and_permission():
-    app = _app(); c = app.test_client(); _owner(c)
-    # No session -> 401
-    assert c.get("/admin/content").status_code == 401
-    sess = _owner_session(app)
-    ok = c.get("/admin/content", headers={"X-Corp-Session": sess["session_id"]})
-    assert ok.status_code == 200  # OWNER has content.read
+    app = _app()
+    # A fresh client with NO cookie is unauthenticated.
+    assert app.test_client().get("/admin/content").status_code == 401
+    # The owner-setup client carries the HttpOnly session cookie → authorized.
+    c = app.test_client(); _owner(c)
+    assert c.get("/admin/content").status_code == 200  # OWNER has content.read
 
 
 def test_editor_cannot_publish_but_owner_can():
-    app = _app(); c = app.test_client(); _owner(c)
-    owner = _owner_session(app)
-    # Owner creates an EDITOR
-    c.post("/admin/admins", headers=_h(owner),
+    app = _app(); c = app.test_client(); csrf = _owner_csrf(c)
+    c.post("/admin/admins", headers={"X-Corp-CSRF": csrf},
            json={"email": "editor@nexus.test", "password": "EditorPass12345", "role": "EDITOR"})
-    ed = app.config[REPO_CONFIG_KEY].login(email="editor@nexus.test", password="EditorPass12345")
-    # Editor can save draft (content.write) but cannot publish (no content.publish)
-    assert c.put("/admin/content/about", headers=_h(ed), json={"data": {"title": "x"}}).status_code == 200
-    pub = c.post("/admin/content/about/publish", headers=_h(ed))
+    # Log in as the editor (replaces the session cookie on this client).
+    ed = app.test_client()
+    lr = ed.post("/admin/login", json={"email": "editor@nexus.test", "password": "EditorPass12345"})
+    ecsrf = lr.get_json()["csrf_token"]
+    assert ed.put("/admin/content/about", headers={"X-Corp-CSRF": ecsrf}, json={"data": {"title": "x"}}).status_code == 200
+    pub = ed.post("/admin/content/about/publish", headers={"X-Corp-CSRF": ecsrf})
     assert pub.status_code == 403 and pub.get_json()["required"] == "content.publish"
 
 
 def test_mutation_requires_csrf():
     app = _app(); c = app.test_client(); _owner(c)
-    owner = _owner_session(app)
-    # Missing CSRF header -> 403
-    r = c.put("/admin/content/about", headers={"X-Corp-Session": owner["session_id"]}, json={"data": {"t": 1}})
+    # Cookie session present but NO CSRF header -> 403.
+    r = c.put("/admin/content/about", json={"data": {"t": 1}})
     assert r.status_code == 403 and r.get_json()["error"] == "csrf_failed"
 
 
-def test_logout_revokes_session():
-    app = _app(); c = app.test_client(); _owner(c)
-    owner = _owner_session(app)
-    c.post("/admin/logout", headers={"X-Corp-Session": owner["session_id"]})
-    assert c.get("/admin/content", headers={"X-Corp-Session": owner["session_id"]}).status_code == 401
+def test_session_cookie_is_httponly_secure_samesite():
+    app = _app(); c = app.test_client()
+    r = _owner_raw(c)
+    cookies = r.headers.get_all("Set-Cookie")
+    sess = [x for x in cookies if x.startswith("corp_session=")][0]
+    assert "HttpOnly" in sess and "Secure" in sess and "SameSite=None" in sess
+    # The CSRF cookie is readable (double-submit) — not HttpOnly.
+    csrf = [x for x in cookies if x.startswith("corp_csrf=")][0]
+    assert "HttpOnly" not in csrf and "Secure" in csrf
+
+
+def test_session_survives_reload_and_logout_revokes():
+    app = _app(); c = app.test_client(); csrf = _owner_csrf(c)
+    # "Reload": a fresh request on the same client (cookie persists) stays authed.
+    assert c.get("/admin/session").get_json()["authenticated"] is True
+    assert c.get("/admin/content").status_code == 200
+    c.post("/admin/logout", headers={"X-Corp-CSRF": csrf})
+    assert c.get("/admin/content").status_code == 401  # session revoked + cookie cleared
 
 
 # --------------------------------------------------------------------------
@@ -229,12 +241,10 @@ def test_logout_revokes_session():
 # --------------------------------------------------------------------------
 
 def test_cms_draft_publish_and_public_reads_published():
-    app = _app(); c = app.test_client(); _owner(c)
-    owner = _owner_session(app)
-    c.put("/admin/content/about", headers=_h(owner), json={"data": {"title": "New About", "vision": "V"}})
-    pub = c.post("/admin/content/about/publish", headers=_h(owner))
+    app = _app(); c = app.test_client(); csrf = _owner_csrf(c)
+    c.put("/admin/content/about", headers={"X-Corp-CSRF": csrf}, json={"data": {"title": "New About", "vision": "V"}})
+    pub = c.post("/admin/content/about/publish", headers={"X-Corp-CSRF": csrf})
     assert pub.status_code == 200 and pub.get_json()["published_version"] == 1
-    # Public API returns the published body.
     got = c.get("/api/corporate/v1/about").get_json()
     assert got["availability"] == "READY" and got["data"]["title"] == "New About"
 
@@ -277,9 +287,9 @@ def test_contact_lead_validation():
 # helpers
 # --------------------------------------------------------------------------
 
-def _owner_session(app):
-    return app.config[REPO_CONFIG_KEY].login(email="owner@nexus.test", password="OwnerPass12345")
+def _owner_raw(c):
+    return c.post("/owner/setup", json={"email": "owner@nexus.test", "password": "OwnerPass12345", "display_name": "Owner"})
 
 
-def _h(sess):
-    return {"X-Corp-Session": sess["session_id"], "X-Corp-CSRF": sess["csrf_token"]}
+def _owner_csrf(c):
+    return _owner(c).get_json()["csrf_token"]

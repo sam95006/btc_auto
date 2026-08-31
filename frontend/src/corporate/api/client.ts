@@ -24,6 +24,15 @@ async function getJson<T>(path: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+// CSRF for admin mutations: read the readable double-submit cookie the server
+// set alongside the HttpOnly session cookie. The session token itself is never
+// accessible to JS.
+function csrfFromCookie(): string {
+  if (typeof document === "undefined") return "";
+  const m = document.cookie.match(/(?:^|;\s*)corp_csrf=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : "";
+}
+
 // ---- public content ----
 export const getSite = () => getJson<ContentEnvelope<SiteContent>>("/api/corporate/v1/site");
 export const getHome = () => getJson<ContentEnvelope<HomeContent>>("/api/corporate/v1/home");
@@ -42,41 +51,24 @@ export async function submitContact(input: { name?: string; email: string; compa
 }
 
 // ---- owner bootstrap + admin ----
-type AdminAuth = { session_id: string; csrf_token: string };
-let auth: AdminAuth | null = null;
-export const setAuth = (a: AdminAuth | null) => (auth = a);
-export const getAuth = () => auth;
-
+// The session is a server-managed HttpOnly cookie — never stored in JS/
+// localStorage. Requests use credentials:"include"; mutations echo the CSRF
+// cookie as a double-submit header.
 async function adminFetch(path: string, init: RequestInit = {}) {
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    ...(init.headers as Record<string, string>),
-  };
-  if (auth) {
-    headers["X-Corp-Session"] = auth.session_id;
-    if (["POST", "PUT", "DELETE", "PATCH"].includes((init.method || "GET").toUpperCase()))
-      headers["X-Corp-CSRF"] = auth.csrf_token;
-  }
-  const res = await fetch(`${origin()}${path}`, { ...init, headers });
+  const method = (init.method || "GET").toUpperCase();
+  const headers: Record<string, string> = { Accept: "application/json", ...(init.headers as Record<string, string>) };
+  if (["POST", "PUT", "DELETE", "PATCH"].includes(method)) headers["X-Corp-CSRF"] = csrfFromCookie();
+  const res = await fetch(`${origin()}${path}`, { ...init, headers, credentials: "include" });
   return { ok: res.ok, status: res.status, body: (await res.json().catch(() => ({}))) as Record<string, unknown> };
 }
 
-export async function ownerSetup(input: { email: string; password: string; display_name?: string }) {
-  const r = await adminFetch("/owner/setup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
-  if (r.ok && r.body.session_id) setAuth({ session_id: String(r.body.session_id), csrf_token: String(r.body.csrf_token) });
-  return r;
-}
+export const ownerSetup = (input: { email: string; password: string; display_name?: string }) =>
+  adminFetch("/owner/setup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
 
-export async function adminLogin(email: string, password: string) {
-  const r = await adminFetch("/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
-  if (r.ok && r.body.session_id) setAuth({ session_id: String(r.body.session_id), csrf_token: String(r.body.csrf_token) });
-  return r;
-}
+export const adminLogin = (email: string, password: string) =>
+  adminFetch("/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
 
-export async function adminLogout() {
-  await adminFetch("/admin/logout", { method: "POST" });
-  setAuth(null);
-}
+export const adminLogout = () => adminFetch("/admin/logout", { method: "POST" });
 
 export const adminSession = () => adminFetch("/admin/session").then((r) => (r.ok ? (r.body as unknown as AdminSession) : { authenticated: false }));
 export const adminContentList = () => adminFetch("/admin/content");
