@@ -248,8 +248,14 @@ def register_corporate_routes(app: Flask) -> None:
         ctx = _auth(app)
         if ctx is None:
             return _json({"authenticated": False}, 401)
+        # Return the session's CSRF token so a cross-origin frontend can rehydrate
+        # its double-submit header after a page reload. This is safe: it is only
+        # returned to a request already bearing the valid HttpOnly session cookie,
+        # and the response body is unreadable by non-allowlisted origins under the
+        # exact-origin CORS policy (a cross-site attacker can send the cookie but
+        # cannot read this body to echo the token).
         return _json({"authenticated": True, "email": ctx["email"], "role": ctx["role"],
-                      "permissions": sorted(ctx["permissions"])})
+                      "permissions": sorted(ctx["permissions"]), "csrf_token": ctx["csrf_token"]})
 
     # ================= ADMIN (protected) =================
     @app.get("/admin/overview")
