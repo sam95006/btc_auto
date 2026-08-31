@@ -24,9 +24,19 @@ async function getJson<T>(path: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-// CSRF for admin mutations: read the readable double-submit cookie the server
-// set alongside the HttpOnly session cookie. The session token itself is never
-// accessible to JS.
+// CSRF for admin mutations. The readable double-submit cookie (corp_csrf) is
+// host-scoped to the API origin, so on a cross-origin deployment (Corporate
+// frontend on a different subdomain than the Core API) it is NOT visible to
+// document.cookie here. We therefore keep the token in memory, captured from the
+// login/owner-setup/session responses, and fall back to the cookie for
+// same-origin deployments. The token itself is never persisted to storage.
+let csrfToken = "";
+
+function rememberCsrf(body: unknown): void {
+  const t = (body as { csrf_token?: unknown } | null)?.csrf_token;
+  if (typeof t === "string" && t) csrfToken = t;
+}
+
 function csrfFromCookie(): string {
   if (typeof document === "undefined") return "";
   const m = document.cookie.match(/(?:^|;\s*)corp_csrf=([^;]+)/);
@@ -57,9 +67,13 @@ export async function submitContact(input: { name?: string; email: string; compa
 async function adminFetch(path: string, init: RequestInit = {}) {
   const method = (init.method || "GET").toUpperCase();
   const headers: Record<string, string> = { Accept: "application/json", ...(init.headers as Record<string, string>) };
-  if (["POST", "PUT", "DELETE", "PATCH"].includes(method)) headers["X-Corp-CSRF"] = csrfFromCookie();
+  if (["POST", "PUT", "DELETE", "PATCH"].includes(method)) headers["X-Corp-CSRF"] = csrfToken || csrfFromCookie();
   const res = await fetch(`${origin()}${path}`, { ...init, headers, credentials: "include" });
-  return { ok: res.ok, status: res.status, body: (await res.json().catch(() => ({}))) as Record<string, unknown> };
+  const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+  // Capture/refresh the CSRF token from any response that carries it (login,
+  // owner-setup, and /admin/session), so mutations work after a reload too.
+  rememberCsrf(body);
+  return { ok: res.ok, status: res.status, body };
 }
 
 export const ownerSetup = (input: { email: string; password: string; display_name?: string }) =>
@@ -68,7 +82,11 @@ export const ownerSetup = (input: { email: string; password: string; display_nam
 export const adminLogin = (email: string, password: string) =>
   adminFetch("/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
 
-export const adminLogout = () => adminFetch("/admin/logout", { method: "POST" });
+export const adminLogout = () =>
+  adminFetch("/admin/logout", { method: "POST" }).then((r) => {
+    csrfToken = "";
+    return r;
+  });
 
 export const adminSession = () => adminFetch("/admin/session").then((r) => (r.ok ? (r.body as unknown as AdminSession) : { authenticated: false }));
 export const adminContentList = () => adminFetch("/admin/content");
