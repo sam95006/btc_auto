@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "npm run build:personal",
     "build:personal": "npm run check:frontend-runtime-boundary && npm run check:surface-boundary && npm run write:build-info && node scripts/check_member_product_generation.mjs && node scripts/check_v18_2_15_exchange_visual_terminal.mjs && node scripts/check_v18_2_16_server_side_live_radar.mjs && node scripts/check_v18_2_18_paid_product_visual.mjs && node scripts/check_v18_2_19_visual_analytics.mjs && node scripts/check_v18_2_20_paid_beta_retention.mjs && node scripts/check_v18_2_21_paid_beta_identity.mjs && node scripts/check_v18_2_22_closed_beta_readiness.mjs && tsc -b && node scripts/build_surface.mjs personal",
-    "build:corporate": "npm run check:surface-boundary && tsc -b && node scripts/build_surface.mjs corporate",
+    "build:corporate": "npm run check:surface-boundary && npm run check:corporate-no-fake-data && tsc -b && node scripts/build_surface.mjs corporate",
     "build:enterprise": "npm run check:surface-boundary && tsc -b && node scripts/build_surface.mjs enterprise",
     "build:founder": "tsc -b && node scripts/build_surface.mjs founder",
     "build:all": "npm run build:personal && npm run build:corporate && npm run build:enterprise && npm run build:founder",
@@ -33,7 +33,8 @@
     "e2e": "playwright test",
     "e2e:a11y": "playwright test --grep @a11y",
     "e2e:a11y-member": "playwright test e2e/a11y-member.spec.ts",
-    "e2e:visual": "playwright test --grep @visual"
+    "e2e:visual": "playwright test --grep @visual",
+    "check:corporate-no-fake-data": "node scripts/check_corporate_no_fake_data.mjs"
   },
   "dependencies": {
     "lightweight-charts": "file:lightweight-charts-5.2.0.tgz",

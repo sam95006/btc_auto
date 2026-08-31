@@ -1,0 +1,285 @@
+from __future__ import annotations
+
+import secrets
+from typing import Any
+
+from flask import Flask
+
+from backend.nexus_corporate.content import DEFAULT_CONTENT
+from backend.nexus_corporate.passwords import hash_password, verify_password
+from backend.nexus_corporate.permissions import OWNER_PERMISSIONS
+from backend.nexus_corporate.routes import (
+    MARKET_SNAPSHOT_CONFIG_KEY,
+    REPO_CONFIG_KEY,
+    _RL,
+    register_corporate_routes,
+)
+
+EDITOR_PERMS = {"website.read", "content.read", "content.write", "leads.read", "status.read"}
+
+
+class FakeRepo:
+    """In-memory Corporate repository double implementing the route surface."""
+
+    def __init__(self):
+        self.admins: dict[str, dict[str, Any]] = {}
+        self.by_email: dict[str, str] = {}
+        self.sessions: dict[str, dict[str, Any]] = {}
+        self.published: dict[str, Any] = {}
+        self.drafts: dict[str, Any] = {}
+        self.versions: dict[str, int] = {}
+        self.leads: list[dict[str, Any]] = []
+        self.audit: list[dict[str, Any]] = []
+        self._closed = False
+
+    def _perms(self, role):
+        return set(OWNER_PERMISSIONS) if role == "OWNER" else set(EDITOR_PERMS)
+
+    def bootstrap_closed(self):
+        return self._closed or any(a["role"] == "OWNER" for a in self.admins.values())
+
+    def add_audit(self, *, admin_id, action, target="", meta=None, ip=""):
+        self.audit.append({"admin_id": admin_id, "action": action, "target": target})
+
+    def _mk_admin(self, email, password, display_name, role):
+        if "@" not in email:
+            raise ValueError("invalid_email")
+        algo, salt, digest = hash_password(password)
+        aid = f"adm_{secrets.token_hex(6)}"
+        self.admins[aid] = {"admin_id": aid, "email": email.lower(), "display_name": display_name,
+                            "salt": salt, "hash": digest, "role": role}
+        self.by_email[email.lower()] = aid
+        return {"admin_id": aid, "email": email.lower(), "role": role, "display_name": display_name}
+
+    def create_owner(self, *, email, password, display_name="", ip=""):
+        if self.bootstrap_closed():
+            raise PermissionError("closed")
+        a = self._mk_admin(email.strip(), password, display_name, "OWNER")
+        self._closed = True
+        return a
+
+    def create_admin(self, *, email, password, display_name, role, actor_id):
+        if role not in ("OWNER", "EDITOR"):
+            raise ValueError("unknown_role")
+        return self._mk_admin(email.strip(), password, display_name, role)
+
+    def login(self, *, email, password, ip=""):
+        aid = self.by_email.get((email or "").strip().lower())
+        a = self.admins.get(aid or "")
+        if not a or not verify_password(password, a["salt"], a["hash"]):
+            raise PermissionError("invalid_credentials")
+        sid = f"sess_{secrets.token_hex(8)}"
+        csrf = secrets.token_urlsafe(16)
+        self.sessions[sid] = {"admin_id": aid, "csrf": csrf, "role": a["role"], "email": a["email"]}
+        return {"session_id": sid, "csrf_token": csrf,
+                "admin": {"admin_id": aid, "email": a["email"], "role": a["role"], "display_name": a["display_name"]}}
+
+    def resolve_session(self, sid):
+        s = self.sessions.get(sid or "")
+        if not s:
+            return None
+        return {"admin_id": s["admin_id"], "csrf_token": s["csrf"], "email": s["email"], "role": s["role"],
+                "permissions": self._perms(s["role"])}
+
+    def revoke_session(self, sid):
+        self.sessions.pop(sid or "", None)
+
+    def get_published(self, slug):
+        return self.published.get(slug) or DEFAULT_CONTENT.get(slug)
+
+    def get_content(self, slug):
+        if slug in self.drafts or slug in self.published or slug in DEFAULT_CONTENT:
+            return {"slug": slug, "draft": self.drafts.get(slug, DEFAULT_CONTENT.get(slug, {})),
+                    "published": self.published.get(slug, DEFAULT_CONTENT.get(slug)),
+                    "published_version": self.versions.get(slug, 1)}
+        return None
+
+    def save_draft(self, *, slug, body, actor_id):
+        self.drafts[slug] = body
+
+    def publish(self, *, slug, actor_id):
+        if slug not in self.drafts and slug not in DEFAULT_CONTENT:
+            raise ValueError("unknown_slug")
+        self.published[slug] = self.drafts.get(slug, DEFAULT_CONTENT.get(slug))
+        self.versions[slug] = self.versions.get(slug, 0) + 1
+        return {"slug": slug, "published_version": self.versions[slug]}
+
+    def list_content(self):
+        return [{"slug": s, "status": "PUBLISHED", "published_version": 1} for s in DEFAULT_CONTENT]
+
+    def add_lead(self, *, name, email, company="", message="", kind="contact"):
+        lid = f"lead_{secrets.token_hex(6)}"
+        self.leads.append({"lead_id": lid, "email": email})
+        return lid
+
+    def list_leads(self, limit=100):
+        return list(self.leads)
+
+    def list_audit(self, limit=100):
+        return list(self.audit)
+
+
+class FakeSnapshot:
+    def __init__(self, status=200):
+        self.status = status
+
+    def snapshot(self):
+        if self.status != 200:
+            return {"symbols": [], "fallback": "unavailable"}, 503
+        return ({"server_timestamp": "2026-08-31T00:00:00Z", "fallback": "none", "symbols": [
+            {"symbol": "BTCUSDT", "current_price": 60000.0, "change_24h_percent": 2.5, "high_24h": 61000, "low_24h": 59000,
+             "provider_timestamp": "2026-08-31T00:00:00Z", "freshness": "FRESH"},
+            {"symbol": "ETHUSDT", "current_price": 3000.0, "change_24h_percent": 3.1, "high_24h": 3100, "low_24h": 2900,
+             "provider_timestamp": "2026-08-31T00:00:00Z", "freshness": "FRESH"},
+            {"symbol": "SOLUSDT", "current_price": 150.0, "change_24h_percent": 1.2, "high_24h": 156, "low_24h": 149,
+             "provider_timestamp": "2026-08-31T00:00:00Z", "freshness": "FRESH"},
+        ]}, 200)
+
+
+def _app(*, market_status=200):
+    _RL.clear()  # reset the shared in-process rate limiter between tests
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    app.config[REPO_CONFIG_KEY] = FakeRepo()
+    app.config[MARKET_SNAPSHOT_CONFIG_KEY] = FakeSnapshot(status=market_status)
+    register_corporate_routes(app)
+    return app
+
+
+def _owner(c):
+    r = c.post("/owner/setup", json={"email": "owner@nexus.test", "password": "OwnerPass12345", "display_name": "Owner"})
+    return r
+
+
+# --------------------------------------------------------------------------
+# Owner bootstrap
+# --------------------------------------------------------------------------
+
+def test_owner_bootstrap_first_succeeds_second_rejected():
+    app = _app(); c = app.test_client()
+    r1 = _owner(c)
+    assert r1.status_code == 200 and r1.get_json()["owner"]["role"] == "OWNER"
+    # Second attempt is server-rejected (not frontend hiding).
+    r2 = c.post("/owner/setup", json={"email": "attacker@x.test", "password": "AttackerPass123"})
+    assert r2.status_code == 403 and r2.get_json()["error"] == "owner_bootstrap_closed"
+
+
+def test_owner_bootstrap_password_too_short_rejected():
+    app = _app(); c = app.test_client()
+    r = c.post("/owner/setup", json={"email": "o@x.test", "password": "short"})
+    assert r.status_code == 400
+
+
+def test_status_reports_bootstrap_state():
+    app = _app(); c = app.test_client()
+    assert c.get("/api/corporate/v1/status").get_json()["owner_bootstrap"] == "open"
+    _owner(c)
+    assert c.get("/api/corporate/v1/status").get_json()["owner_bootstrap"] == "closed"
+
+
+# --------------------------------------------------------------------------
+# Auth + RBAC + CSRF
+# --------------------------------------------------------------------------
+
+def test_login_wrong_password_401():
+    app = _app(); c = app.test_client(); _owner(c)
+    r = c.post("/admin/login", json={"email": "owner@nexus.test", "password": "WrongPass12345"})
+    assert r.status_code == 401
+
+
+def test_admin_requires_session_and_permission():
+    app = _app(); c = app.test_client(); _owner(c)
+    # No session -> 401
+    assert c.get("/admin/content").status_code == 401
+    sess = _owner_session(app)
+    ok = c.get("/admin/content", headers={"X-Corp-Session": sess["session_id"]})
+    assert ok.status_code == 200  # OWNER has content.read
+
+
+def test_editor_cannot_publish_but_owner_can():
+    app = _app(); c = app.test_client(); _owner(c)
+    owner = _owner_session(app)
+    # Owner creates an EDITOR
+    c.post("/admin/admins", headers=_h(owner),
+           json={"email": "editor@nexus.test", "password": "EditorPass12345", "role": "EDITOR"})
+    ed = app.config[REPO_CONFIG_KEY].login(email="editor@nexus.test", password="EditorPass12345")
+    # Editor can save draft (content.write) but cannot publish (no content.publish)
+    assert c.put("/admin/content/about", headers=_h(ed), json={"data": {"title": "x"}}).status_code == 200
+    pub = c.post("/admin/content/about/publish", headers=_h(ed))
+    assert pub.status_code == 403 and pub.get_json()["required"] == "content.publish"
+
+
+def test_mutation_requires_csrf():
+    app = _app(); c = app.test_client(); _owner(c)
+    owner = _owner_session(app)
+    # Missing CSRF header -> 403
+    r = c.put("/admin/content/about", headers={"X-Corp-Session": owner["session_id"]}, json={"data": {"t": 1}})
+    assert r.status_code == 403 and r.get_json()["error"] == "csrf_failed"
+
+
+def test_logout_revokes_session():
+    app = _app(); c = app.test_client(); _owner(c)
+    owner = _owner_session(app)
+    c.post("/admin/logout", headers={"X-Corp-Session": owner["session_id"]})
+    assert c.get("/admin/content", headers={"X-Corp-Session": owner["session_id"]}).status_code == 401
+
+
+# --------------------------------------------------------------------------
+# CMS draft/publish + public published-only
+# --------------------------------------------------------------------------
+
+def test_cms_draft_publish_and_public_reads_published():
+    app = _app(); c = app.test_client(); _owner(c)
+    owner = _owner_session(app)
+    c.put("/admin/content/about", headers=_h(owner), json={"data": {"title": "New About", "vision": "V"}})
+    pub = c.post("/admin/content/about/publish", headers=_h(owner))
+    assert pub.status_code == 200 and pub.get_json()["published_version"] == 1
+    # Public API returns the published body.
+    got = c.get("/api/corporate/v1/about").get_json()
+    assert got["availability"] == "READY" and got["data"]["title"] == "New About"
+
+
+def test_public_endpoints_serve_seed_defaults():
+    app = _app(); c = app.test_client()
+    for path in ("/api/corporate/v1/site", "/api/corporate/v1/home", "/api/corporate/v1/pricing"):
+        j = c.get(path).get_json()
+        assert j["availability"] == "READY" and j["source"] == "cms" and isinstance(j["data"], dict)
+
+
+# --------------------------------------------------------------------------
+# Live market showcase — real data path + honest unavailable
+# --------------------------------------------------------------------------
+
+def test_market_showcase_backend_computed_with_provenance():
+    app = _app(); c = app.test_client()
+    j = c.get("/api/corporate/v1/market").get_json()
+    assert j["availability"] == "READY" and j["source"] == "binance_usdm_public"
+    assert j["regime"]["value"] in ("RISK_ON", "RISK_OFF", "NEUTRAL")
+    assert all("price" in s for s in j["symbols"])
+    assert j["updated_at"] and j["freshness"] in ("FRESH", "STALE")
+
+
+def test_market_showcase_unavailable_no_fabrication():
+    app = _app(market_status=503); c = app.test_client()
+    j = c.get("/api/corporate/v1/market").get_json()
+    assert j["availability"] == "UNAVAILABLE"
+    for s in j["symbols"]:
+        assert "price" not in s and s["availability"] == "UNAVAILABLE"
+
+
+def test_contact_lead_validation():
+    app = _app(); c = app.test_client()
+    assert c.post("/api/corporate/v1/contact", json={"email": "bad"}).status_code == 400
+    assert c.post("/api/corporate/v1/contact", json={"email": "a@b.test", "message": "hi"}).status_code == 200
+
+
+# --------------------------------------------------------------------------
+# helpers
+# --------------------------------------------------------------------------
+
+def _owner_session(app):
+    return app.config[REPO_CONFIG_KEY].login(email="owner@nexus.test", password="OwnerPass12345")
+
+
+def _h(sess):
+    return {"X-Corp-Session": sess["session_id"], "X-Corp-CSRF": sess["csrf_token"]}

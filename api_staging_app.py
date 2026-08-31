@@ -23,6 +23,7 @@ from backend.nexus_product_backend.email_routes import register_member_email_rou
 from backend.nexus_billing.routes import register_billing_routes
 from backend.nexus_personal.routes import MARKET_ADAPTER_CONFIG_KEY, register_personal_routes
 from backend.nexus_personal.market_adapter import build_personal_market_adapter
+from backend.nexus_corporate.routes import register_corporate_routes
 from backend.nexus_public_realtime_transport.routes import register_public_realtime_routes
 
 
@@ -133,6 +134,7 @@ def create_app() -> Flask:
     # lazy — no network call happens until a Personal route fetches data.
     app.config[MARKET_ADAPTER_CONFIG_KEY] = build_personal_market_adapter()
     register_personal_routes(app)
+    register_corporate_routes(app)
     register_public_realtime_routes(app)
 
     @app.after_request

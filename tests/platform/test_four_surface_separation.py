@@ -97,8 +97,13 @@ def test_corporate_and_enterprise_do_not_import_founder_or_personal_billing() ->
 
 
 def test_corporate_has_personal_and_enterprise_product_entries() -> None:
+    # CORPORATE-1: the corporate site routes to Personal + Enterprise product
+    # pages, and the site chrome links out to the separate apps (login-personal /
+    # login-enterprise data-testids live in the Chrome component).
     src = _read(CORP)
-    assert "link-personal" in src and "link-enterprise" in src
+    assert '/personal' in src and '/enterprise' in src
+    chrome = _read(SRC / "corporate" / "components" / "Chrome.tsx")
+    assert 'login-personal' in chrome and 'login-enterprise' in chrome
 
 
 def test_enterprise_is_independent_shell_not_personal_subroute() -> None:
