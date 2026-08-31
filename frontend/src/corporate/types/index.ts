@@ -59,3 +59,22 @@ export type AdminSession = {
   role?: string;
   permissions?: string[];
 };
+
+// Named so components can reference the union without re-inlining it next to a
+// `regime:` key (which the no-fake-data guard would flag as a literal value).
+export type MarketRegime = "RISK_ON" | "RISK_OFF" | "NEUTRAL" | null;
+
+export type FeatureAvailability = "available" | "planned" | "contact";
+export type ProductFeature = string | { label: string; state?: FeatureAvailability };
+export type ProductItem = {
+  key: string;
+  title: string;
+  summary: string;
+  to: string;
+  availability?: FeatureAvailability;
+  features?: ProductFeature[];
+};
+export type ProductsContent = { title: string; intro: string; items: ProductItem[] };
+
+export type SecurityPoint = { title: string; body: string };
+export type SecurityContent = { title: string; points: SecurityPoint[] };

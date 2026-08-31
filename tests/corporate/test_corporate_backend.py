@@ -118,6 +118,18 @@ class FakeRepo:
     def list_audit(self, limit=100):
         return list(self.audit)
 
+    def __init_settings(self):
+        if not hasattr(self, "settings"):
+            self.settings: dict[str, Any] = {}
+
+    def get_setting(self, key):
+        self.__init_settings()
+        return self.settings.get(key)
+
+    def set_setting(self, key, value):
+        self.__init_settings()
+        self.settings[key] = value
+
 
 class FakeSnapshot:
     def __init__(self, status=200):
@@ -300,6 +312,49 @@ def test_contact_lead_validation():
     app = _app(); c = app.test_client()
     assert c.post("/api/corporate/v1/contact", json={"email": "bad"}).status_code == 400
     assert c.post("/api/corporate/v1/contact", json={"email": "a@b.test", "message": "hi"}).status_code == 200
+
+
+# --------------------------------------------------------------------------
+# CORPORATE-2: analytics, preview, settings
+# --------------------------------------------------------------------------
+
+def test_analytics_event_allowlist_and_recording():
+    app = _app(); c = app.test_client()
+    assert c.post("/api/corporate/v1/analytics/event", json={"event": "cta_primary", "path": "/"}).status_code == 200
+    # unknown events are rejected, never recorded
+    assert c.post("/api/corporate/v1/analytics/event", json={"event": "evil_track"}).status_code == 400
+    # owner can read the backend-collected summary
+    csrf = _owner_csrf(c)
+    assert csrf  # session established
+    summary = c.get("/admin/analytics").get_json()
+    assert summary["availability"] == "READY"
+    assert any(e["event"] == "cta_primary" and e["count"] >= 1 for e in summary["events"])
+
+
+def test_admin_preview_requires_auth_and_returns_draft():
+    app = _app(); c = app.test_client()
+    # unauthenticated preview is refused
+    fresh = app.test_client()
+    assert fresh.get("/admin/preview/about").status_code == 401
+    csrf = _owner_csrf(c)
+    c.put("/admin/content/about", headers={"X-Corp-CSRF": csrf}, json={"data": {"title": "Draft only"}})
+    prev = c.get("/admin/preview/about").get_json()
+    assert prev["availability"] == "READY" and prev["source"] == "draft"
+    assert prev["data"]["title"] == "Draft only"
+    # ...and the draft is NOT visible on the public API (still old/default)
+    pub = c.get("/api/corporate/v1/about").get_json()
+    assert pub["data"].get("title") != "Draft only"
+
+
+def test_admin_settings_get_set_requires_csrf():
+    app = _app(); c = app.test_client(); csrf = _owner_csrf(c)
+    # mutation without CSRF is refused
+    assert c.put("/admin/settings/site.meta", json={"value": {"a": 1}}).status_code == 403
+    assert c.put("/admin/settings/site.meta", headers={"X-Corp-CSRF": csrf}, json={"value": {"a": 1}}).status_code == 200
+    got = c.get("/admin/settings/site.meta").get_json()
+    assert got["value"] == {"a": 1}
+    # non-object value rejected
+    assert c.put("/admin/settings/x", headers={"X-Corp-CSRF": csrf}, json={"value": "nope"}).status_code == 400
 
 
 # --------------------------------------------------------------------------

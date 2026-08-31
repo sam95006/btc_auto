@@ -14,7 +14,11 @@ const RULES = [
   { name: "standalone_percentage_literal", re: /(?<![\w.){}])\d{1,3}\.\d+\s?%/ },
   { name: "crypto_price_literal", re: /\b(?:BTC|ETH|SOL)\b[^\n{}]{0,24}?\b\d{3,}\b/ },
   { name: "hardcoded_count", re: /\b(?:members?|users?|customers?|signals?|subscribers?)\b[^\n{}]{0,16}?\b\d{2,}\b/i },
+  // count written before the noun: "300+ coins", "14 signals today"
+  { name: "hardcoded_count_pre", re: /\b\d{2,}\+?\s?(?:members?|users?|customers?|signals?|coins?|traders?|subscribers?)\b/i },
   { name: "market_metric_literal", re: /\b(?:regime|risk[_-]?score|readiness)\b\s*[:=]\s*["']?(?:RISK_ON|RISK_OFF|NEUTRAL|\d)/i },
+  // fabricated performance/marketing figures ("99.9% uptime", "98% accuracy")
+  { name: "performance_literal", re: /\b\d{2,3}(?:\.\d+)?\s?%\s?(?:uptime|accuracy|win|precision|profit|return)/i },
 ];
 
 function walk(p) {
