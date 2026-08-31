@@ -236,6 +236,25 @@ def test_session_survives_reload_and_logout_revokes():
     assert c.get("/admin/content").status_code == 401  # session revoked + cookie cleared
 
 
+def test_admin_session_returns_csrf_for_cross_origin_rehydration():
+    # On a cross-origin deployment the readable corp_csrf cookie is host-scoped to
+    # the API origin and invisible to the frontend, so the frontend rehydrates the
+    # double-submit token from /admin/session after a reload. That token must be
+    # present and must actually satisfy the CSRF guard on a mutation.
+    app = _app(); c = app.test_client()
+    _owner(c)
+    sess = c.get("/admin/session").get_json()
+    assert sess["authenticated"] is True and sess["role"] == "OWNER"
+    rehydrated = sess.get("csrf_token")
+    assert isinstance(rehydrated, str) and rehydrated
+    # A mutation using ONLY the token from /admin/session (not the login body) works.
+    assert c.put("/admin/content/about", headers={"X-Corp-CSRF": rehydrated},
+                 json={"data": {"title": "Rehydrated"}}).status_code == 200
+    # And a wrong token is still rejected (guard intact).
+    assert c.put("/admin/content/about", headers={"X-Corp-CSRF": "wrong"},
+                 json={"data": {"title": "Nope"}}).status_code == 403
+
+
 # --------------------------------------------------------------------------
 # CMS draft/publish + public published-only
 # --------------------------------------------------------------------------
