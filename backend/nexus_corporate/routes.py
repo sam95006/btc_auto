@@ -22,6 +22,32 @@ MARKET_SNAPSHOT_CONFIG_KEY = "NEXUS_CORPORATE_MARKET_SNAPSHOT"
 
 SESSION_HEADER = "X-Corp-Session"
 CSRF_HEADER = "X-Corp-CSRF"
+# Browser-managed session (HttpOnly) + readable double-submit CSRF cookie.
+SESSION_COOKIE = "corp_session"
+CSRF_COOKIE = "corp_csrf"
+SESSION_MAX_AGE = 12 * 3600
+
+
+def _set_session_cookies(resp: Response, session_id: str, csrf: str) -> Response:
+    # HttpOnly session (JS can never read it) + Secure + SameSite=None so it is
+    # sent on the cross-origin Corporate→Core requests. The CSRF cookie is
+    # readable by JS for the double-submit header.
+    resp.set_cookie(SESSION_COOKIE, session_id, max_age=SESSION_MAX_AGE, httponly=True,
+                    secure=True, samesite="None", path="/")
+    resp.set_cookie(CSRF_COOKIE, csrf, max_age=SESSION_MAX_AGE, httponly=False,
+                    secure=True, samesite="None", path="/")
+    return resp
+
+
+def _clear_session_cookies(resp: Response) -> Response:
+    resp.set_cookie(SESSION_COOKIE, "", max_age=0, httponly=True, secure=True, samesite="None", path="/")
+    resp.set_cookie(CSRF_COOKIE, "", max_age=0, secure=True, samesite="None", path="/")
+    return resp
+
+
+def _session_id_from_request() -> str:
+    # Cookie is authoritative for browsers; header is a fallback for API/tests.
+    return request.cookies.get(SESSION_COOKIE) or request.headers.get(SESSION_HEADER, "")
 
 # Minimal in-process rate limiter (per ip+bucket). Hardened store = CORPORATE-2.
 _RL: dict[tuple[str, str], list[float]] = {}
@@ -187,10 +213,11 @@ def register_corporate_routes(app: Flask) -> None:
             return _json({"error": "owner_bootstrap_closed", "classification": "FORBIDDEN"}, 403)
         except ValueError as exc:
             return _json({"error": str(exc), "classification": "BAD_REQUEST"}, 400)
-        # Auto-login the new owner.
+        # Auto-login the new owner via a hardened session cookie.
         session = repo.login(email=email, password=password, ip=_client_ip())
-        return _json({"ok": True, "owner": {"admin_id": admin["admin_id"], "email": admin["email"], "role": "OWNER"},
-                      "session_id": session["session_id"], "csrf_token": session["csrf_token"]})
+        resp = _json({"ok": True, "owner": {"admin_id": admin["admin_id"], "email": admin["email"], "role": "OWNER"},
+                      "csrf_token": session["csrf_token"]})
+        return _set_session_cookies(resp, session["session_id"], session["csrf_token"])
 
     # ================= ADMIN AUTH =================
     @app.post("/admin/login")
@@ -206,14 +233,15 @@ def register_corporate_routes(app: Flask) -> None:
                                  ip=_client_ip())
         except PermissionError as exc:
             return _json({"error": str(exc), "classification": "UNAUTHORIZED"}, 401)
-        return _json({"ok": True, **session})
+        resp = _json({"ok": True, "admin": session["admin"], "csrf_token": session["csrf_token"]})
+        return _set_session_cookies(resp, session["session_id"], session["csrf_token"])
 
     @app.post("/admin/logout")
     def admin_logout():
         repo = _repo(app)
         if repo is not None:
-            repo.revoke_session(request.headers.get(SESSION_HEADER, ""))
-        return _json({"ok": True})
+            repo.revoke_session(_session_id_from_request())
+        return _clear_session_cookies(_json({"ok": True}))
 
     @app.get("/admin/session")
     def admin_session():
@@ -307,7 +335,7 @@ def _auth(app: Flask) -> Optional[dict[str, Any]]:
     repo = _repo(app)
     if repo is None:
         return None
-    return repo.resolve_session(request.headers.get(SESSION_HEADER, ""))
+    return repo.resolve_session(_session_id_from_request())
 
 
 def _guard(app: Flask, scope: str, *, csrf: bool = False):

@@ -10,7 +10,6 @@ import {
   adminPublish,
   adminSaveContent,
   adminSession,
-  getAuth,
 } from "../api/client";
 import type { AdminSession } from "../types";
 
@@ -21,7 +20,7 @@ const SECTIONS = [
 function useSession(): AdminSession | null | undefined {
   const [s, setS] = useState<AdminSession | null | undefined>(undefined);
   useEffect(() => {
-    if (!getAuth()) { setS(null); return; }
+    // Session is a cookie; ask the server whether it is still valid (survives reload).
     adminSession().then((r) => setS(r as AdminSession)).catch(() => setS(null));
   }, []);
   return s;
