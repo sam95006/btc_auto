@@ -81,7 +81,8 @@ def test_hero_is_backend_driven_with_fallback() -> None:
 
 def test_product_console_and_command_center_backend_only() -> None:
     console = _read(CORP / "components" / "product" / "LiveConsole.tsx")
-    assert "useMarket" in console and "暫不可用" in console  # explicit unavailable state
+    # locale-aware explicit unavailable state (no hardcoded language literal)
+    assert "useMarket" in console and "useLocale" in console and "st_unavailable" in console
     cc = _read(CORP / "components" / "product" / "CommandCenter.tsx")
     assert "useMarket" in cc and "Sparkline" in cc
     # CORPORATE-4: homepage is SIMPLIFIED to six sections (hero, jobs, live product,
