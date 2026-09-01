@@ -14,6 +14,7 @@ type SeoInput = {
   ogType?: string;
   robots?: string;
   jsonLd?: Record<string, unknown> | null;
+  hreflang?: { hreflang: string; href: string }[];
 };
 
 function upsertMeta(selector: string, attr: "name" | "property", key: string, content: string) {
@@ -39,7 +40,7 @@ function upsertLink(rel: string, href: string) {
 }
 
 export function useSeo(input: SeoInput) {
-  const { title, description, path, ogType = "website", robots, jsonLd } = input;
+  const { title, description, path, ogType = "website", robots, jsonLd, hreflang } = input;
   useEffect(() => {
     if (title) document.title = title;
     if (description) {
@@ -60,6 +61,17 @@ export function useSeo(input: SeoInput) {
     upsertLink("canonical", url);
     upsertMeta('meta[property="og:url"]', "property", "og:url", url);
 
+    // hreflang alternates (managed set — cleared and rebuilt per page).
+    document.head.querySelectorAll('link[rel="alternate"][data-corp-hreflang]').forEach((n) => n.remove());
+    (hreflang ?? []).forEach((alt) => {
+      const link = document.createElement("link");
+      link.setAttribute("rel", "alternate");
+      link.setAttribute("hreflang", alt.hreflang);
+      link.setAttribute("href", alt.href);
+      link.setAttribute("data-corp-hreflang", "1");
+      document.head.appendChild(link);
+    });
+
     // JSON-LD structured data (managed node — replaced per page).
     let script = document.getElementById("corp-jsonld") as HTMLScriptElement | null;
     if (jsonLd) {
@@ -73,5 +85,5 @@ export function useSeo(input: SeoInput) {
     } else if (script) {
       script.remove();
     }
-  }, [title, description, path, ogType, robots, jsonLd]);
+  }, [title, description, path, ogType, robots, jsonLd, hreflang]);
 }

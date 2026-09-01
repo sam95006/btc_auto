@@ -6,13 +6,11 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { useMarket } from "../../context/MarketContext";
+import { useLocale, type Locale } from "../../i18n";
 import { fmtPct, fmtPrice, symOf } from "../../lib/format";
+import { regimeLabel, riskLabel, volLabel } from "../../lib/marketLabels";
 import type { MarketSymbol } from "../../types";
 import { Sparkline } from "./Sparkline";
-
-const REGIME_ZH: Record<string, string> = { RISK_ON: "偏多", RISK_OFF: "防禦", NEUTRAL: "中性" };
-const VOL_ZH: Record<string, string> = { high: "偏高", moderate: "中等", low: "偏低" };
-const RISK_ZH: Record<string, string> = { elevated: "偏高", moderate: "中等", contained: "受控" };
 
 function usePriceFlash(price?: number) {
   const prev = useRef<number | null>(null);
@@ -33,9 +31,10 @@ function usePriceFlash(price?: number) {
 
 export function LiveConsole() {
   const m = useMarket();
+  const { locale, t } = useLocale();
 
   if (m.status !== "READY") {
-    const label = m.status === "LOADING" ? "連線即時市場中…" : "即時市場暫不可用";
+    const label = m.status === "LOADING" ? t("st_loading") : t("st_unavailable");
     return (
       <div className="corp-fs-console" data-testid="live-console">
         <div className="corp-fs-console-top"><span className="corp-fs-console-sym">BTC / USDT</span><span className="corp-fs-badge warn">{m.status}</span></div>
@@ -59,9 +58,9 @@ export function LiveConsole() {
       </div>
       <div className="corp-fs-console-body">
         {primary && primary.availability === "READY" && typeof primary.price === "number" ? (
-          <PrimaryBlock s={primary} regime={regime} risk={risk} />
+          <PrimaryBlock s={primary} regime={regime} risk={risk} locale={locale} />
         ) : (
-          <div className="corp-fs-unavail">主要交易對資料暫不可用</div>
+          <div className="corp-fs-unavail">{t("st_unavailable")}</div>
         )}
 
         <div className="corp-fs-mini">
@@ -82,14 +81,14 @@ export function LiveConsole() {
         </div>
       </div>
       <div className="corp-fs-console-foot">
-        <span>來源 · {d.source}</span>
-        <span>鮮度 · {d.freshness}</span>
+        <span>Source · {d.source}</span>
+        <span>{d.freshness}</span>
       </div>
     </div>
   );
 }
 
-function PrimaryBlock({ s, regime, risk }: { s: MarketSymbol; regime: string | null; risk: string | null }) {
+function PrimaryBlock({ s, regime, risk, locale }: { s: MarketSymbol; regime: string | null; risk: string | null; locale: Locale }) {
   const flash = usePriceFlash(s.price);
   return (
     <>
@@ -102,15 +101,15 @@ function PrimaryBlock({ s, regime, risk }: { s: MarketSymbol; regime: string | n
       <div className="corp-fs-metrics">
         <div className="corp-fs-metric">
           <div className="k">Regime</div>
-          <div className={`v ${regime ? "" : "muted"}`} data-state={regime ?? undefined}>{regime ? REGIME_ZH[regime] : "—"}</div>
+          <div className={`v ${regime ? "" : "muted"}`} data-state={regime ?? undefined}>{regimeLabel(regime, locale)}</div>
         </div>
         <div className="corp-fs-metric">
           <div className="k">Volatility</div>
-          <div className={`v ${s.volatility === "high" ? "warn" : ""} ${s.volatility ? "" : "muted"}`}>{s.volatility ? VOL_ZH[s.volatility] : "—"}</div>
+          <div className={`v ${s.volatility === "high" ? "warn" : ""} ${s.volatility ? "" : "muted"}`}>{volLabel(s.volatility, locale)}</div>
         </div>
         <div className="corp-fs-metric">
           <div className="k">Risk</div>
-          <div className={`v ${risk === "elevated" ? "warn" : ""} ${risk ? "" : "muted"}`}>{risk ? RISK_ZH[risk] || risk : "—"}</div>
+          <div className={`v ${risk === "elevated" ? "warn" : ""} ${risk ? "" : "muted"}`}>{riskLabel(risk, locale)}</div>
         </div>
       </div>
     </>

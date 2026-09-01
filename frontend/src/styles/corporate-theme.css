@@ -1,0 +1,176 @@
+/* ============================================================================
+   CORPORATE-4 — semantic THEME system (light / dark / system).
+   Loaded LAST (after corporate.css, -cinematic, -flagship). Defines semantic
+   tokens (--ct-*) for LIGHT (:root default) and DARK ([data-theme="dark"] or
+   system dark), then ALIASES the existing --fs-*, cinematic and base tokens to
+   them so the whole corporate surface themes without rewriting every rule.
+
+   Theme = user preference. Market state = backend data. They never mix.
+   ========================================================================== */
+
+/* ---------- LIGHT (intentionally designed, not an inverted dark) ---------- */
+:root {
+  --ct-bg: #eef2f9;
+  --ct-surface: #ffffff;
+  --ct-surface-2: #f4f7fc;
+  --ct-elevated: #ffffff;
+  --ct-text: #0d1526;
+  --ct-text-2: #3d4a63;
+  --ct-muted: #66738f;
+  --ct-muted-2: #8a95ad;
+  --ct-border: rgba(23, 43, 84, 0.12);
+  --ct-border-2: rgba(23, 43, 84, 0.2);
+  --ct-accent: #2f6bff;
+  --ct-accent-2: #0aa189;
+  --ct-positive: #0f9d63;
+  --ct-negative: #e0364f;
+  --ct-warning: #c67c00;
+  --ct-chart: #2f6bff;
+  --ct-shadow-1: 0 1px 2px rgba(23, 43, 84, 0.06), 0 8px 24px rgba(23, 43, 84, 0.08);
+  --ct-shadow-2: 0 1px 2px rgba(23, 43, 84, 0.08), 0 20px 50px rgba(23, 43, 84, 0.12);
+  --ct-glass: saturate(120%) blur(12px);
+  --ct-hero-bg: radial-gradient(1100px 640px at 74% -12%, rgba(47, 107, 255, 0.14), transparent 60%),
+                radial-gradient(900px 560px at 6% 6%, rgba(10, 161, 137, 0.10), transparent 55%),
+                var(--ct-bg);
+  --ct-3d-tint: 0.72; /* R3F opacity multiplier in light mode (subtler) */
+  color-scheme: light;
+}
+
+/* ---------- DARK (explicit toggle) ---------- */
+:root[data-theme="dark"] {
+  --ct-bg: #05070e;
+  --ct-surface: #0b1020;
+  --ct-surface-2: #0f1526;
+  --ct-elevated: #131b30;
+  --ct-text: #f2f6ff;
+  --ct-text-2: #c3cee6;
+  --ct-muted: #8090ae;
+  --ct-muted-2: #5d6a86;
+  --ct-border: rgba(140, 165, 220, 0.14);
+  --ct-border-2: rgba(140, 165, 220, 0.26);
+  --ct-accent: #4f8bff;
+  --ct-accent-2: #37e3c4;
+  --ct-positive: #22c98a;
+  --ct-negative: #ff5f74;
+  --ct-warning: #f6b73c;
+  --ct-chart: #37e3c4;
+  --ct-shadow-1: 0 8px 30px rgba(3, 7, 18, 0.5);
+  --ct-shadow-2: 0 18px 60px rgba(3, 7, 18, 0.6);
+  --ct-glass: saturate(140%) blur(14px);
+  --ct-hero-bg: radial-gradient(1300px 780px at 72% -12%, rgba(60, 104, 224, 0.16), transparent 60%),
+                radial-gradient(1000px 640px at 6% 8%, rgba(53, 224, 192, 0.07), transparent 56%),
+                var(--ct-bg);
+  --ct-3d-tint: 1;
+  color-scheme: dark;
+}
+
+/* ---------- SYSTEM (no explicit data-theme → follow OS) ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ct-bg: #05070e;
+    --ct-surface: #0b1020;
+    --ct-surface-2: #0f1526;
+    --ct-elevated: #131b30;
+    --ct-text: #f2f6ff;
+    --ct-text-2: #c3cee6;
+    --ct-muted: #8090ae;
+    --ct-muted-2: #5d6a86;
+    --ct-border: rgba(140, 165, 220, 0.14);
+    --ct-border-2: rgba(140, 165, 220, 0.26);
+    --ct-accent: #4f8bff;
+    --ct-accent-2: #37e3c4;
+    --ct-positive: #22c98a;
+    --ct-negative: #ff5f74;
+    --ct-warning: #f6b73c;
+    --ct-chart: #37e3c4;
+    --ct-shadow-1: 0 8px 30px rgba(3, 7, 18, 0.5);
+    --ct-shadow-2: 0 18px 60px rgba(3, 7, 18, 0.6);
+    --ct-glass: saturate(140%) blur(14px);
+    --ct-hero-bg: radial-gradient(1300px 780px at 72% -12%, rgba(60, 104, 224, 0.16), transparent 60%),
+                  radial-gradient(1000px 640px at 6% 8%, rgba(53, 224, 192, 0.07), transparent 56%),
+                  var(--ct-bg);
+    --ct-3d-tint: 1;
+    color-scheme: dark;
+  }
+}
+
+/* ============================================================================
+   Alias the existing token systems to the semantic theme tokens.
+   ========================================================================== */
+.corp-root {
+  /* flagship (CORPORATE-3) */
+  --fs-bg: var(--ct-bg);
+  --fs-panel: var(--ct-surface);
+  --fs-panel-2: var(--ct-surface-2);
+  --fs-panel-3: var(--ct-elevated);
+  --fs-line: var(--ct-border);
+  --fs-line-2: var(--ct-border-2);
+  --fs-ink: var(--ct-text);
+  --fs-ink-2: var(--ct-text-2);
+  --fs-muted: var(--ct-muted);
+  --fs-muted-2: var(--ct-muted-2);
+  --fs-accent: var(--ct-accent);
+  --fs-accent-2: var(--ct-accent-2);
+  --fs-up: var(--ct-positive);
+  --fs-down: var(--ct-negative);
+  --fs-warn: var(--ct-warning);
+
+  /* cinematic (CORPORATE-2) */
+  --bg: var(--ct-bg);
+  --bg-2: var(--ct-surface);
+  --bg-3: var(--ct-surface-2);
+  --ink: var(--ct-text);
+  --ink-dim: var(--ct-text-2);
+  --muted: var(--ct-muted);
+  --muted-2: var(--ct-muted-2);
+  --line: var(--ct-border);
+  --line-strong: var(--ct-border-2);
+  --panel: var(--ct-surface);
+  --panel-2: var(--ct-surface-2);
+  --brand: var(--ct-accent);
+  --brand-2: var(--ct-accent-2);
+  --up: var(--ct-positive);
+  --down: var(--ct-negative);
+  --elev-2: var(--ct-shadow-2);
+  --glass: var(--ct-glass);
+
+  background: var(--ct-hero-bg);
+  color: var(--ct-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Body ground follows theme (avoids host-color bleed / theme flash). */
+body { background: var(--ct-bg); }
+
+.corp-fs-hero { background: var(--ct-hero-bg); }
+
+/* Light-mode refinements — elevate surfaces with real shadow (not just borders). */
+:root:not([data-theme="dark"]) .corp-fs-console,
+:root:not([data-theme="dark"]) .corp-fs-cc,
+:root:not([data-theme="dark"]) .corp-fs-brief,
+:root:not([data-theme="dark"]) .corp-fs-card { box-shadow: var(--ct-shadow-1); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .corp-fs-console { box-shadow: var(--ct-shadow-2); }
+}
+
+/* ---------- theme + locale controls in the header ---------- */
+.corp-ctrl { display: inline-flex; align-items: center; gap: 0.35rem; }
+.corp-ctrl-btn {
+  display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer;
+  background: var(--ct-surface); border: 1px solid var(--ct-border); color: var(--ct-text-2);
+  border-radius: 9px; padding: 0.4rem 0.6rem; font: 600 0.82rem/1 inherit;
+}
+.corp-ctrl-btn:hover { border-color: var(--ct-accent); color: var(--ct-text); }
+.corp-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 40; min-width: 168px;
+  background: var(--ct-elevated); border: 1px solid var(--ct-border-2); border-radius: 12px;
+  box-shadow: var(--ct-shadow-2); padding: 0.35rem; display: grid; gap: 0.15rem;
+}
+.corp-menu button {
+  text-align: left; background: transparent; border: none; color: var(--ct-text-2);
+  padding: 0.5rem 0.65rem; border-radius: 8px; cursor: pointer; font: 600 0.85rem/1.2 inherit;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+}
+.corp-menu button:hover { background: color-mix(in oklab, var(--ct-accent) 12%, transparent); color: var(--ct-text); }
+.corp-menu button[aria-checked="true"] { color: var(--ct-accent); }
+.corp-menu-wrap { position: relative; }

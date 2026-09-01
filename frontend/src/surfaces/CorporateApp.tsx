@@ -11,12 +11,16 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Chrome } from "../corporate/components/Chrome";
 import { MarketProvider } from "../corporate/context/MarketContext";
+import { ThemeProvider } from "../corporate/context/ThemeContext";
+import { LocaleProvider } from "../corporate/i18n";
 import { Home } from "../corporate/pages/Home";
 import { ContentPage } from "../corporate/pages/ContentPage";
 import { Contact } from "../corporate/pages/Contact";
 import "../styles/corporate.css";
 import "../styles/corporate-cinematic.css";
 import "../styles/corporate-flagship.css";
+import "../styles/corporate-theme.css";
+import "../styles/corporate-simple.css";
 
 // Admin surfaces are code-split — public visitors never download the console/editors.
 const AdminConsole = lazy(() => import("../corporate/admin/AdminConsole").then((m) => ({ default: m.AdminConsole })));
@@ -49,14 +53,18 @@ function Site() {
 
 export default function CorporateApp() {
   return (
-    <Suspense fallback={<AdminFallback />}>
-      <Routes>
-        {/* Owner/admin surfaces are outside the marketing chrome (code-split). */}
-        <Route path="/owner/setup" element={<OwnerSetup />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/*" element={<AdminConsole />} />
-        <Route path="/*" element={<Site />} />
-      </Routes>
-    </Suspense>
+    <ThemeProvider>
+      <LocaleProvider>
+        <Suspense fallback={<AdminFallback />}>
+          <Routes>
+            {/* Owner/admin surfaces are outside the marketing chrome (code-split). */}
+            <Route path="/owner/setup" element={<OwnerSetup />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/*" element={<AdminConsole />} />
+            <Route path="/*" element={<Site />} />
+          </Routes>
+        </Suspense>
+      </LocaleProvider>
+    </ThemeProvider>
   );
 }

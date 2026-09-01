@@ -1,12 +1,14 @@
 /** Compact BTC/ETH/SOL live strip — establishes immediately that the site holds
  * real data. Backend-only; unavailable symbols render explicitly. */
 import { useMarket } from "../../context/MarketContext";
+import { useLocale } from "../../i18n";
 import { fmtPct, fmtPrice, symOf } from "../../lib/format";
 
 export function MarketStrip() {
   const m = useMarket();
+  const { t } = useLocale();
   if (m.status !== "READY") {
-    return <div className="corp-fs-loading" role="status">{m.status === "LOADING" ? "載入即時行情…" : "行情暫不可用"}</div>;
+    return <div className="corp-fs-loading" role="status">{m.status === "LOADING" ? t("st_loading") : t("st_unavailable")}</div>;
   }
   return (
     <div className="corp-fs-strip" data-testid="market-strip">

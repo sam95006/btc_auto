@@ -5,8 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark light" />
     <meta name="robots" content="index,follow" />
-    <meta name="description" content="NEXUS · a cinematic, real-data market intelligence platform." />
-    <title>NEXUS 公司網站</title>
+    <meta name="description" content="NEXUS · 市場情報平台" />
+    <title>NEXUS · 市場情報平台</title>
+    <script>
+      /* No-flash theme + lang: apply the persisted preference before first paint. */
+      (function () {
+        try {
+          var t = localStorage.getItem("nexus.corp.theme");
+          if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+          var l = localStorage.getItem("nexus.corp.locale");
+          if (l) document.documentElement.setAttribute("lang", l);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
