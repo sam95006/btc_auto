@@ -56,17 +56,38 @@ Plan identity = stable `code`; price is metadata, never authorization.
   On expiry: paid entitlements if any, else FREE. **No auto-charge without explicit consent.**
 - `effective_plan(now, registered_at, paid_plan)` — paid wins → active trial = starter → free.
 
-## 5. Entitlement capability registry (`entitlements.py`)
+## 5. Entitlement capability registry (`entitlements.py`) — 1A.1 hardened
 
-`capability × plan → state ∈ {AVAILABLE, LIMITED, COMING_SOON, UNAVAILABLE}`.
-Two axes: plan grant (full/limited/none) × backend readiness (ready/coming_soon).
+Readiness is **not binary**. Four independent dimensions combine to the effective
+UI state (most-restrictive wins):
 
-Per **DO NOT IMPLEMENT YET**: only market-derived capabilities are `ready`
-(market_overview, watchlist, alerts, history, nex_ai_digest, multi_chart,
-custom_workspace, advanced_alerts). Everything needing news/social/derivatives/
-on-chain/smart-money/reputation data is `coming_soon` (no licensed data) → the UI
-shows COMING_SOON, never fabricated values. `is_allowed` is True only for
-AVAILABLE/LIMITED.
+- **plan grant** — full | limited | none
+- **backend_state** — ready | partial | absent
+- **product_state** — available | beta | partial | coming_soon
+- **data_state** — licensed | unlicensed (derived from the licensing registry)
+
+Effective: `UNAVAILABLE` (no grant) → `COMING_SOON` (unlicensed data / not built /
+no backend) → `PARTIAL` (backend exists, product partial) → `BETA` → `LIMITED` →
+`AVAILABLE`. A capability is **never AVAILABLE just because frontend code exists**.
+
+Audited today (with evidence in `capability_dimensions`):
+
+| capability | backend | product | effective (starter+) |
+|---|---|---|---|
+| market_overview / watchlist / history | ready | available | **AVAILABLE** (LIMITED free) |
+| alerts | partial | partial | **PARTIAL** |
+| nex_ai_digest | partial | partial | **PARTIAL** |
+| multi_chart / custom_workspace / advanced_alerts | absent | coming_soon | **COMING_SOON** |
+| news/social/derivatives/on-chain/smart-money/reputation | absent | coming_soon | **COMING_SOON** (data unlicensed) |
+
+`is_allowed` is True only for AVAILABLE/LIMITED/BETA. Plan authorization and
+product readiness remain separate dimensions; UI state is backend-authoritative.
+
+**Enterprise is a SEPARATE product — no inheritance.** Personal capabilities do
+NOT grant the Enterprise plan; Enterprise grants are explicit
+(`ENTERPRISE_CAPABILITIES` = org_seats / shared_* / org_audit / integrations /
+sso). Regression test proves a new Advanced Personal capability never
+auto-appears in Enterprise.
 
 ## 6. View mode ≠ subscription (`view_modes.py`)
 
@@ -75,15 +96,35 @@ AVAILABLE/LIMITED.
 the entitlement registry. An Advanced subscriber may use Simple; a Starter may see
 locked Pro features.
 
-## 7. Data-licensing governance (`data_licenses.py`)
+## 7. Data-licensing governance (`data_licenses.py`) — 1A.1 hardened
 
-`can_expose_commercially(dataset)` gates commercial exposure. Only
-`Exchange market:usdm_public_ticker_ohlcv` is `in_use` (public exchange market data).
-Derivatives / on-chain / smart-money / social / news providers are registered as
-`not_licensed` → cannot be exposed until licensed. User-facing source labels are
-canonical identities (Exchange market / Official / Institution / News / Social) — never
-engineering/provider API names. **No provider secrets in this registry or frontend.**
-A later PERSONAL-INTEL stage integrates real licensed providers.
+Explicit, conservative, **fail-closed** gates distinguish RAW redistribution from
+DERIVED-intelligence use:
+
+- `can_display_raw_data(ds)` — raw display/redistribution; requires
+  `in_use + commercial_use + redistribution_allowed`.
+- `can_use_for_derived_intelligence(ds)` — member-safe derived intelligence;
+  requires `in_use + commercial_use + derived_data_allowed`.
+- `can_cache_dataset(ds)` — requires `in_use + cache_allowed`.
+- `requires_attribution(ds)` — unknown datasets default to **True**.
+- Unknown/unregistered dataset → **denied** on every gate (public accessibility is
+  not a legal right). `can_expose_commercially` kept as the derived-intelligence alias.
+
+Only `Exchange market:usdm_public_ticker_ohlcv` is `in_use` — and it permits
+DERIVED use (regime/risk/summaries) but **not** raw redistribution
+(`redistribution_allowed = False`), so our product never claims raw-feed rights.
+Derivatives / on-chain / smart-money / social / news are `not_licensed`. User-facing
+source labels are canonical identities (Exchange market / Official / Institution /
+News / Social) — never provider API names. **No provider secrets here or in frontend.**
+
+## 3a. Founder / shared-market clarification (1A.1)
+
+Founder-Private **never** reads a SaaS DB domain directly
+(`FOUNDER_DIRECT_SAAS_DB_ACCESS = False`). It **may**, where the certified private
+architecture permits, consume separately-authorized SAFE market-data **SERVICE**
+outputs (`founder_may_consume_service_market("market") == True`) — a service-level
+feed, NOT direct database access. Social/reputation is banned even at the service
+level. No trading-runtime change.
 
 ## 8. Demo/fixture production audit (baseline for Workstream B)
 

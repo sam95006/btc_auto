@@ -78,28 +78,112 @@ def test_entitlement_states_are_honest():
 
 def test_capability_matrix_admin_inspectable():
     m = entitlements.capability_matrix("pro")
-    assert set(m.values()) <= {"AVAILABLE", "LIMITED", "COMING_SOON", "UNAVAILABLE"}
+    assert set(m.values()) <= {"AVAILABLE", "LIMITED", "BETA", "PARTIAL", "COMING_SOON", "UNAVAILABLE"}
     assert m["market_overview"] == "AVAILABLE"
 
 
-# ---- data licensing gate ----
+def test_audited_capability_states_are_honest():
+    # genuinely built on real market data → AVAILABLE (LIMITED on free)
+    for cap in ("market_overview", "watchlist", "history"):
+        assert entitlements.resolve_state(cap, "starter") == "AVAILABLE", cap
+        assert entitlements.resolve_state(cap, "free") == "LIMITED", cap
+    # real backend primitive but not fully productised → PARTIAL (never AVAILABLE)
+    for cap in ("alerts", "nex_ai_digest"):
+        assert entitlements.resolve_state(cap, "starter") == "PARTIAL", cap
+        assert entitlements.capability_dimensions(cap)["backend_state"] == "partial"
+    # not built → COMING_SOON even for a granting plan
+    for cap in ("multi_chart", "custom_workspace", "advanced_alerts"):
+        assert entitlements.resolve_state(cap, "advanced") == "COMING_SOON", cap
+        assert entitlements.capability_dimensions(cap)["product_state"] == "coming_soon"
 
-def test_only_licensed_datasets_expose_commercially():
-    assert data_licenses.can_expose_commercially("usdm_public_ticker_ohlcv") is True
-    for ds in ("oi_funding_liquidation", "onchain_flows_metrics", "creator_social_sentiment", "market_news_feed"):
-        assert data_licenses.can_expose_commercially(ds) is False
+
+# ---- data licensing gates (raw display vs derived intelligence; fail closed) ----
+
+MARKET_DS = "usdm_public_ticker_ohlcv"
+UNLICENSED = ("oi_funding_liquidation", "onchain_flows_metrics", "creator_social_sentiment", "market_news_feed")
+
+
+def test_license_derived_intelligence_gate():
+    assert data_licenses.can_use_for_derived_intelligence(MARKET_DS) is True
+    for ds in UNLICENSED:
+        assert data_licenses.can_use_for_derived_intelligence(ds) is False
+
+
+def test_license_raw_display_denied_without_redistribution():
+    # market data permits DERIVED use but NOT raw redistribution/display
+    assert data_licenses.can_display_raw_data(MARKET_DS) is False
+    for ds in UNLICENSED:
+        assert data_licenses.can_display_raw_data(ds) is False
+
+
+def test_license_unknown_and_not_licensed_fail_closed():
+    for fn in (data_licenses.can_use_for_derived_intelligence, data_licenses.can_display_raw_data,
+               data_licenses.can_cache_dataset):
+        assert fn("no_such_dataset") is False           # unknown → denied
+        assert fn("market_news_feed") is False           # not_licensed → denied
+    # unknown datasets conservatively require attribution
+    assert data_licenses.requires_attribution("no_such_dataset") is True
+
+
+def test_license_cache_and_attribution():
+    assert data_licenses.can_cache_dataset(MARKET_DS) is True
+    assert data_licenses.requires_attribution(MARKET_DS) is False
+    assert data_licenses.requires_attribution("creator_social_sentiment") is True
     assert data_licenses.licensed_domains() == {"market"}
+
+
+# ---- Enterprise is a SEPARATE product (no Personal-Advanced inheritance) ----
+
+def test_enterprise_does_not_inherit_personal_capabilities():
+    # Every non-enterprise capability must NOT grant the enterprise plan — so
+    # adding a new Advanced Personal capability can never auto-appear in Enterprise.
+    for cid, spec in entitlements.CAPABILITIES.items():
+        if spec["domain"] != "enterprise":
+            assert "enterprise" not in spec["plans"], f"{cid} leaks to enterprise plan"
+            assert entitlements.resolve_state(cid, "enterprise") == "UNAVAILABLE", cid
+    # A concrete Advanced Personal capability is UNAVAILABLE on the enterprise plan.
+    assert entitlements.resolve_state("derivatives_full", "enterprise") == "UNAVAILABLE"
+    assert entitlements.resolve_state("multi_chart", "enterprise") == "UNAVAILABLE"
+
+
+def test_enterprise_capabilities_are_explicit():
+    assert set(entitlements.ENTERPRISE_CAPABILITIES) >= {
+        "org_seats", "shared_intelligence", "org_audit", "sso"}
+    for cid in entitlements.ENTERPRISE_CAPABILITIES:
+        assert entitlements.CAPABILITIES[cid]["plans"].get("enterprise") == "full"
+
+
+def test_new_advanced_personal_capability_not_granted_to_enterprise():
+    # Simulate adding a brand-new Advanced-only Personal capability at runtime.
+    entitlements.CAPABILITIES["__probe_adv_cap__"] = entitlements._cap(
+        "personal", {"advanced": "full"}, "ready", "available",
+        entitlements.DS_MARKET, "probe")
+    try:
+        assert entitlements.resolve_state("__probe_adv_cap__", "advanced") == "AVAILABLE"
+        assert entitlements.resolve_state("__probe_adv_cap__", "enterprise") == "UNAVAILABLE"
+    finally:
+        del entitlements.CAPABILITIES["__probe_adv_cap__"]
 
 
 # ---- domains / Founder isolation ----
 
 def test_founder_isolation_and_social_domains():
     assert domains.FOUNDER_PRIVATE_ISOLATED is True
-    assert domains.founder_may_read("market") is False
-    assert domains.founder_may_read("news_social") is False
-    # SaaS surfaces read news_social/reputation; founder_private never does
+    # Direct SaaS DB access is DENIED for every domain (physical/security boundary).
+    assert domains.FOUNDER_DIRECT_SAAS_DB_ACCESS is False
+    assert domains.founder_may_read_saas_db("market") is False
+    assert domains.founder_may_read_saas_db("news_social") is False
     assert "founder_private" not in domains.readers_for("news_social")
     assert "founder_private" not in domains.readers_for("reputation")
+
+
+def test_founder_safe_service_market_clarification():
+    # Founder MAY consume separately-authorized safe market-data SERVICE outputs
+    # (not DB), but NEVER social/reputation, even at the service level.
+    assert domains.FOUNDER_SAFE_SERVICE_MARKET_ALLOWED is True
+    assert domains.founder_may_consume_service_market("market") is True
+    assert domains.founder_may_consume_service_market("news_social") is False
+    assert domains.founder_may_consume_service_market("reputation") is False
 
 
 # ---- Founder ↔ Social HARD BAN (critical) ----
