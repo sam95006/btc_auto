@@ -346,6 +346,35 @@ def test_admin_preview_requires_auth_and_returns_draft():
     assert pub["data"].get("title") != "Draft only"
 
 
+def test_market_brief_is_deterministic_and_labelled():
+    app = _app(); c = app.test_client()
+    j = c.get("/api/corporate/v1/brief").get_json()
+    assert j["availability"] == "READY"
+    assert j["generator"] == "deterministic_rule_based"  # honest: NOT AI-generated
+    assert j["source"] == "binance_usdm_public"
+    assert isinstance(j["summary"], list) and j["summary"]
+    assert set(j["data_used"]) == {"BTC", "ETH", "SOL"}
+
+
+def test_market_brief_unavailable_no_fabrication():
+    app = _app(market_status=503); c = app.test_client()
+    j = c.get("/api/corporate/v1/brief").get_json()
+    assert j["availability"] == "UNAVAILABLE"
+    assert "summary" not in j  # nothing invented
+
+
+def test_events_feed_real_observations_and_persist():
+    app = _app(); c = app.test_client()
+    j = c.get("/api/corporate/v1/events").get_json()
+    assert j["availability"] == "READY" and j["source"] == "binance_usdm_public"
+    # current-state observations are always populated from real live data
+    assert isinstance(j["observations"], list) and j["observations"]
+    assert all("text" in o and "ts" in o for o in j["observations"])
+    # stable data across two polls yields no fabricated transitions
+    j2 = c.get("/api/corporate/v1/events").get_json()
+    assert j2["transitions"] == []
+
+
 def test_admin_settings_get_set_requires_csrf():
     app = _app(); c = app.test_client(); csrf = _owner_csrf(c)
     # mutation without CSRF is refused

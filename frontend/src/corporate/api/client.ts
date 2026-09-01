@@ -5,7 +5,10 @@
 import type {
   AdminSession,
   ContentEnvelope,
+  EventsFeed,
   HomeContent,
+  MarketBrief,
+  MarketHistory,
   MarketShowcase,
   SiteContent,
 } from "../types";
@@ -50,6 +53,10 @@ export const getContent = <T = Record<string, unknown>>(slug: string) =>
   getJson<ContentEnvelope<T>>(`/api/corporate/v1/content/${slug}`);
 export const getMarket = () => getJson<MarketShowcase>("/api/corporate/v1/market");
 export const getStatus = () => getJson<Record<string, unknown>>("/api/corporate/v1/status");
+export const getHistory = (symbol: string, interval = "1h", limit = 48) =>
+  getJson<MarketHistory>(`/api/corporate/v1/history/${symbol}?interval=${interval}&limit=${limit}`);
+export const getEvents = () => getJson<EventsFeed>("/api/corporate/v1/events");
+export const getBrief = () => getJson<MarketBrief>("/api/corporate/v1/brief");
 
 export async function submitContact(input: { name?: string; email: string; company?: string; message?: string }) {
   const res = await fetch(`${origin()}/api/corporate/v1/contact`, {
