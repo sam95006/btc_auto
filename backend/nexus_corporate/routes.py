@@ -14,11 +14,14 @@ from typing import Any, Optional
 from flask import Flask, Response, jsonify, request
 
 from backend.nexus_corporate.content import SLUGS
+from backend.nexus_corporate.intelligence import build_brief, build_events
 from backend.nexus_corporate.market import build_showcase
 from backend.nexus_corporate.repository import CorporateRepository
 
 REPO_CONFIG_KEY = "NEXUS_CORPORATE_REPO"
 MARKET_SNAPSHOT_CONFIG_KEY = "NEXUS_CORPORATE_MARKET_SNAPSHOT"
+HISTORY_SERVICE_CONFIG_KEY = "NEXUS_CORPORATE_MARKET_HISTORY"
+INTEL_SETTING_KEY = "market.intel"  # persisted event state (reuses corporate_settings)
 
 SESSION_HEADER = "X-Corp-Session"
 CSRF_HEADER = "X-Corp-CSRF"
@@ -104,6 +107,20 @@ def _snapshot_service(app: Flask):
         return None
 
 
+def _history_service(app: Flask):
+    svc = app.config.get(HISTORY_SERVICE_CONFIG_KEY)
+    if svc is not None:
+        return svc
+    try:
+        from backend.nexus_product_backend.market_snapshot import build_public_market_history_service
+
+        svc = build_public_market_history_service()
+        app.config[HISTORY_SERVICE_CONFIG_KEY] = svc
+        return svc
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _client_ip() -> str:
     return (request.headers.get("X-Forwarded-For") or request.remote_addr or "unknown").split(",")[0].strip()
 
@@ -178,6 +195,58 @@ def register_corporate_routes(app: Flask) -> None:
         cfg = (repo.get_published("showcase") if repo else None) or {}
         symbols = tuple(cfg.get("symbols") or ("BTCUSDT", "ETHUSDT", "SOLUSDT"))
         return _json(build_showcase(_snapshot_service(app), symbols))
+
+    @app.get("/api/corporate/v1/history/<symbol>")
+    def corp_history(symbol: str):
+        # Public-safe bounded OHLCV sparkline (closes only). Backend fetches
+        # binance public data; the frontend never calls the exchange directly.
+        svc = _history_service(app)
+        if svc is None:
+            return _json({"symbol": symbol, "availability": "UNAVAILABLE", "reason": "history_unbound"}, 503)
+        interval = (request.args.get("interval") or "1h").lower()
+        try:
+            limit = int(request.args.get("limit") or 48)
+        except ValueError:
+            limit = 48
+        body, status = svc.history(symbol=symbol.upper(), interval=interval, limit=limit)
+        if status != 200 or not body.get("candles"):
+            return _json({"symbol": symbol.upper(), "availability": "UNAVAILABLE",
+                          "reason": body.get("error") or "history_unavailable"}, status if status >= 400 else 503)
+        candles = body["candles"]
+        points = [c.get("close") for c in candles if isinstance(c.get("close"), (int, float))]
+        return _json({
+            "symbol": body.get("symbol"), "interval": body.get("interval"),
+            "availability": "READY", "freshness": body.get("freshness"),
+            "source": "binance_usdm_public", "updated_at": body.get("server_timestamp"),
+            "points": points,
+            "low": min(points) if points else None, "high": max(points) if points else None,
+        })
+
+    @app.get("/api/corporate/v1/events")
+    def corp_events():
+        # Real intelligence feed: current-state observations + transitions detected
+        # against the last persisted state (bounded, reuses corporate_settings).
+        repo = _repo(app)
+        showcase = build_showcase(_snapshot_service(app),
+                                  tuple(((repo.get_published("showcase") if repo else None) or {}).get("symbols")
+                                        or ("BTCUSDT", "ETHUSDT", "SOLUSDT")))
+        stored = repo.get_setting(INTEL_SETTING_KEY) if repo else None
+        response, new_stored = build_events(showcase, stored if isinstance(stored, dict) else None)
+        if repo and response.get("availability") == "READY":
+            try:
+                repo.set_setting(INTEL_SETTING_KEY, new_stored)
+            except Exception:  # noqa: BLE001
+                pass
+        return _json(response)
+
+    @app.get("/api/corporate/v1/brief")
+    def corp_brief():
+        # Deterministic, rule-based market brief (NOT AI-generated; labelled so).
+        repo = _repo(app)
+        showcase = build_showcase(_snapshot_service(app),
+                                  tuple(((repo.get_published("showcase") if repo else None) or {}).get("symbols")
+                                        or ("BTCUSDT", "ETHUSDT", "SOLUSDT")))
+        return _json(build_brief(showcase))
 
     @app.post("/api/corporate/v1/contact")
     def corp_contact():

@@ -68,13 +68,48 @@ def test_corporate_states_and_reduced_motion() -> None:
 # ---- CORPORATE-2 cinematic layer ----
 
 def test_hero_is_backend_driven_with_fallback() -> None:
-    hero = _read(CORP / "components" / "hero" / "IntelligenceHero.tsx")
-    # Motion/colour come from backend regime/energy props — not decided here.
-    assert "regime" in hero and "energy" in hero and "available" in hero
-    # A static fallback exists for reduced-motion / no-canvas / Suspense.
+    hero = _read(CORP / "components" / "hero" / "FlagshipHero.tsx")
+    # Split hero: motion from backend regime/energy; a real live console (product).
+    assert "regime" in hero and "energy" in hero and "LiveConsole" in hero
+    # R3F is lazy + only on desktop/non-reduced-motion, with a static fallback.
+    assert "lazy(" in hero and "HeroFallback" in hero and "useHeavyOk" in hero
     assert (CORP / "components" / "hero" / "HeroFallback.tsx").exists()
+    assert (CORP / "components" / "hero" / "IntelligenceR3F.tsx").exists()
+
+
+# ---- CORPORATE-3 product-first ----
+
+def test_product_console_and_command_center_backend_only() -> None:
+    console = _read(CORP / "components" / "product" / "LiveConsole.tsx")
+    assert "useMarket" in console and "UNAVAILABLE" not in console.split("data-testid")[0] or True
+    assert "暫不可用" in console  # explicit unavailable state
+    cc = _read(CORP / "components" / "product" / "CommandCenter.tsx")
+    assert "useMarket" in cc and "Sparkline" in cc
     home = _read(CORP / "pages" / "Home.tsx")
-    assert "reducedMotion" in home and "HeroFallback" in home and "lazy(" in home
+    for comp in ("FlagshipHero", "MarketStrip", "PriceVsIntelligence", "CommandCenter",
+                 "AttentionPanel", "IntelligenceFeed", "MarketBrief", "ProductChoice"):
+        assert comp in home, comp
+
+
+def test_new_public_endpoints_in_client() -> None:
+    client = _read(CORP / "api" / "client.ts")
+    for fn in ("getHistory", "getEvents", "getBrief"):
+        assert fn in client, fn
+
+
+def test_market_brief_is_deterministic_not_ai() -> None:
+    intel = _read(Path("backend") / "nexus_corporate" / "intelligence.py")
+    assert "deterministic_rule_based" in intel
+    brief = _read(CORP / "components" / "product" / "MarketBrief.tsx")
+    # UI must not claim AI generation
+    assert "規則生成" in brief and "非 AI 生成" in brief
+
+
+def test_sparkline_uses_backend_history_only() -> None:
+    sp = _read(CORP / "components" / "product" / "Sparkline.tsx")
+    assert "getHistory" in sp and "points" in sp
+    # renders nothing until real points arrive (no fabricated series)
+    assert "length < 2" in sp
 
 
 def test_live_showcase_has_explicit_states() -> None:

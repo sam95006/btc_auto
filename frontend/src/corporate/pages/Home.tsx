@@ -1,152 +1,115 @@
-import { lazy, Suspense } from "react";
-import { Link } from "react-router-dom";
 import { getContent, getHome } from "../api/client";
-import { energyOf, regimeOf, useMarket } from "../context/MarketContext";
-import { HeroFallback } from "../components/hero/HeroFallback";
-import { LiveShowcase } from "../components/LiveShowcase";
-import { MarketStructureScene } from "../components/scenes/MarketStructureScene";
-import { IntelligenceEngineScene } from "../components/scenes/IntelligenceEngineScene";
-import { PersonalEnterpriseBranch } from "../components/scenes/PersonalEnterpriseBranch";
-import { CapabilityScene } from "../components/scenes/CapabilityScene";
-import { TrustLayer } from "../components/scenes/TrustLayer";
-import { useResource, useReveal } from "../hooks/useCorporate";
-import { reducedMotion } from "../hooks/useScrollScene";
+import { FlagshipHero } from "../components/hero/FlagshipHero";
+import { MarketStrip } from "../components/product/MarketStrip";
+import { PriceVsIntelligence } from "../components/product/PriceVsIntelligence";
+import { CommandCenter } from "../components/product/CommandCenter";
+import { AttentionPanel } from "../components/product/AttentionPanel";
+import { IntelligenceFeed } from "../components/product/IntelligenceFeed";
+import { MarketBrief } from "../components/product/MarketBrief";
+import { HowItWorks, ProductChoice, TrustFlagship, ClosingCta } from "../components/product/StaticSections";
+import { useResource } from "../hooks/useCorporate";
 import { useSeo } from "../hooks/useSeo";
-import { track } from "../lib/analytics";
 import type { ContentEnvelope, HomeContent, HomeScene } from "../types";
-
-// Animated hero is lazy-loaded AFTER first meaningful content (keeps initial JS lean).
-const IntelligenceHero = lazy(() => import("../components/hero/IntelligenceHero"));
-
-const REGIME_TEXT: Record<string, string> = {
-  RISK_ON: "Risk-On", RISK_OFF: "Risk-Off", NEUTRAL: "Neutral",
-};
 
 function scene(scenes: HomeScene[] | undefined, id: string): HomeScene | undefined {
   return (scenes ?? []).find((s) => s.id === id);
 }
 
-function Hero({ home }: { home?: HomeContent }) {
-  const market = useMarket();
-  const regime = regimeOf(market);
-  const energy = energyOf(market);
-  const hero = scene(home?.scenes, "hero");
-  const reduce = reducedMotion();
-
-  const state = market.status === "READY" ? (regime ?? "NEUTRAL") : market.status === "LOADING" ? "LOADING" : "UNAVAILABLE";
-  const statusText =
-    market.status === "READY"
-      ? `Live market regime · ${regime ? REGIME_TEXT[regime] : "unavailable"}`
-      : market.status === "LOADING"
-        ? "Connecting to live market…"
-        : "Live market temporarily unavailable";
-
+function SectionHead({ eyebrow, title, en, sub }: { eyebrow: string; title: string; en?: string; sub?: string }) {
   return (
-    <header className="corp-hero" data-testid="corp-hero">
-      {reduce ? (
-        <HeroFallback />
-      ) : (
-        <Suspense fallback={<HeroFallback />}>
-          <IntelligenceHero energy={energy} regime={regime} available={market.status === "READY"} />
-        </Suspense>
-      )}
-      <div className="corp-hero-veil" aria-hidden />
-      <div className="corp-hero-inner">
-        <div className="corp-hero-kicker">{hero?.kicker ?? "MARKET INTELLIGENCE"}</div>
-        <h1 className="corp-hero-title">{hero?.title ?? "看見市場結構，而非只有價格"}</h1>
-        <p className="corp-hero-sub">
-          {hero?.subtitle ?? "A real-data market intelligence platform. Price is only the surface."}
-        </p>
-        <div className="corp-hero-cta">
-          <Link to={hero?.primary_cta?.to ?? "/products"} className="corp-btn" onClick={() => track("cta_primary", "hero")}>
-            {hero?.primary_cta?.label ?? "探索平台 / Explore"}
-          </Link>
-          <Link to="/security" className="corp-btn-ghost">安全與信任 / Trust</Link>
-        </div>
-        <div className="corp-hero-status" data-state={state} data-testid="hero-status" role="status" aria-live="polite">
-          <span className="corp-state-dot" />
-          {statusText}
-        </div>
+    <div className="corp-fs-head">
+      <div>
+        <div className="corp-fs-eyebrow">{eyebrow}</div>
+        <h2 className="corp-fs-h2">{title}{en ? <span className="en">{en}</span> : null}</h2>
+        {sub ? <p className="corp-fs-sub">{sub}</p> : null}
       </div>
-    </header>
-  );
-}
-
-function ShowcaseSection({ home }: { home?: HomeContent }) {
-  const s = scene(home?.scenes, "showcase");
-  const { ref, shown } = useReveal<HTMLDivElement>();
-  return (
-    <section className="corp-section" aria-labelledby="corp-showcase-h">
-      <div className="corp-section-inner" ref={ref}>
-        <div className={`corp-reveal ${shown ? "is-shown" : ""}`} style={{ ["--p" as string]: shown ? "1" : "0" }}>
-          <div className="corp-eyebrow">LIVE MARKET</div>
-          <h2 className="corp-h2" id="corp-showcase-h">{s?.title ?? "Live Market Intelligence"}</h2>
-          <p className="corp-lead">
-            {s?.body ?? "Real BTC / ETH / SOL public data with source, freshness and provenance on every value."}
-          </p>
-        </div>
-        <div style={{ marginTop: "1.75rem" }}>
-          <LiveShowcase />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ClosingCta({ home }: { home?: HomeContent }) {
-  const v = scene(home?.scenes, "vision");
-  return (
-    <section className="corp-section" aria-labelledby="corp-cta-h">
-      <div className="corp-section-inner" style={{ textAlign: "center" }}>
-        <h2 className="corp-h2" id="corp-cta-h" style={{ margin: "0 auto 0.7rem" }}>
-          {v?.title ?? "A global intelligence platform"}
-        </h2>
-        <p className="corp-lead" style={{ margin: "0 auto 1.5rem" }}>
-          {v?.body ?? "Built to scale across markets, surfaces and teams."}
-        </p>
-        <div className="corp-hero-cta" style={{ justifyContent: "center" }}>
-          <Link to="/products" className="corp-btn" onClick={() => track("cta_primary", "closing")}>
-            開始使用 / Get started
-          </Link>
-          <Link to="/contact" className="corp-btn-ghost">聯絡我們 / Contact</Link>
-        </div>
-      </div>
-    </section>
+    </div>
   );
 }
 
 export function Home() {
   const homeState = useResource<ContentEnvelope<HomeContent>>(getHome, []);
   const seoState = useResource<ContentEnvelope<{ default?: { title?: string; description?: string; robots?: string } }>>(
-    () => getContent("seo"),
-    [],
+    () => getContent("seo"), [],
   );
   const home = homeState.status === "READY" ? homeState.data.data : undefined;
   const seo = seoState.status === "READY" ? seoState.data.data?.default : undefined;
 
   useSeo({
-    title: seo?.title ?? "NEXUS · Market Intelligence Platform",
-    description: seo?.description ?? "A real-data market intelligence platform.",
+    title: seo?.title ?? "NEXUS · 市場情報平台",
+    description: seo?.description ?? "把即時行情、波動、結構與風險，整理成可以直接判讀的市場情報層。",
     path: "/",
     robots: seo?.robots ?? "index,follow",
-    jsonLd: {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      name: "NEXUS",
-      description: seo?.description ?? "A real-data market intelligence platform.",
-    },
+    jsonLd: { "@context": "https://schema.org", "@type": "Organization", name: "NEXUS",
+      description: seo?.description ?? "市場情報平台" },
   });
 
   return (
-    <div className="corp-home">
-      <Hero home={home} />
-      <MarketStructureScene />
-      <ShowcaseSection home={home} />
-      <IntelligenceEngineScene />
-      <PersonalEnterpriseBranch />
-      <CapabilityScene />
-      <TrustLayer />
-      <ClosingCta home={home} />
+    <div className="corp-fs corp-home">
+      {/* 01 HERO */}
+      <FlagshipHero hero={scene(home?.scenes, "hero")} />
+
+      {/* 02 LIVE MARKET STRIP */}
+      <section className="corp-fs-section tight" aria-label="即時行情">
+        <div className="corp-fs-inner"><MarketStrip /></div>
+      </section>
+
+      {/* 03 PRICE VS INTELLIGENCE */}
+      <section className="corp-fs-section corp-fs-band" aria-labelledby="fs-pvi">
+        <div className="corp-fs-inner">
+          <SectionHead eyebrow="PRICE VS INTELLIGENCE" title="價格只是開始" en="Price is only the beginning"
+            sub="價格告訴你發生了什麼；情報告訴你現在該注意什麼。" />
+          <div id="fs-pvi"><PriceVsIntelligence /></div>
+        </div>
+      </section>
+
+      {/* 04 MARKET COMMAND CENTER */}
+      <section className="corp-fs-section" aria-labelledby="fs-cc">
+        <div className="corp-fs-inner wide">
+          <SectionHead eyebrow="COMMAND CENTER" title="市場情報指揮中心" en="One screen, the whole market"
+            sub="行情、情報與風險，集中在一個即時面板。" />
+          <div id="fs-cc"><CommandCenter /></div>
+        </div>
+      </section>
+
+      {/* 05 OPPORTUNITY / RISK */}
+      <section className="corp-fs-section corp-fs-band" aria-labelledby="fs-attn">
+        <div className="corp-fs-inner">
+          <SectionHead eyebrow="WHAT NEEDS ATTENTION" title="現在，什麼值得注意" en="Attention & risk"
+            sub="依即時波動與區間，標示每個資產的關注程度。" />
+          <div id="fs-attn"><AttentionPanel /></div>
+        </div>
+      </section>
+
+      {/* 06 INTELLIGENCE FEED */}
+      <section className="corp-fs-section" aria-labelledby="fs-feed">
+        <div className="corp-fs-inner">
+          <SectionHead eyebrow="INTELLIGENCE FEED" title="市場情報事件流" en="Real, backend-computed events"
+            sub="市場狀態與波動的變化，即時記錄成事件。" />
+          <div id="fs-feed"><IntelligenceFeed /></div>
+        </div>
+      </section>
+
+      {/* 07 AI MARKET BRIEF */}
+      <section className="corp-fs-section corp-fs-band" aria-labelledby="fs-brief">
+        <div className="corp-fs-inner">
+          <SectionHead eyebrow="MARKET BRIEF" title="一段話，看懂目前市場" en="Deterministic market brief"
+            sub="由後端規則生成的市場簡報，聚焦重點與風險。" />
+          <div id="fs-brief"><MarketBrief /></div>
+        </div>
+      </section>
+
+      {/* 08 HOW IT WORKS */}
+      <HowItWorks />
+
+      {/* 09 PERSONAL / ENTERPRISE */}
+      <ProductChoice />
+
+      {/* 10 TRUST */}
+      <TrustFlagship />
+
+      {/* 11 CTA */}
+      <ClosingCta />
     </div>
   );
 }

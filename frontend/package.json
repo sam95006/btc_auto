@@ -37,16 +37,20 @@
     "check:corporate-no-fake-data": "node scripts/check_corporate_no_fake_data.mjs"
   },
   "dependencies": {
+    "@react-three/fiber": "^8.17.10",
+    "gsap": "^3.12.5",
     "lightweight-charts": "file:lightweight-charts-5.2.0.tgz",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0"
+    "react-router-dom": "^6.28.0",
+    "three": "^0.161.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.62.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@types/three": "^0.161.2",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.6.3",
     "vite": "^5.4.11"

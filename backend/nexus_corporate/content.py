@@ -22,16 +22,16 @@ DEFAULT_CONTENT: dict[str, dict[str, Any]] = {
     "site": {
         "brand": {"name": BRAND_PLACEHOLDER, "tagline": "Market Intelligence Platform", "final_brand": False},
         "nav": [
-            {"label": "產品 / Products", "to": "/products"},
-            {"label": "個人版 / Personal", "to": "/personal"},
-            {"label": "企業版 / Enterprise", "to": "/enterprise"},
-            {"label": "安全 / Security", "to": "/security"},
-            {"label": "關於 / About", "to": "/about"},
+            {"label": "產品", "to": "/products"},
+            {"label": "個人版", "to": "/personal"},
+            {"label": "企業版", "to": "/enterprise"},
+            {"label": "安全", "to": "/security"},
+            {"label": "關於", "to": "/about"},
         ],
-        "cta": {"personal": {"label": "個人登入 / Personal", "href": "/personal.html"},
-                "enterprise": {"label": "企業登入 / Enterprise", "href": "/enterprise.html"}},
+        "cta": {"personal": {"label": "個人登入", "href": "/personal.html"},
+                "enterprise": {"label": "企業登入", "href": "/enterprise.html"}},
         "footer": {
-            "note": "READ-ONLY · research & intelligence platform · not investment advice",
+            "note": "唯讀市場情報平台 · 非投資建議 · Read-only market intelligence",
             "columns": [
                 {"title": "Product", "links": [{"label": "Personal", "to": "/personal"},
                                                 {"label": "Enterprise", "to": "/enterprise"}]},
@@ -42,9 +42,9 @@ DEFAULT_CONTENT: dict[str, dict[str, Any]] = {
     },
     "home": {
         "scenes": [
-            {"id": "hero", "kicker": "MARKET INTELLIGENCE", "title": "看見市場結構，而非只有價格",
-             "subtitle": "A cinematic, real-data intelligence platform. Price is only the surface.",
-             "primary_cta": {"label": "探索平台", "to": "/products"}},
+            {"id": "hero", "kicker": "即時市場情報", "title": "市場很多資料，你不需要全部自己看。",
+             "subtitle": "NEXUS 把即時行情、波動、結構與風險，整理成一個可以直接判讀的市場情報層。",
+             "primary_cta": {"label": "進入個人版", "to": "/personal"}},
             {"id": "surface", "title": "價格只是表層",
              "body": "Every market shows a price. We render the structure beneath it — flow, context, risk and regime."},
             {"id": "structure", "title": "揭開更深的市場結構",

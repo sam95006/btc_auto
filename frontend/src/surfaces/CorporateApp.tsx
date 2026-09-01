@@ -16,6 +16,7 @@ import { ContentPage } from "../corporate/pages/ContentPage";
 import { Contact } from "../corporate/pages/Contact";
 import "../styles/corporate.css";
 import "../styles/corporate-cinematic.css";
+import "../styles/corporate-flagship.css";
 
 // Admin surfaces are code-split — public visitors never download the console/editors.
 const AdminConsole = lazy(() => import("../corporate/admin/AdminConsole").then((m) => ({ default: m.AdminConsole })));

@@ -36,10 +36,60 @@ export type MarketSymbol = {
   availability: "READY" | "UNAVAILABLE";
   price?: number;
   change_24h_percent?: number | null;
+  high_24h?: number | null;
+  low_24h?: number | null;
+  volume_24h?: number | null;
   range_pct?: number | null;
   volatility?: "high" | "moderate" | "low" | null;
   freshness?: string;
   source?: string;
+  provider_timestamp?: string | null;
+};
+
+export type MarketHistory = {
+  symbol: string;
+  interval?: string;
+  availability: "READY" | "UNAVAILABLE";
+  points?: number[];
+  low?: number | null;
+  high?: number | null;
+  source?: string;
+  updated_at?: string;
+  reason?: string;
+};
+
+export type IntelEvent = {
+  ts: string;
+  symbol: string | null;
+  kind: string;
+  severity: string;
+  text: string;
+  from?: string;
+  to?: string;
+  source?: string;
+};
+
+export type EventsFeed = {
+  availability: "READY" | "UNAVAILABLE";
+  source?: string;
+  updated_at?: string;
+  transitions: IntelEvent[];
+  observations: IntelEvent[];
+  reason?: string;
+};
+
+export type MarketBrief = {
+  availability: "READY" | "UNAVAILABLE";
+  generator?: string;
+  source?: string;
+  updated_at?: string;
+  posture?: string | null;
+  regime?: MarketRegime;
+  summary?: string[];
+  watch?: string[];
+  risk?: string[];
+  data_used?: string[];
+  reason?: string;
 };
 
 export type MarketShowcase = {
