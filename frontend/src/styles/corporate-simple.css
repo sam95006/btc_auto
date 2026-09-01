@@ -1,0 +1,73 @@
+/* ============================================================================
+   CORPORATE-4 — simplified layout (minimal nav, tabbed disclosure, realtime).
+   Theme-token based (var(--ct-*) via aliases). Loaded last.
+   ========================================================================== */
+
+/* ---------- minimal header ---------- */
+.corp-fs-nav { display: flex; align-items: center; gap: 1.25rem; }
+.corp-fs-navlinks { display: flex; gap: 1.15rem; margin-left: 0.5rem; }
+.corp-fs-navlinks a { color: var(--ct-text-2); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+.corp-fs-navlinks a:hover { color: var(--ct-text); }
+.corp-fs-navctrl { margin-left: auto; display: flex; align-items: center; gap: 0.55rem; }
+.corp-fs-navlogin { color: var(--ct-text-2); text-decoration: none; font-size: 0.88rem; font-weight: 600; }
+.corp-fs-navlogin:hover { color: var(--ct-text); }
+@media (max-width: 760px) {
+  .corp-fs-navlinks { display: none; }
+  .corp-fs-navlogin { display: none; }
+}
+
+/* ---------- compact footer ---------- */
+.corp-fs-footer { border-top: 1px solid var(--ct-border); }
+.corp-fs-footer-row { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+
+/* ---------- realtime status pill ---------- */
+.corp-rt { display: inline-flex; align-items: center; gap: 0.4rem; font: 700 0.66rem/1 var(--fs-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ct-muted); }
+.corp-rt::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ct-muted); }
+.corp-rt[data-rt="live"] { color: var(--ct-positive); } .corp-rt[data-rt="live"]::before { background: var(--ct-positive); box-shadow: 0 0 0 0 var(--ct-positive); animation: corp-rt-pulse 2.2s ease-out infinite; }
+.corp-rt[data-rt="polling"] { color: var(--ct-accent); } .corp-rt[data-rt="polling"]::before { background: var(--ct-accent); }
+.corp-rt[data-rt="reconnecting"], .corp-rt[data-rt="connecting"] { color: var(--ct-warning); } .corp-rt[data-rt="reconnecting"]::before, .corp-rt[data-rt="connecting"]::before { background: var(--ct-warning); }
+@keyframes corp-rt-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--ct-positive) 60%, transparent); } 70%,100% { box-shadow: 0 0 0 6px transparent; } }
+@media (prefers-reduced-motion: reduce) { .corp-rt::before { animation: none !important; } }
+
+/* ---------- hero simplification ---------- */
+.corp-fs-hero-cta.single { align-items: center; }
+.corp-fs-hero-link { color: var(--ct-accent); text-decoration: none; font-weight: 700; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.3rem; }
+.corp-fs-hero-link:hover { text-decoration: underline; }
+
+/* ---------- tabbed sections (shared shell) ---------- */
+.corp-tabs { display: inline-flex; gap: 0.25rem; padding: 0.28rem; border: 1px solid var(--ct-border); border-radius: 12px; background: var(--ct-surface); }
+.corp-tab { border: none; background: transparent; color: var(--ct-text-2); font: 700 0.9rem/1 inherit; padding: 0.55rem 0.95rem; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.45rem; }
+.corp-tab[aria-selected="true"] { background: color-mix(in oklab, var(--ct-accent) 16%, transparent); color: var(--ct-text); }
+.corp-tab:hover { color: var(--ct-text); }
+.corp-tabpanel { margin-top: 1.25rem; }
+
+/* jobs: shared panel + description */
+.corp-jobs { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(1rem, 3vw, 2.5rem); align-items: start; }
+.corp-jobs-desc { color: var(--ct-text-2); font-size: 1.05rem; line-height: 1.6; margin: 0.75rem 0 0; }
+.corp-jobs-panel { border: 1px solid var(--ct-border); border-radius: 16px; background: var(--ct-surface); padding: 1.25rem; min-height: 260px; box-shadow: var(--ct-shadow-1); }
+@media (max-width: 900px) { .corp-jobs { grid-template-columns: 1fr; } }
+
+/* live product: fixed shell to avoid layout jump */
+.corp-lp { border: 1px solid var(--ct-border-2); border-radius: 18px; overflow: hidden; background: var(--ct-surface); box-shadow: var(--ct-shadow-1); }
+.corp-lp-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.75rem 1rem; border-bottom: 1px solid var(--ct-border); background: var(--ct-surface-2); flex-wrap: wrap; }
+.corp-lp-body { padding: 1.1rem; min-height: 340px; }
+
+/* trust expander */
+.corp-trust-compact { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.8rem; }
+.corp-trust-mini { border: 1px solid var(--ct-border); border-radius: 12px; padding: 0.9rem 1rem; background: var(--ct-surface); }
+.corp-trust-mini h4 { margin: 0 0 0.25rem; font-size: 0.92rem; display: flex; align-items: center; gap: 0.45rem; }
+.corp-trust-mini p { margin: 0; color: var(--ct-muted); font-size: 0.82rem; line-height: 1.5; }
+.corp-disclose { margin-top: 1rem; }
+.corp-disclose > summary { cursor: pointer; color: var(--ct-accent); font-weight: 700; font-size: 0.9rem; list-style: none; display: inline-flex; align-items: center; gap: 0.4rem; }
+.corp-disclose > summary::-webkit-details-marker { display: none; }
+.corp-disclose > summary::before { content: "▸"; transition: transform 0.2s; }
+.corp-disclose[open] > summary::before { transform: rotate(90deg); }
+.corp-disclose-body { margin-top: 0.85rem; color: var(--ct-text-2); font-size: 0.9rem; line-height: 1.6; display: grid; gap: 0.5rem; }
+
+/* light-mode: soften the heavy dark panels used by reused CORPORATE-3 components */
+:root:not([data-theme="dark"]) .corp-fs-console,
+:root:not([data-theme="dark"]) .corp-fs-cc,
+:root:not([data-theme="dark"]) .corp-fs-feed,
+:root:not([data-theme="dark"]) .corp-fs-brief,
+:root:not([data-theme="dark"]) .corp-fs-strip,
+:root:not([data-theme="dark"]) .corp-jobs-panel { background: var(--ct-surface); }

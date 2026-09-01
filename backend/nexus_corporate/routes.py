@@ -13,7 +13,9 @@ from typing import Any, Optional
 
 from flask import Flask, Response, jsonify, request
 
-from backend.nexus_corporate.content import SLUGS
+from backend.nexus_corporate.content import (
+    DEFAULT_LOCALE, SLUGS, SUPPORTED_LOCALES, default_published, normalize_locale,
+)
 from backend.nexus_corporate.intelligence import build_brief, build_events
 from backend.nexus_corporate.market import build_showcase
 from backend.nexus_corporate.repository import CorporateRepository
@@ -142,10 +144,20 @@ def register_corporate_routes(app: Flask) -> None:
         repo = _repo(app)
         if repo is None:
             return _json({"slug": slug, "availability": "UNAVAILABLE", "reason": "backend_unavailable"}, 503)
-        body = repo.get_published(slug)
+        locale = normalize_locale(request.args.get("locale"))
+        body = None
+        # 1) explicit localized CMS override, e.g. "home@en-US"
+        if locale != DEFAULT_LOCALE:
+            body = repo.get_published(f"{slug}@{locale}")
+            # 2) localized code default for a non-default locale
+            if body is None:
+                body = default_published(slug, locale)
+        # 3) default-locale CMS row (or default-locale code default)
+        if body is None:
+            body = repo.get_published(slug)
         if body is None:
             return _json({"slug": slug, "availability": "UNAVAILABLE", "reason": "not_found"}, 404)
-        return _json({"slug": slug, "availability": "READY", "source": "cms", "data": body})
+        return _json({"slug": slug, "locale": locale, "availability": "READY", "source": "cms", "data": body})
 
     @app.get("/api/corporate/v1/site")
     def corp_site():
@@ -231,7 +243,8 @@ def register_corporate_routes(app: Flask) -> None:
                                   tuple(((repo.get_published("showcase") if repo else None) or {}).get("symbols")
                                         or ("BTCUSDT", "ETHUSDT", "SOLUSDT")))
         stored = repo.get_setting(INTEL_SETTING_KEY) if repo else None
-        response, new_stored = build_events(showcase, stored if isinstance(stored, dict) else None)
+        response, new_stored = build_events(showcase, stored if isinstance(stored, dict) else None,
+                                            request.args.get("locale"))
         if repo and response.get("availability") == "READY":
             try:
                 repo.set_setting(INTEL_SETTING_KEY, new_stored)
@@ -246,7 +259,66 @@ def register_corporate_routes(app: Flask) -> None:
         showcase = build_showcase(_snapshot_service(app),
                                   tuple(((repo.get_published("showcase") if repo else None) or {}).get("symbols")
                                         or ("BTCUSDT", "ETHUSDT", "SOLUSDT")))
-        return _json(build_brief(showcase))
+        return _json(build_brief(showcase, request.args.get("locale")))
+
+    @app.get("/api/corporate/v1/locales")
+    def corp_locales():
+        # Supported locales + site default (owner-configurable via settings).
+        repo = _repo(app)
+        cfg = (repo.get_setting("site.locales") if repo else None) or {}
+        supported = cfg.get("supported") if isinstance(cfg.get("supported"), list) else list(SUPPORTED_LOCALES)
+        supported = [loc for loc in supported if loc in SUPPORTED_LOCALES] or list(SUPPORTED_LOCALES)
+        default = cfg.get("default") if cfg.get("default") in supported else DEFAULT_LOCALE
+        return _json({"supported": supported, "default": default})
+
+    @app.get("/api/corporate/v1/stream")
+    def corp_stream():
+        # Public-safe realtime PUSH (SSE). Bounded cadence + duration; heartbeats;
+        # emits market_snapshot / regime_change / intelligence_event / brief_update.
+        # Public data only — never Founder/private. Frontend falls back to polling.
+        import json as _stream_json
+
+        locale = normalize_locale(request.args.get("locale"))
+        symbols = tuple(((_repo(app).get_published("showcase") if _repo(app) else None) or {}).get("symbols")
+                        or ("BTCUSDT", "ETHUSDT", "SOLUSDT"))
+
+        def _sse(event: str, data: dict) -> str:
+            return f"event: {event}\ndata: {_stream_json.dumps(data)}\n\n"
+
+        def generate():
+            snap = _snapshot_service(app)
+            last_regime = None
+            last_vol: dict[str, Any] = {}
+            yield "retry: 4000\n\n"
+            yield _sse("hello", {"ok": True, "cadence_ms": 6000, "source": "binance_usdm_public"})
+            # Bounded stream: ~5 minutes, then ask the client to reconnect.
+            for tick in range(50):
+                showcase = build_showcase(snap, symbols)
+                yield _sse("market_snapshot", showcase)
+                regime = (showcase.get("regime") or {}).get("value")
+                if regime and regime != last_regime and last_regime is not None:
+                    yield _sse("regime_change", {"from": last_regime, "to": regime,
+                                                 "updated_at": showcase.get("updated_at")})
+                last_regime = regime or last_regime
+                for s in showcase.get("symbols", []):
+                    band = s.get("volatility")
+                    prev = last_vol.get(s.get("symbol"))
+                    if band and prev and band != prev:
+                        yield _sse("intelligence_event", {"symbol": str(s.get("symbol")).replace("USDT", ""),
+                                                          "from": prev, "to": band})
+                    if band:
+                        last_vol[s.get("symbol")] = band
+                if tick % 5 == 0:  # brief roughly every ~30s
+                    yield _sse("brief_update", build_brief(showcase, locale))
+                yield ": heartbeat\n\n"  # SSE comment heartbeat
+                time.sleep(6)
+            yield _sse("bye", {"reason": "cycle_complete"})
+
+        resp = Response(generate(), mimetype="text/event-stream")
+        resp.headers["Cache-Control"] = "no-cache, no-transform"
+        resp.headers["X-Accel-Buffering"] = "no"
+        resp.headers["Connection"] = "keep-alive"
+        return resp
 
     @app.post("/api/corporate/v1/contact")
     def corp_contact():

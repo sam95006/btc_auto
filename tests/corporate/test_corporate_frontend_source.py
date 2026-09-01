@@ -81,14 +81,17 @@ def test_hero_is_backend_driven_with_fallback() -> None:
 
 def test_product_console_and_command_center_backend_only() -> None:
     console = _read(CORP / "components" / "product" / "LiveConsole.tsx")
-    assert "useMarket" in console and "UNAVAILABLE" not in console.split("data-testid")[0] or True
-    assert "暫不可用" in console  # explicit unavailable state
+    assert "useMarket" in console and "暫不可用" in console  # explicit unavailable state
     cc = _read(CORP / "components" / "product" / "CommandCenter.tsx")
     assert "useMarket" in cc and "Sparkline" in cc
+    # CORPORATE-4: homepage is SIMPLIFIED to six sections (hero, jobs, live product,
+    # choice, trust, cta); the former modules are MERGED inside LiveProduct.
     home = _read(CORP / "pages" / "Home.tsx")
-    for comp in ("FlagshipHero", "MarketStrip", "PriceVsIntelligence", "CommandCenter",
-                 "AttentionPanel", "IntelligenceFeed", "MarketBrief", "ProductChoice"):
+    for comp in ("FlagshipHero", "JobsSection", "LiveProduct", "ProductChoice", "TrustCompact", "ClosingCta"):
         assert comp in home, comp
+    lp = _read(CORP / "components" / "product" / "LiveProduct.tsx")
+    for merged in ("CommandCenter", "AttentionPanel", "IntelligenceFeed", "MarketBrief"):
+        assert merged in lp, merged
 
 
 def test_new_public_endpoints_in_client() -> None:
@@ -101,8 +104,49 @@ def test_market_brief_is_deterministic_not_ai() -> None:
     intel = _read(Path("backend") / "nexus_corporate" / "intelligence.py")
     assert "deterministic_rule_based" in intel
     brief = _read(CORP / "components" / "product" / "MarketBrief.tsx")
-    # UI must not claim AI generation
-    assert "規則生成" in brief and "非 AI 生成" in brief
+    assert "Deterministic" in brief  # labelled deterministic in the UI
+    # the "not AI-generated" note is localized in the corporate i18n dict
+    i18n = _read(CORP / "i18n" / "index.tsx")
+    assert "非 AI 生成" in i18n and "not AI" in i18n
+
+
+# ---- CORPORATE-4: simplify + theme + i18n + realtime ----
+
+def test_theme_system_light_dark() -> None:
+    ctx = _read(CORP / "context" / "ThemeContext.tsx")
+    assert "system" in ctx and "light" in ctx and "dark" in ctx and "data-theme" in ctx
+    css = _read(FE / "src" / "styles" / "corporate-theme.css")
+    assert '[data-theme="dark"]' in css and "prefers-color-scheme: dark" in css
+    assert "--ct-bg" in css and "--ct-accent" in css and "--ct-positive" in css  # semantic tokens
+    html = _read(FE / "corporate.html")
+    assert "nexus.corp.theme" in html  # no-flash inline script
+
+
+def test_i18n_four_locales_no_bilingual_clutter() -> None:
+    i18n = _read(CORP / "i18n" / "index.tsx")
+    for loc in ("zh-TW", "en-US", "ja-JP", "ko-KR"):
+        assert loc in i18n, loc
+    # header nav uses localized keys, not baked "X / Y" bilingual strings
+    chrome = _read(CORP / "components" / "Chrome.tsx")
+    assert "useLocale" in chrome and "nav_products" in chrome
+    assert " / Products" not in chrome and " / Personal" not in chrome
+
+
+def test_realtime_sse_with_fallback_and_no_binance() -> None:
+    ctx = _read(CORP / "context" / "MarketContext.tsx")
+    assert "EventSource" in ctx and "market_snapshot" in ctx
+    assert "reconnect" in ctx.lower() and "poll" in ctx.lower()  # fallback + reconnect
+    # never a direct Binance URL/endpoint (data flows only via the backend)
+    assert "binance.com" not in ctx.lower() and "fapi.binance" not in ctx.lower()
+    routes = _read(Path("backend") / "nexus_corporate" / "routes.py")
+    assert "text/event-stream" in routes and "/api/corporate/v1/stream" in routes
+
+
+def test_content_and_brief_are_locale_aware() -> None:
+    routes = _read(Path("backend") / "nexus_corporate" / "routes.py")
+    assert "normalize_locale" in routes and "@{locale}" in routes  # slug@locale lookup
+    client = _read(CORP / "api" / "client.ts")
+    assert "getLocales" in client and "withLocale" in client
 
 
 def test_sparkline_uses_backend_history_only() -> None:

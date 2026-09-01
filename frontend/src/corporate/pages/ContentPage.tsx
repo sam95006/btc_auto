@@ -2,11 +2,13 @@ import { getContent } from "../api/client";
 import { DataState } from "../components/DataState";
 import { Scene } from "../components/Scene";
 import { useResource } from "../hooks/useCorporate";
+import { useLocale } from "../i18n";
 import type { ContentEnvelope } from "../types";
 
-/** Renders any backend CMS section by slug. All copy is backend-owned. */
+/** Renders any backend CMS section by slug (locale-aware). All copy is backend-owned. */
 export function ContentPage({ slug }: { slug: string }) {
-  const state = useResource<ContentEnvelope>(() => getContent(slug), [slug]);
+  const { locale } = useLocale();
+  const state = useResource<ContentEnvelope>(() => getContent(slug, locale), [slug, locale]);
   return (
     <Scene className="corp-content-page">
       <div className="corp-scene-inner">

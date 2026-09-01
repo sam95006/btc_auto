@@ -21,6 +21,15 @@ function origin(): string {
   return candidate;
 }
 
+/** Public API origin (for EventSource / direct URLs). */
+export const API_ORIGIN = origin();
+
+/** Append ?locale=… (or &locale=…) when a locale is provided. */
+function withLocale(path: string, locale?: string): string {
+  if (!locale) return path;
+  return `${path}${path.includes("?") ? "&" : "?"}locale=${encodeURIComponent(locale)}`;
+}
+
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${origin()}${path}`, { headers: { Accept: "application/json" } });
   if (!res.ok && res.status !== 404) throw new Error(`corporate_api_http_${res.status}`);
@@ -46,17 +55,18 @@ function csrfFromCookie(): string {
   return m ? decodeURIComponent(m[1]) : "";
 }
 
-// ---- public content ----
-export const getSite = () => getJson<ContentEnvelope<SiteContent>>("/api/corporate/v1/site");
-export const getHome = () => getJson<ContentEnvelope<HomeContent>>("/api/corporate/v1/home");
-export const getContent = <T = Record<string, unknown>>(slug: string) =>
-  getJson<ContentEnvelope<T>>(`/api/corporate/v1/content/${slug}`);
-export const getMarket = () => getJson<MarketShowcase>("/api/corporate/v1/market");
+// ---- public content (locale-aware) ----
+export const getSite = (locale?: string) => getJson<ContentEnvelope<SiteContent>>(withLocale("/api/corporate/v1/site", locale));
+export const getHome = (locale?: string) => getJson<ContentEnvelope<HomeContent>>(withLocale("/api/corporate/v1/home", locale));
+export const getContent = <T = Record<string, unknown>>(slug: string, locale?: string) =>
+  getJson<ContentEnvelope<T>>(withLocale(`/api/corporate/v1/content/${slug}`, locale));
+export const getMarket = (locale?: string) => getJson<MarketShowcase>(withLocale("/api/corporate/v1/market", locale));
 export const getStatus = () => getJson<Record<string, unknown>>("/api/corporate/v1/status");
+export const getLocales = () => getJson<{ supported: string[]; default: string }>("/api/corporate/v1/locales");
 export const getHistory = (symbol: string, interval = "1h", limit = 48) =>
   getJson<MarketHistory>(`/api/corporate/v1/history/${symbol}?interval=${interval}&limit=${limit}`);
-export const getEvents = () => getJson<EventsFeed>("/api/corporate/v1/events");
-export const getBrief = () => getJson<MarketBrief>("/api/corporate/v1/brief");
+export const getEvents = (locale?: string) => getJson<EventsFeed>(withLocale("/api/corporate/v1/events", locale));
+export const getBrief = (locale?: string) => getJson<MarketBrief>(withLocale("/api/corporate/v1/brief", locale));
 
 export async function submitContact(input: { name?: string; email: string; company?: string; message?: string }) {
   const res = await fetch(`${origin()}/api/corporate/v1/contact`, {

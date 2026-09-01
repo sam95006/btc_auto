@@ -346,6 +346,33 @@ def test_admin_preview_requires_auth_and_returns_draft():
     assert pub["data"].get("title") != "Draft only"
 
 
+def test_locales_endpoint_and_content_localization():
+    app = _app(); c = app.test_client()
+    loc = c.get("/api/corporate/v1/locales").get_json()
+    assert loc["default"] == "zh-TW"
+    assert set(loc["supported"]) == {"zh-TW", "en-US", "ja-JP", "ko-KR"}
+    # default locale = Chinese hero
+    zh = c.get("/api/corporate/v1/home").get_json()
+    assert zh["data"]["scenes"][0]["title"].startswith("市場") or "資料" in zh["data"]["scenes"][0]["title"]
+    # en-US override is English
+    en = c.get("/api/corporate/v1/home?locale=en-US").get_json()
+    assert en["locale"] == "en-US"
+    assert all(ord(ch) < 128 for ch in en["data"]["scenes"][0]["title"])  # ASCII English
+    # ja-JP override present
+    ja = c.get("/api/corporate/v1/home?locale=ja-JP").get_json()
+    assert ja["locale"] == "ja-JP" and "市場" in ja["data"]["scenes"][0]["title"] or "必要" in ja["data"]["scenes"][0]["title"]
+    # unsupported locale falls back to default (never errors)
+    xx = c.get("/api/corporate/v1/home?locale=zz-ZZ").get_json()
+    assert xx["locale"] == "zh-TW"
+
+
+def test_brief_localized_no_language_mix():
+    app = _app(); c = app.test_client()
+    en = c.get("/api/corporate/v1/brief?locale=en-US").get_json()
+    assert en["availability"] == "READY" and en["locale"] == "en-US"
+    assert all(ord(ch) < 128 for ch in " ".join(en["summary"]))  # English only
+
+
 def test_market_brief_is_deterministic_and_labelled():
     app = _app(); c = app.test_client()
     j = c.get("/api/corporate/v1/brief").get_json()
