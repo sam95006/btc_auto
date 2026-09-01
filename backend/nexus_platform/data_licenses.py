@@ -73,10 +73,42 @@ def get_license(dataset: str) -> Optional[DatasetLicense]:
     return _BY_DATASET.get(dataset)
 
 
-def can_expose_commercially(dataset: str) -> bool:
-    """Hard gate: only in-use, commercial-use-permitted datasets may be exposed."""
+# ---------------------------------------------------------------------------
+# Explicit, conservative, FAIL-CLOSED gates. An unknown/unregistered dataset is
+# always denied. Public accessibility is NOT a legal right. RAW display /
+# redistribution and DERIVED-intelligence use are distinct permissions.
+# ---------------------------------------------------------------------------
+def can_display_raw_data(dataset: str) -> bool:
+    """Show/redistribute the RAW dataset (feed/values) to end users. Requires the
+    license to explicitly permit redistribution. Fails closed on unknown."""
     lic = _BY_DATASET.get(dataset)
-    return bool(lic and lic.license_status == "in_use" and lic.commercial_use)
+    return bool(lic and lic.license_status == "in_use" and lic.commercial_use and lic.redistribution_allowed)
+
+
+def can_use_for_derived_intelligence(dataset: str) -> bool:
+    """Compute member-safe DERIVED intelligence (regime/risk/summaries) from the
+    dataset. Requires in_use + commercial_use + derived_data_allowed. Fail closed."""
+    lic = _BY_DATASET.get(dataset)
+    return bool(lic and lic.license_status == "in_use" and lic.commercial_use and lic.derived_data_allowed)
+
+
+def can_cache_dataset(dataset: str) -> bool:
+    """Cache the dataset. Requires in_use + cache_allowed. Fail closed on unknown."""
+    lic = _BY_DATASET.get(dataset)
+    return bool(lic and lic.license_status == "in_use" and lic.cache_allowed)
+
+
+def requires_attribution(dataset: str) -> bool:
+    """Whether visible attribution is required. Unknown datasets default to
+    requiring attribution (conservative)."""
+    lic = _BY_DATASET.get(dataset)
+    return True if lic is None else lic.attribution_required
+
+
+def can_expose_commercially(dataset: str) -> bool:
+    """DEPRECATED ambiguous helper — retained as the DERIVED-intelligence gate
+    (our product only exposes derived intelligence, never a raw feed)."""
+    return can_use_for_derived_intelligence(dataset)
 
 
 def licensed_domains() -> set[str]:

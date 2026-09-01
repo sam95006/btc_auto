@@ -61,11 +61,31 @@ SOCIAL_BANNED_IMPORT_TERMS = (
 FOUNDER_BANNED_DOMAINS = ("news_social", "reputation")
 
 
+# --- Founder / shared-market clarification (1A.1) ---
+# Founder-Private NEVER reads a SaaS DB domain directly (physical/security
+# boundary). It MAY, where the certified private architecture permits, consume
+# separately-authorized, SAFE market-data SERVICE outputs (a service-level feed) —
+# which is NOT the same as direct SaaS database access. Social/KOL remains HARD
+# BANNED for Founder. No trading-runtime change.
+FOUNDER_DIRECT_SAAS_DB_ACCESS = False          # never
+FOUNDER_SAFE_SERVICE_MARKET_ALLOWED = True     # service-level safe market feed only
+FOUNDER_SERVICE_MARKET_BANNED_DOMAINS = ("news_social", "reputation")  # never, even at service level
+
+
 def readers_for(domain: str) -> tuple[str, ...]:
     return DOMAIN_READERS.get(domain, ())
 
 
-def founder_may_read(domain: str) -> bool:
-    """The Founder-Private boundary never reads SaaS domains, and NEVER
-    news_social/reputation regardless."""
+def founder_may_read_saas_db(_domain: str) -> bool:
+    """Founder-Private never reads a SaaS DB domain directly. Always False."""
     return False
+
+
+# Backwards-compatible alias (direct DB access is what this asserts).
+founder_may_read = founder_may_read_saas_db
+
+
+def founder_may_consume_service_market(domain: str) -> bool:
+    """Founder may consume separately-authorized SAFE market-data SERVICE outputs
+    (not DB access), but never social/reputation, even at the service level."""
+    return FOUNDER_SAFE_SERVICE_MARKET_ALLOWED and domain not in FOUNDER_SERVICE_MARKET_BANNED_DOMAINS

@@ -1,110 +1,136 @@
-"""Entitlement capability registry (NEXUS-EXPERIENCE-1A).
+"""Entitlement capability registry (NEXUS-EXPERIENCE-1A / hardened in 1A.1).
 
-Backend-authoritative mapping of capability × plan → honest availability STATE.
-Two independent axes are combined:
+FOUR independent dimensions are modelled so a capability is never called READY
+just because some frontend code exists:
 
-  * plan grant  — does the plan entitle this capability?  full | limited | None
-  * backend readiness — does real, legally-usable backend data exist TODAY?
-                        ready | coming_soon   (per "DO NOT IMPLEMENT YET",
-                        news/social/derivatives/on-chain/smart-money/reputation
-                        have NO licensed data yet → coming_soon)
+  * plan grant   — does the plan entitle it?           full | limited | none
+  * backend_state — is a real backend service present?  ready | partial | absent
+  * product_state — is the end-to-end feature built?    available | beta | partial | coming_soon
+  * data_state    — is the underlying data legally usable? (derived from the
+                    data-licensing registry: licensed | unlicensed)
 
-Effective state (what the UI may show):
+Effective UI state (backend-authoritative), most-restrictive wins:
   UNAVAILABLE  — plan does not grant it (locked; upsell)
-  COMING_SOON  — plan grants it but backend data is not yet available
-  LIMITED      — plan grants a limited tier and backend is ready
-  AVAILABLE    — plan grants full access and backend is ready
+  COMING_SOON  — data unlicensed, or product not built, or no backend service
+  PARTIAL      — real backend exists but the product is only partially built
+  BETA         — built but explicitly beta
+  LIMITED      — full path works but the plan grants a limited tier
+  AVAILABLE    — entitled, backend ready, product built, data licensed
 
-Authorization is ALWAYS this registry (backend), never frontend view density.
+Plan AUTHORIZATION and product READINESS are separate dimensions. Enterprise is a
+SEPARATE PRODUCT — it does NOT inherit Personal capabilities; grants are explicit.
 """
 from __future__ import annotations
 
+from backend.nexus_platform.data_licenses import can_use_for_derived_intelligence
 from backend.nexus_platform.plans import (
     PLAN_ADVANCED, PLAN_ENTERPRISE, PLAN_FREE, PLAN_PRO, PLAN_STARTER,
 )
 
 STATE_AVAILABLE = "AVAILABLE"
 STATE_LIMITED = "LIMITED"
+STATE_BETA = "BETA"
+STATE_PARTIAL = "PARTIAL"
 STATE_COMING_SOON = "COMING_SOON"
 STATE_UNAVAILABLE = "UNAVAILABLE"
 
 _F, _L, _N = "full", "limited", None  # plan-grant shorthands
 
-# capability_id -> {"backend": "ready"|"coming_soon", "plans": {plan: grant}}
-# "domain" groups capabilities for the data-domain map.
+# Datasets (from data_licenses) that back each capability's data_state.
+DS_MARKET = "usdm_public_ticker_ohlcv"
+DS_DERIVATIVES = "oi_funding_liquidation"
+DS_ONCHAIN = "onchain_flows_metrics"
+DS_SMART = "entity_wallet_intelligence"
+DS_SOCIAL = "creator_social_sentiment"
+DS_NEWS = "market_news_feed"
+
+
+def _cap(domain, grants, backend, product, dataset, evidence=""):
+    return {"domain": domain, "plans": grants, "backend_state": backend,
+            "product_state": product, "dataset": dataset, "evidence": evidence}
+
+
+# Audited against real routes/services (see 1A.1). product_state reflects what is
+# genuinely built end-to-end today — NOT merely that frontend code exists.
 CAPABILITIES: dict[str, dict] = {
-    # ---- market (real backend data exists today) ----
-    "market_overview":   {"backend": "ready", "domain": "market",
-                          "plans": {PLAN_FREE: _L, PLAN_STARTER: _F, PLAN_PRO: _F, PLAN_ADVANCED: _F}},
-    "watchlist":         {"backend": "ready", "domain": "personal",
-                          "plans": {PLAN_FREE: _L, PLAN_STARTER: _F, PLAN_PRO: _F, PLAN_ADVANCED: _F}},
-    "alerts":            {"backend": "ready", "domain": "personal",
-                          "plans": {PLAN_FREE: _L, PLAN_STARTER: _F, PLAN_PRO: _F, PLAN_ADVANCED: _F}},
-    "history":           {"backend": "ready", "domain": "market",
-                          "plans": {PLAN_FREE: _L, PLAN_STARTER: _F, PLAN_PRO: _F, PLAN_ADVANCED: _F}},
-    "nex_ai_digest":     {"backend": "ready", "domain": "personal",
-                          "plans": {PLAN_FREE: _L, PLAN_STARTER: _F, PLAN_PRO: _F, PLAN_ADVANCED: _F}},
-    "multi_chart":       {"backend": "ready", "domain": "personal",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _L, PLAN_ADVANCED: _F}},
-    "custom_workspace":  {"backend": "ready", "domain": "personal",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _L, PLAN_ADVANCED: _F}},
-    "advanced_alerts":   {"backend": "ready", "domain": "personal",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _F, PLAN_ADVANCED: _F}},
+    # ---- market-derived, licensed data, genuinely built today ----
+    "market_overview": _cap("market", {PLAN_FREE: _L, PLAN_STARTER: _F, PLAN_PRO: _F, PLAN_ADVANCED: _F},
+                            "ready", "available", DS_MARKET,
+                            "GET /api/v1/personal/{analysis,risk,signals} on real market adapter"),
+    "watchlist": _cap("personal", {PLAN_FREE: _L, PLAN_STARTER: _F, PLAN_PRO: _F, PLAN_ADVANCED: _F},
+                      "ready", "available", DS_MARKET,
+                      "GET/POST /api/v1/personal/watchlist + watchlist_repository + migration 0014"),
+    "history": _cap("market", {PLAN_FREE: _L, PLAN_STARTER: _F, PLAN_PRO: _F, PLAN_ADVANCED: _F},
+                    "ready", "available", DS_MARKET,
+                    "GET /api/v1/personal/history (bounded public market history)"),
+    # ---- market-derived but only partially built ----
+    "alerts": _cap("personal", {PLAN_FREE: _L, PLAN_STARTER: _F, PLAN_PRO: _F, PLAN_ADVANCED: _F},
+                   "partial", "partial", DS_MARKET,
+                   "alert engine contract + retention alert_events exist; no member alert-delivery route yet"),
+    "nex_ai_digest": _cap("personal", {PLAN_FREE: _L, PLAN_STARTER: _F, PLAN_PRO: _F, PLAN_ADVANCED: _F},
+                          "partial", "partial", DS_MARKET,
+                          "deterministic brief primitive exists (corporate intelligence); Personal wiring pending"),
+    # ---- pro view/tools not built yet ----
+    "multi_chart": _cap("personal", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _L, PLAN_ADVANCED: _F},
+                        "absent", "coming_soon", DS_MARKET, "multi-chart workspace not built"),
+    "custom_workspace": _cap("personal", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _L, PLAN_ADVANCED: _F},
+                             "absent", "coming_soon", DS_MARKET, "saved-layout workspace not built"),
+    "advanced_alerts": _cap("personal", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _F, PLAN_ADVANCED: _F},
+                            "absent", "coming_soon", DS_MARKET, "multi-condition rule builder not built"),
+    "ai_screener": _cap("personal", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _F, PLAN_ADVANCED: _F},
+                        "absent", "coming_soon", DS_MARKET, "screener not built"),
+    "export": _cap("personal", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _N, PLAN_ADVANCED: _F},
+                   "absent", "coming_soon", DS_MARKET, "export not built"),
+    "api_access": _cap("personal", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _N, PLAN_ADVANCED: _F},
+                       "absent", "coming_soon", DS_MARKET, "public API not implemented"),
+    "cross_exchange": _cap("market", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _N, PLAN_ADVANCED: _F},
+                           "absent", "coming_soon", DS_MARKET, "cross-exchange compare not built"),
 
-    # ---- news / social intelligence (NO licensed data yet → coming_soon) ----
-    "news":              {"backend": "coming_soon", "domain": "news_social",
-                          "plans": {PLAN_FREE: _L, PLAN_STARTER: _F, PLAN_PRO: _F, PLAN_ADVANCED: _F}},
-    "news_reliability":  {"backend": "coming_soon", "domain": "reputation",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _L, PLAN_PRO: _F, PLAN_ADVANCED: _F}},
-    "social_summary":    {"backend": "coming_soon", "domain": "news_social",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _F, PLAN_PRO: _F, PLAN_ADVANCED: _F}},
-    "news_social_intel": {"backend": "coming_soon", "domain": "news_social",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _F, PLAN_ADVANCED: _F}},
-    "kol_track_record":  {"backend": "coming_soon", "domain": "reputation",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _F, PLAN_ADVANCED: _F}},
-    "historical_reaction": {"backend": "coming_soon", "domain": "historical_reaction",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _F, PLAN_ADVANCED: _F}},
+    # ---- news / social (UNLICENSED data -> COMING_SOON regardless) ----
+    "news": _cap("news_social", {PLAN_FREE: _L, PLAN_STARTER: _F, PLAN_PRO: _F, PLAN_ADVANCED: _F},
+                 "absent", "coming_soon", DS_NEWS, "no licensed news feed"),
+    "news_reliability": _cap("reputation", {PLAN_FREE: _N, PLAN_STARTER: _L, PLAN_PRO: _F, PLAN_ADVANCED: _F},
+                             "absent", "coming_soon", DS_NEWS, "no licensed reputation data"),
+    "social_summary": _cap("news_social", {PLAN_FREE: _N, PLAN_STARTER: _F, PLAN_PRO: _F, PLAN_ADVANCED: _F},
+                           "absent", "coming_soon", DS_SOCIAL, "no licensed social data"),
+    "news_social_intel": _cap("news_social", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _F, PLAN_ADVANCED: _F},
+                              "absent", "coming_soon", DS_SOCIAL, "no licensed social data"),
+    "kol_track_record": _cap("reputation", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _F, PLAN_ADVANCED: _F},
+                             "absent", "coming_soon", DS_SOCIAL, "no licensed creator data"),
+    "historical_reaction": _cap("historical_reaction", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _F, PLAN_ADVANCED: _F},
+                                "absent", "coming_soon", DS_NEWS, "no licensed event data"),
 
-    # ---- derivatives (NO licensed data yet → coming_soon) ----
-    "oi_funding":        {"backend": "coming_soon", "domain": "derivatives",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _L, PLAN_PRO: _F, PLAN_ADVANCED: _F}},
-    "liquidation":       {"backend": "coming_soon", "domain": "derivatives",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _L, PLAN_ADVANCED: _F}},
-    "derivatives_full":  {"backend": "coming_soon", "domain": "derivatives",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _N, PLAN_ADVANCED: _F}},
+    # ---- derivatives / on-chain (UNLICENSED data -> COMING_SOON) ----
+    "oi_funding": _cap("derivatives", {PLAN_FREE: _N, PLAN_STARTER: _L, PLAN_PRO: _F, PLAN_ADVANCED: _F},
+                       "absent", "coming_soon", DS_DERIVATIVES, "no licensed derivatives data"),
+    "liquidation": _cap("derivatives", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _L, PLAN_ADVANCED: _F},
+                        "absent", "coming_soon", DS_DERIVATIVES, "no licensed derivatives data"),
+    "derivatives_full": _cap("derivatives", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _N, PLAN_ADVANCED: _F},
+                             "absent", "coming_soon", DS_DERIVATIVES, "no licensed derivatives data"),
+    "onchain_basic": _cap("onchain", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _L, PLAN_ADVANCED: _F},
+                          "absent", "coming_soon", DS_ONCHAIN, "no licensed on-chain data"),
+    "onchain_full": _cap("onchain", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _N, PLAN_ADVANCED: _F},
+                         "absent", "coming_soon", DS_ONCHAIN, "no licensed on-chain data"),
+    "smart_money": _cap("onchain", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _L, PLAN_ADVANCED: _F},
+                        "absent", "coming_soon", DS_SMART, "no licensed smart-money data"),
 
-    # ---- on-chain / smart money (NO licensed data yet → coming_soon) ----
-    "onchain_basic":     {"backend": "coming_soon", "domain": "onchain",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _L, PLAN_ADVANCED: _F}},
-    "onchain_full":      {"backend": "coming_soon", "domain": "onchain",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _N, PLAN_ADVANCED: _F}},
-    "smart_money":       {"backend": "coming_soon", "domain": "onchain",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _L, PLAN_ADVANCED: _F}},
-
-    # ---- pro tools ----
-    "ai_screener":       {"backend": "coming_soon", "domain": "personal",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _F, PLAN_ADVANCED: _F}},
-    "cross_exchange":    {"backend": "coming_soon", "domain": "market",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _N, PLAN_ADVANCED: _F}},
-    "export":            {"backend": "coming_soon", "domain": "personal",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _N, PLAN_ADVANCED: _F}},
-    "api_access":        {"backend": "coming_soon", "domain": "personal",
-                          "plans": {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _N, PLAN_ADVANCED: _F}},
-
-    # ---- enterprise-only (separate product; org domain) ----
-    "org_seats":         {"backend": "coming_soon", "domain": "enterprise",
-                          "plans": {PLAN_ENTERPRISE: _F}},
-    "shared_intelligence": {"backend": "coming_soon", "domain": "enterprise",
-                          "plans": {PLAN_ENTERPRISE: _F}},
-    "org_audit":         {"backend": "coming_soon", "domain": "enterprise",
-                          "plans": {PLAN_ENTERPRISE: _F}},
-    "sso":               {"backend": "coming_soon", "domain": "enterprise",
-                          "plans": {PLAN_ENTERPRISE: _F}},
+    # ---- ENTERPRISE product — EXPLICIT grants only (NOT Personal Advanced+) ----
+    "org_seats": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "org/seats not built"),
+    "shared_watchlists": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "shared watchlists not built"),
+    "shared_intelligence": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "shared intelligence not built"),
+    "shared_research": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "shared research not built"),
+    "shared_alerts": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "shared alerts not built"),
+    "org_audit": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "org audit not built"),
+    "integrations": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "integrations not built"),
+    "sso": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "SSO not built"),
 }
 
-# Enterprise inherits all Personal capabilities at full grant (superset product).
-for _cid, _spec in CAPABILITIES.items():
-    _spec["plans"].setdefault(PLAN_ENTERPRISE, _F if _spec["plans"].get(PLAN_ADVANCED) else _spec["plans"].get(PLAN_ENTERPRISE, _N))
+# Capabilities that make up the Enterprise product (explicit — no inheritance).
+ENTERPRISE_CAPABILITIES = tuple(cid for cid, s in CAPABILITIES.items() if s["domain"] == "enterprise")
+
+
+def _data_licensed(dataset: str | None) -> bool:
+    return bool(dataset) and can_use_for_derived_intelligence(dataset)
 
 
 def resolve_state(capability_id: str, plan: str) -> str:
@@ -113,9 +139,15 @@ def resolve_state(capability_id: str, plan: str) -> str:
         return STATE_UNAVAILABLE
     grant = spec["plans"].get(plan)
     if grant is None:
-        return STATE_UNAVAILABLE  # locked for this plan
-    if spec["backend"] != "ready":
-        return STATE_COMING_SOON  # entitled, but no real backend data yet
+        return STATE_UNAVAILABLE                        # plan does not grant it
+    if not _data_licensed(spec.get("dataset")):
+        return STATE_COMING_SOON                        # underlying data not licensed
+    if spec["product_state"] == "coming_soon" or spec["backend_state"] == "absent":
+        return STATE_COMING_SOON
+    if spec["product_state"] == "beta":
+        return STATE_BETA
+    if spec["product_state"] == "partial" or spec["backend_state"] == "partial":
+        return STATE_PARTIAL
     return STATE_LIMITED if grant == "limited" else STATE_AVAILABLE
 
 
@@ -124,6 +156,17 @@ def capability_matrix(plan: str) -> dict[str, str]:
     return {cid: resolve_state(cid, plan) for cid in CAPABILITIES}
 
 
+def capability_dimensions(capability_id: str) -> dict:
+    """Full four-dimension view (for admin/inspection)."""
+    spec = CAPABILITIES.get(capability_id)
+    if spec is None:
+        return {}
+    return {"domain": spec["domain"], "backend_state": spec["backend_state"],
+            "product_state": spec["product_state"],
+            "data_state": "licensed" if _data_licensed(spec.get("dataset")) else "unlicensed",
+            "evidence": spec.get("evidence", "")}
+
+
 def is_allowed(capability_id: str, plan: str) -> bool:
-    """True only when entitled AND backed by real data (AVAILABLE or LIMITED)."""
-    return resolve_state(capability_id, plan) in (STATE_AVAILABLE, STATE_LIMITED)
+    """True only when the capability is actually usable today (AVAILABLE/LIMITED/BETA)."""
+    return resolve_state(capability_id, plan) in (STATE_AVAILABLE, STATE_LIMITED, STATE_BETA)
