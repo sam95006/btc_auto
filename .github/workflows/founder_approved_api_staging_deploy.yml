@@ -114,7 +114,7 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
-      - run: python -m pytest tests/test_v18_3_4_product_http_api.py tests/test_api_staging_safe_catchup_workflow.py -q --tb=line
+      - run: python -m pytest tests/test_v18_3_4_product_http_api.py tests/test_api_staging_safe_catchup_workflow.py tests/test_api_staging_release_repair.py -q --tb=line
         env:
           PYTHONPATH: ${{ github.workspace }}
           NEXUS_RUNTIME_BINDING: UNAVAILABLE
@@ -403,38 +403,13 @@ jobs:
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          # Snapshot the deployment list BEFORE deploying. The exact new deployment
+          # is resolved later by set-diffing 24-hex object-ids against this snapshot
+          # (robust to the precise --json shape). Keep the raw file for that diff.
           zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/pre-deployments.json 2>&1 || true
-          python - <<'PY' >> "$GITHUB_OUTPUT"
-          import json
-          from pathlib import Path
-
-          raw = Path("/tmp/pre-deployments.json").read_text(encoding="utf-8", errors="replace")
-          deployment_id = ""
-          try:
-              parsed = json.loads(raw)
-          except Exception:
-              parsed = None
-
-          def walk(node):
-              if isinstance(node, dict):
-                  candidate = node.get("id") or node.get("deploymentID") or node.get("deploymentId")
-                  if isinstance(candidate, str) and candidate:
-                      return candidate
-                  for item in node.values():
-                      found = walk(item)
-                      if found:
-                          return found
-              elif isinstance(node, list):
-                  for item in node:
-                      found = walk(item)
-                      if found:
-                          return found
-              return ""
-
-          if parsed is not None:
-              deployment_id = walk(parsed)
-          print(f"previous_deployment_id={deployment_id}")
-          PY
+          PRE_IDS="$(python tools/ci/zeabur_deployment_resolve.py ids /tmp/pre-deployments.json | tr '\n' ' ')"
+          echo "previous_deployment_id=$(echo "$PRE_IDS" | tr ' ' '\n' | grep -vx '' | head -1)" >> "$GITHUB_OUTPUT"
+          echo "PREVIOUS_DEPLOYMENT_IDS_CAPTURED_COUNT=$(echo "$PRE_IDS" | wc -w)"
           echo "ROLLBACK_PREVIOUS_DEPLOYMENT_ID_CAPTURED=yes"
 
       - name: Deploy API staging only
@@ -497,6 +472,7 @@ jobs:
           zeabur service restart --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
 
       - name: Read-only post-deploy verification
+        id: post_deploy_verify
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           SERVICE_ID: ${{ steps.svc.outputs.service_id }}
@@ -521,40 +497,55 @@ jobs:
           echo "VERIFY_TARGET_RESOLVED=yes"
 
           # --- Deployment activation gate (Zeabur activates asynchronously) ------
-          # Prove the deploy created a NEW deployment, then poll THAT exact
-          # deployment until it reaches a terminal activated state before doing any
-          # live HTTP verification. Never blindly sleep-and-assume.
+          # Resolve the EXACT new deployment id by set-diffing the deployment list
+          # against the pre-deploy snapshot, then poll THAT deployment until it
+          # reaches a terminal activated state before any live HTTP verification.
+          # Fail closed if the new deployment cannot be uniquely identified.
           PREV_DEPLOYMENT_ID="${{ steps.previous_deployment.outputs.previous_deployment_id }}"
-          NEW_DEPLOYMENT_ID="${{ steps.deploy_api.outputs.new_deployment_id }}"
           echo "PREVIOUS_DEPLOYMENT_ID=$PREV_DEPLOYMENT_ID"
-          echo "NEW_DEPLOYMENT_ID=$NEW_DEPLOYMENT_ID"
-          if [ -n "$NEW_DEPLOYMENT_ID" ] && [ -n "$PREV_DEPLOYMENT_ID" ] && [ "$NEW_DEPLOYMENT_ID" = "$PREV_DEPLOYMENT_ID" ]; then
-            echo "NEW_DEPLOYMENT_ID_DID_NOT_ADVANCE=yes"
-            echo "POST_DEPLOY_VERIFY_FAIL_CLOSED=yes"
-            exit 1
-          fi
-
-          # A durable Workstream-B activation marker: the new-code route /personal/catalog
-          # returns 200 only once the new deployment is serving (older deployments 404).
           activated=no
+          resolved=no
+          NEW_DEPLOYMENT_ID=""
           dep_status=UNKNOWN
           catalog_http=000
           for attempt in $(seq 1 40); do
             zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/dep-poll.json 2>&1 || true
-            dep_status="$(python tools/ci/zeabur_deployment_status.py /tmp/dep-poll.json "$NEW_DEPLOYMENT_ID")"
+            NEW_DEPLOYMENT_ID="$(python tools/ci/zeabur_deployment_resolve.py new /tmp/pre-deployments.json /tmp/dep-poll.json)"
+            if printf '%s' "$NEW_DEPLOYMENT_ID" | grep -qE '^[0-9a-f]{24}$'; then
+              resolved=yes
+              dep_status="$(python tools/ci/zeabur_deployment_status.py /tmp/dep-poll.json "$NEW_DEPLOYMENT_ID")"
+            else
+              dep_status="NONE_RESOLVED"
+            fi
+            # The new-code route /personal/catalog returns 200 only once the new
+            # deployment is serving (older deployments 404) — a SECOND independent
+            # application-level activation proof alongside the exact-id status.
             catalog_http="$(curl -s -m 20 -o /dev/null -w '%{http_code}' "$URL/api/v1/personal/catalog" || echo 000)"
-            echo "activation_attempt=$attempt deployment_status=$dep_status catalog_http=$catalog_http"
+            echo "activation_attempt=$attempt new_deployment_id=$NEW_DEPLOYMENT_ID deployment_status=$dep_status catalog_http=$catalog_http"
             if [ "$dep_status" = "FAILED" ]; then
               echo "NEW_DEPLOYMENT_FAILED=yes"
               echo "POST_DEPLOY_VERIFY_FAIL_CLOSED=yes"
               exit 1
             fi
-            if [ "$catalog_http" = "200" ] || [ "$dep_status" = "RUNNING" ]; then
+            if [ "$resolved" = "yes" ] && { [ "$dep_status" = "RUNNING" ] || [ "$catalog_http" = "200" ]; }; then
               activated=yes
               break
             fi
             sleep 15
           done
+          echo "NEW_DEPLOYMENT_ID=$NEW_DEPLOYMENT_ID"
+          if [ "$resolved" != "yes" ]; then
+            echo "NEW_DEPLOYMENT_ID_DID_NOT_ADVANCE=yes"
+            echo "DEPLOYMENT_ACTIVATION_TIMEOUT=yes"
+            echo "LIVE_VERIFICATION_TIMEOUT=yes"
+            echo "POST_DEPLOY_VERIFY_FAIL_CLOSED=yes"
+            exit 1
+          fi
+          if [ -n "$PREV_DEPLOYMENT_ID" ] && [ "$NEW_DEPLOYMENT_ID" = "$PREV_DEPLOYMENT_ID" ]; then
+            echo "NEW_DEPLOYMENT_ID_DID_NOT_ADVANCE=yes"
+            echo "POST_DEPLOY_VERIFY_FAIL_CLOSED=yes"
+            exit 1
+          fi
           if [ "$activated" != "yes" ]; then
             echo "DEPLOYMENT_ACTIVATION_TIMEOUT=yes deployment_status=$dep_status catalog_http=$catalog_http"
             echo "LIVE_VERIFICATION_TIMEOUT=yes"
@@ -562,6 +553,8 @@ jobs:
             exit 1
           fi
           echo "NEW_DEPLOYMENT_ACTIVATED=yes"
+          echo "EXACT_NEW_DEPLOYMENT_ID_RESOLVED=yes"
+          echo "new_deployment_id=$NEW_DEPLOYMENT_ID" >> "$GITHUB_OUTPUT"
 
           # --- Live HTTP verification (only after activation) --------------------
           # Fail closed on timeout so success always means an actual verifier PASS.
@@ -597,7 +590,9 @@ jobs:
           echo "ROLLBACK_METADATA_CAPTURED=yes"
           echo "TARGET_SHA=${{ needs.validate.outputs.target_sha }}"
           echo "PREVIOUS_DEPLOYMENT_ID=${{ steps.previous_deployment.outputs.previous_deployment_id }}"
-          echo "NEW_DEPLOYMENT_ID=${{ steps.deploy_api.outputs.new_deployment_id }}"
+          # The exact new deployment id resolved by the activation gate's set-diff
+          # (the deploy CLI's own --json id is unreliable and is not trusted here).
+          echo "NEW_DEPLOYMENT_ID=${{ steps.post_deploy_verify.outputs.new_deployment_id }}"
 
       - name: Private Postgres staging E2E (in-pod, auto-cleanup)
         if: needs.validate.outputs.mode != 'SAFE_CATCHUP_ONLY'

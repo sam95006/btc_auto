@@ -113,3 +113,101 @@ def test_status_parser_normalizes_states():
     s = STATUS.read_text(encoding="utf-8")
     for token in ("RUNNING", "FAILED", "PENDING", "UNKNOWN"):
         assert token in s
+
+
+# ---- Part 1/2: exact deployment-id resolution + CI wiring -------------------
+
+RESOLVE = Path("tools/ci/zeabur_deployment_resolve.py")
+SERVICE_ID = "6a7ee0a82b4272705cd1c9c8"
+ENV_ID = "69d559b6474db8a99d6dd6bf"
+
+
+def _load(path: Path):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(path.stem, path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _write(tmp_path, name, text):
+    p = tmp_path / name
+    p.write_text(text, encoding="utf-8")
+    return str(p)
+
+
+# The new release-repair tests actually run in the deploy workflow's test job.
+def test_release_repair_tests_wired_into_deploy_ci():
+    wf = _wf()
+    assert "tests/test_api_staging_release_repair.py" in wf
+    assert "tests/test_v18_3_4_product_http_api.py" in wf
+    assert "tests/test_api_staging_safe_catchup_workflow.py" in wf
+
+
+# Real-shape JSON parsing + previous/new id extraction via before/after set-diff.
+def test_resolver_extracts_previous_and_new_ids(tmp_path):
+    r = _load(RESOLVE)
+    # Stable service/env ids appear in BOTH snapshots; only the new deployment differs.
+    before = ('{"deployments":[{"_id":"aaaaaaaaaaaaaaaaaaaaaaa1","status":"RUNNING",'
+              f'"serviceID":"{SERVICE_ID}","environmentID":"{ENV_ID}"}}]}}')
+    after = ('{"deployments":['
+             f'{{"_id":"aaaaaaaaaaaaaaaaaaaaaaa1","status":"RUNNING","serviceID":"{SERVICE_ID}"}},'
+             f'{{"_id":"bbbbbbbbbbbbbbbbbbbbbbb2","status":"BUILDING","serviceID":"{SERVICE_ID}","environmentID":"{ENV_ID}"}}]}}')
+    bf = _write(tmp_path, "before.json", before)
+    af = _write(tmp_path, "after.json", after)
+    # previous ids include the pre-existing deployment; the diff yields exactly the new one.
+    assert "aaaaaaaaaaaaaaaaaaaaaaa1" in r._ids(bf)
+    assert sorted(r._ids(af) - r._ids(bf)) == ["bbbbbbbbbbbbbbbbbbbbbbb2"]
+
+
+def test_resolver_same_snapshot_yields_no_new_id(tmp_path):
+    r = _load(RESOLVE)
+    same = '{"deployments":[{"_id":"aaaaaaaaaaaaaaaaaaaaaaa1","status":"RUNNING"}]}'
+    bf = _write(tmp_path, "b.json", same)
+    af = _write(tmp_path, "a.json", same)
+    assert sorted(r._ids(af) - r._ids(bf)) == []   # -> workflow keeps polling / fails closed
+
+
+def test_resolver_ignores_40hex_sha_and_redacted_secrets(tmp_path):
+    r = _load(RESOLVE)
+    # A 40-hex SHA and a redacted token must not be mistaken for a 24-hex deployment id.
+    txt = ('362faee9d141c40d1dda61e58dc73c451eb27973 ***REDACTED*** '
+           '{"_id":"ccccccccccccccccccccccc3"}')
+    f = _write(tmp_path, "x.json", txt)
+    assert r._ids(f) == {"ccccccccccccccccccccccc3"}
+
+
+def test_status_parser_running_failed_pending_unknown(tmp_path):
+    s = _load(STATUS)
+    running = _write(tmp_path, "r.json", '[{"id":"d1","status":"RUNNING"}]')
+    failed = _write(tmp_path, "f.json", '{"deployments":[{"deploymentID":"d2","state":"FAILED"}]}')
+    building = _write(tmp_path, "p.json", '[{"id":"d3","phase":"BUILDING"}]')
+    assert s._status_of(s._find_deployment(__import__("json").load(open(running)), "d1")) == "RUNNING"
+    assert s._status_of(s._find_deployment(__import__("json").load(open(failed)), "d2")) == "FAILED"
+    assert s._status_of(s._find_deployment(__import__("json").load(open(building)), "d3")) == "PENDING"
+
+
+def test_workflow_resolves_exact_id_via_diff_and_fails_closed_when_unresolved():
+    block = _verify_block(_wf())
+    assert "python tools/ci/zeabur_deployment_resolve.py new /tmp/pre-deployments.json" in block
+    assert 'resolved="yes"' in block or 'resolved = "yes"' in block or "resolved=yes" in block
+    # Unresolvable new id (never appears / ambiguous) must fail closed, not pass.
+    assert 'resolved" != "yes"' in block
+    assert "NEW_DEPLOYMENT_ID_DID_NOT_ADVANCE=yes" in block
+    assert "EXACT_NEW_DEPLOYMENT_ID_RESOLVED=yes" in block
+
+
+def test_workflow_targets_exact_api_staging_service_for_deployment_list():
+    wf = _wf()
+    assert "API_STAGING_SERVICE_ID: 6a7ee0a82b4272705cd1c9c8" in wf
+    # Deployment list snapshots are scoped to the exact service + env.
+    assert 'zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID"' in wf
+
+
+def test_app_marker_remains_secondary_proof_alongside_exact_id():
+    block = _verify_block(_wf())
+    # Activation requires the exact id resolved AND (deployment RUNNING OR the
+    # application-level /personal/catalog marker at 200).
+    assert 'resolved" = "yes"' in block
+    assert 'dep_status" = "RUNNING"' in block
+    assert 'catalog_http" = "200"' in block
