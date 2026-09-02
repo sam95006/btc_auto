@@ -184,6 +184,13 @@
 /* Mobile experience-settings row (view / theme / locale). */
 .mpv1-m-controls { padding: 0 0.85rem 0.55rem; text-align: right; }
 .mpv1-m-controls .nx-ctrls { flex-wrap: wrap; justify-content: flex-end; }
+
+/* Enterprise band — visually SEPARATE from the Personal plan grid (Enterprise is a
+   distinct product with its own sales path, not the next Personal tier). */
+.mpv1-enterprise-band { display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; flex-wrap: wrap; margin-top: 1.5rem; padding: 1.25rem 1.4rem; border: 1px solid var(--mp-border); border-radius: var(--mp-radius); background: var(--mp-surface-2); }
+.mpv1-enterprise-band h3 { margin: 0.25rem 0 0.4rem; font: 800 1.15rem/1.2 var(--mp-display, var(--mp-font)); color: var(--mp-text); }
+.mpv1-enterprise-band p { max-width: 46rem; }
+.mpv1-enterprise-eyebrow { font: 700 0.7rem/1 var(--mp-font); letter-spacing: 0.08em; text-transform: uppercase; color: var(--mp-accent); }
 .nx-cap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; }
 .nx-cap { border: 1px dashed var(--mp-border-2); border-radius: var(--mp-radius-sm); padding: 0.85rem 0.9rem; background: var(--mp-surface-2); }
 .nx-cap h3 { margin: 0 0 0.3rem; font-size: 0.9rem; color: var(--mp-text-2); display: flex; align-items: center; gap: 0.4rem; }
