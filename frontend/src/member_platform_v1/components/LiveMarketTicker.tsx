@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getLiveMarketSnapshot, type LiveMarketSnapshot } from "../services/stagingApi";
+import { useExperience } from "../context/NexusExperience";
 
 const POLL_MS = 8_000;
 
@@ -12,6 +13,7 @@ const STRIP_SYMBOLS = new Set(["BTCUSDT", "ETHUSDT", "SOLUSDT"]);
 
 /** LIVE_API strip only. Uses the central staging snapshot; never queries Binance directly. */
 export function LiveMarketTicker() {
+  const { t } = useExperience();
   const [snapshot, setSnapshot] = useState<LiveMarketSnapshot | null>(null);
   const [delayed, setDelayed] = useState(false);
   const lastSuccess = useRef<LiveMarketSnapshot | null>(null);
@@ -41,14 +43,14 @@ export function LiveMarketTicker() {
   }, []);
 
   if (!snapshot) {
-    return <p className="mpv1-muted" role="status">市場資料載入中 · LIVE_API</p>;
+    return <p className="mpv1-muted" role="status">{t("loading")}</p>;
   }
 
   const rows = snapshot.symbols.filter((row) => STRIP_SYMBOLS.has(row.symbol));
 
   return (
     <div
-      aria-label="即時市場摘要"
+      aria-label={t("live_label")}
       data-classification="LIVE_API"
       style={{
         display: "flex",
@@ -60,7 +62,7 @@ export function LiveMarketTicker() {
         borderBottom: "1px solid var(--mp-border)",
       }}
     >
-      <strong>LIVE 市場</strong>
+      <strong>{t("live_label")}</strong>
       {rows.map((row) => {
         const up = (row.change_24h_percent ?? 0) >= 0;
         return (
@@ -74,7 +76,7 @@ export function LiveMarketTicker() {
         );
       })}
       <span className="mpv1-muted">
-        {delayed ? "DATA DELAYED" : "LIVE"} · {new Date(snapshot.server_timestamp).toLocaleTimeString()}
+        {delayed ? t("data_delayed") : "LIVE"} · {new Date(snapshot.server_timestamp).toLocaleTimeString()}
       </span>
     </div>
   );
