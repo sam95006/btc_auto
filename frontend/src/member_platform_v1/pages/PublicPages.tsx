@@ -929,6 +929,33 @@ const PLAN_COPY: Record<string, { audience: string; daily: string }> = {
   enterprise: { audience: "團隊與機構", daily: "組織權限與整合（洽詢）" },
 };
 
+// Personal comparison rows. Each row is a real capability id; per-plan values come
+// from the backend catalog capability matrix (not hard-coded), so columns cannot
+// shift and capabilities are never invented. Enterprise-only capabilities are
+// intentionally excluded — Enterprise is not part of the Personal comparison.
+const COMPARE_ROWS: { id: string; label: string }[] = [
+  { id: "market_overview", label: "市場總覽" },
+  { id: "watchlist", label: "我的關注清單" },
+  { id: "history", label: "歷史資料" },
+  { id: "alerts", label: "市場提醒" },
+  { id: "nex_ai_digest", label: "NEX AI 摘要" },
+  { id: "multi_chart", label: "多圖表工作區" },
+  { id: "ai_screener", label: "AI 選幣篩選" },
+  { id: "advanced_alerts", label: "進階提醒策略" },
+  { id: "export", label: "資料匯出" },
+  { id: "api_access", label: "API 存取" },
+];
+
+// Honest customer-facing rendering of each backend capability state.
+const CAP_STATE_LABEL: Record<string, string> = {
+  AVAILABLE: "✓",
+  LIMITED: "有限",
+  PARTIAL: "部分",
+  BETA: "Beta",
+  COMING_SOON: "即將推出",
+  UNAVAILABLE: "—",
+};
+
 export function PlansPage() {
   const { catalog } = usePersonalCatalog();
   const allPlans = catalog?.commercial.plans ?? [];
@@ -936,6 +963,7 @@ export function PlansPage() {
   // Free / Starter / Pro / Advanced; Enterprise is presented in its own section.
   const personalPlans = allPlans.filter((p) => p.code !== "enterprise");
   const enterprisePlan = allPlans.find((p) => p.code === "enterprise");
+  const caps = catalog?.capabilities ?? {}; // backend per-plan capability states
   const priceLabel = (p: { contact_sales: boolean; monthly_usd: number | null }) =>
     p.contact_sales ? "聯絡我們" : (p.monthly_usd == null || p.monthly_usd === 0) ? "免費" : `$${p.monthly_usd}/月`;
 
@@ -1002,33 +1030,31 @@ export function PlansPage() {
             <h3>{enterprisePlan?.display_name ?? "NEXUS Enterprise"}</h3>
             <p className="mpv1-muted">為團隊與機構提供的獨立方案：組織權限、成員管理與整合能力。部分企業功能仍在開發中，將以誠實的狀態呈現。採洽詢報價，非線上自助訂閱。</p>
           </div>
-          <Link className="mpv1-btn mpv1-btn-primary" to="/register">聯絡我們</Link>
+          {/* No real Enterprise/sales route exists yet — an honest, non-self-service
+              state that must NOT route into Personal registration (/register). */}
+          <button className="mpv1-btn mpv1-btn-outline" type="button" disabled>企業方案洽詢即將開放</button>
         </section>
 
+        {/* Personal comparison — canonical Free / Starter / Pro / Advanced columns,
+            values sourced from the backend capability matrix (explicit per-plan key,
+            no positional shift, no Enterprise column, no invented capabilities). */}
         <table className="mpv1-compare">
           <thead>
             <tr>
               <th>個人方案功能比較</th>
-              <th>入門版</th>
-              <th>進階版</th>
-              <th>專業版</th>
+              {personalPlans.map((p) => (
+                <th key={p.code}>{p.display_name}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {[
-              ["市場總覽", "✓", "✓", "✓"],
-              ["排行深度", "Top 20", "Top 50", "Top 100"],
-              ["今日重點", "✓", "✓", "✓"],
-              ["進出場觀察", "—", "✓", "✓"],
-              ["風險提醒", "基礎", "進階", "即時"],
-              ["觀察清單", "10", "50", "無上限"],
-              ["歷史回溯", "—", "30 天", "180 天"],
-              ["完整證據", "—", "—", "✓"],
-            ].map((row) => (
-              <tr key={row[0]}>
-                {row.map((cell) => (
-                  <td key={`${row[0]}-${cell}`}>{cell}</td>
-                ))}
+            {COMPARE_ROWS.map((row) => (
+              <tr key={row.id}>
+                <td>{row.label}</td>
+                {personalPlans.map((p) => {
+                  const state = caps[p.code]?.[row.id] ?? "UNAVAILABLE";
+                  return <td key={p.code}>{CAP_STATE_LABEL[state] ?? "—"}</td>;
+                })}
               </tr>
             ))}
           </tbody>
