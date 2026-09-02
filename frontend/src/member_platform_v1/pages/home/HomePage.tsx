@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useExperience } from "../../context/NexusExperience";
 import { useWatchlist } from "../../context/WatchlistContext";
+import { TrialBanner } from "../../components/TrialBanner";
 import { useLiveMarketTickers } from "../../hooks/useLiveMarketTickers";
 import { getPersonalMarketState, type PersonalMarketState, type PersonalMarketSymbol } from "../../services/stagingApi";
 
@@ -30,10 +31,19 @@ export function HomePage() {
     return () => { on = false; window.clearInterval(id); };
   }, []);
 
-  const ready = state?.availability === "READY";
-  const regime = ready ? state!.regime?.value ?? null : null;
-  const risk = ready ? state!.risk?.value ?? null : null;
-  const stSymbols: PersonalMarketSymbol[] = ready ? state!.symbols ?? [] : [];
+  // Distinguish every data state explicitly (section 8). A network/backend ERROR
+  // (fetch rejected → null) is NOT the same as the market being UNAVAILABLE, and
+  // stale data is never shown as fresh.
+  const dataStatus: "loading" | "error" | "unavailable" | "stale" | "available" =
+    state === undefined ? "loading"
+      : state === null ? "error"
+      : state.availability !== "READY" ? "unavailable"
+      : (state.freshness === "STALE" || state.freshness === "DATA_DELAYED") ? "stale"
+      : "available";
+  const hasMarket = dataStatus === "available" || dataStatus === "stale";
+  const regime = hasMarket ? state!.regime?.value ?? null : null;
+  const risk = hasMarket ? state!.risk?.value ?? null : null;
+  const stSymbols: PersonalMarketSymbol[] = hasMarket ? state!.symbols ?? [] : [];
 
   const regimeLabel = regime === "RISK_ON" ? (locale === "zh-TW" ? "偏多" : "Risk-On")
     : regime === "RISK_OFF" ? (locale === "zh-TW" ? "防禦" : "Risk-Off")
@@ -41,7 +51,14 @@ export function HomePage() {
   const riskLabel = risk ? t(`r_${risk}`) : "—";
   const volLabel = (v?: string | null) => (v ? t(`v_${v}`) : "—");
 
-  // What matters now (≤3), derived from real backend volatility/range. Honest.
+  // The dimensions required to judge "what matters now" are per-symbol volatility /
+  // 24H range and the aggregate risk availability. Their ABSENCE must NEVER be
+  // interpreted as a calm market — a calm conclusion is only shown when at least one
+  // of these dimensions is genuinely available (section 2, critical data-truth rule).
+  const attentionDataAvailable = hasMarket && (
+    state!.risk?.availability === "READY"
+    || stSymbols.some((s) => s.volatility != null || typeof s.range_pct === "number")
+  );
   const attention = stSymbols
     .map((s) => {
       if (s.volatility === "high") return { s: sym(s.symbol), sev: "high" as const, t: t("attn_vol_high"), why: whyVol(s, locale) };
@@ -51,21 +68,31 @@ export function HomePage() {
     .filter(Boolean)
     .slice(0, 3) as { s: string; sev: "high" | "med"; t: string; why: string }[];
 
+  const stateCardText = hasMarket ? regimeLabel
+    : dataStatus === "loading" ? t("loading")
+      : dataStatus === "error" ? t("error") : t("unavailable");
+
   return (
     <div className="nx-home" data-view={view} data-testid="nx-home">
       <div className="nx-home-head">
         <div>
           <h1 className="nx-home-title">{t("today")}</h1>
-          <p className="nx-home-sub">{t("source")}{ready && state!.updated_at ? ` · ${new Date(state!.updated_at).toLocaleTimeString()}` : ""}</p>
+          <p className="nx-home-sub">
+            {t("source")}
+            {hasMarket && state!.updated_at ? ` · ${new Date(state!.updated_at).toLocaleTimeString()}` : ""}
+            {dataStatus === "stale" ? <span className="nx-badge stale"> {t("data_delayed")}</span> : null}
+          </p>
         </div>
       </div>
+
+      <TrialBanner />
 
       {/* 1. Market state + risk */}
       <div className="nx-state">
         <div className="nx-state-card"><div className="k">{t("market_state")}</div>
-          <div className={`v ${ready ? "" : "muted"}`} data-state={regime ?? undefined}>{ready ? regimeLabel : (state === undefined ? t("loading") : t("unavailable"))}</div></div>
+          <div className={`v ${hasMarket ? "" : "muted"}`} data-state={regime ?? undefined}>{stateCardText}</div></div>
         <div className="nx-state-card"><div className="k">{t("market_risk")}</div>
-          <div className={`v ${risk === "elevated" ? "warn" : ""} ${risk ? "" : "muted"}`}>{ready ? riskLabel : "—"}</div></div>
+          <div className={`v ${risk === "elevated" ? "warn" : ""} ${risk ? "" : "muted"}`}>{hasMarket ? riskLabel : "—"}</div></div>
       </div>
 
       {/* 2. BTC / ETH / SOL live strip */}
@@ -82,12 +109,22 @@ export function HomePage() {
       {/* 3. What matters now (≤3) */}
       <section className="nx-sec">
         <div className="nx-sec-h"><h2>{t("what_matters")}</h2></div>
-        {attention.length ? (
+        {dataStatus === "loading" ? (
+          <p className="nx-empty">{t("loading")}</p>
+        ) : dataStatus === "error" ? (
+          <p className="nx-empty">{t("error")}</p>
+        ) : dataStatus === "unavailable" ? (
+          <p className="nx-empty">{t("unavailable")}</p>
+        ) : attention.length ? (
           <div className="nx-attn">
             {attention.map((a, i) => <AttentionRow key={i} a={a} whyLabel={t("why")} />)}
           </div>
+        ) : attentionDataAvailable ? (
+          <p className="nx-empty">{t("no_attention")}</p>
         ) : (
-          <p className="nx-empty">{ready ? t("no_attention") : (state === undefined ? t("loading") : t("unavailable"))}</p>
+          /* READY market, but the volatility/risk dimensions are unavailable — never
+             claim calm from missing data. */
+          <p className="nx-empty">{t("attn_insufficient")}</p>
         )}
       </section>
 
@@ -113,12 +150,12 @@ export function HomePage() {
       {/* 5. Daily brief — deterministic, PARTIAL (built from backend states only) */}
       <section className="nx-sec nx-brief nx-standard-only">
         <div className="nx-sec-h"><h2>{t("brief")}</h2><span className="nx-badge partial">PARTIAL</span></div>
-        {ready ? (
+        {hasMarket ? (
           <>
             {briefLines(regimeLabel, stSymbols, locale, volLabel).map((line, i) => <p key={i}>{line}</p>)}
             <p className="meta">{t("brief_note")}</p>
           </>
-        ) : <p className="nx-empty">{state === undefined ? t("loading") : t("unavailable")}</p>}
+        ) : <p className="nx-empty">{dataStatus === "loading" ? t("loading") : dataStatus === "error" ? t("error") : t("unavailable")}</p>}
       </section>
 
       {/* 6. Latest intelligence — honest COMING_SOON (no licensed data) */}
@@ -133,7 +170,7 @@ export function HomePage() {
 
       {/* PRO: provenance / data panel (no fake workspace) */}
       <section className="nx-sec nx-pro-only">
-        <div className="nx-sec-h"><h2>Data & provenance</h2></div>
+        <div className="nx-sec-h"><h2>{t("provenance")}</h2></div>
         <div className="nx-wl">
           {stSymbols.map((s) => (
             <div key={s.symbol} className="nx-wl-row">
@@ -143,7 +180,7 @@ export function HomePage() {
             </div>
           ))}
         </div>
-        <p className="meta" style={{ marginTop: "0.6rem" }}>{t("source")} · {ready ? state!.freshness : "—"}</p>
+        <p className="meta" style={{ marginTop: "0.6rem" }}>{t("source")} · {hasMarket ? freshnessLabel(state!.freshness, t) : "—"}</p>
       </section>
     </div>
   );
@@ -161,6 +198,12 @@ function AttentionRow({ a, whyLabel }: { a: { s: string; sev: string; t: string;
       {open ? <div className="nx-drawer"><h4>{whyLabel}</h4><p>{a.why}</p></div> : null}
     </div>
   );
+}
+
+function freshnessLabel(f: string | undefined, t: (k: string) => string): string {
+  if (f === "STALE" || f === "DATA_DELAYED") return t("data_delayed");
+  if (f === "FRESH" || f === "LIVE") return t("fresh");
+  return "—";
 }
 
 function whyVol(s: PersonalMarketSymbol, locale: string): string {

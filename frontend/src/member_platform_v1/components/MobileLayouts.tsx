@@ -153,7 +153,7 @@ export function MobileDashboard({ data }: { data: DashboardDto }) {
         <div className="mpv1-m-best">
           <div>
             <strong>{best?.symbol.replace("USDT", "")}</strong>
-            <p>公開市場排行；NEXUS 機會評分需 Runtime。</p>
+            <p>公開市場排行即時更新；NEXUS 機會評分即將推出。</p>
           </div>
         </div>
         <Link className="mpv1-m-cta" to={`/app/market/${best?.symbol.replace("USDT", "") || "ETH"}`}>

@@ -1,37 +1,20 @@
-import type { FeatureKey, MembershipTier } from "../types/dto";
+import type { MembershipTier } from "../types/dto";
 
-const TIER_RANK: Record<MembershipTier, number> = {
-  starter: 1,
-  advanced: 2,
-  professional: 3,
-  enterprise: 4,
-};
-
-const FEATURE_MIN: Record<FeatureKey, MembershipTier> = {
-  full_ranking: "advanced",
-  why_reasons: "advanced",
-  watchlist: "advanced",
-  risk_alerts: "advanced",
-  evidence: "professional",
-  derivatives: "professional",
-  liquidity: "professional",
-  signal_history: "professional",
-  team: "enterprise",
-  api_export: "enterprise",
-};
-
-export function canAccess(tier: MembershipTier, feature: FeatureKey): boolean {
-  return TIER_RANK[tier] >= TIER_RANK[FEATURE_MIN[feature]];
-}
-
-export function minTierFor(feature: FeatureKey): MembershipTier {
-  return FEATURE_MIN[feature];
-}
-
+/**
+ * NEXUS-EXPERIENCE-1B.1: there is NO client-side tier-rank authorization. The
+ * backend is the sole entitlement authority (per-capability states from
+ * /api/v1/personal/catalog and the member's effective plan). The former
+ * TIER_RANK / FEATURE_MIN / canAccess() rank system was removed — the frontend
+ * must never decide access from a plan rank.
+ *
+ * TIER_LABELS are canonical, display-only fallbacks (zh-TW). Prefer the localized
+ * plan_* keys via useExperience().t() where a locale context is available.
+ */
 export const TIER_LABELS: Record<MembershipTier, string> = {
+  free: "免費版",
   starter: "入門版",
+  pro: "專業版",
   advanced: "進階版",
-  professional: "專業版",
   enterprise: "企業版",
 };
 

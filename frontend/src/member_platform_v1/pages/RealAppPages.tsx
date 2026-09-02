@@ -6,7 +6,7 @@ import { useLiveMarketHistory } from "../hooks/useLiveMarketHistory";
 import { useLiveMarketTickers } from "../hooks/useLiveMarketTickers";
 import { HomePage } from "./home/HomePage";
 import {
-  getLiveMarketRankings, getMarketDerivatives, getMarketLiquidity, getMemberEntitlements,
+  getLiveMarketRankings, getMarketDerivatives, getMarketLiquidity,
   getMemberNotifications, getMemberProfile, getNotificationPreferences, markMemberNotificationRead,
   updateMemberProfile, updateNotificationPreferences, type LiveMarketRanking, type LiveMarketTelemetry,
 } from "../services/stagingApi";
@@ -68,7 +68,7 @@ export function MarketDetailPage() {
   const interest = derivatives?.open_interest as Record<string, unknown> | undefined;
   const orderBook = liquidity?.order_book as Record<string, unknown> | undefined;
   return <RequireSession><div className="mpv1-page-head"><div><h1 className="mpv1-page-title">{symbol.toUpperCase()} / USDT</h1><p className="mpv1-page-sub">來源 · 交易所市場</p></div><button className="mpv1-btn mpv1-btn-outline" onClick={() => void toggle(marketSymbol)}>{has(marketSymbol) ? "移出觀察" : "加入觀察"}</button></div>
-    <section className="mpv1-card" data-classification="LIVE_API"><div className="mpv1-pulse-stats"><div className="mpv1-pulse-stat"><div className="lbl">價格</div><div className="val">${fmt(ticker?.price)}</div></div><div className="mpv1-pulse-stat"><div className="lbl">24h</div><div className="val">{fmt(ticker?.change24hPct)}%</div></div><div className="mpv1-pulse-stat"><div className="lbl">24h 高 / 低</div><div className="val">${fmt(ticker?.high24h)} / ${fmt(ticker?.low24h)}</div></div><div className="mpv1-pulse-stat"><div className="lbl">成交額</div><div className="val">${fmt(ticker?.volume24h)}</div></div></div><p className="mpv1-muted">{status(history.state)} · provider timestamp {history.updatedAt || "—"}</p></section>
+    <section className="mpv1-card" data-classification="LIVE_API"><div className="mpv1-pulse-stats"><div className="mpv1-pulse-stat"><div className="lbl">價格</div><div className="val">${fmt(ticker?.price)}</div></div><div className="mpv1-pulse-stat"><div className="lbl">24h</div><div className="val">{fmt(ticker?.change24hPct)}%</div></div><div className="mpv1-pulse-stat"><div className="lbl">24h 高 / 低</div><div className="val">${fmt(ticker?.high24h)} / ${fmt(ticker?.low24h)}</div></div><div className="mpv1-pulse-stat"><div className="lbl">成交額</div><div className="val">${fmt(ticker?.volume24h)}</div></div></div><p className="mpv1-muted">{status(history.state)} · 更新時間 {history.updatedAt || "—"}</p></section>
     <section className="mpv1-card" data-classification="LIVE_API"><h2 className="mpv1-card-title">K 線 / 歷史資料</h2><p className="mpv1-muted">{history.candles.length ? `${history.candles.length} 根 15m K 線 · 最新收盤 ${fmt(history.candles[history.candles.length - 1]?.c)}` : "資料暫時無法取得"}</p></section>
     <div className="mpv1-grid mpv1-grid-2"><section className="mpv1-card" data-classification="LIVE_API"><h2 className="mpv1-card-title">衍生品</h2><ul className="mpv1-list"><li>Mark Price: ${fmt(mark?.mark_price as number)}</li><li>Index Price: ${fmt(mark?.index_price as number)}</li><li>Funding: {fmt(funding?.funding_rate as number)}</li><li>Open Interest: {fmt(interest?.open_interest as number)}</li></ul><p className="mpv1-muted">{status(derivatives?.freshness)}</p></section>
       <section className="mpv1-card" data-classification="LIVE_API"><h2 className="mpv1-card-title">流動性</h2><ul className="mpv1-list"><li>Bid / Ask: ${fmt(orderBook?.best_bid as number)} / ${fmt(orderBook?.best_ask as number)}</li><li>Spread: {fmt(liquidity?.spread as number)} ({fmt(liquidity?.spread_bps as number)} bps)</li><li>Bid depth: {fmt(orderBook?.bid_depth as number)}</li><li>Ask depth: {fmt(orderBook?.ask_depth as number)}</li></ul><p className="mpv1-muted">{status(liquidity?.freshness)}</p></section></div>
@@ -93,20 +93,15 @@ export function AlertsPage() {
   const refresh = () => void getMemberNotifications().then(response => setItems(response.notifications)).catch(() => setItems([]));
   useEffect(refresh, []);
   return <RequireSession><div className="mpv1-page-head"><div><h1 className="mpv1-page-title">市場提醒</h1><p className="mpv1-page-sub">市場資料提醒與已讀狀態。</p></div></div>
-    <section className="mpv1-card" data-classification="LIVE_MEMBER_DB">{items.length ? items.map(item => <article key={item.id} className="mpv1-alert-card"><div><strong>{item.symbol ? `${item.symbol} · ` : ""}{item.title}</strong><p>{item.body}</p><time>{new Date(item.created_at).toLocaleString()}</time></div>{!item.read && <button className="mpv1-btn mpv1-btn-ghost" onClick={() => void markMemberNotificationRead(item.id).then(refresh)}>標示已讀</button>}</article>) : <p className="mpv1-empty">目前沒有已持久化的市場提醒。NEXUS 訊號/風險提醒需要 Runtime。</p>}</section>
+    <section className="mpv1-card" data-classification="LIVE_MEMBER_DB">{items.length ? items.map(item => <article key={item.id} className="mpv1-alert-card"><div><strong>{item.symbol ? `${item.symbol} · ` : ""}{item.title}</strong><p>{item.body}</p><time>{new Date(item.created_at).toLocaleString()}</time></div>{!item.read && <button className="mpv1-btn mpv1-btn-ghost" onClick={() => void markMemberNotificationRead(item.id).then(refresh)}>標示已讀</button>}</article>) : <p className="mpv1-empty">目前沒有市場提醒。NEXUS 訊號與風險提醒即將推出。</p>}</section>
     <RuntimeRequired title="進階訊號與風險提醒尚未啟用" />
   </RequireSession>;
 }
 
-const CATALOG = [{ id: "starter", name: "入門" }, { id: "advanced", name: "進階" }, { id: "professional", name: "專業" }, { id: "enterprise", name: "企業" }];
-export function MembershipPage() {
-  const [entitlements, setEntitlements] = useState<string[]>([]);
-  useEffect(() => { void getMemberEntitlements().then(value => setEntitlements(value.entitlements)).catch(() => setEntitlements([])); }, []);
-  return <RequireSession><div className="mpv1-page-head"><div><h1 className="mpv1-page-title">會員方案</h1><p className="mpv1-page-sub">選擇最適合你的方案，權益即時同步。</p></div></div>
-    <section className="mpv1-card" data-classification="LIVE_MEMBER_DB"><h2 className="mpv1-card-title">目前會員權益</h2><p>{entitlements.length ? entitlements.join("、") : "沒有可用權益"}</p><p className="mpv1-muted">帳務與續訂即將推出。</p></section>
-    <div className="mpv1-plan-grid" data-classification="STATIC_PRODUCT_CONFIG">{CATALOG.map(plan => <article className="mpv1-plan" key={plan.id}><h2>{plan.name}</h2><p>產品方案資訊；尚未串接帳務。</p><button className="mpv1-btn mpv1-btn-outline" disabled>帳務未開放</button></article>)}</div>
-  </RequireSession>;
-}
+// NEXUS-EXPERIENCE-1B.1: the legacy MembershipPage duplicated a non-canonical plan
+// catalog in a frontend constant. The canonical membership surface is
+// BillingCenterPage (backend billing plans); the public catalog is the canonical
+// /api/v1/personal/catalog. This dead, unrouted duplicate was removed.
 
 export function AccountPage() {
   const { logout } = useAuth(); const navigate = useNavigate();

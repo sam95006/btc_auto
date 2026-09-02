@@ -247,3 +247,25 @@ def test_personal_demo_dependency_is_zero():
     # may live only in isolated test/story directories, which the scanner excludes.
     hits = scan_personal_demo_dependencies(REPO)
     assert hits == [], [h["file"] for h in hits]
+
+
+def test_demo_scanner_covers_canonical_production_surface(tmp_path):
+    # NEXUS-EXPERIENCE-1B.1: the gate must guard the REAL Personal production entry.
+    # The canonical surface is frontend/src/member_platform_v1 (App.tsx mounts
+    # MemberPlatformV1App at "/*"); the legacy shells live under frontend/src/member.
+    from backend.nexus_platform.checks.personal_demo_dependency import PERSONAL_PRODUCTION_DIRS
+
+    scanned = {"/".join(p) for p in PERSONAL_PRODUCTION_DIRS}
+    assert "frontend/src/member_platform_v1" in scanned
+    assert "frontend/src/member" in scanned
+
+    # A demo/fixture import planted in EITHER production surface must be caught (the
+    # test is guarding the real surface, not merely staying green).
+    for surface in ("frontend/src/member", "frontend/src/member_platform_v1"):
+        offender = tmp_path / surface / "pages" / "leak.ts"
+        offender.parent.mkdir(parents=True, exist_ok=True)
+        offender.write_text('import { X } from "./fixtureCatalog";\n', encoding="utf-8")
+    hits = scan_personal_demo_dependencies(tmp_path)
+    caught = {h["file"] for h in hits}
+    assert "frontend/src/member/pages/leak.ts" in caught, caught
+    assert "frontend/src/member_platform_v1/pages/leak.ts" in caught, caught

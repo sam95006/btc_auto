@@ -665,3 +665,22 @@ export type PersonalCatalog = {
 export function getPersonalCatalog(): Promise<PersonalCatalog> {
   return getJson<PersonalCatalog>("/personal/catalog");
 }
+
+export type PersonalTrial = {
+  state: "TRIAL" | "TRIAL_EXPIRED" | "PAID" | "FREE" | "UNAVAILABLE";
+  plan?: string;
+  trial_active?: boolean;
+  trial_code?: string;
+  trial_started_at?: string;
+  trial_ends_at?: string;
+  days_remaining?: number;
+};
+export type PersonalSubscription = {
+  effective_plan: string;
+  trial: PersonalTrial;
+  trial_contract: { code: string; grants: string; days: number; auto_charge: boolean; on_expiry: string };
+  currency: string;
+};
+export function getPersonalSubscription(): Promise<PersonalSubscription> {
+  return getJson<PersonalSubscription>("/personal/subscription");
+}
