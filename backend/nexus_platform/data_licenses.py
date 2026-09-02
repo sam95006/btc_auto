@@ -23,6 +23,9 @@ class DatasetLicense:
     attribution_required: bool
     cache_allowed: bool
     derived_data_allowed: bool
+    # End-user market snapshot/quote display — DISTINCT from raw-feed redistribution.
+    # Defaults fail-closed; only set True with documented source-license evidence.
+    snapshot_display_allowed: bool = False
     retention_limit_days: Optional[int] = None
     rate_limit_per_min: Optional[int] = None
     plan_cost_usd_month: Optional[int] = None   # our cost, metadata only
@@ -40,7 +43,10 @@ REGISTRY: tuple[DatasetLicense, ...] = (
         provider="Exchange market", dataset="usdm_public_ticker_ohlcv", domain="market",
         license_status="in_use", commercial_use=True, redistribution_allowed=False,
         attribution_required=False, cache_allowed=True, derived_data_allowed=True,
-        rate_limit_per_min=1200, notes="Credential-free public exchange market data; derived intelligence only.",
+        snapshot_display_allowed=True, rate_limit_per_min=1200,
+        notes="Credential-free PUBLIC exchange market data. Permitted: end-user "
+              "snapshot/quote/OHLCV display + derived member-safe intelligence. NOT "
+              "claimed: redistribution/resale of the raw continuous provider feed.",
     ),
     # Future paid/derived providers — registered but NOT licensed yet.
     DatasetLicense(provider="Derivatives analytics", dataset="oi_funding_liquidation", domain="derivatives",
@@ -90,6 +96,15 @@ def can_use_for_derived_intelligence(dataset: str) -> bool:
     dataset. Requires in_use + commercial_use + derived_data_allowed. Fail closed."""
     lic = _BY_DATASET.get(dataset)
     return bool(lic and lic.license_status == "in_use" and lic.commercial_use and lic.derived_data_allowed)
+
+
+def can_display_market_snapshot(dataset: str) -> bool:
+    """Display an end-user market SNAPSHOT/quote/OHLCV point — a distinct, narrower
+    permission than raw continuous-feed redistribution. Requires in_use +
+    commercial_use + an explicit, evidenced snapshot_display_allowed. Fail closed on
+    unknown; raw-feed redistribution is NOT implied."""
+    lic = _BY_DATASET.get(dataset)
+    return bool(lic and lic.license_status == "in_use" and lic.commercial_use and lic.snapshot_display_allowed)
 
 
 def can_cache_dataset(dataset: str) -> bool:
