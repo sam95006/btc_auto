@@ -20,6 +20,8 @@ from backend.nexus_billing.routes import (
     _account_subscription,
     _authenticated_account_id,
     _json_no_store,
+    _services as _billing_services,
+    _session_id,
     enforce_entitlement,
     enforce_quota,
 )
@@ -56,6 +58,31 @@ def _services(app: Flask) -> dict[str, Any]:
 
 def _effective_plan(app: Flask, account_id: str) -> str:
     return effective_plan_code(_account_subscription(app, account_id))
+
+
+def _authenticated_identity(app: Flask) -> Optional[dict[str, Any]]:
+    """Full authenticated session identity (includes the account registration
+    timestamp `created_at` from nexus.accounts). The account is ALWAYS resolved
+    from the server session — account_id / registration time are never accepted
+    from browser input."""
+    auth = _billing_services(app).get("auth")
+    session_id = _session_id()
+    if not auth or not session_id:
+        return None
+    return auth.resolve_session(session_id) or None
+
+
+def _parse_iso_utc(value: Any) -> Optional[Any]:
+    """Parse an ISO-8601 timestamp to a tz-aware UTC datetime; None if unparseable."""
+    from datetime import datetime, timezone
+
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
 def _market_adapter(app: Flask):
@@ -161,7 +188,8 @@ def register_personal_routes(app: Flask) -> None:
         from backend.nexus_platform import plans as _plans
         from backend.nexus_platform import trial as _trial
 
-        account_id = _authenticated_account_id(app)
+        identity = _authenticated_identity(app)
+        account_id = identity.get("account_id") if identity else None
         if not account_id:
             return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
 
@@ -171,10 +199,12 @@ def register_personal_routes(app: Flask) -> None:
             if (sub is not None and sub.is_live and sub.plan_code != _plans.PLAN_FREE)
             else None
         )
-        # A registration timestamp is required to compute a real trial window. We do
-        # NOT invent one: when it is unavailable and there is no paid plan, the trial
-        # status is reported UNAVAILABLE rather than fabricated.
-        registered_at = getattr(sub, "created_at", None) if sub is not None else None
+        # CANONICAL TRIAL START = the ACCOUNT registration timestamp
+        # (nexus.accounts.created_at), resolved from the authenticated session
+        # identity — NOT subscription.created_at, not the billing row, not now(),
+        # not any browser-supplied value. When it cannot be resolved truthfully the
+        # trial is reported UNAVAILABLE rather than fabricated.
+        registered_at = _parse_iso_utc(identity.get("created_at"))
         now = datetime.now(timezone.utc)
         if registered_at is not None:
             status = _trial.trial_status(now, registered_at=registered_at, paid_plan=paid_plan)

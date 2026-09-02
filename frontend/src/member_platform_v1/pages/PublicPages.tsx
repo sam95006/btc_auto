@@ -215,7 +215,7 @@ export function LandingPage() {
           <p>從免費入門到完整證據，依需求開通深度。</p>
         </div>
         <div className="mpv1-plan-grid">
-          {previewPlans.map((p) => {
+          {previewPlans.filter((p) => p.code !== "enterprise").map((p) => {
             const hot = p.code === "pro";
             const copy = PLAN_COPY[p.code] ?? { audience: "—", daily: "—" };
             return (
@@ -234,6 +234,10 @@ export function LandingPage() {
             );
           })}
         </div>
+        {/* Enterprise is a separate product / sales path — not a Personal tier. */}
+        <p className="mpv1-muted" style={{ textAlign: "center", marginTop: "0.85rem" }}>
+          團隊與組織需求？<Link to="/plans">了解 NEXUS Enterprise（洽詢）</Link>
+        </p>
       </section>
 
       <section className="mpv1-land-band" id="faq">
@@ -927,7 +931,11 @@ const PLAN_COPY: Record<string, { audience: string; daily: string }> = {
 
 export function PlansPage() {
   const { catalog } = usePersonalCatalog();
-  const plans = catalog?.commercial.plans ?? [];
+  const allPlans = catalog?.commercial.plans ?? [];
+  // Enterprise is a SEPARATE product, not the top Personal tier. Personal plans are
+  // Free / Starter / Pro / Advanced; Enterprise is presented in its own section.
+  const personalPlans = allPlans.filter((p) => p.code !== "enterprise");
+  const enterprisePlan = allPlans.find((p) => p.code === "enterprise");
   const priceLabel = (p: { contact_sales: boolean; monthly_usd: number | null }) =>
     p.contact_sales ? "聯絡我們" : (p.monthly_usd == null || p.monthly_usd === 0) ? "免費" : `$${p.monthly_usd}/月`;
 
@@ -967,7 +975,7 @@ export function PlansPage() {
         </div>
 
         <div className="mpv1-plan-grid">
-          {plans.map((p) => {
+          {personalPlans.map((p) => {
             const hot = p.code === "pro";
             const copy = PLAN_COPY[p.code] ?? { audience: "—", daily: "—" };
             return (
@@ -978,7 +986,7 @@ export function PlansPage() {
                 <div className="audience">適合誰：{copy.audience}</div>
                 <div className="daily">每天：{copy.daily}</div>
                 <Link className={`mpv1-btn ${hot ? "mpv1-btn-primary" : "mpv1-btn-outline"} mpv1-btn-block`} to="/register">
-                  {p.contact_sales ? "聯絡我們" : "選擇此方案"}
+                  選擇此方案
                 </Link>
               </article>
             );
@@ -986,28 +994,36 @@ export function PlansPage() {
         </div>
         <p className="mpv1-muted" style={{ textAlign: "center", marginTop: "0.75rem" }}>價格採年繳約 8 折；線上訂閱即將開放。</p>
 
+        {/* Enterprise is a SEPARATE product with its own sales path — never the next
+            Personal subscription level. Contact-sales only (no self-service checkout). */}
+        <section className="mpv1-enterprise-band">
+          <div>
+            <span className="mpv1-enterprise-eyebrow">為團隊與組織</span>
+            <h3>{enterprisePlan?.display_name ?? "NEXUS Enterprise"}</h3>
+            <p className="mpv1-muted">為團隊與機構提供的獨立方案：組織權限、成員管理與整合能力。部分企業功能仍在開發中，將以誠實的狀態呈現。採洽詢報價，非線上自助訂閱。</p>
+          </div>
+          <Link className="mpv1-btn mpv1-btn-primary" to="/register">聯絡我們</Link>
+        </section>
+
         <table className="mpv1-compare">
           <thead>
             <tr>
-              <th>功能比較</th>
+              <th>個人方案功能比較</th>
               <th>入門版</th>
               <th>進階版</th>
               <th>專業版</th>
-              <th>企業版</th>
             </tr>
           </thead>
           <tbody>
             {[
-              ["市場總覽", "✓", "✓", "✓", "✓"],
-              ["排行深度", "Top 20", "Top 50", "Top 100", "Top 100"],
-              ["今日重點", "✓", "✓", "✓", "✓"],
-              ["進出場觀察", "—", "✓", "✓", "✓"],
-              ["風險提醒", "基礎", "進階", "即時", "即時"],
-              ["觀察清單", "10", "50", "無上限", "無上限"],
-              ["歷史回溯", "—", "30 天", "180 天", "180 天"],
-              ["完整證據", "—", "—", "✓", "✓"],
-              ["團隊管理", "—", "—", "—", "✓"],
-              ["API / Bridge", "—", "—", "—", "✓"],
+              ["市場總覽", "✓", "✓", "✓"],
+              ["排行深度", "Top 20", "Top 50", "Top 100"],
+              ["今日重點", "✓", "✓", "✓"],
+              ["進出場觀察", "—", "✓", "✓"],
+              ["風險提醒", "基礎", "進階", "即時"],
+              ["觀察清單", "10", "50", "無上限"],
+              ["歷史回溯", "—", "30 天", "180 天"],
+              ["完整證據", "—", "—", "✓"],
             ].map((row) => (
               <tr key={row[0]}>
                 {row.map((cell) => (
