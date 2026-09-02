@@ -188,7 +188,7 @@ export function MobileDashboard({ data }: { data: DashboardDto }) {
           ))}
         </div>
         <p className="mpv1-muted" style={{ margin: "0.35rem 0 0", fontSize: "0.7rem" }}>
-          LIVE_API · 公開行情；NEXUS 解讀為 RUNTIME_REQUIRED
+          公開行情即時更新；NEXUS 進階解讀即將推出
         </p>
         <div className="mpv1-m-metric">
           <span>總市值</span>

@@ -628,3 +628,40 @@ export type PersonalClosedBetaHealth = {
 export async function getPersonalClosedBetaHealth(): Promise<PersonalClosedBetaHealth> {
   return getJson<PersonalClosedBetaHealth>("/personal/closed-beta-health");
 }
+
+/* ---------------- NEXUS-EXPERIENCE-1B: member-safe market state + catalog ---------------- */
+export type PersonalMarketSymbol = {
+  symbol: string;
+  availability: "READY" | "UNAVAILABLE";
+  price?: number;
+  change_24h_percent?: number | null;
+  range_pct?: number | null;
+  volatility?: "high" | "moderate" | "low" | null;
+};
+export type PersonalMarketState = {
+  availability: "READY" | "UNAVAILABLE";
+  source_label?: string;
+  updated_at?: string;
+  freshness?: string;
+  reason?: string;
+  regime?: { value: "RISK_ON" | "RISK_OFF" | "NEUTRAL" | null; availability?: string };
+  risk?: { value: "elevated" | "moderate" | "contained" | null; availability?: string };
+  symbols?: PersonalMarketSymbol[];
+};
+export function getPersonalMarketState(): Promise<PersonalMarketState> {
+  return getJson<PersonalMarketState>("/personal/market-state");
+}
+
+export type PersonalCatalog = {
+  commercial: {
+    currency: string; annual_discount_pct: number;
+    trial: { code: string; grants: string; days: number; auto_charge: boolean; on_expiry: string };
+    plans: { code: string; display_name: string; monthly_usd: number | null; annual_usd: number | null; contact_sales: boolean }[];
+  };
+  capabilities: Record<string, Record<string, string>>;
+  capability_dimensions: Record<string, { domain: string; backend_state: string; product_state: string; data_state: string; evidence: string }>;
+  states: string[];
+};
+export function getPersonalCatalog(): Promise<PersonalCatalog> {
+  return getJson<PersonalCatalog>("/personal/catalog");
+}

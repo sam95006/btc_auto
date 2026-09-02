@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { NexusExperienceProvider } from "./context/NexusExperience";
 import { WatchlistProvider } from "./context/WatchlistContext";
 import { AppShell, PublicShell } from "./layout/Shells";
 import {
@@ -24,9 +25,11 @@ import {
 } from "./pages/PublicPages";
 import "./styles/memberPlatformV1.css";
 import "./styles/memberPlatformMobile.css";
+import "./styles/memberTheme.css";
 
 export function MemberPlatformV1App() {
   return (
+    <NexusExperienceProvider>
     <AuthProvider>
       <WatchlistProvider>
         <Routes>
@@ -56,5 +59,6 @@ export function MemberPlatformV1App() {
         </Routes>
       </WatchlistProvider>
     </AuthProvider>
+    </NexusExperienceProvider>
   );
 }

@@ -36,7 +36,7 @@ export function LandingPage() {
               </span>
               <div>
                 <strong>公開市場資料</strong>
-                <span>Binance USD-M 公開行情</span>
+                <span>交易所公開行情</span>
               </div>
             </li>
             <li>
@@ -77,16 +77,16 @@ export function LandingPage() {
               fontWeight: 600,
             }}
           >
-            <span>staging-only identity</span>
-            <span>帳務未開放</span>
+            <span>安全帳號登入</span>
+            <span>帳務即將推出</span>
           </div>
         </div>
 
         <div className="mpv1-preview-panel" data-classification="RUNTIME_REQUIRED">
           <h2>即時市場與成員產品</h2>
           <p>公開市場行情、成員觀察清單和官方新聞會在登入後顯示。</p>
-          <p className="mpv1-muted">NEXUS 分數、方向訊號、AI 解讀與風險結論需要 Runtime；目前未綁定。</p>
-          <Link className="mpv1-btn mpv1-btn-outline" to="/login">前往 staging 登入</Link>
+          <p className="mpv1-muted">NEXUS 分數、方向訊號、AI 解讀與風險結論即將推出；在此之前不會以假資料呈現。</p>
+          <Link className="mpv1-btn mpv1-btn-outline" to="/login">前往登入</Link>
         </div>
       </section>
 
@@ -483,7 +483,7 @@ export function LoginPage() {
           <p>查看今天市場重點與你的觀察清單</p>
         </div>
 
-        <p className="mpv1-m-passkey-hint">staging 僅支援已由管理員佈建的帳號密碼登入。</p>
+        <p className="mpv1-m-passkey-hint">目前採邀請制，帳號由管理員開通後以電子郵件與密碼登入。</p>
 
         <form onSubmit={onSubmit} className="mpv1-m-login-form">
           <div className="mpv1-field">
@@ -543,7 +543,7 @@ export function RegisterPage() {
       <div className="mpv1-page-pad">
         <div className="mpv1-auth-card" style={{ margin: "2rem auto" }}>
           <h2>Staging 測試註冊</h2>
-          <p className="mpv1-sub">僅供 staging 測試使用，非 Production 開放註冊。</p>
+          <p className="mpv1-sub">目前採邀請制，尚未開放公開註冊。</p>
           <form onSubmit={(event) => void onSubmit(event)}>
             <label className="mpv1-field">名稱<input value={displayName} onChange={(event) => setDisplayName(event.target.value)} required maxLength={120} /></label>
             <label className="mpv1-field">Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
@@ -554,7 +554,7 @@ export function RegisterPage() {
               <input aria-label="Founder Claim Code" type="password" value={phone} onChange={(event) => setPhone(event.target.value)} />
             </details>
             {err ? <p className="mpv1-auth-error" role="alert">{err}</p> : null}
-            <button className="mpv1-btn mpv1-btn-primary mpv1-btn-block" disabled={busy} type="submit">{busy ? "建立中…" : "建立 staging 帳號"}</button>
+            <button className="mpv1-btn mpv1-btn-primary mpv1-btn-block" disabled={busy} type="submit">{busy ? "建立中…" : "建立帳號"}</button>
           </form>
           <p className="mpv1-sub">已有帳號？ <Link to="/login">登入</Link></p>
         </div>

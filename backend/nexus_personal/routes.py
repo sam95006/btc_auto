@@ -111,6 +111,48 @@ def register_personal_routes(app: Flask) -> None:
             )
         return _json_no_store({"effective_plan_code": plan, "features": features})
 
+    # ----- member-safe market STATE (regime/risk/symbols) for the Simple Home -----
+    @app.get("/api/v1/personal/market-state")
+    def personal_market_state():
+        # Backend-authoritative regime/risk/volatility from the REAL member-safe
+        # public market snapshot (same primitive as Corporate). No fabrication.
+        from backend.nexus_corporate.market import build_showcase
+        from backend.nexus_product_backend.market_snapshot import build_public_market_snapshot_service
+
+        svc = app.config.get("NEXUS_PERSONAL_MARKET_SNAPSHOT")
+        if svc is None:
+            try:
+                svc = build_public_market_snapshot_service()
+            except Exception:  # noqa: BLE001
+                svc = None
+            app.config["NEXUS_PERSONAL_MARKET_SNAPSHOT"] = svc
+        symbols = ("BTCUSDT", "ETHUSDT", "SOLUSDT")
+        showcase = build_showcase(svc, symbols)
+        # Present a canonical source identity only. Strip the engineering provider
+        # slug (e.g. "binance_usdm_public") from the Personal contract at every
+        # level so no engineering provider name is ever exposed to the member app.
+        showcase.pop("source", None)
+        showcase["source_label"] = "Exchange market"
+        for _sym in showcase.get("symbols") or []:
+            if isinstance(_sym, dict):
+                _sym.pop("source", None)
+        return _json_no_store(showcase)
+
+    # ----- canonical plan + capability catalog (nexus_platform contracts) -----
+    @app.get("/api/v1/personal/catalog")
+    def personal_catalog():
+        from backend.nexus_platform import entitlements as _ent
+        from backend.nexus_platform import plans as _plans
+
+        matrices = {p.code: _ent.capability_matrix(p.code) for p in _plans.list_plans()}
+        dims = {cid: _ent.capability_dimensions(cid) for cid in _ent.CAPABILITIES}
+        return _json_no_store({
+            "commercial": _plans.public_catalog(),
+            "capabilities": matrices,               # {plan: {capability: STATE}}
+            "capability_dimensions": dims,          # 4-dimension audit (admin/inspection)
+            "states": ["AVAILABLE", "LIMITED", "BETA", "PARTIAL", "COMING_SOON", "UNAVAILABLE"],
+        })
+
     # ----- metered: advanced analysis (bound to REAL market data) -----
     @app.post("/api/v1/personal/analysis")
     def personal_analysis():

@@ -1,15 +1,15 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { TIER_LABELS } from "../lib/entitlements";
-import { StagingApiStatus } from "../components/StagingApiStatus";
 import { LiveMarketTicker } from "../components/LiveMarketTicker";
 import { IconHome } from "../components/MobileLayouts";
+import { CommandBar, HeaderControls } from "../components/HeaderControls";
+import { useExperience } from "../context/NexusExperience";
 import {
   IconBell,
   IconChart,
   IconCrown,
   IconOverview,
-  IconSearch,
   IconStar,
   IconUser,
 } from "../components/Icons";
@@ -113,38 +113,43 @@ export function PublicShell() {
 }
 
 const SIDE = [
-  { to: "/app", label: "總覽", Icon: IconOverview, end: true },
-  { to: "/app/markets", label: "市場排行", Icon: IconChart },
-  { to: "/app/intelligence", label: "智慧分析", Icon: IconOverview },
-  { to: "/app/watchlist", label: "我的觀察", Icon: IconStar },
-  { to: "/app/alerts", label: "風險提醒", Icon: IconBell },
-  { to: "/app/membership", label: "會員方案", Icon: IconCrown },
-  { to: "/app/account", label: "帳號設定", Icon: IconUser },
+  { to: "/app", k: "nav_overview", Icon: IconOverview, end: true },
+  { to: "/app/markets", k: "nav_markets", Icon: IconChart },
+  { to: "/app/intelligence", k: "nav_intel", Icon: IconOverview },
+  { to: "/app/watchlist", k: "nav_watchlist", Icon: IconStar },
+  { to: "/app/alerts", k: "nav_alerts", Icon: IconBell },
+  { to: "/app/membership", k: "nav_plans", Icon: IconCrown },
+  { to: "/app/account", k: "nav_account", Icon: IconUser },
 ];
 
 const MOBILE = [
-  { to: "/app", label: "首頁", Icon: IconHome, end: true },
-  { to: "/app/markets", label: "市場", Icon: IconChart },
-  { to: "/app/watchlist", label: "觀察", Icon: IconStar },
-  { to: "/app/alerts", label: "提醒", Icon: IconBell },
-  { to: "/app/account", label: "我的", Icon: IconUser },
+  { to: "/app", k: "m_home", Icon: IconHome, end: true },
+  { to: "/app/markets", k: "m_markets", Icon: IconChart },
+  { to: "/app/watchlist", k: "m_watch", Icon: IconStar },
+  { to: "/app/alerts", k: "m_alerts", Icon: IconBell },
+  { to: "/app/account", k: "m_me", Icon: IconUser },
 ];
 
-function mobileTitle(pathname: string) {
-  if (pathname.startsWith("/app/markets")) return "市場排行";
-  if (pathname.startsWith("/app/watchlist")) return "我的觀察";
-  if (pathname.startsWith("/app/alerts")) return "風險提醒";
-  if (pathname.startsWith("/app/membership")) return "會員方案";
-  if (pathname.startsWith("/app/account")) return "我的";
-  if (pathname.startsWith("/app/market/")) return "資產詳情";
-  return "NEXUS";
+function mobileTitleKey(pathname: string): string {
+  if (pathname.startsWith("/app/markets")) return "nav_markets";
+  if (pathname.startsWith("/app/watchlist")) return "nav_watchlist";
+  if (pathname.startsWith("/app/alerts")) return "nav_alerts";
+  if (pathname.startsWith("/app/membership")) return "nav_plans";
+  if (pathname.startsWith("/app/account")) return "nav_account";
+  if (pathname.startsWith("/app/market/")) return "today";
+  return "__nexus__";
 }
 
 export function AppShell() {
   const { session, tier } = useAuth();
-  const name = session?.displayName || "Nexus 用戶";
+  const { t } = useExperience();
+  const name = session?.displayName || "Nexus";
   const loc = useLocation();
   const hideMobileChrome = loc.pathname.startsWith("/app/market/");
+  const mobileTitle = (p: string) => {
+    const key = mobileTitleKey(p);
+    return key === "__nexus__" ? "NEXUS" : t(key);
+  };
 
   return (
     <div className="mpv1 mpv1-app-shell">
@@ -161,7 +166,7 @@ export function AppShell() {
               className={({ isActive }) => `mpv1-side-link${isActive ? " is-active" : ""}`}
             >
               <item.Icon className="nav-ico" size={17} />
-              {item.label}
+              {t(item.k)}
             </NavLink>
           ))}
         </nav>
@@ -169,22 +174,19 @@ export function AppShell() {
           <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", color: "#fbbf24" }}>
             <IconCrown size={14} />
           </div>
-          <h4>進階版 會員專屬</h4>
-          <p>解鎖更深排行、即時風險與完整證據深度。</p>
+          <h4>{t("promo_title")}</h4>
+          <p>{t("promo_body")}</p>
           <Link className="mpv1-btn mpv1-btn-primary mpv1-btn-sm mpv1-btn-block" to="/app/membership">
-            升級方案
+            {t("promo_cta")}
           </Link>
         </div>
       </aside>
 
       <div className="mpv1-app-main">
         <div className="mpv1-topbar mpv1-d-only">
-          <label className="mpv1-search mpv1-search-wide">
-            <IconSearch size={15} />
-            <input placeholder="搜尋幣種、主題或關鍵字" aria-label="搜尋" />
-            <kbd className="mpv1-kbd">/</kbd>
-          </label>
+          <CommandBar />
           <div className="mpv1-top-actions">
+            <HeaderControls />
             <Link className="mpv1-icon-btn" to="/app/alerts" title="提醒" aria-label="提醒">
               <IconBell size={16} />
             </Link>
@@ -196,9 +198,6 @@ export function AppShell() {
               {name}
             </span>
           </div>
-        </div>
-        <div style={{ padding: "0.35rem 1.25rem 0" }}>
-          <StagingApiStatus />
         </div>
         <LiveMarketTicker />
 
@@ -229,7 +228,7 @@ export function AppShell() {
             className={({ isActive }) => (isActive ? "is-active" : undefined)}
           >
             <item.Icon size={20} className="mpv1-m-nav-ico" />
-            <span>{item.label}</span>
+            <span>{t(item.k)}</span>
           </NavLink>
         ))}
       </nav>

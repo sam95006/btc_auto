@@ -1,0 +1,195 @@
+/* ============================================================================
+   NEXUS-EXPERIENCE-1B — Personal theme (SYSTEM / LIGHT / DARK) + new Home UI.
+   The shell CSS uses --mp-* tokens (light by default). We redefine them under a
+   dark theme (explicit + system) so the whole member app themes without a
+   rewrite, then add the new Simple/Standard/Pro Home components.
+
+   Theme = user preference. Market state = backend data. Never mixed.
+   ========================================================================== */
+
+/* ---- DARK (explicit toggle) ----
+   NOTE: `.mpv1` sets the LIGHT palette locally on the app root, so a dark
+   redefinition on :root alone loses to it for descendants. We therefore scope the
+   dark tokens onto `.mpv1` as well (closer ancestor wins for custom properties). */
+:root[data-theme="dark"],
+:root[data-theme="dark"] .mpv1 {
+  --mp-navy: #060b16;
+  --mp-navy-2: #0d1626;
+  --mp-navy-3: #16233b;
+  --mp-bg: #070c17;
+  --mp-surface: #0e1626;
+  --mp-surface-2: #0b1220;
+  --mp-border: #1e2c44;
+  --mp-border-2: #2a3c5c;
+  --mp-text: #e9eefb;
+  --mp-text-2: #a2b2cc;
+  --mp-text-3: #67789a;
+  --mp-accent: #5b8cff;
+  --mp-accent-2: #7aa2ff;
+  --mp-accent-soft: rgba(91, 140, 255, 0.16);
+  --mp-bull: #26d08a;
+  --mp-bear: #ff6274;
+  --mp-warn: #f5b73c;
+  --mp-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 40px rgba(0, 0, 0, 0.5);
+  --mp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+/* ---- SYSTEM (no explicit choice → follow OS) ---- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]),
+  :root:not([data-theme="light"]) .mpv1 {
+    --mp-navy: #060b16; --mp-navy-2: #0d1626; --mp-navy-3: #16233b;
+    --mp-bg: #070c17; --mp-surface: #0e1626; --mp-surface-2: #0b1220;
+    --mp-border: #1e2c44; --mp-border-2: #2a3c5c;
+    --mp-text: #e9eefb; --mp-text-2: #a2b2cc; --mp-text-3: #67789a;
+    --mp-accent: #5b8cff; --mp-accent-2: #7aa2ff; --mp-accent-soft: rgba(91,140,255,0.16);
+    --mp-bull: #26d08a; --mp-bear: #ff6274; --mp-warn: #f5b73c;
+    --mp-shadow: 0 1px 2px rgba(0,0,0,0.4), 0 12px 40px rgba(0,0,0,0.5);
+    --mp-shadow-sm: 0 1px 2px rgba(0,0,0,0.5); color-scheme: dark;
+  }
+}
+:root[data-theme="light"] { color-scheme: light; }
+
+/* Mobile shell components hardcode `background:#fff` (light-only). Remap them to
+   the themed surface under dark (explicit toggle + system preference) so the
+   mobile app is fully dark, not a light shell on a dark page. */
+:root[data-theme="dark"] .mpv1-mobile-nav,
+:root[data-theme="dark"] .mpv1-m-card,
+:root[data-theme="dark"] .mpv1-m-iconbtn,
+:root[data-theme="dark"] .mpv1-m-chips button,
+:root[data-theme="dark"] .mpv1-m-alert-card,
+:root[data-theme="dark"] .mpv1-m-plan,
+:root[data-theme="dark"] .mpv1-m-profile,
+:root[data-theme="dark"] .mpv1-m-settings-group,
+:root[data-theme="dark"] .mpv1-m-seg button.is-on {
+  background: var(--mp-surface);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .mpv1-mobile-nav,
+  :root:not([data-theme="light"]) .mpv1-m-card,
+  :root:not([data-theme="light"]) .mpv1-m-iconbtn,
+  :root:not([data-theme="light"]) .mpv1-m-chips button,
+  :root:not([data-theme="light"]) .mpv1-m-alert-card,
+  :root:not([data-theme="light"]) .mpv1-m-plan,
+  :root:not([data-theme="light"]) .mpv1-m-profile,
+  :root:not([data-theme="light"]) .mpv1-m-settings-group,
+  :root:not([data-theme="light"]) .mpv1-m-seg button.is-on {
+    background: var(--mp-surface);
+  }
+}
+
+/* smooth theme transition (not under reduced motion) */
+.mpv1-app, .mpv1-card, .nx-home { transition: background-color .25s ease, color .25s ease, border-color .25s ease; }
+@media (prefers-reduced-motion: reduce) { .mpv1-app, .mpv1-card, .nx-home { transition: none; } }
+
+/* ============================================================================
+   Header controls (view mode · theme · locale) — reused shell top bar
+   ========================================================================== */
+.nx-ctrls { display: inline-flex; align-items: center; gap: 0.5rem; }
+.nx-seg { display: inline-flex; background: var(--mp-surface-2); border: 1px solid var(--mp-border); border-radius: 10px; padding: 0.18rem; }
+.nx-seg button { border: none; background: transparent; color: var(--mp-text-2); font: 600 0.8rem/1 inherit; padding: 0.36rem 0.6rem; border-radius: 7px; cursor: pointer; }
+.nx-seg button[aria-pressed="true"] { background: var(--mp-accent-soft); color: var(--mp-accent); }
+.nx-iconbtn { display: inline-flex; align-items: center; gap: 0.35rem; background: var(--mp-surface); border: 1px solid var(--mp-border); color: var(--mp-text-2); border-radius: 9px; padding: 0.4rem 0.55rem; font: 600 0.8rem/1 inherit; cursor: pointer; }
+.nx-iconbtn:hover { border-color: var(--mp-accent); color: var(--mp-text); }
+.nx-menu-wrap { position: relative; }
+.nx-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 50; min-width: 160px; background: var(--mp-surface); border: 1px solid var(--mp-border-2); border-radius: 11px; box-shadow: var(--mp-shadow); padding: 0.3rem; display: grid; gap: 0.12rem; }
+.nx-menu button { text-align: left; background: transparent; border: none; color: var(--mp-text-2); padding: 0.45rem 0.6rem; border-radius: 7px; cursor: pointer; font: 600 0.83rem/1.2 inherit; display: flex; justify-content: space-between; gap: 0.6rem; }
+.nx-menu button:hover { background: var(--mp-accent-soft); color: var(--mp-text); }
+.nx-menu button[aria-checked="true"] { color: var(--mp-accent); }
+
+/* command bar */
+.nx-cmd { flex: 1; max-width: 460px; display: flex; align-items: center; gap: 0.5rem; background: var(--mp-surface-2); border: 1px solid var(--mp-border); border-radius: 10px; padding: 0.45rem 0.7rem; color: var(--mp-text-3); }
+.nx-cmd input { flex: 1; border: none; background: transparent; color: var(--mp-text); font: inherit; outline: none; }
+.nx-cmd input::placeholder { color: var(--mp-text-3); }
+.nx-cmd-wrap { position: relative; flex: 1; max-width: 460px; }
+.nx-cmd-results { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 50; background: var(--mp-surface); border: 1px solid var(--mp-border-2); border-radius: 11px; box-shadow: var(--mp-shadow); padding: 0.3rem; display: grid; gap: 0.1rem; }
+.nx-cmd-results a, .nx-cmd-results .soon { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.6rem; border-radius: 7px; text-decoration: none; color: var(--mp-text); font-size: 0.88rem; }
+.nx-cmd-results a:hover { background: var(--mp-accent-soft); }
+.nx-cmd-results .soon { color: var(--mp-text-3); }
+
+/* ============================================================================
+   New Home (answer-first). Simple/Standard/Pro density via data-view.
+   ========================================================================== */
+.nx-home { display: grid; gap: 1rem; }
+.nx-home-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.nx-home-title { font: 800 clamp(1.3rem, 2.4vw, 1.75rem)/1.1 var(--mp-display); color: var(--mp-text); margin: 0; }
+.nx-home-sub { color: var(--mp-text-3); font-size: 0.85rem; margin: 0.25rem 0 0; }
+
+/* market state bar */
+.nx-state { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; }
+.nx-state-card { border: 1px solid var(--mp-border); border-radius: var(--mp-radius); background: var(--mp-surface); padding: 0.9rem 1rem; box-shadow: var(--mp-shadow-sm); }
+.nx-state-card .k { color: var(--mp-text-3); font: 700 0.68rem/1 var(--mp-font); letter-spacing: 0.06em; text-transform: uppercase; }
+.nx-state-card .v { font: 800 1.25rem/1 var(--mp-display); margin-top: 0.4rem; color: var(--mp-text); }
+.nx-state-card .v[data-state="RISK_OFF"], .nx-state-card .v.bear { color: var(--mp-bear); }
+.nx-state-card .v[data-state="RISK_ON"], .nx-state-card .v.bull { color: var(--mp-bull); }
+.nx-state-card .v[data-state="NEUTRAL"] { color: var(--mp-accent); }
+.nx-state-card .v.warn { color: var(--mp-warn); }
+.nx-state-card .v.muted { color: var(--mp-text-3); }
+
+/* live strip */
+.nx-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+.nx-strip a { text-decoration: none; border: 1px solid var(--mp-border); border-radius: var(--mp-radius-sm); background: var(--mp-surface); padding: 0.75rem 0.9rem; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--mp-shadow-sm); }
+.nx-strip a:hover { border-color: var(--mp-accent); }
+.nx-strip .s { font: 800 0.92rem/1 var(--mp-font); color: var(--mp-text); }
+.nx-strip .p { font: 700 0.95rem/1 var(--mp-font); font-variant-numeric: tabular-nums; color: var(--mp-text); }
+.nx-strip .c { font: 700 0.78rem/1 var(--mp-font); }
+.nx-strip .c.bull { color: var(--mp-bull); } .nx-strip .c.bear { color: var(--mp-bear); }
+
+/* section titles */
+.nx-sec { border: 1px solid var(--mp-border); border-radius: var(--mp-radius); background: var(--mp-surface); padding: 1.1rem 1.15rem; box-shadow: var(--mp-shadow-sm); }
+.nx-sec-h { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin: 0 0 0.85rem; }
+.nx-sec-h h2 { font: 700 1.05rem/1.1 var(--mp-display); color: var(--mp-text); margin: 0; }
+.nx-sec-h .more { color: var(--mp-accent); text-decoration: none; font-size: 0.82rem; font-weight: 600; }
+
+/* attention items */
+.nx-attn { display: grid; gap: 0.6rem; }
+.nx-attn-item { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.85rem; padding: 0.8rem 0.9rem; border: 1px solid var(--mp-border); border-radius: var(--mp-radius-sm); background: var(--mp-surface-2); position: relative; }
+.nx-attn-item::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 3px; background: var(--mp-text-3); }
+.nx-attn-item[data-sev="high"]::before { background: var(--mp-bear); }
+.nx-attn-item[data-sev="med"]::before { background: var(--mp-warn); }
+.nx-attn-item[data-sev="info"]::before { background: var(--mp-accent); }
+.nx-attn-sym { font: 800 0.85rem/1 var(--mp-font); color: var(--mp-text); min-width: 3ch; }
+.nx-attn-body .t { color: var(--mp-text); font-weight: 600; font-size: 0.92rem; }
+.nx-attn-body .r { color: var(--mp-text-2); font-size: 0.8rem; margin-top: 0.15rem; }
+.nx-why { background: transparent; border: 1px solid var(--mp-border-2); color: var(--mp-text-2); border-radius: 8px; padding: 0.3rem 0.55rem; font: 600 0.76rem/1 inherit; cursor: pointer; }
+.nx-why:hover { border-color: var(--mp-accent); color: var(--mp-accent); }
+.nx-empty { color: var(--mp-text-3); font-size: 0.9rem; padding: 0.4rem 0; }
+
+/* watchlist compact */
+.nx-wl { display: grid; gap: 0.4rem; }
+.nx-wl-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 0.85rem; padding: 0.6rem 0.7rem; border-radius: var(--mp-radius-sm); }
+.nx-wl-row:hover { background: var(--mp-surface-2); }
+.nx-wl-row .s { font: 700 0.88rem/1 var(--mp-font); color: var(--mp-text); }
+.nx-wl-row .p { font: 700 0.88rem/1 var(--mp-font); font-variant-numeric: tabular-nums; text-align: right; color: var(--mp-text); }
+.nx-wl-row .c { font: 700 0.8rem/1 var(--mp-font); text-align: right; }
+.nx-wl-row .c.bull { color: var(--mp-bull); } .nx-wl-row .c.bear { color: var(--mp-bear); }
+
+/* brief + capability preview */
+.nx-brief p { color: var(--mp-text); line-height: 1.6; margin: 0 0 0.4rem; }
+.nx-brief .meta { color: var(--mp-text-3); font-size: 0.76rem; margin-top: 0.6rem; }
+.nx-badge { font: 700 0.6rem/1 var(--mp-font); letter-spacing: 0.06em; text-transform: uppercase; padding: 0.2rem 0.45rem; border-radius: 6px; border: 1px solid var(--mp-border-2); color: var(--mp-text-3); }
+.nx-badge.partial { color: var(--mp-warn); border-color: color-mix(in oklab, var(--mp-warn) 40%, var(--mp-border)); }
+.nx-badge.soon { color: var(--mp-text-3); }
+.nx-badge.live { color: var(--mp-bull); border-color: color-mix(in oklab, var(--mp-bull) 40%, var(--mp-border)); }
+.nx-cap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; }
+.nx-cap { border: 1px dashed var(--mp-border-2); border-radius: var(--mp-radius-sm); padding: 0.85rem 0.9rem; background: var(--mp-surface-2); }
+.nx-cap h3 { margin: 0 0 0.3rem; font-size: 0.9rem; color: var(--mp-text-2); display: flex; align-items: center; gap: 0.4rem; }
+.nx-cap p { margin: 0; color: var(--mp-text-3); font-size: 0.78rem; }
+
+/* view-mode extra density */
+.nx-home[data-view="simple"] .nx-standard-only,
+.nx-home[data-view="simple"] .nx-pro-only { display: none; }
+.nx-home[data-view="standard"] .nx-pro-only { display: none; }
+
+/* Why drawer */
+.nx-drawer { border: 1px solid var(--mp-border); border-radius: var(--mp-radius-sm); background: var(--mp-surface-2); padding: 0.75rem 0.85rem; margin-top: 0.5rem; }
+.nx-drawer h4 { margin: 0 0 0.3rem; font-size: 0.82rem; color: var(--mp-text-2); }
+.nx-drawer p { margin: 0 0 0.3rem; color: var(--mp-text-2); font-size: 0.84rem; line-height: 1.5; }
+
+/* responsive */
+@media (max-width: 720px) {
+  .nx-strip { grid-template-columns: 1fr; }
+  .nx-attn-item { grid-template-columns: auto 1fr; }
+  .nx-why { grid-column: 1 / -1; justify-self: start; }
+  .nx-cmd-wrap { max-width: none; }
+}

@@ -238,11 +238,12 @@ def test_founder_runtime_has_no_social_imports():
     assert violations == [], f"Founder runtime imports banned social intelligence: {violations}"
 
 
-# ---- Personal demo-dependency AUDIT (baseline for Workstream B) ----
+# ---- Personal demo-dependency REGRESSION (Workstream B drove this to zero) ----
 
-def test_personal_demo_dependency_audit_baseline():
-    # Workstream A documents the current violation; Workstream B must drive this to zero.
+def test_personal_demo_dependency_is_zero():
+    # Workstream A documented the baseline violation (3 files); Workstream B removed
+    # every production dependency on demo/fixture data. This is now a hard CI gate:
+    # the Personal production surface must import ZERO demo/fixture catalogs. Fixtures
+    # may live only in isolated test/story directories, which the scanner excludes.
     hits = scan_personal_demo_dependencies(REPO)
-    files = {h["file"] for h in hits}
-    assert any("firstScreenAnswers" in f for f in files), files
-    assert any("MemberFirstScreen" in f for f in files), files
+    assert hits == [], [h["file"] for h in hits]
