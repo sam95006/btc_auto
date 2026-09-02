@@ -171,6 +171,19 @@
 .nx-badge.partial { color: var(--mp-warn); border-color: color-mix(in oklab, var(--mp-warn) 40%, var(--mp-border)); }
 .nx-badge.soon { color: var(--mp-text-3); }
 .nx-badge.live { color: var(--mp-bull); border-color: color-mix(in oklab, var(--mp-bull) 40%, var(--mp-border)); }
+.nx-badge.stale { color: var(--mp-warn); border-color: color-mix(in oklab, var(--mp-warn) 40%, var(--mp-border)); text-transform: none; letter-spacing: 0; margin-left: 0.4rem; }
+
+/* Starter-trial banner (honest; never a fabricated countdown). */
+.nx-trial { border: 1px solid color-mix(in oklab, var(--mp-accent) 30%, var(--mp-border)); background: var(--mp-accent-soft); border-radius: var(--mp-radius); padding: 0.75rem 0.95rem; margin: 0.9rem 0; }
+.nx-trial-head { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.nx-trial-title { font: 700 0.9rem/1.2 var(--mp-font); color: var(--mp-text); }
+.nx-trial-line { margin: 0.35rem 0 0; font-size: 0.82rem; color: var(--mp-text-2); }
+.nx-trial-line.no-charge { color: var(--mp-bull); font-weight: 600; }
+.nx-trial-line.meta { color: var(--mp-text-3); }
+
+/* Mobile experience-settings row (view / theme / locale). */
+.mpv1-m-controls { padding: 0 0.85rem 0.55rem; text-align: right; }
+.mpv1-m-controls .nx-ctrls { flex-wrap: wrap; justify-content: flex-end; }
 .nx-cap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; }
 .nx-cap { border: 1px dashed var(--mp-border-2); border-radius: var(--mp-radius-sm); padding: 0.85rem 0.9rem; background: var(--mp-surface-2); }
 .nx-cap h3 { margin: 0 0 0.3rem; font-size: 0.9rem; color: var(--mp-text-2); display: flex; align-items: center; gap: 0.4rem; }

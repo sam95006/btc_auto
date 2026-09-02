@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { MembershipTier, MemberSession } from "../types/dto";
 import {
+  getBillingEntitlements,
   getMemberEntitlements,
   getMemberSession,
   registrationRequiresVerification,
@@ -17,6 +18,24 @@ import {
   stagingRegister,
   type StagingRegisterResult,
 } from "../services/stagingApi";
+
+const CANONICAL_TIERS: MembershipTier[] = ["free", "starter", "pro", "advanced", "enterprise"];
+
+/** Coerce a backend plan code to a canonical Personal tier (fail closed to free). */
+function normalizeTier(code: string | null | undefined): MembershipTier {
+  const c = (code || "").trim().toLowerCase();
+  return (CANONICAL_TIERS as string[]).includes(c) ? (c as MembershipTier) : "free";
+}
+
+/** Best-effort map of the legacy member-entitlement plan naming to canonical. */
+function mapMemberPlan(plan: string | null | undefined): MembershipTier {
+  switch ((plan || "").trim().toUpperCase()) {
+    case "ENTERPRISE": return "enterprise";
+    case "PRO": return "pro";
+    case "INTERMEDIATE": return "advanced";
+    default: return "free";
+  }
+}
 
 type AuthCtx = {
   session: MemberSession | null;
@@ -46,10 +65,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setPreviewTier = useCallback((_t: MembershipTier | null) => undefined, []);
 
   const hydrate = useCallback(async () => {
-    const [{ session: remote, profile }, entitlements] = await Promise.all([getMemberSession(), getMemberEntitlements()]);
-    const tier: MembershipTier = entitlements.plan === "ENTERPRISE" ? "enterprise"
-      : entitlements.plan === "PRO" ? "professional"
-      : entitlements.plan === "INTERMEDIATE" ? "advanced" : "starter";
+    const { session: remote, profile } = await getMemberSession();
+    // Canonical effective plan is backend-authoritative (nexus_billing). The old
+    // member-entitlement naming is only a best-effort fallback when billing is
+    // unavailable. The frontend never derives access from a tier rank.
+    let tier: MembershipTier = "free";
+    try {
+      tier = normalizeTier((await getBillingEntitlements()).effective_plan_code);
+    } catch {
+      try { tier = mapMemberPlan((await getMemberEntitlements()).plan); } catch { tier = "free"; }
+    }
     setSession({
       id: remote.user_id, email: remote.email, displayName: profile.display_name || remote.email.split("@")[0],
       accountType: "individual", tier,
@@ -83,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
   }, []);
 
-  const tier: MembershipTier = session?.tier || "starter";
+  const tier: MembershipTier = session?.tier || "free";
 
   const value = useMemo(
     () => ({ session, ready, tier, previewTier, setPreviewTier, login, register, logout }),

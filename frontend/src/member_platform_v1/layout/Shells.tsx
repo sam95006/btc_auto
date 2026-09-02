@@ -1,6 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { TIER_LABELS } from "../lib/entitlements";
 import { LiveMarketTicker } from "../components/LiveMarketTicker";
 import { IconHome } from "../components/MobileLayouts";
 import { CommandBar, HeaderControls } from "../components/HeaderControls";
@@ -191,7 +190,7 @@ export function AppShell() {
               <IconBell size={16} />
             </Link>
             <Link className="mpv1-plan-pill" to="/app/membership">
-              <IconCrown size={14} /> {TIER_LABELS[tier]}
+              <IconCrown size={14} /> {t(`plan_${tier}`)}
             </Link>
             <span className="mpv1-user-chip" aria-label={`${name} 的帳號`}>
               <span className="mpv1-avatar">{name.slice(0, 1).toUpperCase()}</span>
@@ -202,18 +201,24 @@ export function AppShell() {
         <LiveMarketTicker />
 
         {!hideMobileChrome ? (
-          <div className="mpv1-m-topbar mpv1-m-only">
-            <div className="mpv1-m-topbar-title">{mobileTitle(loc.pathname)}</div>
-            <div className="mpv1-m-topbar-actions">
-              <Link className="mpv1-m-iconbtn" to="/app/alerts" aria-label="提醒">
-                <IconBell size={18} />
-                <span className="mpv1-badge-count">3</span>
-              </Link>
-              <Link to="/app/account" className="mpv1-m-avatar" aria-label="帳號">
-                {name.slice(0, 1).toUpperCase()}
-              </Link>
+          <>
+            <div className="mpv1-m-topbar mpv1-m-only">
+              <div className="mpv1-m-topbar-title">{mobileTitle(loc.pathname)}</div>
+              <div className="mpv1-m-topbar-actions">
+                <Link className="mpv1-m-iconbtn" to="/app/alerts" aria-label={t("nav_alerts")}>
+                  <IconBell size={18} />
+                  <span className="mpv1-badge-count">3</span>
+                </Link>
+                <Link to="/app/account" className="mpv1-m-avatar" aria-label={t("nav_account")}>
+                  {name.slice(0, 1).toUpperCase()}
+                </Link>
+              </div>
             </div>
-          </div>
+            {/* Mobile users get a usable path to view / theme / locale (section 10). */}
+            <div className="mpv1-m-controls mpv1-m-only">
+              <HeaderControls />
+            </div>
+          </>
         ) : null}
 
         <Outlet />

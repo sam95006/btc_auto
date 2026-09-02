@@ -2,7 +2,7 @@ import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { AuthFooter, MarketingFooter, MarketingHeader } from "../layout/Shells";
 import { useAuth } from "../context/AuthContext";
-import { memberApi } from "../services";
+import { usePersonalCatalog } from "../hooks/usePersonalCatalog";
 import {
   registrationRequiresVerification,
   stagingForgotPassword,
@@ -10,11 +10,14 @@ import {
   stagingResetPassword,
   stagingVerifyEmail,
 } from "../services/stagingApi";
-import type { PlanDto } from "../types/dto";
 import { IconChart, IconCrown, IconLock, IconMail, IconShield, IconTarget, IconTrend } from "../components/Icons";
 import { SparkChart } from "../components/SparkChart";
 
 export function LandingPage() {
+  const { catalog } = usePersonalCatalog();
+  const previewPlans = catalog?.commercial.plans ?? [];
+  const landingPrice = (p: { contact_sales: boolean; monthly_usd: number | null }) =>
+    p.contact_sales ? "客製化" : (p.monthly_usd == null || p.monthly_usd === 0) ? "免費" : `$${p.monthly_usd}/月`;
   return (
     <div className="mpv1-auth-shell mpv1-land">
       <MarketingHeader />
@@ -54,13 +57,13 @@ export function LandingPage() {
               </span>
               <div>
                 <strong>資料來源透明</strong>
-                <span>Runtime 未綁定時不顯示 NEXUS 觀點</span>
+                <span>尚未取得的 NEXUS 觀點不會以假資料呈現</span>
               </div>
             </li>
           </ul>
           <div className="mpv1-land-cta">
             <Link className="mpv1-btn mpv1-btn-primary" to="/register">
-              Staging 登入
+              登入
             </Link>
             <Link className="mpv1-btn mpv1-btn-outline" to="/plans">
               查看會員方案
@@ -212,49 +215,24 @@ export function LandingPage() {
           <p>從免費入門到完整證據，依需求開通深度。</p>
         </div>
         <div className="mpv1-plan-grid">
-          {[
-            {
-              id: "starter",
-              name: "入門",
-              price: "NT$0",
-              desc: "市場方向、精選排行與今日白話重點",
-              hot: false,
-            },
-            {
-              id: "advanced",
-              name: "進階",
-              price: "NT$299",
-              desc: "完整排行、進出場觀察與進階風險提醒",
-              hot: true,
-            },
-            {
-              id: "professional",
-              name: "專業",
-              price: "NT$799",
-              desc: "即時風險、完整證據與自訂提醒策略",
-              hot: false,
-            },
-            {
-              id: "enterprise",
-              name: "企業",
-              price: "客製化",
-              desc: "團隊權限、高額度 API 與專屬顧問",
-              hot: false,
-            },
-          ].map((p) => (
-            <article key={p.id} className={`mpv1-plan${p.hot ? " is-hot" : ""}`}>
-              {p.hot ? <div className="mpv1-plan-badge">最受歡迎</div> : null}
-              <h3 className="mpv1-card-title">{p.name}</h3>
-              <div className="price">{p.price}</div>
-              <p className="audience">{p.desc}</p>
-              <Link
-                className={`mpv1-btn ${p.hot ? "mpv1-btn-primary" : "mpv1-btn-outline"} mpv1-btn-block`}
-                to="/plans"
-              >
-                查看詳情
-              </Link>
-            </article>
-          ))}
+          {previewPlans.map((p) => {
+            const hot = p.code === "pro";
+            const copy = PLAN_COPY[p.code] ?? { audience: "—", daily: "—" };
+            return (
+              <article key={p.code} className={`mpv1-plan${hot ? " is-hot" : ""}`}>
+                {hot ? <div className="mpv1-plan-badge">最受歡迎</div> : null}
+                <h3 className="mpv1-card-title">{p.display_name}</h3>
+                <div className="price">{landingPrice(p)}</div>
+                <p className="audience">{copy.daily}</p>
+                <Link
+                  className={`mpv1-btn ${hot ? "mpv1-btn-primary" : "mpv1-btn-outline"} mpv1-btn-block`}
+                  to="/plans"
+                >
+                  查看詳情
+                </Link>
+              </article>
+            );
+          })}
         </div>
       </section>
 
@@ -542,7 +520,7 @@ export function RegisterPage() {
       <MarketingHeader />
       <div className="mpv1-page-pad">
         <div className="mpv1-auth-card" style={{ margin: "2rem auto" }}>
-          <h2>Staging 測試註冊</h2>
+          <h2>建立帳號</h2>
           <p className="mpv1-sub">目前採邀請制，尚未開放公開註冊。</p>
           <form onSubmit={(event) => void onSubmit(event)}>
             <label className="mpv1-field">名稱<input value={displayName} onChange={(event) => setDisplayName(event.target.value)} required maxLength={120} /></label>
@@ -937,11 +915,21 @@ export function ResetPasswordPage() {
   );
 }
 
+// Presentation copy only (audience/taglines). Canonical PRICING and identity come
+// from the backend catalog — never hard-coded here.
+const PLAN_COPY: Record<string, { audience: string; daily: string }> = {
+  free: { audience: "剛開始了解市場的你", daily: "掌握市場方向與重點" },
+  starter: { audience: "想每天快速看懂市場的你", daily: "市場狀態、關注清單與提醒" },
+  pro: { audience: "需要更深證據與工具的你", daily: "更完整的證據與市場深度" },
+  advanced: { audience: "重度使用者與專業交易者", daily: "最深的排行、風險與資料" },
+  enterprise: { audience: "團隊與機構", daily: "組織權限與整合（洽詢）" },
+};
+
 export function PlansPage() {
-  const [plans, setPlans] = useState<PlanDto[]>([]);
-  useEffect(() => {
-    void memberApi.getPlans().then(setPlans);
-  }, []);
+  const { catalog } = usePersonalCatalog();
+  const plans = catalog?.commercial.plans ?? [];
+  const priceLabel = (p: { contact_sales: boolean; monthly_usd: number | null }) =>
+    p.contact_sales ? "聯絡我們" : (p.monthly_usd == null || p.monthly_usd === 0) ? "免費" : `$${p.monthly_usd}/月`;
 
   return (
     <div className="mpv1-auth-shell">
@@ -980,26 +968,23 @@ export function PlansPage() {
 
         <div className="mpv1-plan-grid">
           {plans.map((p) => {
-            const hot = Boolean(p.highlighted) || p.id === "professional";
+            const hot = p.code === "pro";
+            const copy = PLAN_COPY[p.code] ?? { audience: "—", daily: "—" };
             return (
-              <article key={p.id} className={`mpv1-plan${hot ? " is-hot" : ""}`}>
+              <article key={p.code} className={`mpv1-plan${hot ? " is-hot" : ""}`}>
                 {hot ? <div className="mpv1-plan-badge">最受歡迎</div> : null}
-                <h3 className="mpv1-card-title">{p.name}</h3>
-                <div className="price">{p.priceLabel}</div>
-                <div className="audience">適合誰：{p.audience}</div>
-                <div className="daily">每天：{p.dailyValue}</div>
-                <ul>
-                  {p.features.map((f) => (
-                    <li key={f}>{f}</li>
-                  ))}
-                </ul>
+                <h3 className="mpv1-card-title">{p.display_name}</h3>
+                <div className="price">{priceLabel(p)}</div>
+                <div className="audience">適合誰：{copy.audience}</div>
+                <div className="daily">每天：{copy.daily}</div>
                 <Link className={`mpv1-btn ${hot ? "mpv1-btn-primary" : "mpv1-btn-outline"} mpv1-btn-block`} to="/register">
-                  {p.id === "enterprise" ? "聯絡我們" : "選擇此方案"}
+                  {p.contact_sales ? "聯絡我們" : "選擇此方案"}
                 </Link>
               </article>
             );
           })}
         </div>
+        <p className="mpv1-muted" style={{ textAlign: "center", marginTop: "0.75rem" }}>價格採年繳約 8 折；線上訂閱即將開放。</p>
 
         <table className="mpv1-compare">
           <thead>

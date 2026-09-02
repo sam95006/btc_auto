@@ -3,7 +3,11 @@
  * Product DTOs retained for static product configuration.
  * Never includes wallet, keys, positions, or execution controls.
  */
-export type MembershipTier = "starter" | "advanced" | "professional" | "enterprise";
+// Canonical Personal subscription plans (aligned with backend nexus_platform /
+// nexus_billing). Enterprise is a SEPARATE product, not the top Personal tier, but
+// remains a valid entitlement code. View Mode (SIMPLE/STANDARD/PRO) is independent
+// and NEVER grants authorization — see NexusExperience.
+export type MembershipTier = "free" | "starter" | "pro" | "advanced" | "enterprise";
 
 export type MarketBias = "bullish" | "bearish" | "neutral";
 export type ActionAdvice = "watch_closely" | "observing" | "wait";

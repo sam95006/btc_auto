@@ -153,6 +153,47 @@ def register_personal_routes(app: Flask) -> None:
             "states": ["AVAILABLE", "LIMITED", "BETA", "PARTIAL", "COMING_SOON", "UNAVAILABLE"],
         })
 
+    # ----- member subscription + honest Starter-trial status (no fabrication) -----
+    @app.get("/api/v1/personal/subscription")
+    def personal_subscription():
+        from datetime import datetime, timezone
+
+        from backend.nexus_platform import plans as _plans
+        from backend.nexus_platform import trial as _trial
+
+        account_id = _authenticated_account_id(app)
+        if not account_id:
+            return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
+
+        sub = _account_subscription(app, account_id)
+        paid_plan = (
+            sub.plan_code
+            if (sub is not None and sub.is_live and sub.plan_code != _plans.PLAN_FREE)
+            else None
+        )
+        # A registration timestamp is required to compute a real trial window. We do
+        # NOT invent one: when it is unavailable and there is no paid plan, the trial
+        # status is reported UNAVAILABLE rather than fabricated.
+        registered_at = getattr(sub, "created_at", None) if sub is not None else None
+        now = datetime.now(timezone.utc)
+        if registered_at is not None:
+            status = _trial.trial_status(now, registered_at=registered_at, paid_plan=paid_plan)
+            effective = _trial.effective_plan(now, registered_at=registered_at, paid_plan=paid_plan)
+        elif paid_plan:
+            status = {"state": "PAID", "plan": paid_plan, "trial_active": False}
+            effective = paid_plan
+        else:
+            status = {"state": "UNAVAILABLE", "trial_active": False}
+            effective = effective_plan_code(sub)
+
+        catalog = _plans.public_catalog()
+        return _json_no_store({
+            "effective_plan": effective,
+            "trial": status,
+            "trial_contract": catalog["trial"],   # generic contract (always safe to show)
+            "currency": catalog["currency"],
+        })
+
     # ----- metered: advanced analysis (bound to REAL market data) -----
     @app.post("/api/v1/personal/analysis")
     def personal_analysis():

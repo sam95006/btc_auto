@@ -18,26 +18,36 @@ EXEMPT = re.compile(r"(__tests__|\.test\.|\.spec\.|/fixtures?/|/mocks?/|/test/)"
 _IMPORT_RE = re.compile(r'(?:from|import)\s+["\']([^"\']+)["\']')
 
 
+# Personal production frontend surfaces. `member_platform_v1` is the CANONICAL
+# production entry (main.tsx -> App.tsx -> MemberPlatformV1App at "/*"); `member`
+# holds the legacy/alternate shells. Both must be free of demo/fixture imports.
+PERSONAL_PRODUCTION_DIRS = (
+    ("frontend", "src", "member"),
+    ("frontend", "src", "member_platform_v1"),
+)
+
+
 def scan_personal_demo_dependencies(repo_root: str | Path) -> list[dict]:
     root = Path(repo_root)
-    member = root / "frontend" / "src" / "member"
-    if not member.is_dir():
-        return []
     hits: list[dict] = []
-    for f in member.rglob("*.ts*"):
-        rel = str(f.relative_to(root)).replace("\\", "/")
-        if EXEMPT.search(rel):
+    for parts in PERSONAL_PRODUCTION_DIRS:
+        surface = root.joinpath(*parts)
+        if not surface.is_dir():
             continue
-        # the catalog files themselves are the demo source, not consumers
-        if f.name in (m + ".ts" for m in DEMO_MODULES):
-            continue
-        text = f.read_text(encoding="utf-8", errors="ignore")
-        for m in _IMPORT_RE.finditer(text):
-            spec = m.group(1)
-            for demo in DEMO_MODULES:
-                if demo in spec:
-                    line = text[: m.start()].count("\n") + 1
-                    hits.append({"file": rel, "line": line, "imports": spec, "demo_module": demo})
+        for f in surface.rglob("*.ts*"):
+            rel = str(f.relative_to(root)).replace("\\", "/")
+            if EXEMPT.search(rel):
+                continue
+            # the catalog files themselves are the demo source, not consumers
+            if f.name in (m + ".ts" for m in DEMO_MODULES):
+                continue
+            text = f.read_text(encoding="utf-8", errors="ignore")
+            for m in _IMPORT_RE.finditer(text):
+                spec = m.group(1)
+                for demo in DEMO_MODULES:
+                    if demo in spec:
+                        line = text[: m.start()].count("\n") + 1
+                        hits.append({"file": rel, "line": line, "imports": spec, "demo_module": demo})
     return hits
 
 
