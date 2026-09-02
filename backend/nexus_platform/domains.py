@@ -68,8 +68,11 @@ FOUNDER_BANNED_DOMAINS = ("news_social", "reputation")
 # which is NOT the same as direct SaaS database access. Social/KOL remains HARD
 # BANNED for Founder. No trading-runtime change.
 FOUNDER_DIRECT_SAAS_DB_ACCESS = False          # never
-FOUNDER_SAFE_SERVICE_MARKET_ALLOWED = True     # service-level safe market feed only
-FOUNDER_SERVICE_MARKET_BANNED_DOMAINS = ("news_social", "reputation")  # never, even at service level
+# Explicit ALLOWLIST — Founder may consume ONLY separately-authorized safe MARKET
+# SERVICE outputs. Every other SaaS domain (identity/billing/entitlements/corporate/
+# personal/derivatives/onchain/news_social/reputation/historical_reaction/enterprise/
+# audit) and unknown domains are denied by this contract. Social/KOL stays hard-banned.
+FOUNDER_SAFE_SERVICE_ALLOWED_DOMAINS = ("market",)
 
 
 def readers_for(domain: str) -> tuple[str, ...]:
@@ -86,6 +89,7 @@ founder_may_read = founder_may_read_saas_db
 
 
 def founder_may_consume_service_market(domain: str) -> bool:
-    """Founder may consume separately-authorized SAFE market-data SERVICE outputs
-    (not DB access), but never social/reputation, even at the service level."""
-    return FOUNDER_SAFE_SERVICE_MARKET_ALLOWED and domain not in FOUNDER_SERVICE_MARKET_BANNED_DOMAINS
+    """Founder may consume ONLY separately-authorized SAFE market-data SERVICE
+    outputs (not DB access). Explicit allowlist: only 'market'; every other SaaS
+    domain and unknown domains are denied. Social/KOL remains hard-banned."""
+    return domain in FOUNDER_SAFE_SERVICE_ALLOWED_DOMAINS

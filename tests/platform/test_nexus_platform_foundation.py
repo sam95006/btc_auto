@@ -132,6 +132,45 @@ def test_license_cache_and_attribution():
     assert data_licenses.licensed_domains() == {"market"}
 
 
+def test_market_display_semantics_are_distinct():
+    # Three DISTINCT permissions for the public exchange market dataset:
+    # A) raw feed redistribution  -> DENIED (not claimed)
+    assert data_licenses.can_display_raw_data(MARKET_DS) is False
+    # B) end-user snapshot/quote display -> ALLOWED (evidenced, distinct from raw feed)
+    assert data_licenses.can_display_market_snapshot(MARKET_DS) is True
+    # C) derived NEXUS intelligence -> ALLOWED
+    assert data_licenses.can_use_for_derived_intelligence(MARKET_DS) is True
+    # snapshot display fails closed for unknown + not_licensed datasets
+    assert data_licenses.can_display_market_snapshot("no_such_dataset") is False
+    assert data_licenses.can_display_market_snapshot("market_news_feed") is False
+
+
+def test_data_state_supports_not_applicable():
+    # market-data capability -> licensed
+    assert entitlements.data_state_of("usdm_public_ticker_ohlcv") == "licensed"
+    # external unlicensed dataset / unknown -> unlicensed (fail closed)
+    assert entitlements.data_state_of("oi_funding_liquidation") == "unlicensed"
+    assert entitlements.data_state_of("no_such_dataset") == "unlicensed"
+    # product/account mechanics -> not_applicable
+    assert entitlements.data_state_of(None) == "not_applicable"
+    for cap in ("sso", "org_seats", "org_audit", "integrations", "multi_chart", "custom_workspace"):
+        assert entitlements.capability_dimensions(cap)["data_state"] == "not_applicable", cap
+
+
+def test_not_applicable_capability_not_blocked_by_licensing():
+    # A NOT_APPLICABLE capability that is entitled + backend-ready + built must be
+    # AVAILABLE — licensing must NOT force it COMING_SOON.
+    entitlements.CAPABILITIES["__probe_sso__"] = entitlements._cap(
+        "enterprise", {"enterprise": "full"}, "ready", "available", None, "probe")
+    try:
+        assert entitlements.data_state_of(None) == "not_applicable"
+        assert entitlements.resolve_state("__probe_sso__", "enterprise") == "AVAILABLE"
+    finally:
+        del entitlements.CAPABILITIES["__probe_sso__"]
+    # External unlicensed capability stays COMING_SOON regardless of plan.
+    assert entitlements.resolve_state("oi_funding", "advanced") == "COMING_SOON"
+
+
 # ---- Enterprise is a SEPARATE product (no Personal-Advanced inheritance) ----
 
 def test_enterprise_does_not_inherit_personal_capabilities():
@@ -177,13 +216,19 @@ def test_founder_isolation_and_social_domains():
     assert "founder_private" not in domains.readers_for("reputation")
 
 
-def test_founder_safe_service_market_clarification():
-    # Founder MAY consume separately-authorized safe market-data SERVICE outputs
-    # (not DB), but NEVER social/reputation, even at the service level.
-    assert domains.FOUNDER_SAFE_SERVICE_MARKET_ALLOWED is True
+def test_founder_safe_service_market_allowlist():
+    # Explicit allowlist: ONLY 'market' is consumable at service level.
+    assert domains.FOUNDER_SAFE_SERVICE_ALLOWED_DOMAINS == ("market",)
     assert domains.founder_may_consume_service_market("market") is True
-    assert domains.founder_may_consume_service_market("news_social") is False
-    assert domains.founder_may_consume_service_market("reputation") is False
+    # Every OTHER current logical SaaS domain is denied by this contract.
+    for d in domains.DOMAINS:
+        if d == "market":
+            continue
+        assert domains.founder_may_consume_service_market(d) is False, d
+    # Unknown domain denied; direct SaaS DB access denied for every domain.
+    assert domains.founder_may_consume_service_market("totally_unknown") is False
+    for d in domains.DOMAINS + ("totally_unknown",):
+        assert domains.founder_may_read_saas_db(d) is False, d
 
 
 # ---- Founder ↔ Social HARD BAN (critical) ----

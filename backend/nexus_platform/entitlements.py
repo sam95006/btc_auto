@@ -72,17 +72,17 @@ CAPABILITIES: dict[str, dict] = {
                           "deterministic brief primitive exists (corporate intelligence); Personal wiring pending"),
     # ---- pro view/tools not built yet ----
     "multi_chart": _cap("personal", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _L, PLAN_ADVANCED: _F},
-                        "absent", "coming_soon", DS_MARKET, "multi-chart workspace not built"),
+                        "absent", "coming_soon", None, "multi-chart workspace not built"),
     "custom_workspace": _cap("personal", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _L, PLAN_ADVANCED: _F},
-                             "absent", "coming_soon", DS_MARKET, "saved-layout workspace not built"),
+                             "absent", "coming_soon", None, "saved-layout workspace not built"),
     "advanced_alerts": _cap("personal", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _F, PLAN_ADVANCED: _F},
-                            "absent", "coming_soon", DS_MARKET, "multi-condition rule builder not built"),
+                            "absent", "coming_soon", None, "multi-condition rule builder not built"),
     "ai_screener": _cap("personal", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _F, PLAN_ADVANCED: _F},
-                        "absent", "coming_soon", DS_MARKET, "screener not built"),
+                        "absent", "coming_soon", None, "screener not built"),
     "export": _cap("personal", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _N, PLAN_ADVANCED: _F},
-                   "absent", "coming_soon", DS_MARKET, "export not built"),
+                   "absent", "coming_soon", None, "export not built"),
     "api_access": _cap("personal", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _N, PLAN_ADVANCED: _F},
-                       "absent", "coming_soon", DS_MARKET, "public API not implemented"),
+                       "absent", "coming_soon", None, "public API not implemented"),
     "cross_exchange": _cap("market", {PLAN_FREE: _N, PLAN_STARTER: _N, PLAN_PRO: _N, PLAN_ADVANCED: _F},
                            "absent", "coming_soon", DS_MARKET, "cross-exchange compare not built"),
 
@@ -115,22 +115,33 @@ CAPABILITIES: dict[str, dict] = {
                         "absent", "coming_soon", DS_SMART, "no licensed smart-money data"),
 
     # ---- ENTERPRISE product — EXPLICIT grants only (NOT Personal Advanced+) ----
-    "org_seats": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "org/seats not built"),
-    "shared_watchlists": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "shared watchlists not built"),
-    "shared_intelligence": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "shared intelligence not built"),
-    "shared_research": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "shared research not built"),
-    "shared_alerts": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "shared alerts not built"),
-    "org_audit": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "org audit not built"),
-    "integrations": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "integrations not built"),
-    "sso": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", DS_MARKET, "SSO not built"),
+    "org_seats": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", None, "org/seats not built"),
+    "shared_watchlists": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", None, "shared watchlists not built"),
+    "shared_intelligence": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", None, "shared intelligence not built"),
+    "shared_research": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", None, "shared research not built"),
+    "shared_alerts": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", None, "shared alerts not built"),
+    "org_audit": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", None, "org audit not built"),
+    "integrations": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", None, "integrations not built"),
+    "sso": _cap("enterprise", {PLAN_ENTERPRISE: _F}, "absent", "coming_soon", None, "SSO not built"),
 }
 
 # Capabilities that make up the Enterprise product (explicit — no inheritance).
 ENTERPRISE_CAPABILITIES = tuple(cid for cid, s in CAPABILITIES.items() if s["domain"] == "enterprise")
 
 
-def _data_licensed(dataset: str | None) -> bool:
-    return bool(dataset) and can_use_for_derived_intelligence(dataset)
+DATA_LICENSED = "licensed"
+DATA_UNLICENSED = "unlicensed"
+DATA_NOT_APPLICABLE = "not_applicable"
+
+
+def data_state_of(dataset: str | None) -> str:
+    """A capability with no external dataset (product/account mechanics) is
+    NOT_APPLICABLE and is NOT blocked by licensing. External datasets are
+    licensed only when the licensing registry permits derived use; unknown/
+    unregistered datasets fail closed as unlicensed."""
+    if dataset is None:
+        return DATA_NOT_APPLICABLE
+    return DATA_LICENSED if can_use_for_derived_intelligence(dataset) else DATA_UNLICENSED
 
 
 def resolve_state(capability_id: str, plan: str) -> str:
@@ -140,7 +151,9 @@ def resolve_state(capability_id: str, plan: str) -> str:
     grant = spec["plans"].get(plan)
     if grant is None:
         return STATE_UNAVAILABLE                        # plan does not grant it
-    if not _data_licensed(spec.get("dataset")):
+    # Only EXTERNAL-data capabilities are gated by licensing. NOT_APPLICABLE
+    # (workspace/seats/sso/audit/integrations) depends on grant/backend/product only.
+    if data_state_of(spec.get("dataset")) == DATA_UNLICENSED:
         return STATE_COMING_SOON                        # underlying data not licensed
     if spec["product_state"] == "coming_soon" or spec["backend_state"] == "absent":
         return STATE_COMING_SOON
@@ -163,7 +176,7 @@ def capability_dimensions(capability_id: str) -> dict:
         return {}
     return {"domain": spec["domain"], "backend_state": spec["backend_state"],
             "product_state": spec["product_state"],
-            "data_state": "licensed" if _data_licensed(spec.get("dataset")) else "unlicensed",
+            "data_state": data_state_of(spec.get("dataset")),
             "evidence": spec.get("evidence", "")}
 
 

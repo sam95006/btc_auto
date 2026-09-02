@@ -120,11 +120,28 @@ News / Social) — never provider API names. **No provider secrets here or in fr
 ## 3a. Founder / shared-market clarification (1A.1)
 
 Founder-Private **never** reads a SaaS DB domain directly
-(`FOUNDER_DIRECT_SAAS_DB_ACCESS = False`). It **may**, where the certified private
-architecture permits, consume separately-authorized SAFE market-data **SERVICE**
-outputs (`founder_may_consume_service_market("market") == True`) — a service-level
-feed, NOT direct database access. Social/reputation is banned even at the service
-level. No trading-runtime change.
+(`FOUNDER_DIRECT_SAAS_DB_ACCESS = False`, denied for every domain). It **may**,
+where the certified private architecture permits, consume separately-authorized
+SAFE market-data **SERVICE** outputs — but only via an **explicit allowlist**
+`FOUNDER_SAFE_SERVICE_ALLOWED_DOMAINS = ("market",)`; every other SaaS domain
+(identity/billing/entitlements/corporate/personal/derivatives/onchain/news_social/
+reputation/historical_reaction/enterprise/audit) and unknown domains are **denied**
+by this contract. Social/KOL stays hard-banned. No trading-runtime change.
+
+**Market display semantics (1A.1.1)** — three DISTINCT permissions on the public
+exchange dataset: (A) raw continuous-feed **redistribution** = `can_display_raw_data`
+→ **DENIED** (not claimed); (B) end-user **snapshot/quote/OHLCV display** =
+`can_display_market_snapshot` → **ALLOWED** (evidenced `snapshot_display_allowed`;
+public market data — standard permitted display, distinct from feed redistribution);
+(C) **derived intelligence** = `can_use_for_derived_intelligence` → **ALLOWED**. Any
+dataset lacking explicit evidence fails closed on all three.
+
+**Data-state NOT_APPLICABLE (1A.1.1)** — capabilities with no external dataset
+(workspace/seats/SSO/audit/integrations/multi-chart mechanics) are
+`NOT_APPLICABLE` and are **not** blocked by licensing; their effective state depends
+only on grant/backend/product. Only external-data capabilities are gated by
+`licensed | unlicensed` (unknown → unlicensed, fail closed). Enterprise capabilities
+no longer misuse `DS_MARKET`.
 
 ## 8. Demo/fixture production audit (baseline for Workstream B)
 
