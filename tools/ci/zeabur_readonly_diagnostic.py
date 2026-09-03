@@ -229,6 +229,16 @@ def analyze(service_path: str, domain_path: str, deployment_path: str):
 
     # ----- deployment metadata -----
     emit(lines, "DEPLOYMENT_JSON_VALID", "yes" if dep_valid else "no")
+    # Sanitized top-level container shape (structural evidence; no values / secrets).
+    if isinstance(dep, list):
+        emit(lines, "DEPLOYMENT_TOP_LEVEL_TYPE", "array")
+        emit(lines, "DEPLOYMENT_TOP_LEVEL_KEYS", "none")
+    elif isinstance(dep, dict):
+        emit(lines, "DEPLOYMENT_TOP_LEVEL_TYPE", "object")
+        emit(lines, "DEPLOYMENT_TOP_LEVEL_KEYS", ",".join(sorted(dep.keys())) if dep else "none")
+    else:
+        emit(lines, "DEPLOYMENT_TOP_LEVEL_TYPE", "none")
+        emit(lines, "DEPLOYMENT_TOP_LEVEL_KEYS", "none")
     records = _deployment_records(dep) if dep is not None else []
     emit(lines, "DEPLOYMENT_COUNT", str(len(records)))
     dep_keys: set = set()

@@ -2,18 +2,17 @@
 """Normalized status of a specific Zeabur deployment id from a
 `zeabur deployment list --json` output file.
 
-Uses the repo's proven structural deployment-record parser
-(``zeabur_readonly_diagnostic._deployment_records`` + ``_dep_id`` + ``_dep_status``)
-so status is read from the SAME exact deployment record that the id-resolver
-selected — not from arbitrary JSON. Prints exactly one token:
+Uses the SAME strict, schema-explicit deployment-record container as the release
+resolver (``zeabur_deployment_resolve._records_container``) and the proven field
+helpers (``_dep_id`` / ``_dep_status``), so status is read from the SAME exact
+record the id-resolver selected — never arbitrary JSON. Prints one token:
 
     RUNNING   -> healthy / activated terminal state
     FAILED    -> failed / error / cancelled terminal state
     PENDING   -> still building / queued / deploying (non-terminal)
-    UNKNOWN   -> deployment id not found, or status not parseable / recognised
+    UNKNOWN   -> id not found, unrecognized container, or status not recognised
 
-Never raises for a missing/garbled file — prints UNKNOWN and returns 0 so the
-workflow's own bounded loop owns the fail-closed timeout decision.
+Never raises; the workflow's bounded loop owns the fail-closed timeout decision.
 """
 from __future__ import annotations
 
@@ -23,18 +22,17 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from zeabur_readonly_diagnostic import _deployment_records, _dep_id, _dep_status  # noqa: E402
+from zeabur_deployment_resolve import _records_container  # noqa: E402
+from zeabur_readonly_diagnostic import _dep_id, _dep_status  # noqa: E402
 
 _RUNNING = {"RUNNING", "SUCCESS", "SUCCEEDED", "HEALTHY", "ACTIVE", "DEPLOYED", "READY", "LIVE"}
 _FAILED = {"FAILED", "FAILURE", "ERROR", "ERRORED", "CANCELLED", "CANCELED", "CRASHED", "ABORTED"}
 _PENDING = {"PENDING", "QUEUED", "BUILDING", "DEPLOYING", "CREATED", "CREATING", "INITIALIZING",
-            "IN_PROGRESS", "PROGRESS", "STARTING", "UPLOADING", "WAITING", "RUNNING_BUILD"}
+            "IN_PROGRESS", "PROGRESS", "STARTING", "UPLOADING", "WAITING"}
 
 
 def _normalize(raw: str) -> str:
     token = (raw or "").strip().upper()
-    if not token:
-        return "UNKNOWN"
     if token in _RUNNING:
         return "RUNNING"
     if token in _FAILED:
@@ -54,8 +52,11 @@ def main() -> int:
         parsed = json.loads(Path(path).read_text(encoding="utf-8", errors="replace"))
     except Exception:
         print("UNKNOWN"); return 0
-    for rec in _deployment_records(parsed):
-        if isinstance(rec, dict) and _dep_id(rec).lower() == target_id:
+    container = _records_container(parsed)
+    if container is None:
+        print("UNKNOWN"); return 0
+    for rec in container:
+        if _dep_id(rec).lower() == target_id:
             print(_normalize(_dep_status(rec)))
             return 0
     print("UNKNOWN")

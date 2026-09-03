@@ -408,7 +408,11 @@ jobs:
           # (robust to the precise --json shape). Keep the raw file for that diff.
           zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/pre-deployments.json 2>&1 || true
           PRE_IDS="$(python tools/ci/zeabur_deployment_resolve.py records /tmp/pre-deployments.json --service "$SERVICE_ID" --env "$ZEABUR_ENV_ID" | tr '\n' ' ')"
-          echo "previous_deployment_id=$(echo "$PRE_IDS" | tr ' ' '\n' | grep -E '^[0-9a-f]{24}$' | head -1)" >> "$GITHUB_OUTPUT"
+          # PREVIOUS_DEPLOYMENT_ID = the record that was latest by REAL createdAt
+          # timestamp immediately before this deploy — NOT lexicographic id order.
+          PREV_ID="$(python tools/ci/zeabur_deployment_resolve.py latest /tmp/pre-deployments.json --service "$SERVICE_ID" --env "$ZEABUR_ENV_ID")"
+          echo "previous_deployment_id=$PREV_ID" >> "$GITHUB_OUTPUT"
+          echo "PREVIOUS_DEPLOYMENT_ID_SELECTED_BY=createdAt_timestamp"
           echo "PREVIOUS_DEPLOYMENT_IDS_CAPTURED_COUNT=$(echo "$PRE_IDS" | tr ' ' '\n' | grep -cE '^[0-9a-f]{24}$')"
           # Sanitized deployment-record SCHEMA evidence (field names only, never id
           # values or secrets) so the real Zeabur JSON shape is auditable in logs.
