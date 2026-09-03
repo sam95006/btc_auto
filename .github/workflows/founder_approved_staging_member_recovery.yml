@@ -1,0 +1,83 @@
+# STAGING-ONLY operator-assisted normal-member password recovery.
+#
+# A narrow recovery path until transactional email delivery is configured. It is
+# NOT a public reset bypass and NOT the production reset architecture.
+#
+# The Founder supplies the target email and the NEW password via repository
+# Secrets (NEXUS_STAGING_RECOVERY_EMAIL / NEXUS_STAGING_RECOVERY_PASSWORD). Those
+# values are never read, printed, or logged by the job — only redacted status
+# markers are emitted. The script refuses to run outside NEXUS_ENV=staging, fails
+# closed if the account cannot be uniquely resolved, uses the canonical Argon2
+# hasher, revokes sessions, and never touches account_id / created_at / plan /
+# trial / subscription. No Founder session/claim; no execution/runtime.
+name: founder-approved-staging-member-recovery
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type RECOVER_NEXUS_STAGING_MEMBER"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founder-staging-member-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    # Dedicated protected environment. Configure in GitHub:
+    #   Environment name: staging-member-recovery
+    #   Environment secrets: NEXUS_STAGING_POSTGRES_URL,
+    #                        NEXUS_STAGING_RECOVERY_EMAIL,
+    #                        NEXUS_STAGING_RECOVERY_PASSWORD
+    #   Deployment branches/tags: Selected -> main ONLY
+    #   (Enable required reviewers if the repository plan supports it.)
+    environment: staging-member-recovery
+    steps:
+      - name: Fail-closed guard (main ref + confirmation) BEFORE any secret use
+        run: |
+          set -euo pipefail
+          # The recovery mutation must NEVER run on a feature branch, PR ref, tag,
+          # or arbitrary dispatch ref — only the reviewed main branch.
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "RECOVERY_REF_REFUSED=yes"
+            exit 1
+          fi
+          echo "RECOVERY_REF_OK=yes"
+          if [ "${{ github.event.inputs.confirm }}" != "RECOVER_NEXUS_STAGING_MEMBER" ]; then
+            echo "CONFIRM_TOKEN_MISMATCH=yes"
+            exit 1
+          fi
+          echo "CONFIRM_TOKEN_OK=yes"
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt flask argon2-cffi psycopg[binary]
+
+      - name: Staging-only operator password recovery (redacted markers only)
+        env:
+          # Force the staging guard; the DB + recovery inputs come from Secrets and
+          # are never echoed.
+          NEXUS_ENV: staging
+          NEXUS_PG_RUNTIME_ENABLED: "true"
+          NEXUS_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
+          NEXUS_STAGING_RECOVERY_EMAIL: ${{ secrets.NEXUS_STAGING_RECOVERY_EMAIL }}
+          NEXUS_STAGING_RECOVERY_PASSWORD: ${{ secrets.NEXUS_STAGING_RECOVERY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$NEXUS_POSTGRES_URL"
+          test -n "$NEXUS_STAGING_RECOVERY_EMAIL"
+          test -n "$NEXUS_STAGING_RECOVERY_PASSWORD"
+          python tools/ci/staging_member_password_recovery.py
+          echo "STAGING_MEMBER_RECOVERY_COMPLETE=yes"

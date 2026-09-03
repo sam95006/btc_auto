@@ -407,6 +407,18 @@ def test_route_forgot_password_generic_for_missing_and_present(client_and_repo) 
     assert a.get_json() == b.get_json()
 
 
+def test_route_forgot_password_email_delivery_flag_is_system_level_not_enumerating(client_and_repo) -> None:
+    client, repo = client_and_repo
+    repo.add_account("real2@example.com")
+    a = client.post("/api/v1/product/auth/forgot-password", json={"email": "real2@example.com"}).get_json()
+    b = client.post("/api/v1/product/auth/forgot-password", json={"email": "ghost2@example.com"}).get_json()
+    # The truthful-UI flag is a SYSTEM capability: present, boolean, and identical
+    # for a known vs unknown email (so it can never reveal account existence).
+    assert "email_provider_configured" in a
+    assert isinstance(a["email_provider_configured"], bool)
+    assert a["email_provider_configured"] == b["email_provider_configured"]
+
+
 def test_route_reset_password_reports_sessions_revoked(client_and_repo) -> None:
     client, repo = client_and_repo
     aid = repo.add_account("a@example.com", status="active")

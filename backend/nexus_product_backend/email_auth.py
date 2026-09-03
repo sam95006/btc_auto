@@ -83,6 +83,13 @@ class MemberEmailService:
         self._frontend_base = (frontend_base_url or "").rstrip("/")
         self._cooldown = int(resend_cooldown_seconds)
 
+    @property
+    def email_delivery_configured(self) -> bool:
+        """System-level (NOT per-account) fact: whether a transactional email
+        provider is configured. Safe to surface publicly — identical for every
+        caller, so it never reveals whether a specific account exists."""
+        return bool(getattr(self._provider, "configured", False))
+
     # ----- link construction (raw token only ever placed in the emailed link) -----
     def _verify_link(self, raw_token: str) -> str:
         return f"{self._frontend_base}/verify-email?token={raw_token}"
