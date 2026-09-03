@@ -17,7 +17,9 @@ NEXUS_CORPORATE_API_ORIGIN (connect-src allow-list; default staging API).
 """
 from __future__ import annotations
 
+import json
 import os
+import re
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -71,6 +73,23 @@ def assert_valid_artifact_root(root: Path) -> None:
         )
 
 
+def _build_info(root: Path) -> str:
+    """Build-identity marker (a JSON endpoint, NOT shown on any customer page):
+    the content-hashed asset filenames the deployed index.html references, proving
+    the served HTML and the loaded JS/CSS bundle belong to ONE build, plus an
+    optional source SHA. No secrets."""
+    try:
+        html = (root / "index.html").read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        html = ""
+    assets = sorted(set(re.findall(r"/assets/[A-Za-z0-9_.-]+\.(?:js|css)", html)))
+    return json.dumps({
+        "service": "nexus-corporate-staging",
+        "index_assets": assets,
+        "build_sha": os.environ.get("NEXUS_CORPORATE_BUILD_SHA", "unset"),
+    })
+
+
 def _sitemap() -> str:
     urls = "".join(f"  <url><loc>{SITE_ORIGIN}{p}</loc></url>\n" for p in SITEMAP_PATHS)
     return ('<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -91,24 +110,43 @@ class CorporateSpaHandler(SimpleHTTPRequestHandler):
             self.wfile.write(data)
 
     def do_GET(self) -> None:  # noqa: N802
+        # Default every response to revalidate; only real content-hashed asset
+        # files opt into immutable caching (set in translate_path).
+        self._cache_immutable = False
         path = self.path.split("?", 1)[0].split("#", 1)[0]
         if path == "/robots.txt":
             return self._send_text(ROBOTS.format(site=SITE_ORIGIN), "text/plain; charset=utf-8")
         if path == "/sitemap.xml":
             return self._send_text(_sitemap(), "application/xml; charset=utf-8")
+        if path == "/build-info":
+            return self._send_text(_build_info(self.root), "application/json; charset=utf-8")
         return super().do_GET()
 
     def translate_path(self, path: str) -> str:
         raw = path.split("?", 1)[0].split("#", 1)[0]
         candidate = (self.root / raw.lstrip("/")).resolve()
         if candidate.is_file() and (self.root == candidate or self.root in candidate.parents):
+            # Only real files under /assets/ are content-hashed by Vite, so only
+            # they are safe to cache immutably. Everything else (index.html,
+            # favicon, etc.) must revalidate.
+            assets_dir = (self.root / "assets").resolve()
+            if assets_dir == candidate.parent or assets_dir in candidate.parents:
+                self._cache_immutable = True
             return str(candidate)
+        # SPA fallback for ANY unmatched route -> index.html, which stays no-cache
+        # so a deep-link navigation can never pin a stale build in the browser.
         return str(self.root / "index.html")
 
     def end_headers(self) -> None:
         for k, v in SECURITY_HEADERS.items():
             self.send_header(k, v)
-        cache = "no-cache" if self.path in {"/", "/index.html"} else "public, max-age=604800, immutable"
+        # Content-hashed assets: long immutable. index.html / SPA fallback / robots
+        # / sitemap / build-info: never cached stale (revalidate every deploy).
+        cache = (
+            "public, max-age=31536000, immutable"
+            if getattr(self, "_cache_immutable", False)
+            else "no-cache"
+        )
         self.send_header("Cache-Control", cache)
         super().end_headers()
 
