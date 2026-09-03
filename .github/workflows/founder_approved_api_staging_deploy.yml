@@ -404,7 +404,7 @@ jobs:
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           # Snapshot the deployment list BEFORE deploying. The exact new deployment
-          # is resolved later by set-diffing 24-hex object-ids against this snapshot
+          # is resolved later by set-diffing deployment-record IDs against this snapshot
           # (robust to the precise --json shape). Keep the raw file for that diff.
           zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/pre-deployments.json 2>&1 || true
           PRE_IDS="$(python tools/ci/zeabur_deployment_resolve.py records /tmp/pre-deployments.json --service "$SERVICE_ID" --env "$ZEABUR_ENV_ID" | tr '\n' ' ')"

@@ -1,38 +1,43 @@
 #!/usr/bin/env python3
 """Resolve Zeabur deployments for the api-staging release gate.
 
-STRICT, schema-explicit and record-based (NOT a global 24-hex scrape, and NOT the
-diagnostic's loose "largest list of dicts"). Aligned to the OBSERVED live
-`zeabur deployment list --json` shape (2026-09-03): a top-level JSON array of
-deployment records whose fields include:
+STRICT, schema-explicit, record-based. Aligned to the OBSERVED live
+`zeabur deployment list --json` shape (read-only diagnostic, 2026-09-03): a
+TOP-LEVEL JSON ARRAY of deployment records whose fields include:
 
     ID, status, createdAt, serviceID, environmentID, commitSHA, ...
 
 Field extraction reuses the repo's proven, case-insensitive helpers
-(``zeabur_readonly_diagnostic._dep_id`` / ``_dep_status`` / ``_dep_created``), so
+(``zeabur_readonly_diagnostic._dep_id`` / ``_dep_status`` / ``_dep_created``): so
 ``ID`` -> id, ``status`` -> status, ``createdAt`` -> created.
 
-Container rules (release gate = strict, fail closed):
-  * top-level JSON array of deployment-shaped dicts (the observed shape), OR
-  * a known wrapped container key ({"deployments"|"items"|"data"|...: [...]}), OR
-  * a single top-level deployment record.
-  A deployment-shaped dict must have an ID field AND a status or createdAt field
-  (so service/env/project metadata objects are never counted). Malformed JSON or
-  an unrecognized container fails closed.
+Release-gate rules (stricter than the general read-only diagnostic):
+  * Container: ONLY a top-level JSON array of deployment-shaped dicts (the observed
+    shape). Anything else (wrapped object, bare object, unrecognized) -> MALFORMED,
+    fail closed. No speculative generic wrappers.
+  * A deployment-shaped dict has an ID field AND a status/createdAt field, so
+    service/environment/project metadata objects are never counted.
+  * Deployment id is taken ONLY from the ID field (never serviceID/environmentID).
+  * Service/environment binding: when --service/--env is supplied, a record MUST
+    contain the corresponding id field AND it MUST equal the expected value.
+    A record missing that field is REJECTED (fail closed, not accepted).
+  * New deployment = after deployment-record ids minus before deployment-record ids.
+  * `latest` selects by REAL parsed createdAt (tz-aware UTC); ties or missing/invalid
+    timestamps -> PREVIOUS_DEPLOYMENT_ID_UNAVAILABLE (never an id-order tie-break).
 
 Commands:
   records <file> [--service SID] [--env EID]  -> deployment ids (sorted) or MALFORMED
-  latest  <file> [--service SID] [--env EID]  -> id of the latest record by createdAt,
-                                                 or PREVIOUS_DEPLOYMENT_ID_UNAVAILABLE
+  latest  <file> [--service SID] [--env EID]  -> latest-by-createdAt id, or
+                                                 PREVIOUS_DEPLOYMENT_ID_UNAVAILABLE
   new <before> <after> [--service SID] [--env EID]
-        -> the single NEW deployment id (after-ids minus before-ids), or:
-             NONE / AMBIGUOUS:<csv> / MALFORMED
+        -> single NEW deployment id, or NONE / AMBIGUOUS:<csv> / MALFORMED
 """
 from __future__ import annotations
 
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -40,8 +45,6 @@ from zeabur_readonly_diagnostic import _dep_created, _dep_id, _dep_status  # noq
 
 _SERVICE_KEYS = {"serviceid", "service_id"}
 _ENV_KEYS = {"environmentid", "environment_id", "envid", "env_id"}
-# Known wrapped container keys (NO "largest list of dicts" guessing).
-_CONTAINER_KEYS = ("deployments", "Deployments", "items", "nodes", "data", "result", "results")
 
 UNAVAILABLE = "PREVIOUS_DEPLOYMENT_ID_UNAVAILABLE"
 
@@ -59,42 +62,25 @@ def _is_record(d) -> bool:
     return isinstance(d, dict) and bool(_dep_id(d)) and bool(_dep_status(d) or _dep_created(d))
 
 
-def _shaped(seq) -> list[dict]:
-    return [d for d in seq if _is_record(d)]
-
-
 def _records_container(parsed) -> list[dict] | None:
-    """Strict container extraction. None => unrecognized => fail closed."""
+    """Recognize ONLY the observed shape: a top-level array of deployment records.
+    None => unrecognized container => fail closed."""
     if isinstance(parsed, list):
-        recs = _shaped(parsed)
+        recs = [d for d in parsed if _is_record(d)]
         return recs if recs else None
-    if isinstance(parsed, dict):
-        for key in _CONTAINER_KEYS:
-            v = parsed.get(key)
-            if isinstance(v, list):
-                recs = _shaped(v)
-                if recs:
-                    return recs
-            elif isinstance(v, dict):
-                for k2 in _CONTAINER_KEYS:
-                    vv = v.get(k2)
-                    if isinstance(vv, list):
-                        recs = _shaped(vv)
-                        if recs:
-                            return recs
-        if _is_record(parsed):
-            return [parsed]
     return None
 
 
 def _record_ok(rec: dict, service: str | None, env: str | None) -> bool:
-    if service:
+    # Fail-closed binding: when an expected service/env is supplied, the record MUST
+    # carry that id field AND match it exactly. A missing field is a rejection.
+    if service is not None:
         rs = _field(rec, _SERVICE_KEYS)
-        if rs and rs.lower() != service:
+        if not rs or rs.lower() != service:
             return False
-    if env:
+    if env is not None:
         re_ = _field(rec, _ENV_KEYS)
-        if re_ and re_.lower() != env:
+        if not re_ or re_.lower() != env:
             return False
     return True
 
@@ -112,6 +98,37 @@ def _records(path: str, service: str | None, env: str | None) -> list[dict] | No
 
 def _ids(recs: list[dict]) -> set[str]:
     return {_dep_id(r).lower() for r in recs if _dep_id(r)}
+
+
+def _parse_ts(raw: str):
+    """Parse an ISO8601 createdAt to a tz-aware UTC datetime, or None."""
+    if not raw:
+        return None
+    try:
+        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return None
+    return dt.astimezone(timezone.utc) if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+def _latest_id(recs: list[dict]) -> str:
+    """Deployment id of the record with the max parsed createdAt. Any missing/
+    invalid timestamp, or a tie on the latest timestamp, -> UNAVAILABLE (never an
+    id-order tie-break)."""
+    if not recs:
+        return UNAVAILABLE
+    stamped = []
+    for r in recs:
+        rid = _dep_id(r)
+        ts = _parse_ts(_dep_created(r))
+        if not rid or ts is None:      # missing id, or missing/invalid timestamp
+            return UNAVAILABLE
+        stamped.append((ts, rid))
+    latest_ts = max(ts for ts, _ in stamped)
+    winners = [rid for ts, rid in stamped if ts == latest_ts]
+    if len(winners) != 1:              # duplicate-latest ambiguity
+        return UNAVAILABLE
+    return winners[0].lower()
 
 
 def _parse_flags(args):
@@ -140,14 +157,9 @@ def main() -> int:
 
     if len(pos) == 2 and pos[0] == "latest":
         recs = _records(pos[1], service, env)
-        if not recs:
+        if recs is None:
             print(UNAVAILABLE); return 0
-        # Latest by real createdAt timestamp (ISO8601 sorts lexicographically).
-        dated = [(_dep_created(r), _dep_id(r)) for r in recs if _dep_created(r) and _dep_id(r)]
-        if not dated:
-            print(UNAVAILABLE); return 0  # no timestamp -> do not guess by id order
-        dated.sort()
-        print(dated[-1][1].lower())
+        print(_latest_id(recs))
         return 0
 
     if len(pos) == 3 and pos[0] == "new":

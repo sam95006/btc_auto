@@ -161,15 +161,51 @@ def test_resolver_unrecognized_container_fails_closed(tmp_path):
     assert _run(RESOLVE, "records", f) == "MALFORMED"
 
 
-def test_resolver_rejects_wrong_service(tmp_path):
+# ---- service/environment binding (fail closed) -------------------------------
+def test_binding_accepts_correct_service_and_env(tmp_path):
+    f = _write(tmp_path, "d.json", _list(_dep(DEP1, "RUNNING")))
+    assert _run(RESOLVE, "records", f, "--service", SERVICE_ID, "--env", ENV_ID) == DEP1
+
+
+def test_binding_rejects_wrong_service(tmp_path):
+    f = _write(tmp_path, "d.json", _list(_dep(DEP1, "RUNNING", service=OTHER_SERVICE)))
+    assert _run(RESOLVE, "records", f, "--service", SERVICE_ID, "--env", ENV_ID) == ""
+
+
+def test_binding_rejects_wrong_env(tmp_path):
+    f = _write(tmp_path, "d.json", _list(_dep(DEP1, "RUNNING", env="0" * 24)))
+    assert _run(RESOLVE, "records", f, "--service", SERVICE_ID, "--env", ENV_ID) == ""
+
+
+def test_binding_rejects_missing_service_field(tmp_path):
+    rec = {"ID": DEP1, "status": "RUNNING", "createdAt": "2026-09-02T00:00:00.000Z",
+           "environmentID": ENV_ID}  # no serviceID
+    f = _write(tmp_path, "d.json", _list(rec))
+    assert _run(RESOLVE, "records", f, "--service", SERVICE_ID) == ""
+
+
+def test_binding_rejects_missing_env_field(tmp_path):
+    rec = {"ID": DEP1, "status": "RUNNING", "createdAt": "2026-09-02T00:00:00.000Z",
+           "serviceID": SERVICE_ID}  # no environmentID
+    f = _write(tmp_path, "d.json", _list(rec))
+    assert _run(RESOLVE, "records", f, "--env", ENV_ID) == ""
+
+
+def test_resolver_new_rejects_wrong_service(tmp_path):
     before = _write(tmp_path, "b.json", _list(_dep(DEP1, "RUNNING")))
     after = _write(tmp_path, "a.json", _list(_dep(DEP1, "RUNNING"), _dep(DEP2, "RUNNING", service=OTHER_SERVICE)))
-    assert _run(RESOLVE, "new", before, after, "--service", SERVICE_ID) == "NONE"
+    assert _run(RESOLVE, "new", before, after, "--service", SERVICE_ID, "--env", ENV_ID) == "NONE"
 
 
-def test_resolver_supports_wrapped_deployments_container(tmp_path):
+# ---- container: ONLY the observed top-level array is recognized ---------------
+def test_wrapped_container_is_rejected(tmp_path):
     f = _write(tmp_path, "w.json", json.dumps({"deployments": [_dep(DEP1, "RUNNING")]}))
-    assert _run(RESOLVE, "records", f) == DEP1
+    assert _run(RESOLVE, "records", f) == "MALFORMED"
+
+
+def test_single_top_level_object_is_rejected(tmp_path):
+    f = _write(tmp_path, "o.json", json.dumps(_dep(DEP1, "RUNNING")))
+    assert _run(RESOLVE, "records", f) == "MALFORMED"
 
 
 # ---- previous deployment selection by timestamp (A3) -------------------------
@@ -188,6 +224,31 @@ def test_previous_deployment_selected_by_created_timestamp_not_id_order(tmp_path
 def test_previous_unavailable_when_no_timestamp(tmp_path):
     rec = {"ID": DEP1, "status": "RUNNING", "serviceID": SERVICE_ID}  # no createdAt
     f = _write(tmp_path, "n.json", _list(rec))
+    assert _run(RESOLVE, "latest", f) == "PREVIOUS_DEPLOYMENT_ID_UNAVAILABLE"
+
+
+def test_latest_parses_iso_z_and_offset_timestamps(tmp_path):
+    # Real observed form uses 'Z'; an explicit offset must compare correctly too.
+    f = _write(tmp_path, "t.json", _list(
+        _dep(DEP1, "RUNNING", created="2026-09-02T16:42:43.392Z"),          # 16:42:43 UTC
+        _dep(DEP2, "RUNNING", created="2026-09-02T17:00:00.000+01:00"),     # 16:00:00 UTC (earlier)
+    ))
+    assert _run(RESOLVE, "latest", f, "--service", SERVICE_ID, "--env", ENV_ID) == DEP1
+
+
+def test_latest_invalid_timestamp_is_unavailable(tmp_path):
+    f = _write(tmp_path, "i.json", _list(
+        _dep(DEP1, "RUNNING", created="2026-09-02T00:00:00.000Z"),
+        _dep(DEP2, "RUNNING", created="not-a-timestamp"),
+    ))
+    assert _run(RESOLVE, "latest", f) == "PREVIOUS_DEPLOYMENT_ID_UNAVAILABLE"
+
+
+def test_latest_duplicate_timestamp_is_ambiguous_unavailable(tmp_path):
+    # Two records tie on the latest timestamp -> never break the tie by id order.
+    ts = "2026-09-02T00:00:00.000Z"
+    f = _write(tmp_path, "dup.json", _list(_dep(DEP_OLD, "RUNNING", created=ts),
+                                           _dep(DEP_NEW, "RUNNING", created=ts)))
     assert _run(RESOLVE, "latest", f) == "PREVIOUS_DEPLOYMENT_ID_UNAVAILABLE"
 
 
