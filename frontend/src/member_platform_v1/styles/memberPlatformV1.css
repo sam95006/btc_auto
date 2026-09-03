@@ -1,6 +1,6 @@
 /**
  * NEXUS Member Platform UI V2
- * Premium light fintech  dense  navy sidebar  blue accent
+ * Premium light fintech ï¿½ dense ï¿½ navy sidebar ï¿½ blue accent
  */
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap");
 
@@ -85,7 +85,7 @@
   flex-shrink: 0;
 }
 
-/*  Buttons  */
+/* ï¿½ï¿½ Buttons ï¿½ï¿½ */
 .mpv1-btn {
   display: inline-flex;
   align-items: center;
@@ -146,7 +146,7 @@
   border-radius: 8px;
 }
 
-/*  Chips  */
+/* ï¿½ï¿½ Chips ï¿½ï¿½ */
 .mpv1-chip {
   display: inline-flex;
   align-items: center;
@@ -212,7 +212,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/*  Marketing  */
+/* ï¿½ï¿½ Marketing ï¿½ï¿½ */
 .mpv1-mkt-top {
   display: flex;
   align-items: center;
@@ -274,7 +274,7 @@
   background: var(--mp-bg);
 }
 
-/*  Landing V2  */
+/* ï¿½ï¿½ Landing V2 ï¿½ï¿½ */
 .mpv1-land {
   background: #fff;
 }
@@ -458,7 +458,7 @@
   font-size: 0.88rem;
 }
 
-/*  Auth (keep split)  */
+/* ï¿½ï¿½ Auth (keep split) ï¿½ï¿½ */
 .mpv1-auth-body {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -537,11 +537,14 @@
   display: grid;
   place-items: center;
   padding: 2rem 1.25rem;
-  background: #f8fafc;
+  /* Themed so the auth card never renders light text on a forced-light surface in
+     dark / system-dark (the invisible-text bug). Light mode is visually unchanged. */
+  background: var(--mp-bg);
 }
 .mpv1-auth-card {
   width: min(440px, 100%);
-  background: #fff;
+  background: var(--mp-surface);
+  color: var(--mp-text);
   border: 1px solid var(--mp-border);
   border-radius: 18px;
   box-shadow: var(--mp-shadow-sm);
@@ -575,17 +578,74 @@
   border-radius: var(--mp-radius-sm);
   padding: 0 0.75rem;
   min-height: var(--mp-input-h);
-  background: #fff;
+  background: var(--mp-surface);
 }
 .mpv1-input:focus-within {
   border-color: var(--mp-accent);
   box-shadow: 0 0 0 3px var(--mp-accent-soft);
 }
+/* Explicit, theme-correct foreground contract so typed text, caret, placeholder,
+   password dots, "é¡¯ç¤ºå¯†ç¢¼" and browser/password-manager autofill are always
+   readable in LIGHT / DARK / SYSTEM. */
 .mpv1-input input {
   border: 0;
   outline: 0;
   width: 100%;
   background: transparent;
+  color: var(--mp-text);
+  caret-color: var(--mp-accent);
+  font: inherit;
+}
+.mpv1-input input::placeholder {
+  color: var(--mp-text-3);
+  opacity: 1; /* Firefox lowers placeholder opacity by default */
+}
+.mpv1-input input:disabled,
+.mpv1-input input[disabled] {
+  color: var(--mp-text-3);
+  -webkit-text-fill-color: var(--mp-text-3);
+}
+/* Chrome/Safari autofill otherwise paints its own light background + text; force
+   the themed foreground and mask the autofill background with an inset shadow. */
+.mpv1-input input:-webkit-autofill,
+.mpv1-input input:-webkit-autofill:hover,
+.mpv1-input input:-webkit-autofill:focus,
+.mpv1-input input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--mp-text);
+  caret-color: var(--mp-accent);
+  -webkit-box-shadow: 0 0 0 1000px var(--mp-surface) inset;
+  box-shadow: 0 0 0 1000px var(--mp-surface) inset;
+  transition: background-color 100000s ease-in-out 0s;
+}
+/* Same explicit foreground/background contract for the plain form-field inputs
+   used by Register / Account / other forms, so no form control ever renders
+   unreadable text regardless of theme or browser color-scheme defaults. */
+.mpv1-field input,
+.mpv1-field select,
+.mpv1-field textarea {
+  color: var(--mp-text);
+  background: var(--mp-surface);
+  caret-color: var(--mp-accent);
+}
+.mpv1-field input::placeholder,
+.mpv1-field textarea::placeholder {
+  color: var(--mp-text-3);
+  opacity: 1;
+}
+.mpv1-field input:disabled,
+.mpv1-field select:disabled,
+.mpv1-field textarea:disabled {
+  color: var(--mp-text-3);
+  -webkit-text-fill-color: var(--mp-text-3);
+}
+.mpv1-field input:-webkit-autofill,
+.mpv1-field input:-webkit-autofill:hover,
+.mpv1-field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--mp-text);
+  caret-color: var(--mp-accent);
+  -webkit-box-shadow: 0 0 0 1000px var(--mp-surface) inset;
+  box-shadow: 0 0 0 1000px var(--mp-surface) inset;
+  transition: background-color 100000s ease-in-out 0s;
 }
 .mpv1-input-ico {
   color: var(--mp-text-3);
@@ -710,7 +770,7 @@
   color: #bfdbfe;
 }
 
-/*  App shell  */
+/* ï¿½ï¿½ App shell ï¿½ï¿½ */
 .mpv1-app-shell {
   display: grid;
   grid-template-columns: var(--mp-nav-w) 1fr;
@@ -908,7 +968,7 @@
   font-weight: 700;
 }
 
-/* Tier preview  single subtle control */
+/* Tier preview ï¿½ single subtle control */
 .mpv1-tier-preview {
   display: flex;
   align-items: center;
@@ -936,7 +996,7 @@
   cursor: pointer;
 }
 
-/*  Cards / layout  */
+/* ï¿½ï¿½ Cards / layout ï¿½ï¿½ */
 .mpv1-card {
   background: var(--mp-surface);
   border: 1px solid var(--mp-border);
@@ -1737,7 +1797,7 @@
   }
 }
 
-/* XX V2 reference-match additions XX */
+/* ï¿½Xï¿½X V2 reference-match additions ï¿½Xï¿½X */
 .mpv1-app-main { max-width: none; width: 100%; }
 .mpv1-topbar { justify-content: stretch; }
 .mpv1-search-wide {
@@ -1922,7 +1982,7 @@
   .mpv1-change-strip { grid-template-columns: 1fr; }
 }
 
-/*  UI V2.1 polish  */
+/* ï¿½ï¿½ UI V2.1 polish ï¿½ï¿½ */
 .mpv1-preview-panel-dense {
   gap: 0.7rem;
   padding: 1rem;
@@ -2105,7 +2165,7 @@
   background: radial-gradient(circle at 40% 40%, rgba(147, 197, 253, 0.22), transparent 60%);
 }
 
-/*  UI V2.2 final polish  */
+/* ï¿½ï¿½ UI V2.2 final polish ï¿½ï¿½ */
 .mpv1-dash-intel {
   grid-template-columns: 1.18fr 1.18fr 0.82fr 0.82fr;
 }

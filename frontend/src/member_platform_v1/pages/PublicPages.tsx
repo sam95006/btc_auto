@@ -769,30 +769,38 @@ export function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  // System-level flag (never per-account): whether a transactional email provider
+  // can actually deliver a reset link. Lets us stay truthful without enumerating.
+  const [emailConfigured, setEmailConfigured] = useState(true);
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
     try {
-      // Response is intentionally generic (enumeration resistant); always show
-      // the same confirmation regardless of whether the account exists.
-      await stagingForgotPassword(email.trim().toLowerCase());
+      // Response is intentionally generic per account (enumeration resistant);
+      // we only branch the copy on the system email-delivery capability.
+      const res = await stagingForgotPassword(email.trim().toLowerCase());
+      setEmailConfigured(res.email_provider_configured !== false);
       setDone(true);
     } finally {
       setBusy(false);
     }
   }
   if (done) {
+    // Truthful: do not claim an email was sent when no provider can deliver it.
+    const sub = emailConfigured
+      ? "如果該 Email 對應到一個帳號，我們已寄出密碼重設連結。請檢查你的信箱（連結一小時內有效）。"
+      : "如果該 Email 對應到一個帳號，我們已收到你的密碼重設請求。目前系統尚未開通 Email 寄送，請聯絡管理員協助完成重設。";
     return (
-      <AuthCard title="忘記密碼" sub="如果該 Email 對應到一個帳號，我們已寄出密碼重設連結。請檢查你的信箱（連結一小時內有效）。">
+      <AuthCard title="忘記密碼" sub={sub}>
         <Link className="mpv1-btn mpv1-btn-primary mpv1-btn-block" to="/login">返回登入</Link>
       </AuthCard>
     );
   }
   return (
-    <AuthCard title="忘記密碼" sub="輸入你的 Email，我們會寄出密碼重設連結。">
+    <AuthCard title="忘記密碼" sub="輸入你的 Email 以申請密碼重設。">
       <form onSubmit={(event) => void onSubmit(event)}>
         <label className="mpv1-field">Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
-        <button className="mpv1-btn mpv1-btn-primary mpv1-btn-block" disabled={busy} type="submit">{busy ? "送出中…" : "寄送重設連結"}</button>
+        <button className="mpv1-btn mpv1-btn-primary mpv1-btn-block" disabled={busy} type="submit">{busy ? "送出中…" : "申請密碼重設"}</button>
       </form>
       <p className="mpv1-sub">想起來了？ <Link to="/login">返回登入</Link></p>
     </AuthCard>

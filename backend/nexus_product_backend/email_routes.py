@@ -153,9 +153,18 @@ def register_member_email_routes(app: Flask) -> None:
             return limited
         body = request.get_json(silent=True) or {}
         email = str(body.get("email") or "").strip().lower()
-        result = build_member_email_service(app).forgot_password(email=email)
-        # Always generic; never reveals whether the account exists.
-        return _json_no_store({"ok": True, "code": result.code, "message": result.message}, 200)
+        service = build_member_email_service(app)
+        result = service.forgot_password(email=email)
+        # Always generic per account; never reveals whether the account exists.
+        # `email_delivery` is a SYSTEM capability flag (identical for every caller),
+        # so the UI can be truthful about whether a reset email can actually be
+        # delivered without leaking account existence.
+        return _json_no_store({
+            "ok": True,
+            "code": result.code,
+            "message": result.message,
+            "email_provider_configured": bool(service.email_delivery_configured),
+        }, 200)
 
     @app.post("/api/v1/product/auth/reset-password")
     def product_reset_password():
