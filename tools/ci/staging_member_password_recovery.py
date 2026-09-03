@@ -24,6 +24,10 @@ from __future__ import annotations
 import os
 import sys
 
+# Make `backend...` importable regardless of the invoking cwd (repo root is
+# tools/ci/../../..).
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 
 def _fail(marker: str) -> "int":
     print(marker)
@@ -41,13 +45,18 @@ def main() -> int:
     new_password = os.getenv("NEXUS_STAGING_RECOVERY_PASSWORD") or ""
     if not email or not new_password:
         return _fail("RECOVERY_MISSING_INPUTS=yes")
-    if len(new_password) < 8:
-        return _fail("RECOVERY_WEAK_PASSWORD=yes")
 
     from backend.nexus_persistence_pg.pool import PostgresPool
     from backend.nexus_persistence_pg.runtime import PostgresRuntimeConfig
     from backend.nexus_product_backend.auth_alpha import AuthAlphaService
+    # Reuse the SINGLE canonical Personal password policy — the same minimum the
+    # customer reset path (MemberEmailService.reset_password) enforces — so
+    # registration / customer-reset / operator-recovery never drift apart.
+    from backend.nexus_product_backend.email_auth import MIN_PASSWORD_LENGTH
     from backend.nexus_product_backend.repository import ProductRepository
+
+    if len(new_password) < MIN_PASSWORD_LENGTH:
+        return _fail("RECOVERY_WEAK_PASSWORD=yes")
 
     try:
         cfg = PostgresRuntimeConfig.from_env()
@@ -71,6 +80,12 @@ def main() -> int:
     account_id = account["account_id"]
     print("ACCOUNT_RESOLVED=yes")
 
+    # Capture the immutable identity (incl. the trial-truth anchor created_at)
+    # BEFORE any mutation, so we can prove afterwards it was untouched.
+    before = _immutable_snapshot(pool, account_id)
+    if before is None:
+        return _fail("RECOVERY_IMMUTABLE_SNAPSHOT_FAILED=yes")
+
     # Canonical Argon2 hash; only the password credential + sessions are touched.
     repo.update_password_hash(account_id, hasher.hash(new_password))
     print("PASSWORD_UPDATED=yes")
@@ -84,10 +99,30 @@ def main() -> int:
         detail={"channel": "staging_operator_recovery", "sessions_revoked": revoked},
     )
     print("AUDIT_APPENDED=yes")
-    # account_id / created_at / plan / trial / subscription are never written here.
+
+    # Real runtime proof: re-resolve the account and confirm account_id + created_at
+    # (and status) are byte-for-byte unchanged. Fail closed otherwise.
+    after = _immutable_snapshot(pool, account_id)
+    if after is None:
+        return _fail("RECOVERY_ACCOUNT_RERESOLVE_FAILED=yes")
+    if after != before:
+        return _fail("RECOVERY_IMMUTABLE_FIELDS_CHANGED=yes")
     print("ACCOUNT_IMMUTABLE_FIELDS_UNCHANGED=yes")
     print("RECOVERY_OK=yes")
     return 0
+
+
+def _immutable_snapshot(pool, account_id: str):
+    """(account_id, created_at, status) for the account, or None if not found.
+    Used for a before/after equality proof — no values are ever printed."""
+    rows = pool.fetchall(
+        "SELECT account_id, created_at, status FROM nexus.accounts WHERE account_id = %s",
+        (account_id,),
+    )
+    if not rows:
+        return None
+    aid, created, status = rows[0]
+    return (str(aid), created.isoformat() if created is not None else None, str(status))
 
 
 if __name__ == "__main__":

@@ -30,10 +30,25 @@ concurrency:
 jobs:
   recover:
     runs-on: ubuntu-latest
+    # Dedicated protected environment. Configure in GitHub:
+    #   Environment name: staging-member-recovery
+    #   Environment secrets: NEXUS_STAGING_POSTGRES_URL,
+    #                        NEXUS_STAGING_RECOVERY_EMAIL,
+    #                        NEXUS_STAGING_RECOVERY_PASSWORD
+    #   Deployment branches/tags: Selected -> main ONLY
+    #   (Enable required reviewers if the repository plan supports it.)
+    environment: staging-member-recovery
     steps:
-      - name: Validate confirmation token
+      - name: Fail-closed guard (main ref + confirmation) BEFORE any secret use
         run: |
           set -euo pipefail
+          # The recovery mutation must NEVER run on a feature branch, PR ref, tag,
+          # or arbitrary dispatch ref — only the reviewed main branch.
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "RECOVERY_REF_REFUSED=yes"
+            exit 1
+          fi
+          echo "RECOVERY_REF_OK=yes"
           if [ "${{ github.event.inputs.confirm }}" != "RECOVER_NEXUS_STAGING_MEMBER" ]; then
             echo "CONFIRM_TOKEN_MISMATCH=yes"
             exit 1
