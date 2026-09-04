@@ -1,0 +1,72 @@
+# Narrow, READ-ONLY authenticated Workstream-B E2E for Personal staging.
+#
+# Runs the SAME normal login path the product uses (POST
+# /api/v1/member/session/login) with a NORMAL member account, then exercises
+# authenticated read endpoints (subscription / features / catalog / session) to
+# prove authenticated runtime truth. It does NOT use a Founder session/claim,
+# does NOT touch PostgreSQL, does NOT open any DB port, and never prints the
+# email / password / cookie / session id / CSRF / account_id / raw created_at /
+# DB URL — only sanitized markers.
+#
+# The email + password come ONLY from the protected `staging-personal-e2e`
+# Environment secrets (NEXUS_STAGING_E2E_EMAIL / NEXUS_STAGING_E2E_PASSWORD),
+# entered by the Founder directly in GitHub Settings. Configure that Environment:
+#   Environment name: staging-personal-e2e
+#   Environment secrets: NEXUS_STAGING_E2E_EMAIL, NEXUS_STAGING_E2E_PASSWORD
+#   Deployment branches/tags: Selected -> main ONLY
+#   (Enable required reviewers if the repository plan supports it.)
+name: personal-authenticated-staging-e2e
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type RUN_PERSONAL_E2E"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: personal-authenticated-staging-e2e
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    environment: staging-personal-e2e
+    steps:
+      - name: Fail-closed guard (main ref + confirmation) BEFORE any secret use
+        run: |
+          set -euo pipefail
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "E2E_REF_REFUSED=yes"
+            exit 1
+          fi
+          echo "E2E_REF_OK=yes"
+          if [ "${{ github.event.inputs.confirm }}" != "RUN_PERSONAL_E2E" ]; then
+            echo "CONFIRM_TOKEN_MISMATCH=yes"
+            exit 1
+          fi
+          echo "CONFIRM_TOKEN_OK=yes"
+
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Authenticated Personal staging E2E (sanitized markers only)
+        env:
+          # Normal-member credentials + API origin come from the protected
+          # Environment; they are never read, printed, or logged by the job.
+          NEXUS_STAGING_E2E_EMAIL: ${{ secrets.NEXUS_STAGING_E2E_EMAIL }}
+          NEXUS_STAGING_E2E_PASSWORD: ${{ secrets.NEXUS_STAGING_E2E_PASSWORD }}
+          NEXUS_PERSONAL_E2E_API_ORIGIN: ${{ vars.NEXUS_PERSONAL_E2E_API_ORIGIN }}
+        run: |
+          set -euo pipefail
+          test -n "$NEXUS_STAGING_E2E_EMAIL"
+          test -n "$NEXUS_STAGING_E2E_PASSWORD"
+          python tools/ci/personal_authenticated_staging_e2e.py
+          echo "PERSONAL_AUTHENTICATED_STAGING_E2E_COMPLETE=yes"
