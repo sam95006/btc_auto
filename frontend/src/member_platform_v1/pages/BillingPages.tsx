@@ -148,6 +148,11 @@ function BillingCenterInner() {
   const effectivePlan = entitlements?.effective_plan_code || "free";
   const status = subscription?.status || "inactive";
   const isActive = ACTIVE_STATUSES.has(status);
+  // Enterprise is a SEPARATE product / contact-sales surface — never a Personal
+  // plan in the grid. Split it out so the Personal grid holds ONLY Free / Starter
+  // / Pro / Advanced, and Enterprise renders in its own contact band below.
+  const personalPlans = plans.filter((plan) => plan.code !== "enterprise");
+  const enterprisePlan = plans.find((plan) => plan.code === "enterprise");
 
   return (
     <BillingShell>
@@ -247,8 +252,8 @@ function BillingCenterInner() {
         )}
       </section>
 
-      <div className="mpv1-plan-grid" data-classification="STATIC_PRODUCT_CONFIG">
-        {plans.map((plan) => {
+      <div className="mpv1-plan-grid" data-classification="STATIC_PRODUCT_CONFIG" data-testid="personal-plan-grid">
+        {personalPlans.map((plan) => {
           const current = plan.code === effectivePlan;
           const selfService = isSelfServicePlan(plan.code);
           return (
@@ -259,12 +264,6 @@ function BillingCenterInner() {
                 <span className="mpv1-chip" data-testid={`current-${plan.code}`}>
                   目前方案
                 </span>
-              ) : plan.code === "enterprise" ? (
-                // Enterprise is contact-sales, not self-service. No hardcoded
-                // email/domain until branding + contact are configured.
-                <button type="button" className="mpv1-btn mpv1-btn-outline" disabled data-testid="enterprise-contact">
-                  企業方案即將開放
-                </button>
               ) : selfService ? (
                 <button
                   type="button"
@@ -284,6 +283,19 @@ function BillingCenterInner() {
           );
         })}
       </div>
+
+      {/* Enterprise is a SEPARATE product with its own contact-sales path —
+          rendered OUTSIDE the Personal plan grid. No self-service price, no
+          upgrade button, never a Personal effective plan. */}
+      <section className="mpv1-card mpv1-enterprise-band" data-testid="enterprise-band">
+        <h2 className="mpv1-card-title">{enterprisePlan?.display_name || "NEXUS Enterprise"}</h2>
+        <p className="mpv1-muted">
+          為團隊與組織提供的獨立方案:組織權限、成員管理與整合能力。採洽詢報價,非線上自助訂閱。
+        </p>
+        <button type="button" className="mpv1-btn mpv1-btn-outline" disabled data-testid="enterprise-contact">
+          企業方案即將開放
+        </button>
+      </section>
     </BillingShell>
   );
 }
