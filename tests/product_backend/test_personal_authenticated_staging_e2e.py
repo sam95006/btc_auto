@@ -157,6 +157,74 @@ def test_registration_anchor_matches_real_backend_trial_output():
     e2e.validate_registration_anchor(reg.isoformat(), status)
 
 
+# --------------------------------------------------------------------------- #
+# State-branching anchor resolver (paid accounts must not false-fail).
+# --------------------------------------------------------------------------- #
+def test_resolver_active_trial_yes():
+    trial = {"trial_started_at": "2026-08-01T00:00:00+00:00",
+             "trial_ends_at": "2026-08-31T00:00:00+00:00"}
+    assert e2e.resolve_registration_anchor("TRIAL", "2026-08-01T00:00:00+00:00", trial) == "yes"
+
+
+def test_resolver_expired_trial_yes():
+    trial = {"trial_started_at": "2026-06-01T00:00:00+00:00",
+             "trial_ends_at": "2026-07-01T00:00:00+00:00"}  # exactly 30 days
+    assert e2e.resolve_registration_anchor("TRIAL_EXPIRED", "2026-06-01T00:00:00+00:00", trial) == "yes"
+
+
+def test_resolver_paid_is_not_applicable_without_trial_timestamps():
+    # Canonical PAID trial_status omits trial_started_at/trial_ends_at; a paid
+    # member must NOT be required to have them and must NOT false-fail.
+    paid_trial = {"state": "PAID", "plan": "pro", "trial_active": False}
+    assert e2e.resolve_registration_anchor("PAID", "2026-01-01T00:00:00+00:00", paid_trial) == "not_applicable_paid"
+    # Paid-wins is still enforced by validate_trial_truth.
+    e2e.validate_trial_truth("pro", paid_trial, _contract())
+
+
+def test_resolver_trial_states_still_enforce_anchor_rules():
+    good = {"trial_started_at": "2026-08-01T00:00:00+00:00",
+            "trial_ends_at": "2026-08-31T00:00:00+00:00"}
+    # Mismatched origin fails.
+    with pytest.raises(e2e.E2EError):
+        e2e.resolve_registration_anchor("TRIAL", "2026-08-02T00:00:00+00:00", good)
+    # Non-30-day interval fails.
+    with pytest.raises(e2e.E2EError):
+        e2e.resolve_registration_anchor(
+            "TRIAL",
+            "2026-08-01T00:00:00+00:00",
+            {"trial_started_at": "2026-08-01T00:00:00+00:00",
+             "trial_ends_at": "2026-08-29T00:00:00+00:00"})
+
+
+def test_resolver_free_or_unknown_state_fails_closed():
+    # FREE (registration origin unresolved) or any unexpected state cannot honestly
+    # establish the anchor.
+    with pytest.raises(e2e.E2EError):
+        e2e.resolve_registration_anchor("FREE", None, {})
+    with pytest.raises(e2e.E2EError):
+        e2e.resolve_registration_anchor("UNAVAILABLE", None, {})
+
+
+# --------------------------------------------------------------------------- #
+# Authenticated membership: Enterprise separated OUTSIDE the Personal plan grid.
+# --------------------------------------------------------------------------- #
+def test_billing_enterprise_rendered_outside_personal_grid():
+    billing = Path("frontend/src/member_platform_v1/pages/BillingPages.tsx")
+    src = billing.read_text(encoding="utf-8")
+    # Grid maps ONLY the Personal plans (enterprise filtered out).
+    assert "personalPlans = plans.filter" in src
+    assert 'plan.code !== "enterprise"' in src
+    assert "personalPlans.map(" in src
+    assert 'data-testid="personal-plan-grid"' in src
+    # Enterprise band exists and is a SIBLING after the grid (outside it).
+    grid_idx = src.index('data-testid="personal-plan-grid"')
+    band_idx = src.index('data-testid="enterprise-band"')
+    grid_close_idx = src.index("</div>", grid_idx)
+    assert grid_close_idx < band_idx, "enterprise band must be after the grid closes"
+    # No self-service Enterprise price / upgrade path.
+    assert "upgrade-enterprise" not in src
+
+
 def test_contract_drift_fails_closed():
     for bad in ({"days": 14}, {"on_expiry": "auto_upgrade"}, {"auto_charge": True}):
         contract = {**_contract(), **bad}
@@ -303,19 +371,34 @@ def test_browser_smoke_is_secret_safe_and_correctness_only():
     # Fresh incognito context per viewport; no on-disk session persistence.
     assert "new_context(" in src
     assert "storage_state" not in src and ".save(" not in src
-    # Correctness assertions present: session-persist, plans, enterprise-separate,
-    # no-founder/trading UI, logout+redirect.
-    for needed in ("session_did_not_persist", "plan-advanced", "enterprise",
-                   "FORBIDDEN_UI_TERMS", "登出", "post_logout_app_not_redirected_to_login"):
+    # Correctness assertions present: session-persist, plans, enterprise-separate
+    # (outside the Personal grid), no-founder/trading UI, logout+redirect.
+    for needed in ("session_did_not_persist", "plan-advanced",
+                   "personal-plan-grid", "enterprise_band_inside_personal_grid",
+                   "enterprise_inside_personal_plan_grid",
+                   "FORBIDDEN_TEXT_TERMS", "FORBIDDEN_CONTROL_TERMS",
+                   "登出", "post_logout_app_not_redirected_to_login"):
         assert needed in src
+    # The Founder/trading boundary check is reusable and runs on BOTH Home (/app)
+    # and Membership (/app/membership) — at least two invocations.
+    assert "def assert_no_founder_or_execution_ui" in src
+    assert src.count("assert_no_founder_or_execution_ui(page)") >= 2
     # Emits the two runtime markers.
     assert "PERSONAL_DESKTOP_RUNTIME" in src and "PERSONAL_MOBILE_RUNTIME" in src
 
 
 def test_browser_smoke_forbids_founder_and_trading_ui_terms():
     src = SMOKE.read_text(encoding="utf-8")
-    for term in ("下單", "槓桿", "leverage", "position size", "founder", "bybit"):
-        assert term in src, f"smoke must screen for {term!r}"
+    # Trading-action controls + Founder-private / execution leak strings screened.
+    for term in ("下單", "做多", "做空", "槓桿", "倉位", "平倉", "掛單", "leverage"):
+        assert term in src, f"smoke must screen control term {term!r}"
+    for term in ("bybit", "mainnet", "api secret", "founder private",
+                 "私有核心", "order entry", "position size"):
+        assert term in src, f"smoke must screen leak term {term!r}"
+    # Control terms must be matched as actionable controls, not raw prose, so safe
+    # disclaimers ("本平台不下單") and open-interest data ("未平倉") don't false-fail.
+    assert 'get_by_role("button", name=term)' in src
+    assert 'get_by_role("link", name=term)' in src
 
 
 # --------------------------------------------------------------------------- #

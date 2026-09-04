@@ -159,6 +159,27 @@ def validate_registration_anchor(session_created_at: Any, trial: dict) -> None:
         raise E2EError("anchor_interval_not_30_days")
 
 
+def resolve_registration_anchor(state: Any, session_created_at: Any, trial: dict) -> str:
+    """Decide the non-sensitive anchor marker from the trial state, or raise
+    E2EError (fail closed).
+
+      * TRIAL / TRIAL_EXPIRED -> the canonical backend exposes the trial window,
+        so verify it against the account's registration origin -> "yes".
+      * PAID -> paid wins; the canonical trial_status() intentionally OMITS
+        trial_started_at / trial_ends_at, so we do NOT demand them and never
+        pretend a live trial timestamp proof existed -> "not_applicable_paid".
+        (The caller must still have proven the authenticated session is valid.)
+      * anything else (e.g. FREE with an unresolved registration origin,
+        UNAVAILABLE) -> fail closed: the anchor cannot be established honestly.
+    """
+    if state in ("TRIAL", "TRIAL_EXPIRED"):
+        validate_registration_anchor(session_created_at, trial)
+        return "yes"
+    if state == "PAID":
+        return "not_applicable_paid"
+    raise E2EError(f"anchor_unresolvable_state:{state}")
+
+
 def validate_membership_catalog(catalog: dict) -> None:
     """Assert the canonical plan catalog: Free/Starter/Pro/Advanced present and
     Enterprise present-but-separate (contact-sales, not a self-serve Personal
@@ -296,12 +317,12 @@ def run() -> int:
         return 1
     session_created_at = (sess_body.get("session") or {}).get("created_at")
     try:
-        validate_registration_anchor(session_created_at, trial)
+        anchor_marker = resolve_registration_anchor(trial.get("state"), session_created_at, trial)
     except E2EError as exc:
         print(f"TRIAL_REGISTRATION_ANCHOR_VALID=no reason={exc}")
         print("AUTHENTICATED_WORKSTREAM_B_E2E=no")
         return 1
-    print("TRIAL_REGISTRATION_ANCHOR_VALID=yes")
+    print(f"TRIAL_REGISTRATION_ANCHOR_VALID={anchor_marker}")
 
     # 3) Authenticated Personal Home / API access (member session + per-member
     #    features, the Home's plan/feature source).

@@ -37,16 +37,45 @@ VIEWPORTS = [
 PERSONAL_PLAN_TESTIDS = ("plan-free", "plan-starter", "plan-pro", "plan-advanced")
 
 # Founder-private / trading-execution surface that must NEVER appear in Personal.
-FORBIDDEN_UI_TERMS = (
+#
+# Two-tier screening avoids false positives while still catching real leaks:
+#  * TEXT terms are specific phrases that never occur in legitimate Personal
+#    copy — safe to match anywhere in the rendered text.
+#  * CONTROL terms are trading-action verbs that DO appear inside safe prose
+#    (the disclaimer "本平台不下單" contains 下單; open-interest data "未平倉"
+#    contains 平倉), so they are matched ONLY as the accessible name of an
+#    actionable control (button / link) — the real execution-UI leak vector.
+FORBIDDEN_TEXT_TERMS = (
+    "bybit", "mainnet", "api secret", "founder private", "私有核心",
+    "order entry", "buy order", "sell order", "long position",
+    "short position", "position size",
+)
+FORBIDDEN_CONTROL_TERMS = (
     "下單", "做多", "做空", "槓桿", "倉位", "平倉", "掛單",
-    "buy order", "sell order", "long position", "short position",
-    "leverage", "order entry", "position size", "founder", "私有核心",
-    "bybit", "mainnet", "api key", "api secret",
+    "買入", "賣出", "leverage",
 )
 
 
 class SmokeFail(Exception):
     """A fail-closed browser-smoke deviation (message is always non-sensitive)."""
+
+
+def assert_no_founder_or_execution_ui(page) -> None:
+    """Fail closed if any Founder-Private / trading-execution surface leaks onto
+    the currently-rendered Personal page. Run per key page (Home + Membership),
+    not a full-site crawl.
+
+    TEXT terms are matched in the page text; CONTROL terms are matched only as the
+    accessible name of an actionable button/link, so safe disclaimer prose
+    ("本平台不下單") and market data ("未平倉" open interest) never false-trip."""
+    body_text = (page.locator("body").inner_text() or "").lower()
+    for term in FORBIDDEN_TEXT_TERMS:
+        if term.lower() in body_text:
+            raise SmokeFail(f"forbidden_text_present:{term}")
+    for term in FORBIDDEN_CONTROL_TERMS:
+        if (page.get_by_role("button", name=term).count() > 0
+                or page.get_by_role("link", name=term).count() > 0):
+            raise SmokeFail(f"forbidden_control_present:{term}")
 
 
 def _run_viewport(browser, origin: str, email: str, password: str,
@@ -82,18 +111,36 @@ def _run_viewport(browser, origin: str, email: str, password: str,
             raise SmokeFail("session_did_not_persist_after_reload")
         if not page.url.rstrip("/").endswith("/app"):
             raise SmokeFail(f"unexpected_url_after_reload:{_path(page.url)}")
+        # 6b) Founder/trading boundary must hold on the authenticated Home too.
+        page.wait_for_load_state("networkidle", timeout=45000)
+        assert_no_founder_or_execution_ui(page)
 
         # 7) authenticated membership / plans surface.
         page.goto(f"{origin}/app/membership", wait_until="networkidle", timeout=45000)
         if "/login" in page.url:
             raise SmokeFail("membership_redirected_to_login")
 
-        # 8) Personal plans Free/Starter/Pro/Advanced present.
+        # 8) Personal plans Free/Starter/Pro/Advanced present INSIDE the Personal
+        #    plan grid.
+        grid = page.locator('[data-testid="personal-plan-grid"]').first
+        grid.wait_for(state="visible", timeout=20000)
         for testid in PERSONAL_PLAN_TESTIDS:
-            page.locator(f'[data-testid="{testid}"]').first.wait_for(state="visible", timeout=20000)
+            grid.locator(f'[data-testid="{testid}"]').first.wait_for(state="visible", timeout=20000)
+        # The Personal grid must contain EXACTLY those four Personal plans.
+        plan_count = grid.locator('[data-testid^="plan-"]').count()
+        if plan_count != len(PERSONAL_PLAN_TESTIDS):
+            raise SmokeFail(f"personal_grid_plan_count_{plan_count}_not_{len(PERSONAL_PLAN_TESTIDS)}")
+        if grid.locator('[data-testid="plan-enterprise"]').count() != 0:
+            raise SmokeFail("enterprise_inside_personal_plan_grid")
 
-        # 9) Enterprise is separate (contact-sales, disabled) and NOT the current
-        #    effective plan.
+        # 9) Enterprise contact surface exists OUTSIDE the Personal plan grid, and
+        #    Enterprise is never the current Personal effective plan.
+        if page.locator('[data-testid="enterprise-band"]').count() == 0:
+            raise SmokeFail("enterprise_band_missing")
+        if page.locator('[data-testid="personal-plan-grid"] [data-testid="enterprise-band"]').count() != 0:
+            raise SmokeFail("enterprise_band_inside_personal_grid")
+        if page.locator('[data-testid="personal-plan-grid"] [data-testid="enterprise-contact"]').count() != 0:
+            raise SmokeFail("enterprise_contact_inside_personal_grid")
         page.locator('[data-testid="enterprise-contact"]').first.wait_for(state="visible", timeout=20000)
         current = page.locator('[data-testid="current-subscription"]').first
         current.wait_for(state="visible", timeout=20000)
@@ -101,11 +148,8 @@ def _run_viewport(browser, origin: str, email: str, password: str,
         if "enterprise" in current_text or "企業" in current_text:
             raise SmokeFail("enterprise_presented_as_personal_effective_plan")
 
-        # 10) no Founder Private / trading-execution UI anywhere on the surface.
-        body_text = (page.locator("body").inner_text() or "").lower()
-        for term in FORBIDDEN_UI_TERMS:
-            if term.lower() in body_text:
-                raise SmokeFail(f"forbidden_ui_term_present:{term}")
+        # 10) no Founder Private / trading-execution UI on the membership surface.
+        assert_no_founder_or_execution_ui(page)
 
         # 11) logout through the real UI (account page).
         page.goto(f"{origin}/app/account", wait_until="networkidle", timeout=45000)
