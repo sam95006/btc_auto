@@ -1,12 +1,22 @@
 """WORKSTREAM-B trial-entitlement truth: the canonical Personal access resolver
-and its consistent wiring into features, entitlement enforcement, quota policy,
-and the membership (billing) display endpoints.
+and its wiring into the PERSONAL surfaces, kept strictly separate from GENERIC
+BILLING.
+
+Architecture verified here:
+  * PERSONAL ACCESS (trial-aware): /personal/subscription, /personal/access and
+    /personal/features agree on the effective Personal plan, and the Personal
+    entitlement/quota gates follow it. Personal plans are only free/starter/pro/
+    advanced — Enterprise is NEVER a Personal effective plan.
+  * GENERIC BILLING (independent, billing-subscription authoritative):
+    /billing/entitlements and /billing/usage resolve from the billing
+    subscription only and PRESERVE Enterprise. They are deliberately NOT
+    trial-aware and are NOT equal to the Personal surfaces for a trial member.
 
 Covers the required matrix: active trial => Starter (entitlements + quotas),
-expired trial => Free, paid wins (Starter/Pro/Advanced), Enterprise never a
-Personal plan, missing created_at never fabricates Starter, view-mode spoof is
-inert, and /personal/subscription == /personal/features == /billing/entitlements
-== /billing/usage for the same member.
+expired trial => Free, paid wins (Starter/Pro/Advanced), Enterprise preserved in
+generic billing but never a Personal plan (even with a missing registration
+origin), missing created_at never fabricates Starter, unknown/malformed plans
+fail closed, usage-ledger outage reported explicitly, and view-mode spoof inert.
 """
 from __future__ import annotations
 
@@ -337,6 +347,36 @@ def test_membership_ui_sources_effective_plan_from_personal_access():  # section
         assert t in m.group(1)
     # No legacy member-entitlement plan fallback when Personal access fails.
     assert "getMemberEntitlements" not in auth and "mapMemberPlan" not in auth
+
+
+def test_missing_created_at_with_enterprise_billing_isolation():  # final blocker
+    # Registration origin unavailable + an ACTIVE Enterprise billing subscription:
+    # generic Billing must stay Enterprise while every Personal surface stays free.
+    c = _app(days_since_registration=None, sub=_sub("enterprise")).test_client()
+    bent = c.get("/api/v1/billing/entitlements", headers=_H).get_json()
+    assert bent["effective_plan_code"] == "enterprise"
+    assert "enterprise_admin" in bent["entitlements"]
+    sub = c.get("/api/v1/personal/subscription", headers=_H).get_json()
+    assert sub["trial"]["state"] == "UNAVAILABLE"   # honest, not a fabricated trial
+    assert sub["effective_plan"] == "free"          # NEVER enterprise
+    assert c.get("/api/v1/personal/access", headers=_H).get_json()["effective_plan_code"] == "free"
+    assert c.get("/api/v1/personal/features", headers=_H).get_json()["effective_plan_code"] == "free"
+
+
+def test_missing_created_at_no_paid_is_unavailable_free():  # A at route level
+    c = _app(days_since_registration=None).test_client()
+    sub = c.get("/api/v1/personal/subscription", headers=_H).get_json()
+    assert sub["trial"]["state"] == "UNAVAILABLE"
+    assert sub["effective_plan"] == "free"          # no fake Starter/expired trial
+    assert c.get("/api/v1/personal/access", headers=_H).get_json()["effective_plan_code"] == "free"
+
+
+def test_missing_created_at_paid_pro_is_paid_pro():  # C at route level (paid wins)
+    c = _app(days_since_registration=None, sub=_sub("pro")).test_client()
+    sub = c.get("/api/v1/personal/subscription", headers=_H).get_json()
+    assert sub["trial"]["state"] == "PAID"
+    assert sub["effective_plan"] == "pro"
+    assert c.get("/api/v1/personal/access", headers=_H).get_json()["effective_plan_code"] == "pro"
 
 
 def test_unknown_or_malformed_paid_plan_fails_closed():  # section 7

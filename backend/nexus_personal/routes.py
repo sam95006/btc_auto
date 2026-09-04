@@ -16,7 +16,6 @@ from typing import Any, Optional
 from flask import Flask, request
 
 from backend.nexus_billing.entitlements import (
-    effective_plan_code,
     plan_has_entitlement,
     resolve_entitlements_for_plan,
 )
@@ -242,8 +241,14 @@ def register_personal_routes(app: Flask) -> None:
             status = {"state": "PAID", "plan": paid_plan, "trial_active": False}
             effective = paid_plan
         else:
+            # Registration origin unavailable AND no paid Personal plan (a live
+            # Enterprise billing sub lands here too, since Enterprise is never a
+            # Personal paid plan). Resolve the effective plan through the canonical
+            # Personal boundary — NOT generic effective_plan_code(), which could
+            # leak "enterprise". This yields free; the state stays honestly
+            # UNAVAILABLE (no fabricated trial/Starter).
             status = {"state": "UNAVAILABLE", "trial_active": False}
-            effective = effective_plan_code(sub)
+            effective = _pa.effective_personal_plan(registered_at=None, subscription=sub)
 
         catalog = _plans.public_catalog()
         return _json_no_store({
