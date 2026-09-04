@@ -266,16 +266,28 @@ def register_personal_routes(app: Flask) -> None:
             return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
         plan = _effective_plan(app, account_id)
         resolution = resolve_entitlements_for_plan(plan)
-        svc = _usage_service(app)
-        quotas = svc.resolve_usage(account_id, effective_plan=plan)["quotas"] if svc is not None else []
         sub = _account_subscription(app, account_id)
         billing_status = getattr(sub, "status", "inactive") if sub is not None else "inactive"
-        return _json_no_store({
+        # Plan / entitlement / billing truth NEVER depends on usage-ledger health.
+        payload = {
             "effective_plan_code": plan,
             "entitlements": resolution.feature_codes,
-            "quotas": quotas,
             "billing_status": billing_status,   # raw payment truth, kept separate
-        })
+            "usage_available": False,
+            "quotas": None,                     # explicit: not "no quotas", but "unknown"
+        }
+        # Usage/quota is best-effort and reported with explicit availability. A
+        # missing usage service or a ledger read error must NOT 500 the endpoint,
+        # fabricate empty quotas, or downgrade the plan.
+        svc = _usage_service(app)
+        if svc is not None:
+            try:
+                payload["quotas"] = svc.resolve_usage(account_id, effective_plan=plan)["quotas"]
+                payload["usage_available"] = True
+            except Exception:  # noqa: BLE001 - usage outage -> explicitly unavailable
+                payload["quotas"] = None
+                payload["usage_available"] = False
+        return _json_no_store(payload)
 
     # ----- metered: advanced analysis (bound to REAL market data) -----
     @app.post("/api/v1/personal/analysis")

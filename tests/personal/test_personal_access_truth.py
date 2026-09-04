@@ -141,6 +141,16 @@ class _UsageRepo:
         return False, used
 
 
+class _BrokenUsageRepo:
+    """A usage repository whose ledger read fails — simulates a metering outage."""
+
+    def get_used(self, *a, **k):
+        raise RuntimeError("usage ledger unavailable")
+
+    def consume(self, *a, **k):
+        raise RuntimeError("usage ledger unavailable")
+
+
 class _WlRepo:
     def __init__(self):
         self.by_account = {}
@@ -163,7 +173,7 @@ class _WlRepo:
         self.by_account[account_id] = [s for s in self.by_account.get(account_id, []) if s.upper() != symbol.upper()]
 
 
-def _app(*, days_since_registration=None, sub=None):
+def _app(*, days_since_registration=None, sub=None, usage="ok"):
     created = (
         (datetime.now(timezone.utc) - timedelta(days=days_since_registration)).isoformat()
         if days_since_registration is not None
@@ -174,7 +184,11 @@ def _app(*, days_since_registration=None, sub=None):
     subs = _SubRepo(sub)
     app.config["NEXUS_PRODUCT_ALPHA_SERVICES"] = {"auth": _Auth(created)}
     app.config[SUBSCRIPTION_REPO_CONFIG_KEY] = subs
-    app.config[USAGE_SERVICE_CONFIG_KEY] = UsageService(usage_repo=_UsageRepo(), subscription_repo=subs)
+    if usage == "ok":
+        app.config[USAGE_SERVICE_CONFIG_KEY] = UsageService(usage_repo=_UsageRepo(), subscription_repo=subs)
+    elif usage == "broken":
+        app.config[USAGE_SERVICE_CONFIG_KEY] = UsageService(usage_repo=_BrokenUsageRepo(), subscription_repo=subs)
+    # usage == "none": leave the usage service unconfigured (no pool) -> None.
     app.config[WATCHLIST_REPO_CONFIG_KEY] = _WlRepo()
     app.config[MARKET_SOURCE_CONFIG_KEY] = lambda sym: [100.0, 101.0, 103.0, 102.5, 106.0]
     register_billing_routes(app)
@@ -275,6 +289,33 @@ def test_enterprise_billing_never_becomes_personal_plan():  # 6C at route level
     assert personal_plan == "starter"  # falls through to the active trial
 
 
+def _access(client):
+    return client.get("/api/v1/personal/access", headers=_H).get_json()
+
+
+def test_personal_access_usage_unavailable_when_no_service():  # section 1
+    acc = _access(_app(days_since_registration=5, usage="none").test_client())
+    # Plan / entitlements / billing remain correct despite usage being unavailable.
+    assert acc["effective_plan_code"] == "starter"
+    assert {"watchlists", "extended_market_history"} <= set(acc["entitlements"])
+    assert acc["billing_status"] == "inactive"
+    assert acc["usage_available"] is False and acc["quotas"] is None
+
+
+def test_personal_access_usage_unavailable_on_ledger_read_error():  # section 1
+    acc = _access(_app(days_since_registration=5, usage="broken").test_client())
+    assert acc["effective_plan_code"] == "starter"                 # plan truth intact
+    assert {"watchlists", "extended_market_history"} <= set(acc["entitlements"])
+    assert acc["usage_available"] is False and acc["quotas"] is None  # not fabricated []
+
+
+def test_personal_access_healthy_usage_returns_exact_quotas():  # section 1
+    acc = _access(_app(days_since_registration=5, usage="ok").test_client())
+    assert acc["usage_available"] is True
+    q = {x["quota_code"]: x["limit"] for x in acc["quotas"]}
+    assert q["watchlist_items"] == 20 and q["history_days"] == 30
+
+
 def test_membership_ui_sources_effective_plan_from_personal_access():  # section 5
     billing = Path("frontend/src/member_platform_v1/pages/BillingPages.tsx").read_text(encoding="utf-8")
     auth = Path("frontend/src/member_platform_v1/context/AuthContext.tsx").read_text(encoding="utf-8")
@@ -286,6 +327,16 @@ def test_membership_ui_sources_effective_plan_from_personal_access():  # section
     assert "getBillingSubscription" in billing
     # App-wide tier is trial-aware too (was billing-only before).
     assert "getPersonalAccess" in auth and "getBillingEntitlements" not in auth
+    # Personal AuthContext tier is Personal-only: Enterprise (and unknown) fail
+    # closed to free — the tier allowlist must NOT contain "enterprise".
+    import re as _re
+    m = _re.search(r"PERSONAL_TIERS[^\n]*=\s*\[([^\]]*)\]", auth)
+    assert m is not None, "expected a PERSONAL_TIERS allowlist"
+    assert "enterprise" not in m.group(1)
+    for t in ("free", "starter", "pro", "advanced"):
+        assert t in m.group(1)
+    # No legacy member-entitlement plan fallback when Personal access fails.
+    assert "getMemberEntitlements" not in auth and "mapMemberPlan" not in auth
 
 
 def test_unknown_or_malformed_paid_plan_fails_closed():  # section 7

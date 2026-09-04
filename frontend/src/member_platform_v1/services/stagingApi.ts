@@ -444,8 +444,12 @@ export async function getBillingUsage(): Promise<BillingUsage> {
 export type PersonalAccess = {
   effective_plan_code: string;
   entitlements: string[];
-  quotas: BillingUsageQuota[];
   billing_status: string;
+  // Usage/quota is best-effort with EXPLICIT availability: `usage_available:false`
+  // + `quotas:null` means the usage ledger could not be read — NOT that the plan
+  // has no quotas. Plan/entitlements/billing_status are always authoritative.
+  usage_available: boolean;
+  quotas: BillingUsageQuota[] | null;
 };
 
 export async function getPersonalAccess(): Promise<PersonalAccess> {

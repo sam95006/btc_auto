@@ -297,25 +297,56 @@ def _access_consistency(opener, origin: str, effective_plan: str, acc: dict) -> 
     })
 
 
-def _access_tier_exact(acc: dict) -> str:
-    """Prove the LIVE active-Starter-trial account receives EXACTLY Starter access
-    (read-only): Starter capabilities granted, Pro+ withheld, Starter quota limits.
-    Fails closed on any deviation."""
-    plan = str(acc.get("effective_plan_code") or "")
-    if plan != "starter":
-        raise E2EError(f"tier_not_starter:{plan}")
+def _access_tier_check(state: Any, effective_plan: str, acc: dict) -> str:
+    """STATE-AWARE exact-tier proof (read-only). Personal access must equal the
+    subscription effective plan and NEVER be Enterprise; then, per trial state:
+
+      * TRIAL         -> starter, with EXACT Starter access (caps + 20/30 quotas);
+      * TRIAL_EXPIRED -> free;
+      * PAID          -> a Personal paid plan (starter/pro/advanced), never enterprise/free;
+      * FREE          -> free;
+      * anything else -> fail closed.
+
+    This keeps the release workflow valid after the current member's trial expires
+    or they buy a paid plan. Fails closed on any deviation."""
+    acc_plan = str(acc.get("effective_plan_code") or "")
+    if acc_plan != effective_plan:
+        raise E2EError(f"access_plan_{acc_plan}_ne_subscription_{effective_plan}")
+    if acc_plan == "enterprise":
+        raise E2EError("personal_effective_plan_is_enterprise")
     ent = set(acc.get("entitlements") or [])
-    if not set(STARTER_GRANTED) <= ent:
-        raise E2EError("starter_capabilities_not_granted")
-    if set(STARTER_DENIED) & ent:
-        raise E2EError("pro_capabilities_granted_to_starter")
-    q = {x.get("quota_code"): x.get("limit") for x in (acc.get("quotas") or [])}
-    if q.get("watchlist_items") != STARTER_WATCHLIST_ITEMS:
-        raise E2EError(f"watchlist_items_{q.get('watchlist_items')}_ne_{STARTER_WATCHLIST_ITEMS}")
-    if q.get("history_days") != STARTER_HISTORY_DAYS:
-        raise E2EError(f"history_days_{q.get('history_days')}_ne_{STARTER_HISTORY_DAYS}")
-    return json.dumps({"tier": "starter", "watchlist_items": q.get("watchlist_items"),
-                       "history_days": q.get("history_days")})
+    usage_available = bool(acc.get("usage_available"))
+    limits = {q.get("quota_code"): q.get("limit") for q in (acc.get("quotas") or [])}
+
+    if state == "TRIAL":
+        if effective_plan != "starter":
+            raise E2EError(f"trial_not_starter:{effective_plan}")
+        if not set(STARTER_GRANTED) <= ent:
+            raise E2EError("starter_capabilities_not_granted")
+        if set(STARTER_DENIED) & ent:
+            raise E2EError("pro_capabilities_granted_to_starter")
+        if not usage_available:
+            raise E2EError("usage_unavailable_cannot_verify_starter_quota")
+        if limits.get("watchlist_items") != STARTER_WATCHLIST_ITEMS:
+            raise E2EError(f"watchlist_items_{limits.get('watchlist_items')}_ne_{STARTER_WATCHLIST_ITEMS}")
+        if limits.get("history_days") != STARTER_HISTORY_DAYS:
+            raise E2EError(f"history_days_{limits.get('history_days')}_ne_{STARTER_HISTORY_DAYS}")
+        return json.dumps({"state": "TRIAL", "tier": "starter",
+                           "watchlist_items": limits.get("watchlist_items"),
+                           "history_days": limits.get("history_days")})
+    if state == "TRIAL_EXPIRED":
+        if effective_plan != "free":
+            raise E2EError(f"expired_not_free:{effective_plan}")
+        return json.dumps({"state": "TRIAL_EXPIRED", "tier": "free"})
+    if state == "PAID":
+        if effective_plan not in ("starter", "pro", "advanced"):
+            raise E2EError(f"paid_plan_not_personal:{effective_plan}")
+        return json.dumps({"state": "PAID", "tier": effective_plan})
+    if state == "FREE":
+        if effective_plan != "free":
+            raise E2EError(f"free_state_not_free:{effective_plan}")
+        return json.dumps({"state": "FREE", "tier": "free"})
+    raise E2EError(f"unverifiable_state:{state}")
 
 
 # --------------------------------------------------------------------------- #
@@ -417,7 +448,7 @@ def run() -> int:
         return 1
     print(f"PERSONAL_ACCESS_CONSISTENT=yes {ac}")
     try:
-        tier = _access_tier_exact(acc)
+        tier = _access_tier_check(trial.get("state"), effective_plan, acc)
     except E2EError as exc:
         print(f"PERSONAL_ACCESS_TIER_EXACT=no reason={exc}")
         print("AUTHENTICATED_WORKSTREAM_B_E2E=no")

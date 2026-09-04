@@ -66,8 +66,15 @@ function BillingCenterInner() {
         subscription_status: a.billing_status,
         entitlements: a.entitlements,
       });
-      setUsage({ effective_plan_code: a.effective_plan_code, quotas: a.quotas });
-      setUsageError(false);
+      // Usage is best-effort: a ledger outage shows the usage section as
+      // unavailable but never blocks plan/entitlement rendering or the page.
+      if (a.usage_available && a.quotas) {
+        setUsage({ effective_plan_code: a.effective_plan_code, quotas: a.quotas });
+        setUsageError(false);
+      } else {
+        setUsage(null);
+        setUsageError(true);
+      }
     } catch {
       setError("目前無法載入帳務資訊，請稍後再試。");
     } finally {
