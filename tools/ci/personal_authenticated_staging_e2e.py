@@ -33,6 +33,7 @@ import os
 import sys
 import urllib.error
 import urllib.request
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 DEFAULT_API_ORIGIN = "https://nexus-api-staging.zeabur.app"
@@ -46,7 +47,12 @@ EXPECTED_ON_EXPIRY = "paid_else_free"
 # Canonical Personal plan codes + the separate Enterprise (contact-sales) tier.
 EXPECTED_PERSONAL_PLANS = ("free", "starter", "pro", "advanced")
 ENTERPRISE_CODE = "enterprise"
-PAID_PLANS = ("starter", "pro", "advanced", "enterprise")
+# Enterprise is a SEPARATE product / contact-sales surface — it is NEVER a valid
+# Personal effective plan, so it is deliberately excluded from the paid allowlist.
+PAID_PLANS = ("starter", "pro", "advanced")
+
+# Exact Starter-trial length (registration origin -> +30 days).
+TRIAL_LENGTH = timedelta(days=EXPECTED_TRIAL_DAYS)
 
 
 class E2EError(Exception):
@@ -74,6 +80,10 @@ def validate_trial_truth(effective_plan: str, trial: dict, trial_contract: dict)
         raise E2EError("trial_contract_on_expiry_not_paid_else_free")
     if trial_contract.get("auto_charge") is not False:
         raise E2EError("trial_contract_auto_charge_not_false")
+
+    # Enterprise is a separate product and must NEVER be a Personal effective plan.
+    if effective_plan == ENTERPRISE_CODE:
+        raise E2EError("enterprise_is_not_a_personal_effective_plan")
 
     state = trial.get("state")
     active = bool(trial.get("trial_active"))
@@ -109,6 +119,44 @@ def validate_trial_truth(effective_plan: str, trial: dict, trial_contract: dict)
             raise E2EError("free_state_effective_plan_not_free")
     else:  # UNAVAILABLE or unknown -> trial truth could not be established.
         raise E2EError(f"trial_state_unverifiable:{state}")
+
+
+def _parse_aware(value: Any) -> Optional[datetime]:
+    """Parse an ISO-8601 timestamp to a timezone-AWARE datetime (naive => UTC).
+    Returns None if the value is missing or unparseable."""
+    if not isinstance(value, str) or not value.strip():
+        return None
+    text = value.strip()
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        dt = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+
+
+def validate_registration_anchor(session_created_at: Any, trial: dict) -> None:
+    """Prove the LIVE trial is anchored to the account's ORIGINAL registration
+    timestamp — WITHOUT any DB access. For a trial-bearing account:
+
+        trial.trial_started_at == session.created_at   (same instant)
+        trial.trial_ends_at - trial.trial_started_at == exactly 30 days
+
+    Raises E2EError (fail closed) if any timestamp is missing/unparseable or the
+    values are inconsistent. Only instants are compared; nothing is returned or
+    printed (the raw timestamps must never be logged)."""
+    registered = _parse_aware(session_created_at)
+    if registered is None:
+        raise E2EError("anchor_session_created_at_missing")
+    started = _parse_aware(trial.get("trial_started_at"))
+    ends = _parse_aware(trial.get("trial_ends_at"))
+    if started is None or ends is None:
+        raise E2EError("anchor_trial_timestamps_missing")
+    if started != registered:
+        raise E2EError("anchor_trial_start_ne_registration")
+    if (ends - started) != TRIAL_LENGTH:
+        raise E2EError("anchor_interval_not_30_days")
 
 
 def validate_membership_catalog(catalog: dict) -> None:
@@ -236,13 +284,30 @@ def run() -> int:
         print("AUTHENTICATED_WORKSTREAM_B_E2E=no")
         return 1
 
+    # 2b) LIVE trial registration-anchor proof (no DB): the trial must start at
+    #     the account's ORIGINAL registration timestamp and last exactly 30 days.
+    #     session.created_at comes from the authenticated member session identity;
+    #     trial_started_at / trial_ends_at from the subscription. Raw values are
+    #     never printed.
+    s_session, sess_body = _request(opener, "GET", f"{origin}/api/v1/member/session")
+    if s_session != 200:
+        print(f"TRIAL_REGISTRATION_ANCHOR_VALID=no session_http={s_session}")
+        print("AUTHENTICATED_WORKSTREAM_B_E2E=no")
+        return 1
+    session_created_at = (sess_body.get("session") or {}).get("created_at")
+    try:
+        validate_registration_anchor(session_created_at, trial)
+    except E2EError as exc:
+        print(f"TRIAL_REGISTRATION_ANCHOR_VALID=no reason={exc}")
+        print("AUTHENTICATED_WORKSTREAM_B_E2E=no")
+        return 1
+    print("TRIAL_REGISTRATION_ANCHOR_VALID=yes")
+
     # 3) Authenticated Personal Home / API access (member session + per-member
     #    features, the Home's plan/feature source).
-    s_session, _ = _request(opener, "GET", f"{origin}/api/v1/member/session")
     s_feat, feat = _request(opener, "GET", f"{origin}/api/v1/personal/features")
     home_ok = (
-        s_session == 200
-        and s_feat == 200
+        s_feat == 200
         and str(feat.get("effective_plan_code") or "") == effective_plan
     )
     print("PERSONAL_HOME_AUTHENTICATED=" + ("yes" if home_ok else "no"))

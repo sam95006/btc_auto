@@ -70,3 +70,23 @@ jobs:
           test -n "$NEXUS_STAGING_E2E_PASSWORD"
           python tools/ci/personal_authenticated_staging_e2e.py
           echo "PERSONAL_AUTHENTICATED_STAGING_E2E_COMPLETE=yes"
+
+      - name: Install Playwright (Chromium) for the browser smoke
+        run: |
+          set -euo pipefail
+          pip install "playwright==1.47.0"
+          python -m playwright install --with-deps chromium
+
+      - name: Personal browser smoke — desktop 1440 + mobile 390 (correctness only)
+        env:
+          # Same protected-Environment credentials; the browser origin is the
+          # Personal web app. Values are never read, printed, or logged.
+          NEXUS_STAGING_E2E_EMAIL: ${{ secrets.NEXUS_STAGING_E2E_EMAIL }}
+          NEXUS_STAGING_E2E_PASSWORD: ${{ secrets.NEXUS_STAGING_E2E_PASSWORD }}
+          NEXUS_PERSONAL_E2E_WEB_ORIGIN: ${{ vars.NEXUS_PERSONAL_E2E_WEB_ORIGIN }}
+        run: |
+          set -euo pipefail
+          test -n "$NEXUS_STAGING_E2E_EMAIL"
+          test -n "$NEXUS_STAGING_E2E_PASSWORD"
+          python tools/ci/personal_browser_smoke.py
+          echo "PERSONAL_BROWSER_SMOKE_COMPLETE=yes"

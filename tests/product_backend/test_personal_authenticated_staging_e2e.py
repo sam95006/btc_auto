@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 SCRIPT = Path("tools/ci/personal_authenticated_staging_e2e.py")
+SMOKE = Path("tools/ci/personal_browser_smoke.py")
 WORKFLOW = Path(".github/workflows/personal_authenticated_staging_e2e.yml")
 
 
@@ -74,6 +75,86 @@ def test_expired_trial_must_be_free():
 def test_unavailable_state_fails_closed():
     with pytest.raises(e2e.E2EError):
         e2e.validate_trial_truth("free", {"state": "UNAVAILABLE", "trial_active": False}, _contract())
+
+
+def test_enterprise_is_never_a_personal_effective_plan():
+    # Enterprise is a separate product; a Personal subscription reporting
+    # effective_plan=enterprise must fail closed (in ANY state).
+    assert "enterprise" not in e2e.PAID_PLANS
+    with pytest.raises(e2e.E2EError):
+        e2e.validate_trial_truth(
+            "enterprise",
+            {"state": "PAID", "plan": "enterprise", "trial_active": False},
+            _contract(),
+        )
+
+
+# --------------------------------------------------------------------------- #
+# LIVE trial registration-anchor proof.
+# --------------------------------------------------------------------------- #
+def test_registration_anchor_matching_origin_passes():
+    e2e.validate_registration_anchor(
+        "2026-08-01T00:00:00+00:00",
+        {"trial_started_at": "2026-08-01T00:00:00+00:00",
+         "trial_ends_at": "2026-08-31T00:00:00+00:00"},  # exactly 30 days
+    )
+
+
+def test_registration_anchor_accepts_equivalent_instant_across_tz_forms():
+    # Same instant expressed with 'Z' vs +00:00 must still match.
+    e2e.validate_registration_anchor(
+        "2026-08-01T00:00:00Z",
+        {"trial_started_at": "2026-08-01T00:00:00+00:00",
+         "trial_ends_at": "2026-08-31T00:00:00+00:00"},
+    )
+
+
+def test_registration_anchor_mismatched_origin_fails():
+    with pytest.raises(e2e.E2EError):
+        e2e.validate_registration_anchor(
+            "2026-08-01T00:00:00+00:00",
+            {"trial_started_at": "2026-08-02T00:00:00+00:00",   # != registration
+             "trial_ends_at": "2026-09-01T00:00:00+00:00"},
+        )
+
+
+def test_registration_anchor_non_30_day_interval_fails():
+    with pytest.raises(e2e.E2EError):
+        e2e.validate_registration_anchor(
+            "2026-08-01T00:00:00+00:00",
+            {"trial_started_at": "2026-08-01T00:00:00+00:00",
+             "trial_ends_at": "2026-08-30T00:00:00+00:00"},   # 29 days
+        )
+
+
+def test_registration_anchor_missing_or_malformed_fails_closed():
+    # Missing session created_at.
+    with pytest.raises(e2e.E2EError):
+        e2e.validate_registration_anchor(
+            None, {"trial_started_at": "2026-08-01T00:00:00+00:00",
+                   "trial_ends_at": "2026-08-31T00:00:00+00:00"})
+    # Missing trial timestamps.
+    with pytest.raises(e2e.E2EError):
+        e2e.validate_registration_anchor("2026-08-01T00:00:00+00:00", {})
+    # Malformed timestamp.
+    with pytest.raises(e2e.E2EError):
+        e2e.validate_registration_anchor(
+            "not-a-timestamp",
+            {"trial_started_at": "2026-08-01T00:00:00+00:00",
+             "trial_ends_at": "2026-08-31T00:00:00+00:00"})
+
+
+def test_registration_anchor_matches_real_backend_trial_output():
+    """Genuine backend trial output for a freshly-registered account must satisfy
+    the anchor: trial_started_at == registered_at and a 30-day window."""
+    from datetime import datetime, timedelta, timezone
+
+    from backend.nexus_platform import trial as _trial
+
+    now = datetime(2026, 9, 4, tzinfo=timezone.utc)
+    reg = now - timedelta(days=5)
+    status = _trial.trial_status(now, registered_at=reg, paid_plan=None)
+    e2e.validate_registration_anchor(reg.isoformat(), status)
 
 
 def test_contract_drift_fails_closed():
@@ -203,6 +284,41 @@ def test_runner_source_never_prints_credentials_or_identity():
 
 
 # --------------------------------------------------------------------------- #
+# Browser smoke: secret-safe, correctness-only, two viewports (source scan so it
+# runs without Playwright installed).
+# --------------------------------------------------------------------------- #
+def test_browser_smoke_is_secret_safe_and_correctness_only():
+    src = SMOKE.read_text(encoding="utf-8")
+    # Exactly the two required viewports.
+    assert "1440" in src and "900" in src
+    assert "390" in src and "844" in src
+    # Real UI login via typed fields; credentials are filled, never printed.
+    assert ".fill(email)" in src and ".fill(password)" in src
+    print_lines = [ln for ln in src.splitlines() if "print(" in ln]
+    for ln in print_lines:
+        low = ln.lower()
+        for forbidden in ("password", "email", "cookie", "session id",
+                          "created_at", "storage_state"):
+            assert forbidden not in low, f"smoke print may leak {forbidden!r}: {ln.strip()}"
+    # Fresh incognito context per viewport; no on-disk session persistence.
+    assert "new_context(" in src
+    assert "storage_state" not in src and ".save(" not in src
+    # Correctness assertions present: session-persist, plans, enterprise-separate,
+    # no-founder/trading UI, logout+redirect.
+    for needed in ("session_did_not_persist", "plan-advanced", "enterprise",
+                   "FORBIDDEN_UI_TERMS", "登出", "post_logout_app_not_redirected_to_login"):
+        assert needed in src
+    # Emits the two runtime markers.
+    assert "PERSONAL_DESKTOP_RUNTIME" in src and "PERSONAL_MOBILE_RUNTIME" in src
+
+
+def test_browser_smoke_forbids_founder_and_trading_ui_terms():
+    src = SMOKE.read_text(encoding="utf-8")
+    for term in ("下單", "槓桿", "leverage", "position size", "founder", "bybit"):
+        assert term in src, f"smoke must screen for {term!r}"
+
+
+# --------------------------------------------------------------------------- #
 # Workflow protection.
 # --------------------------------------------------------------------------- #
 def test_workflow_is_ref_and_environment_protected():
@@ -218,5 +334,15 @@ def test_workflow_is_ref_and_environment_protected():
     # Never any direct DB access from this workflow (scan executable YAML only;
     # the header comment may say it does NOT touch Postgres).
     exec_yaml = "\n".join(ln for ln in wf.splitlines() if not ln.lstrip().startswith("#")).lower()
-    for db in ("postgres", "psql", "nexus_staging_postgres_url", "database_url"):
+    for db in ("psql", "nexus_staging_postgres_url", "database_url"):
         assert db not in exec_yaml
+    # "postgres" may appear only inside the Playwright system-deps install
+    # (playwright install --with-deps pulls OS libs), never as a DB step.
+    for ln in exec_yaml.splitlines():
+        if "postgres" in ln:
+            assert "playwright" in ln, f"unexpected postgres reference: {ln.strip()}"
+    # The browser smoke runs both viewports via the dedicated script, using the
+    # same Environment secrets only as env.
+    assert "tools/ci/personal_browser_smoke.py" in wf
+    assert "python -m playwright install" in wf
+    assert "NEXUS_STAGING_E2E_PASSWORD: ${{ secrets.NEXUS_STAGING_E2E_PASSWORD }}" in wf
