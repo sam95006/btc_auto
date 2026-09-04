@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { MembershipTier, MemberSession } from "../types/dto";
 import {
-  getBillingEntitlements,
+  getPersonalAccess,
   getMemberEntitlements,
   getMemberSession,
   registrationRequiresVerification,
@@ -66,12 +66,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const hydrate = useCallback(async () => {
     const { session: remote, profile } = await getMemberSession();
-    // Canonical effective plan is backend-authoritative (nexus_billing). The old
-    // member-entitlement naming is only a best-effort fallback when billing is
-    // unavailable. The frontend never derives access from a tier rank.
+    // Canonical effective plan is backend-authoritative and TRIAL-AWARE: an active
+    // Starter trial resolves to Starter here, consistent with /personal/subscription.
+    // It comes from the Personal access endpoint (NOT the generic billing plan,
+    // which is billing-subscription-only). The old member-entitlement naming is a
+    // best-effort fallback. The frontend never derives access from a tier rank.
     let tier: MembershipTier = "free";
     try {
-      tier = normalizeTier((await getBillingEntitlements()).effective_plan_code);
+      tier = normalizeTier((await getPersonalAccess()).effective_plan_code);
     } catch {
       try { tier = mapMemberPlan((await getMemberEntitlements()).plan); } catch { tier = "free"; }
     }

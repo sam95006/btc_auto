@@ -4,10 +4,9 @@ import { useAuth } from "../context/AuthContext";
 import { MarketingHeader, AuthFooter } from "../layout/Shells";
 import {
   cancelBillingSubscription,
-  getBillingEntitlements,
   getBillingPlans,
   getBillingSubscription,
-  getBillingUsage,
+  getPersonalAccess,
   openBillingPortal,
   startBillingCheckout,
   type BillingEntitlements,
@@ -52,26 +51,27 @@ function BillingCenterInner() {
     setLoading(true);
     setError("");
     try {
-      const [p, s, e] = await Promise.all([
+      const [p, s, a] = await Promise.all([
         getBillingPlans(),
         getBillingSubscription(),
-        getBillingEntitlements(),
+        // Trial-aware PERSONAL access = effective plan + entitlements + quotas.
+        getPersonalAccess(),
       ]);
       setPlans(p.plans);
-      setSubscription(s.subscription);
-      setEntitlements(e);
+      setSubscription(s.subscription); // raw payment/subscription status (billing)
+      // Effective plan + entitlements come from Personal access truth; the raw
+      // billing status is carried through as subscription_status for reference.
+      setEntitlements({
+        effective_plan_code: a.effective_plan_code,
+        subscription_status: a.billing_status,
+        entitlements: a.entitlements,
+      });
+      setUsage({ effective_plan_code: a.effective_plan_code, quotas: a.quotas });
+      setUsageError(false);
     } catch {
       setError("目前無法載入帳務資訊，請稍後再試。");
     } finally {
       setLoading(false);
-    }
-    // Usage is loaded separately so a metering outage does not break the page.
-    try {
-      setUsage(await getBillingUsage());
-      setUsageError(false);
-    } catch {
-      setUsage(null);
-      setUsageError(true);
     }
   }, []);
 

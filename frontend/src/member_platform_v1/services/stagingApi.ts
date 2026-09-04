@@ -436,6 +436,22 @@ export async function getBillingUsage(): Promise<BillingUsage> {
   return getJson<BillingUsage>("/billing/usage");
 }
 
+// PERSONAL product ACCESS (trial-aware): the effective Personal plan, its
+// entitlements, and quota/capacity limits. This is the source the member UI uses
+// for effective-plan / entitlement / quota DISPLAY. Raw payment status stays on
+// getBillingSubscription(); the two are deliberately separate (a Starter trial
+// has Starter access but an inactive billing subscription).
+export type PersonalAccess = {
+  effective_plan_code: string;
+  entitlements: string[];
+  quotas: BillingUsageQuota[];
+  billing_status: string;
+};
+
+export async function getPersonalAccess(): Promise<PersonalAccess> {
+  return getJson<PersonalAccess>("/personal/access");
+}
+
 // ---------------------------------------------------------------------------
 // Personal Market Intelligence product (PERSONAL-1). Every paid action is
 // gated on the backend by Authentication AND Entitlement AND (when metered)

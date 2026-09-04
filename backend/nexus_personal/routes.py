@@ -15,14 +15,18 @@ from typing import Any, Optional
 
 from flask import Flask, request
 
-from backend.nexus_billing.entitlements import effective_plan_code, plan_has_entitlement
+from backend.nexus_billing.entitlements import (
+    effective_plan_code,
+    plan_has_entitlement,
+    resolve_entitlements_for_plan,
+)
 from backend.nexus_billing.routes import (
     _account_subscription,
     _authenticated_account_id,
     _json_no_store,
     _services as _billing_services,
     _session_id,
-    enforce_entitlement,
+    _usage_service,
     enforce_quota,
 )
 from backend.nexus_billing.usage_policy import quota_limit
@@ -69,6 +73,25 @@ def _effective_plan(app: Flask, account_id: str) -> str:
     return effective_personal_plan(
         registered_at=registered_at, subscription=_account_subscription(app, account_id)
     )
+
+
+def _personal_entitlements(app: Flask, account_id: str):
+    """Entitlements resolved from the canonical Personal effective plan (trial-
+    aware). This is the PERSONAL access path — distinct from the generic billing
+    entitlement resolver, which stays billing-subscription authoritative."""
+    return resolve_entitlements_for_plan(_effective_plan(app, account_id))
+
+
+def _enforce_personal_entitlement(app: Flask, account_id: str, feature_code: str):
+    """Personal entitlement gate: deny (403) unless the canonical Personal
+    effective plan holds the feature. Callers have already resolved account_id."""
+    if not _personal_entitlements(app, account_id).has(feature_code):
+        return _json_no_store(
+            {"error": "entitlement_required", "classification": "ENTITLEMENT_REQUIRED",
+             "required_feature": feature_code},
+            403,
+        )
+    return None
 
 
 def _authenticated_identity(app: Flask) -> Optional[dict[str, Any]]:
@@ -194,32 +217,27 @@ def register_personal_routes(app: Flask) -> None:
     # ----- member subscription + honest Starter-trial status (no fabrication) -----
     @app.get("/api/v1/personal/subscription")
     def personal_subscription():
-        from datetime import datetime, timezone
-
         from backend.nexus_platform import plans as _plans
-        from backend.nexus_platform import trial as _trial
+        from backend.nexus_platform import personal_access as _pa
 
         identity = _authenticated_identity(app)
         account_id = identity.get("account_id") if identity else None
         if not account_id:
             return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
 
-        from backend.nexus_platform.personal_access import personal_paid_plan
-
         sub = _account_subscription(app, account_id)
-        # Canonical paid-plan extraction (live, non-free, and NEVER Enterprise —
-        # Enterprise is a separate product, never a Personal effective plan).
-        paid_plan = personal_paid_plan(sub)
-        # CANONICAL TRIAL START = the ACCOUNT registration timestamp
-        # (nexus.accounts.created_at), resolved from the authenticated session
-        # identity — NOT subscription.created_at, not the billing row, not now(),
-        # not any browser-supplied value. When it cannot be resolved truthfully the
-        # trial is reported UNAVAILABLE rather than fabricated.
+        # Single source of truth: the canonical Personal access module resolves the
+        # paid Personal plan (live, allowlisted, NEVER Enterprise) and the trial
+        # status from the ACCOUNT registration timestamp (accounts.created_at via
+        # the authenticated identity) — not subscription.created_at / now / any
+        # browser value. When registration cannot be resolved AND there is no paid
+        # plan the public contract reports UNAVAILABLE rather than a fabricated
+        # trial/free.
+        paid_plan = _pa.personal_paid_plan(sub)
         registered_at = _parse_iso_utc(identity.get("created_at"))
-        now = datetime.now(timezone.utc)
         if registered_at is not None:
-            status = _trial.trial_status(now, registered_at=registered_at, paid_plan=paid_plan)
-            effective = _trial.effective_plan(now, registered_at=registered_at, paid_plan=paid_plan)
+            status = _pa.personal_trial_status(registered_at=registered_at, subscription=sub)
+            effective = _pa.effective_personal_plan(registered_at=registered_at, subscription=sub)
         elif paid_plan:
             status = {"state": "PAID", "plan": paid_plan, "trial_active": False}
             effective = paid_plan
@@ -235,13 +253,37 @@ def register_personal_routes(app: Flask) -> None:
             "currency": catalog["currency"],
         })
 
+    # ----- Personal product ACCESS truth (trial-aware) for the member UI -----
+    @app.get("/api/v1/personal/access")
+    def personal_access_view():
+        """Member-safe Personal ACCESS contract: the trial-aware effective plan,
+        its entitlements, and quota/capacity limits — the source the membership
+        page uses for entitlement/quota display. Raw payment status is exposed as
+        a SEPARATE `billing_status` field; this endpoint never mints a paid row.
+        Distinct from the generic /billing endpoints, which stay billing-only."""
+        account_id = _authenticated_account_id(app)
+        if not account_id:
+            return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
+        plan = _effective_plan(app, account_id)
+        resolution = resolve_entitlements_for_plan(plan)
+        svc = _usage_service(app)
+        quotas = svc.resolve_usage(account_id, effective_plan=plan)["quotas"] if svc is not None else []
+        sub = _account_subscription(app, account_id)
+        billing_status = getattr(sub, "status", "inactive") if sub is not None else "inactive"
+        return _json_no_store({
+            "effective_plan_code": plan,
+            "entitlements": resolution.feature_codes,
+            "quotas": quotas,
+            "billing_status": billing_status,   # raw payment truth, kept separate
+        })
+
     # ----- metered: advanced analysis (bound to REAL market data) -----
     @app.post("/api/v1/personal/analysis")
     def personal_analysis():
         account_id = _authenticated_account_id(app)
         if not account_id:
             return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
-        denied = enforce_entitlement(app, "advanced_analysis")
+        denied = _enforce_personal_entitlement(app, account_id, "advanced_analysis")
         if denied is not None:
             return denied
         body = request.get_json(silent=True) or {}
@@ -256,7 +298,10 @@ def register_personal_routes(app: Flask) -> None:
             # No real market data -> unavailable; never fabricate, never consume.
             return _json_no_store({"error": "market_data_unavailable", "classification": "UNAVAILABLE"}, 503)
         analysis = analyze_series(symbol, series.closes)
-        err, decision = enforce_quota(app, account_id, "advanced_analysis_requests_daily", idempotency_key=idem)
+        err, decision = enforce_quota(
+            app, account_id, "advanced_analysis_requests_daily", idempotency_key=idem,
+            effective_plan=_effective_plan(app, account_id),
+        )
         if err is not None:
             return err
         assert decision is not None
@@ -270,7 +315,7 @@ def register_personal_routes(app: Flask) -> None:
         account_id = _authenticated_account_id(app)
         if not account_id:
             return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
-        denied = enforce_entitlement(app, "report_generation")
+        denied = _enforce_personal_entitlement(app, account_id, "report_generation")
         if denied is not None:
             return denied
         body = request.get_json(silent=True) or {}
@@ -284,7 +329,10 @@ def register_personal_routes(app: Flask) -> None:
         if series is None:
             return _json_no_store({"error": "market_data_unavailable", "classification": "UNAVAILABLE"}, 503)
         analysis = analyze_series(symbol, series.closes)
-        err, decision = enforce_quota(app, account_id, "report_generation_monthly", idempotency_key=idem)
+        err, decision = enforce_quota(
+            app, account_id, "report_generation_monthly", idempotency_key=idem,
+            effective_plan=_effective_plan(app, account_id),
+        )
         if err is not None:
             return err
         assert decision is not None
@@ -297,7 +345,7 @@ def register_personal_routes(app: Flask) -> None:
         account_id = _authenticated_account_id(app)
         if not account_id:
             return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
-        denied = enforce_entitlement(app, "watchlists")
+        denied = _enforce_personal_entitlement(app, account_id, "watchlists")
         if denied is not None:
             return denied
         repo = _watchlist_repo(app)
@@ -313,7 +361,7 @@ def register_personal_routes(app: Flask) -> None:
         account_id = _authenticated_account_id(app)
         if not account_id:
             return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
-        denied = enforce_entitlement(app, "watchlists")
+        denied = _enforce_personal_entitlement(app, account_id, "watchlists")
         if denied is not None:
             return denied
         repo = _watchlist_repo(app)
@@ -344,7 +392,7 @@ def register_personal_routes(app: Flask) -> None:
         account_id = _authenticated_account_id(app)
         if not account_id:
             return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
-        denied = enforce_entitlement(app, "watchlists")
+        denied = _enforce_personal_entitlement(app, account_id, "watchlists")
         if denied is not None:
             return denied
         repo = _watchlist_repo(app)
@@ -359,7 +407,7 @@ def register_personal_routes(app: Flask) -> None:
         account_id = _authenticated_account_id(app)
         if not account_id:
             return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
-        denied = enforce_entitlement(app, "extended_market_history")
+        denied = _enforce_personal_entitlement(app, account_id, "extended_market_history")
         if denied is not None:
             return denied
         plan = _effective_plan(app, account_id)
@@ -408,7 +456,7 @@ def register_personal_routes(app: Flask) -> None:
         account_id = _authenticated_account_id(app)
         if not account_id:
             return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
-        denied = enforce_entitlement(app, "advanced_signals")
+        denied = _enforce_personal_entitlement(app, account_id, "advanced_signals")
         if denied is not None:
             return denied
         # Audit result: every existing signal/decision output is private trading
@@ -424,7 +472,7 @@ def register_personal_routes(app: Flask) -> None:
         account_id = _authenticated_account_id(app)
         if not account_id:
             return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
-        denied = enforce_entitlement(app, "risk_intelligence")
+        denied = _enforce_personal_entitlement(app, account_id, "risk_intelligence")
         if denied is not None:
             return denied
         symbol = str(request.args.get("symbol") or "BTCUSDT").upper()

@@ -253,37 +253,37 @@ def _request(
     return status, payload
 
 
-def _access_consistency(opener, origin: str, effective_plan: str) -> str:
-    """READ-ONLY proof that effective plan + entitlements + quota/capacity agree
-    across /billing/entitlements, /billing/usage and /personal/watchlist. Raises
-    E2EError on any disagreement. Consumes no quota and mutates no watchlist."""
-    s_ent, ent = _request(opener, "GET", f"{origin}/api/v1/billing/entitlements")
-    if s_ent != 200:
-        raise E2EError(f"billing_entitlements_http:{s_ent}")
-    ent_plan = str(ent.get("effective_plan_code") or "")
-    if ent_plan != effective_plan:
-        raise E2EError(f"entitlements_plan_{ent_plan}_ne_{effective_plan}")
+# Starter policy the LIVE active-trial account must resolve to (mirrors
+# nexus_billing.usage_policy; a backend test cross-checks these exact numbers).
+STARTER_WATCHLIST_ITEMS = 20
+STARTER_HISTORY_DAYS = 30
+STARTER_GRANTED = ("watchlists", "extended_market_history")
+STARTER_DENIED = ("advanced_analysis", "report_generation")
 
-    s_use, use = _request(opener, "GET", f"{origin}/api/v1/billing/usage")
-    if s_use != 200:
-        raise E2EError(f"billing_usage_http:{s_use}")
-    use_plan = str(use.get("effective_plan_code") or "")
-    if use_plan != effective_plan:
-        raise E2EError(f"usage_plan_{use_plan}_ne_{effective_plan}")
-    wl_limit = None
-    for q in (use.get("quotas") or []):
-        if q.get("quota_code") == "watchlist_items":
-            wl_limit = q.get("limit")
-            break
 
-    # Representative capacity, read-only. When the effective plan holds the
-    # watchlists entitlement (Starter+), capacity must equal the usage limit;
-    # a plan without it correctly denies (403) — both are consistent.
+def _fetch_personal_access(opener, origin: str) -> dict:
+    """The trial-aware PERSONAL access contract (NOT generic /billing, which stays
+    billing-only). Read-only."""
+    s_acc, acc = _request(opener, "GET", f"{origin}/api/v1/personal/access")
+    if s_acc != 200:
+        raise E2EError(f"personal_access_http:{s_acc}")
+    return acc
+
+
+def _access_consistency(opener, origin: str, effective_plan: str, acc: dict) -> str:
+    """READ-ONLY proof that the effective plan + quota/capacity agree across
+    /personal/access and /personal/watchlist. Consumes no quota, mutates nothing."""
+    acc_plan = str(acc.get("effective_plan_code") or "")
+    if acc_plan != effective_plan:
+        raise E2EError(f"access_plan_{acc_plan}_ne_subscription_{effective_plan}")
+    quotas = {q.get("quota_code"): q for q in (acc.get("quotas") or [])}
+    wl_limit = (quotas.get("watchlist_items") or {}).get("limit")
+
     s_wl, wl = _request(opener, "GET", f"{origin}/api/v1/personal/watchlist")
     if s_wl == 200:
         capacity = wl.get("capacity")
         if wl_limit is not None and capacity != wl_limit:
-            raise E2EError(f"watchlist_capacity_{capacity}_ne_usage_limit_{wl_limit}")
+            raise E2EError(f"watchlist_capacity_{capacity}_ne_access_limit_{wl_limit}")
         cap_repr: Any = capacity
     elif s_wl == 403:
         cap_repr = "denied_no_entitlement"
@@ -291,11 +291,31 @@ def _access_consistency(opener, origin: str, effective_plan: str) -> str:
         raise E2EError(f"watchlist_http:{s_wl}")
     return json.dumps({
         "effective_plan": effective_plan,
-        "entitlements_plan": ent_plan,
-        "usage_plan": use_plan,
+        "access_plan": acc_plan,
         "watchlist_capacity": cap_repr,
-        "usage_watchlist_limit": wl_limit,
+        "access_watchlist_limit": wl_limit,
     })
+
+
+def _access_tier_exact(acc: dict) -> str:
+    """Prove the LIVE active-Starter-trial account receives EXACTLY Starter access
+    (read-only): Starter capabilities granted, Pro+ withheld, Starter quota limits.
+    Fails closed on any deviation."""
+    plan = str(acc.get("effective_plan_code") or "")
+    if plan != "starter":
+        raise E2EError(f"tier_not_starter:{plan}")
+    ent = set(acc.get("entitlements") or [])
+    if not set(STARTER_GRANTED) <= ent:
+        raise E2EError("starter_capabilities_not_granted")
+    if set(STARTER_DENIED) & ent:
+        raise E2EError("pro_capabilities_granted_to_starter")
+    q = {x.get("quota_code"): x.get("limit") for x in (acc.get("quotas") or [])}
+    if q.get("watchlist_items") != STARTER_WATCHLIST_ITEMS:
+        raise E2EError(f"watchlist_items_{q.get('watchlist_items')}_ne_{STARTER_WATCHLIST_ITEMS}")
+    if q.get("history_days") != STARTER_HISTORY_DAYS:
+        raise E2EError(f"history_days_{q.get('history_days')}_ne_{STARTER_HISTORY_DAYS}")
+    return json.dumps({"tier": "starter", "watchlist_items": q.get("watchlist_items"),
+                       "history_days": q.get("history_days")})
 
 
 # --------------------------------------------------------------------------- #
@@ -382,18 +402,27 @@ def run() -> int:
         print("AUTHENTICATED_WORKSTREAM_B_E2E=no")
         return 1
 
-    # 3b) Access-truth consistency (READ-ONLY): the effective Personal plan,
-    #     entitlements, and quota/capacity must all agree across the endpoints the
-    #     Home + membership page consume — proving a trial member is not shown one
-    #     plan (Starter) while gated at another (Free). No quota is consumed and no
-    #     watchlist is mutated.
+    # 3b) Access-truth consistency + exact tier (READ-ONLY): the trial-aware
+    #     Personal access endpoint must agree with the subscription plan and grant
+    #     EXACTLY the Starter tier for the live active-trial account — proving the
+    #     member is not shown one plan (Starter) while gated at another (Free). No
+    #     quota is consumed and no watchlist is mutated. Generic /billing endpoints
+    #     are intentionally NOT used here (they stay billing-only).
     try:
-        ac = _access_consistency(opener, origin, effective_plan)
+        acc = _fetch_personal_access(opener, origin)
+        ac = _access_consistency(opener, origin, effective_plan, acc)
     except E2EError as exc:
         print(f"PERSONAL_ACCESS_CONSISTENT=no reason={exc}")
         print("AUTHENTICATED_WORKSTREAM_B_E2E=no")
         return 1
     print(f"PERSONAL_ACCESS_CONSISTENT=yes {ac}")
+    try:
+        tier = _access_tier_exact(acc)
+    except E2EError as exc:
+        print(f"PERSONAL_ACCESS_TIER_EXACT=no reason={exc}")
+        print("AUTHENTICATED_WORKSTREAM_B_E2E=no")
+        return 1
+    print(f"PERSONAL_ACCESS_TIER_EXACT=yes {tier}")
 
     # 4) Membership catalog (Free/Starter/Pro/Advanced; Enterprise separate).
     s_cat, catalog = _request(opener, "GET", f"{origin}/api/v1/personal/catalog")

@@ -37,6 +37,13 @@ from backend.nexus_platform import trial as _trial
 
 ENTERPRISE = _plans.PLAN_ENTERPRISE
 
+# The ONLY plans a Personal member can hold as a paid effective plan. Enterprise
+# is a separate product and is deliberately excluded; anything else (unknown,
+# malformed, or a non-Personal code) is never a Personal paid plan (fail closed).
+PERSONAL_PAID_PLANS: frozenset[str] = frozenset(
+    {_plans.PLAN_STARTER, _plans.PLAN_PRO, _plans.PLAN_ADVANCED}
+)
+
 
 def parse_registered_at(value: Any) -> Optional[datetime]:
     """Parse an account registration timestamp (accounts.created_at) to a
@@ -59,9 +66,11 @@ def parse_registered_at(value: Any) -> Optional[datetime]:
 
 
 def personal_paid_plan(subscription: Any) -> Optional[str]:
-    """The paid Personal plan from a billing subscription, or None. Only a LIVE,
-    non-free subscription yields a paid plan; Enterprise is never a Personal
-    paid plan (separate product)."""
+    """The paid Personal plan from a billing subscription, or None (fail closed).
+
+    Only a LIVE subscription whose plan is in the explicit Personal paid allowlist
+    (starter/pro/advanced) yields a paid Personal plan. Free, Enterprise, unknown,
+    or malformed codes never become a Personal paid plan."""
     if subscription is None:
         return None
     try:
@@ -69,7 +78,7 @@ def personal_paid_plan(subscription: Any) -> Optional[str]:
     except Exception:  # noqa: BLE001 - any malformed subscription => not paid
         return None
     code = getattr(subscription, "plan_code", None)
-    if live and isinstance(code, str) and code not in (_plans.PLAN_FREE, ENTERPRISE):
+    if live and isinstance(code, str) and code in PERSONAL_PAID_PLANS:
         return code
     return None
 

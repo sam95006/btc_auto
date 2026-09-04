@@ -321,14 +321,19 @@ def test_sanitized_view_excludes_registration_origin():
 # --------------------------------------------------------------------------- #
 def test_e2e_access_consistency_is_read_only_and_cross_endpoint():
     src = SCRIPT.read_text(encoding="utf-8")
-    # New read-only access-truth consistency check + marker.
+    # Read-only access-truth consistency + exact-tier markers.
     assert "PERSONAL_ACCESS_CONSISTENT" in src
-    assert "_access_consistency(" in src
-    for endpoint in ("/api/v1/billing/entitlements", "/api/v1/billing/usage",
-                     "/api/v1/personal/watchlist"):
-        assert endpoint in src
-    # It must never CONSUME quota or MUTATE the watchlist (no POST/DELETE to
-    # personal endpoints in the consistency path).
+    assert "PERSONAL_ACCESS_TIER_EXACT" in src
+    assert "_access_consistency(" in src and "_access_tier_exact(" in src
+    # It uses the trial-aware Personal access endpoint, not generic /billing.
+    assert "/api/v1/personal/access" in src
+    assert "/api/v1/billing/entitlements" not in src and "/api/v1/billing/usage" not in src
+    assert "/api/v1/personal/watchlist" in src
+    # Exact Starter tier is verified (capabilities + quota limits).
+    for tok in ("watchlists", "extended_market_history", "advanced_analysis",
+                "report_generation", "STARTER_WATCHLIST_ITEMS", "STARTER_HISTORY_DAYS"):
+        assert tok in src
+    # It must never CONSUME quota or MUTATE the watchlist.
     assert '"POST", f"{origin}/api/v1/personal/watchlist' not in src
     assert '"DELETE", f"{origin}/api/v1/personal/watchlist' not in src
     assert '/api/v1/personal/analysis' not in src and '/api/v1/personal/report' not in src

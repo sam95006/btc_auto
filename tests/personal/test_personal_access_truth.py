@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import threading
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from flask import Flask
 
@@ -184,43 +185,53 @@ def _app(*, days_since_registration=None, sub=None):
 _H = {"X-Nexus-Session": "sid"}
 
 
-def _plans_agree(client):
+def _personal_plans_agree(client):
+    """The PERSONAL access surfaces must agree (subscription / features / the
+    trial-aware /personal/access endpoint) — NOT the generic /billing endpoints,
+    which stay billing-only."""
     sub = client.get("/api/v1/personal/subscription", headers=_H).get_json()
     feat = client.get("/api/v1/personal/features", headers=_H).get_json()
-    bent = client.get("/api/v1/billing/entitlements", headers=_H).get_json()
-    busage = client.get("/api/v1/billing/usage", headers=_H).get_json()
-    return (
-        sub["effective_plan"],
-        feat["effective_plan_code"],
-        bent["effective_plan_code"],
-        busage["effective_plan_code"],
-    )
+    acc = client.get("/api/v1/personal/access", headers=_H).get_json()
+    return sub["effective_plan"], feat["effective_plan_code"], acc["effective_plan_code"]
 
 
-def test_active_trial_routes_are_consistent_starter():  # I + section 3/5/7
+def _access_quota_limit(client, quota_code):
+    acc = client.get("/api/v1/personal/access", headers=_H).get_json()
+    return next(q["limit"] for q in acc["quotas"] if q["quota_code"] == quota_code)
+
+
+def test_active_trial_personal_surfaces_are_starter():  # I + section 3/5
     c = _app(days_since_registration=5).test_client()
-    assert _plans_agree(c) == ("starter", "starter", "starter", "starter")
-    # Capacity follows Starter (20), not Free (5); read-only.
+    assert _personal_plans_agree(c) == ("starter", "starter", "starter")
+    # Capacity follows Starter (20), not Free (5); read-only and consistent with
+    # the /personal/access quota view.
     wl = c.get("/api/v1/personal/watchlist", headers=_H).get_json()
-    assert wl["capacity"] == 20
-    # Starter lacks advanced_analysis -> enforced at the backend (403), not free-gated silently.
+    assert wl["capacity"] == 20 == _access_quota_limit(c, "watchlist_items")
+    assert _access_quota_limit(c, "history_days") == 30
+    # Starter lacks advanced_analysis -> enforced at the backend (403).
     assert c.post("/api/v1/personal/analysis", json={"symbol": "BTC", "idempotency_key": "k"},
                   headers=_H).status_code == 403
 
 
-def test_expired_trial_routes_are_consistent_free():  # B at route level
+def test_active_trial_access_tier_is_exactly_starter():  # section 8 (exact tier)
+    acc = _app(days_since_registration=5).test_client().get("/api/v1/personal/access", headers=_H).get_json()
+    ent = set(acc["entitlements"])
+    assert {"watchlists", "extended_market_history"} <= ent          # Starter granted
+    assert not ({"advanced_analysis", "report_generation"} & ent)    # Pro+ NOT granted
+    assert acc["billing_status"] == "inactive"                       # raw payment truth, separate
+
+
+def test_expired_trial_personal_surfaces_are_free():  # B at route level
     c = _app(days_since_registration=60).test_client()
-    assert _plans_agree(c) == ("free", "free", "free", "free")
-    # Free does not hold the watchlists entitlement, so the gate denies (403) —
-    # proving the expired trial is genuinely Free, not silently Starter.
+    assert _personal_plans_agree(c) == ("free", "free", "free")
+    # Free lacks the watchlists entitlement -> the gate denies (403), proving the
+    # expired trial is genuinely Free, not silently Starter.
     assert c.get("/api/v1/personal/watchlist", headers=_H).status_code == 403
 
 
 def test_paid_pro_grants_analysis_entitlement_and_quota():  # D at route level
     c = _app(days_since_registration=60, sub=_sub("pro")).test_client()
-    plans = _plans_agree(c)
-    assert plans == ("pro", "pro", "pro", "pro")
-    # Pro holds advanced_analysis and a non-zero daily quota -> action succeeds.
+    assert _personal_plans_agree(c) == ("pro", "pro", "pro")
     r = c.post("/api/v1/personal/analysis", json={"symbol": "BTC", "idempotency_key": "k1"}, headers=_H)
     assert r.status_code == 200
 
@@ -230,13 +241,67 @@ def test_view_mode_spoof_does_not_alter_plan():  # H at route level
     spoof = {**_H, "X-Nexus-View-Mode": "advanced"}
     feat = c.get("/api/v1/personal/features?view_mode=pro&view=advanced&plan=advanced", headers=spoof).get_json()
     assert feat["effective_plan_code"] == "starter"
-    sub = c.get("/api/v1/personal/subscription?view_mode=pro", headers=spoof).get_json()
-    assert sub["effective_plan"] == "starter"
+    acc = c.get("/api/v1/personal/access?view_mode=pro&plan=advanced", headers=spoof).get_json()
+    assert acc["effective_plan_code"] == "starter"
 
 
-def test_billing_usage_watchlist_capacity_matches_personal_watchlist():  # quota consistency
-    c = _app(days_since_registration=5).test_client()
+# --------------------------------------------------------------------------- #
+# Domain boundary: GENERIC BILLING must stay billing-authoritative and preserve
+# Enterprise, even while the SAME account's PERSONAL access is trial-aware.
+# --------------------------------------------------------------------------- #
+def test_generic_billing_preserves_enterprise():  # 6A / 6B
+    c = _app(days_since_registration=5, sub=_sub("enterprise")).test_client()
+    bent = c.get("/api/v1/billing/entitlements", headers=_H).get_json()
+    assert bent["effective_plan_code"] == "enterprise"
+    assert "enterprise_admin" in bent["entitlements"]
     busage = c.get("/api/v1/billing/usage", headers=_H).get_json()
-    wl_limit = next(q["limit"] for q in busage["quotas"] if q["quota_code"] == "watchlist_items")
-    capacity = c.get("/api/v1/personal/watchlist", headers=_H).get_json()["capacity"]
-    assert wl_limit == capacity == 20
+    assert busage["effective_plan_code"] == "enterprise"
+
+
+def test_generic_billing_is_not_trial_aware():  # section 1/2 regression guard
+    # Active trial account with NO paid billing row: generic billing stays free
+    # (billing-subscription authoritative), even though PERSONAL access is Starter.
+    c = _app(days_since_registration=5).test_client()
+    assert c.get("/api/v1/billing/entitlements", headers=_H).get_json()["effective_plan_code"] == "free"
+    assert c.get("/api/v1/personal/access", headers=_H).get_json()["effective_plan_code"] == "starter"
+
+
+def test_enterprise_billing_never_becomes_personal_plan():  # 6C at route level
+    c = _app(days_since_registration=5, sub=_sub("enterprise")).test_client()
+    # Generic billing = enterprise; Personal access must NEVER be enterprise.
+    assert c.get("/api/v1/billing/entitlements", headers=_H).get_json()["effective_plan_code"] == "enterprise"
+    personal_plan = c.get("/api/v1/personal/access", headers=_H).get_json()["effective_plan_code"]
+    assert personal_plan != "enterprise"
+    assert personal_plan == "starter"  # falls through to the active trial
+
+
+def test_membership_ui_sources_effective_plan_from_personal_access():  # section 5
+    billing = Path("frontend/src/member_platform_v1/pages/BillingPages.tsx").read_text(encoding="utf-8")
+    auth = Path("frontend/src/member_platform_v1/context/AuthContext.tsx").read_text(encoding="utf-8")
+    # Effective plan / entitlements / usage come from the trial-aware Personal
+    # access endpoint, NOT the generic billing entitlement/usage endpoints.
+    assert "getPersonalAccess" in billing
+    assert "getBillingEntitlements" not in billing and "getBillingUsage" not in billing
+    # Raw payment/subscription status still comes from billing.
+    assert "getBillingSubscription" in billing
+    # App-wide tier is trial-aware too (was billing-only before).
+    assert "getPersonalAccess" in auth and "getBillingEntitlements" not in auth
+
+
+def test_unknown_or_malformed_paid_plan_fails_closed():  # section 7
+    class _FakeSub:
+        is_live = True
+        status = "active"
+
+        def __init__(self, code):
+            self.plan_code = code
+
+    for bad in ("mythic", "ENTERPRISE_X", "", None, 123):
+        assert pa.personal_paid_plan(_FakeSub(bad)) is None
+    # A malformed effective-plan override is denied by the usage service (fail closed).
+    from backend.nexus_billing.usage_service import UsageService
+
+    svc = UsageService(usage_repo=_UsageRepo(), subscription_repo=_SubRepo(None))
+    d = svc.consume(account_id="acct", quota_code="advanced_analysis_requests_daily",
+                    idempotency_key="k", effective_plan="mythic")
+    assert d.allowed is False and d.reason == "invalid_effective_plan"
