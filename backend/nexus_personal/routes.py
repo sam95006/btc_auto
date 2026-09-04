@@ -57,7 +57,18 @@ def _services(app: Flask) -> dict[str, Any]:
 
 
 def _effective_plan(app: Flask, account_id: str) -> str:
-    return effective_plan_code(_account_subscription(app, account_id))
+    """The canonical trial-aware effective Personal plan (paid wins, then active
+    Starter trial, else free), used for features + quota/capacity policy. Kept
+    identical to the plan reported by /personal/subscription and enforced by the
+    entitlement/quota gates so the member is never shown one plan and gated at
+    another."""
+    from backend.nexus_platform.personal_access import effective_personal_plan
+
+    identity = _authenticated_identity(app)
+    registered_at = identity.get("created_at") if identity else None
+    return effective_personal_plan(
+        registered_at=registered_at, subscription=_account_subscription(app, account_id)
+    )
 
 
 def _authenticated_identity(app: Flask) -> Optional[dict[str, Any]]:
@@ -193,12 +204,12 @@ def register_personal_routes(app: Flask) -> None:
         if not account_id:
             return _json_no_store({"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401)
 
+        from backend.nexus_platform.personal_access import personal_paid_plan
+
         sub = _account_subscription(app, account_id)
-        paid_plan = (
-            sub.plan_code
-            if (sub is not None and sub.is_live and sub.plan_code != _plans.PLAN_FREE)
-            else None
-        )
+        # Canonical paid-plan extraction (live, non-free, and NEVER Enterprise —
+        # Enterprise is a separate product, never a Personal effective plan).
+        paid_plan = personal_paid_plan(sub)
         # CANONICAL TRIAL START = the ACCOUNT registration timestamp
         # (nexus.accounts.created_at), resolved from the authenticated session
         # identity — NOT subscription.created_at, not the billing row, not now(),

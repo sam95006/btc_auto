@@ -319,6 +319,21 @@ def test_sanitized_view_excludes_registration_origin():
 # --------------------------------------------------------------------------- #
 # Runner secret-safety (no network needed for the missing-input path).
 # --------------------------------------------------------------------------- #
+def test_e2e_access_consistency_is_read_only_and_cross_endpoint():
+    src = SCRIPT.read_text(encoding="utf-8")
+    # New read-only access-truth consistency check + marker.
+    assert "PERSONAL_ACCESS_CONSISTENT" in src
+    assert "_access_consistency(" in src
+    for endpoint in ("/api/v1/billing/entitlements", "/api/v1/billing/usage",
+                     "/api/v1/personal/watchlist"):
+        assert endpoint in src
+    # It must never CONSUME quota or MUTATE the watchlist (no POST/DELETE to
+    # personal endpoints in the consistency path).
+    assert '"POST", f"{origin}/api/v1/personal/watchlist' not in src
+    assert '"DELETE", f"{origin}/api/v1/personal/watchlist' not in src
+    assert '/api/v1/personal/analysis' not in src and '/api/v1/personal/report' not in src
+
+
 def test_runner_fails_closed_without_inputs():
     r = subprocess.run(
         [sys.executable, str(SCRIPT)],

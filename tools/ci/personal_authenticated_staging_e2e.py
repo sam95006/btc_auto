@@ -253,6 +253,51 @@ def _request(
     return status, payload
 
 
+def _access_consistency(opener, origin: str, effective_plan: str) -> str:
+    """READ-ONLY proof that effective plan + entitlements + quota/capacity agree
+    across /billing/entitlements, /billing/usage and /personal/watchlist. Raises
+    E2EError on any disagreement. Consumes no quota and mutates no watchlist."""
+    s_ent, ent = _request(opener, "GET", f"{origin}/api/v1/billing/entitlements")
+    if s_ent != 200:
+        raise E2EError(f"billing_entitlements_http:{s_ent}")
+    ent_plan = str(ent.get("effective_plan_code") or "")
+    if ent_plan != effective_plan:
+        raise E2EError(f"entitlements_plan_{ent_plan}_ne_{effective_plan}")
+
+    s_use, use = _request(opener, "GET", f"{origin}/api/v1/billing/usage")
+    if s_use != 200:
+        raise E2EError(f"billing_usage_http:{s_use}")
+    use_plan = str(use.get("effective_plan_code") or "")
+    if use_plan != effective_plan:
+        raise E2EError(f"usage_plan_{use_plan}_ne_{effective_plan}")
+    wl_limit = None
+    for q in (use.get("quotas") or []):
+        if q.get("quota_code") == "watchlist_items":
+            wl_limit = q.get("limit")
+            break
+
+    # Representative capacity, read-only. When the effective plan holds the
+    # watchlists entitlement (Starter+), capacity must equal the usage limit;
+    # a plan without it correctly denies (403) — both are consistent.
+    s_wl, wl = _request(opener, "GET", f"{origin}/api/v1/personal/watchlist")
+    if s_wl == 200:
+        capacity = wl.get("capacity")
+        if wl_limit is not None and capacity != wl_limit:
+            raise E2EError(f"watchlist_capacity_{capacity}_ne_usage_limit_{wl_limit}")
+        cap_repr: Any = capacity
+    elif s_wl == 403:
+        cap_repr = "denied_no_entitlement"
+    else:
+        raise E2EError(f"watchlist_http:{s_wl}")
+    return json.dumps({
+        "effective_plan": effective_plan,
+        "entitlements_plan": ent_plan,
+        "usage_plan": use_plan,
+        "watchlist_capacity": cap_repr,
+        "usage_watchlist_limit": wl_limit,
+    })
+
+
 # --------------------------------------------------------------------------- #
 # Live E2E.
 # --------------------------------------------------------------------------- #
@@ -336,6 +381,19 @@ def run() -> int:
         print(f"(session_http={s_session} features_http={s_feat})")
         print("AUTHENTICATED_WORKSTREAM_B_E2E=no")
         return 1
+
+    # 3b) Access-truth consistency (READ-ONLY): the effective Personal plan,
+    #     entitlements, and quota/capacity must all agree across the endpoints the
+    #     Home + membership page consume — proving a trial member is not shown one
+    #     plan (Starter) while gated at another (Free). No quota is consumed and no
+    #     watchlist is mutated.
+    try:
+        ac = _access_consistency(opener, origin, effective_plan)
+    except E2EError as exc:
+        print(f"PERSONAL_ACCESS_CONSISTENT=no reason={exc}")
+        print("AUTHENTICATED_WORKSTREAM_B_E2E=no")
+        return 1
+    print(f"PERSONAL_ACCESS_CONSISTENT=yes {ac}")
 
     # 4) Membership catalog (Free/Starter/Pro/Advanced; Enterprise separate).
     s_cat, catalog = _request(opener, "GET", f"{origin}/api/v1/personal/catalog")

@@ -21,10 +21,7 @@ from typing import Any, Optional
 
 from flask import Flask, Response, jsonify, request
 
-from backend.nexus_billing.entitlements import (
-    EntitlementResolution,
-    resolve_entitlements,
-)
+from backend.nexus_billing.entitlements import EntitlementResolution
 from backend.nexus_billing.event_repository import BillingEventRepository
 from backend.nexus_billing.factory import build_stripe_config
 from backend.nexus_billing.mock_provider import MockPaymentProvider
@@ -61,15 +58,34 @@ def _session_id() -> Optional[str]:
     return request.headers.get("X-Nexus-Session") or request.cookies.get("nexus_session")
 
 
-def _authenticated_account_id(app: Flask) -> Optional[str]:
+def _authenticated_identity(app: Flask) -> Optional[dict[str, Any]]:
     auth = _services(app).get("auth")
     session_id = _session_id()
     if not auth or not session_id:
         return None
     identity = auth.resolve_session(session_id)
-    if not identity:
-        return None
-    return identity.get("account_id")
+    return identity or None
+
+
+def _authenticated_account_id(app: Flask) -> Optional[str]:
+    identity = _authenticated_identity(app)
+    return identity.get("account_id") if identity else None
+
+
+def _account_effective_plan(app: Flask, account_id: str, identity: Optional[dict[str, Any]] = None) -> str:
+    """The canonical trial-aware effective PERSONAL plan for entitlement/quota
+    policy. Registration origin (accounts.created_at) comes from the authenticated
+    session identity; the paid plan (if any) from the billing subscription. This
+    keeps entitlements/quotas consistent with /personal/subscription without ever
+    minting a paid billing row (billing status stays truthful)."""
+    from backend.nexus_platform.personal_access import effective_personal_plan
+
+    if identity is None:
+        identity = _authenticated_identity(app)
+    registered_at = identity.get("created_at") if identity else None
+    return effective_personal_plan(
+        registered_at=registered_at, subscription=_account_subscription(app, account_id)
+    )
 
 
 def _subscription_repo(app: Flask) -> Optional[SubscriptionRepository]:
@@ -108,12 +124,20 @@ def resolve_request_entitlements(
     not. The account is derived strictly from the session — never from client
     input — so a caller can only ever resolve their own entitlements.
     """
-    account_id = _authenticated_account_id(app)
+    from backend.nexus_platform.personal_access import personal_entitlement_resolution
+
+    identity = _authenticated_identity(app)
+    account_id = identity.get("account_id") if identity else None
     if not account_id:
         return None, _json_no_store(
             {"error": "session_unavailable", "classification": "AUTH_REQUIRED"}, 401
         )
-    resolution = resolve_entitlements(_account_subscription(app, account_id))
+    # Trial-aware Personal access: an active Starter trial (no paid billing row)
+    # resolves to Starter entitlements, consistent with /personal/subscription.
+    resolution = personal_entitlement_resolution(
+        registered_at=identity.get("created_at"),
+        subscription=_account_subscription(app, account_id),
+    )
     return resolution, None
 
 
@@ -186,7 +210,12 @@ def enforce_quota(
     svc = _usage_service(app)
     if svc is None:
         return _json_no_store({"error": "usage_unavailable", "classification": "UNAVAILABLE"}, 503), None
-    decision = svc.consume(account_id=account_id, quota_code=quota_code, amount=amount, idempotency_key=idempotency_key)
+    # Quota limits follow the canonical trial-aware Personal effective plan so a
+    # Starter trial receives Starter limits (not Free), consistent with entitlements.
+    decision = svc.consume(
+        account_id=account_id, quota_code=quota_code, amount=amount, idempotency_key=idempotency_key,
+        effective_plan=_account_effective_plan(app, account_id),
+    )
     if decision.allowed:
         return None, decision
     # Consistent, distinct error semantics by reason (fail closed; never dress an
@@ -351,7 +380,9 @@ def register_billing_routes(app: Flask) -> None:
         if svc is None:
             return _json_no_store({"error": "usage_unavailable", "classification": "UNAVAILABLE"}, 503)
         try:
-            data = svc.resolve_usage(account_id)
+            # Trial-aware: quota display uses the canonical Personal effective plan
+            # so the membership page never shows Starter plan with Free limits.
+            data = svc.resolve_usage(account_id, effective_plan=_account_effective_plan(app, account_id))
         except Exception:  # noqa: BLE001 - never expose internals; UI shows unavailable
             return _json_no_store({"error": "usage_unavailable", "classification": "UNAVAILABLE"}, 503)
         return _json_no_store(data)

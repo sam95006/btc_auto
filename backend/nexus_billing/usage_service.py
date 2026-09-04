@@ -64,8 +64,14 @@ class UsageService:
         subscription = self._subs.get_by_account(account_id)
         return effective_plan_code(subscription)
 
-    def resolve_usage(self, account_id: str) -> dict[str, Any]:
-        plan = self._effective_plan(account_id)
+    def _plan_for(self, account_id: str, effective_plan: Optional[str]) -> str:
+        """Prefer a caller-supplied canonical effective plan (e.g. the trial-aware
+        Personal access plan) over the billing-only plan. Falls back to billing so
+        callers that do not supply one keep the original behaviour."""
+        return effective_plan if effective_plan else self._effective_plan(account_id)
+
+    def resolve_usage(self, account_id: str, *, effective_plan: Optional[str] = None) -> dict[str, Any]:
+        plan = self._plan_for(account_id, effective_plan)
         now = self._clock()
         quotas: list[dict[str, Any]] = []
         for code in plan_quota_codes(plan):
@@ -99,7 +105,8 @@ class UsageService:
         return {"effective_plan_code": plan, "quotas": quotas}
 
     def consume(
-        self, *, account_id: str, quota_code: str, amount: int = 1, idempotency_key: str
+        self, *, account_id: str, quota_code: str, amount: int = 1, idempotency_key: str,
+        effective_plan: Optional[str] = None,
     ) -> UsageDecision:
         # Fail closed on any invalid/unknown input.
         if not is_valid_quota(quota_code):
@@ -114,7 +121,7 @@ class UsageService:
         if spec.quota_type != TYPE_CONSUMABLE:
             return UsageDecision(False, quota_code, 0, 0, 0, reason="not_consumable")
 
-        plan = self._effective_plan(account_id)
+        plan = self._plan_for(account_id, effective_plan)
         # Entitlement AND Quota: without the gating entitlement there is no usable
         # quota, regardless of any numeric limit.
         if not plan_has_entitlement(plan, spec.entitlement):
