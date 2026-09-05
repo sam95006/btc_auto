@@ -203,6 +203,21 @@ class BoundedAutonomousSessionEngine:
             "leader_lock_status": "HELD",
         }
 
+    def _founder_start_authorization(self, gate_env: str) -> dict[str, Any] | None:
+        """Founder start authorization for the LEGACY (non-certified) engine:
+        requires the founder-approval env (e.g. FOUNDER_6H_APPROVED=true). Returns
+        an error dict to block, or None to allow.
+
+        Overridable hook: certified runtimes replace ONLY this authorization step
+        with signed one-shot authorization; the surrounding gate-label / kill-switch
+        / session-id / thread-spawn logic is unchanged. Legacy behavior here is
+        intentionally byte-for-byte the original env check."""
+        if not _env_true(self.policy.founder_approval_env):
+            return redact_secrets(
+                {"ok": False, "reason": "founder_not_approved", "env": self.policy.founder_approval_env, "got_gate": gate_env}
+            )
+        return None
+
     def start(self) -> dict[str, Any]:
         with self._lock:
             if self._thread and self._thread.is_alive():
@@ -219,8 +234,9 @@ class BoundedAutonomousSessionEngine:
                         "founder_6h_approved": _env_true("FOUNDER_6H_APPROVED"),
                     }
                 )
-            if not _env_true(self.policy.founder_approval_env):
-                return redact_secrets({"ok": False, "reason": "founder_not_approved", "env": self.policy.founder_approval_env, "got_gate": gate_env})
+            founder_block = self._founder_start_authorization(gate_env)
+            if founder_block is not None:
+                return founder_block
             if self.kill_switch.engaged:
                 return redact_secrets({"ok": False, "reason": "kill_switch_engaged"})
 

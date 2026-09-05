@@ -21,8 +21,13 @@ FORBIDDEN_PREFIXES = (
     "tools/ci/p2_1_postgres_qualification.py",
 )
 
-# Accepted diagnostics baseline (historical lock + initial diagnostics).
-BASELINE_SHA = "bce441792de7e36264f706ab80c0273bad386060"
+# Freeze baseline. ADVANCED to the reviewed FOUNDER PRIVATE DEMO RUNTIME REPAIR 1
+# commit, which already contains the single approved bounded-engine authorization
+# hook (_founder_start_authorization). That authorized change is therefore part
+# of the baseline and no longer flagged, while ANY future modification to the
+# engine (or other certified surfaces) after this baseline is detected again.
+# (Previous historical baseline: bce441792de7e36264f706ab80c0273bad386060.)
+BASELINE_SHA = "fee62b16e42c0c46087e945f1bfcda4f60112dc6"
 
 
 def _git(*args: str) -> list[str]:
