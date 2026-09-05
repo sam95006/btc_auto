@@ -21,18 +21,13 @@ FORBIDDEN_PREFIXES = (
     "tools/ci/p2_1_postgres_qualification.py",
 )
 
-# Accepted diagnostics baseline (historical lock + initial diagnostics).
-BASELINE_SHA = "bce441792de7e36264f706ab80c0273bad386060"
-
-# Files intentionally changed by an AUTHORIZED, independently-reviewed repair that
-# supersedes the diagnostics-phase freeze for exactly that file (and no other).
-# FOUNDER PRIVATE DEMO RUNTIME REPAIR 1 adds a single overridable hook
-# (_founder_start_authorization) to the bounded engine so the certified runtime
-# can authorize via signed one-shot Founder start; legacy env-gated behavior is
-# unchanged and regression-tested. Every other certified surface stays frozen.
-ALLOWED_AUTHORIZED_REPAIR = (
-    "backend/nexus_demo_execution/bounded_autonomous_engine.py",
-)
+# Freeze baseline. ADVANCED to the reviewed FOUNDER PRIVATE DEMO RUNTIME REPAIR 1
+# commit, which already contains the single approved bounded-engine authorization
+# hook (_founder_start_authorization). That authorized change is therefore part
+# of the baseline and no longer flagged, while ANY future modification to the
+# engine (or other certified surfaces) after this baseline is detected again.
+# (Previous historical baseline: bce441792de7e36264f706ab80c0273bad386060.)
+BASELINE_SHA = "fee62b16e42c0c46087e945f1bfcda4f60112dc6"
 
 
 def _git(*args: str) -> list[str]:
@@ -59,8 +54,6 @@ def _is_noise(path: str) -> bool:
 
 def _is_forbidden(path: str) -> bool:
     if _is_noise(path):
-        return False
-    if path in ALLOWED_AUTHORIZED_REPAIR:
         return False
     return any(path.startswith(prefix) or path == prefix.rstrip("/") for prefix in FORBIDDEN_PREFIXES)
 
