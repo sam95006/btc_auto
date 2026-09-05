@@ -25,9 +25,14 @@ from backend.nexus_demo_execution.session_limits import FIXED_LEVERAGE, MARGIN_P
 from backend.nexus_persistence_pg.pool import PostgresPool
 from tools.ci.demo_6h_v2_preflight import run_preflight as run_validation_preflight
 from tools.ci.demo_bounded_session_lease import demo_api_base_ok
-from tools.ci.p2_migration_service_identity import LEARNING_VALIDATION_SERVICE_NAME
+from tools.ci.p2_migration_service_identity import (
+    LEARNING_VALIDATION_SERVICE_NAME,
+    learning_validation_origin,
+)
 
-VALIDATION_URL = os.environ.get("DEMO_VAL_URL", "https://nexus-bybit-demo-val.zeabur.app").rstrip("/")
+# Canonical bounded-Demo control-plane origin (env override else the live long
+# domain). The dead short alias nexus-bybit-demo-val is never the default.
+VALIDATION_URL = learning_validation_origin()
 UNKNOWN_OUTCOME_STATES = frozenset({"SUBMIT_UNKNOWN", "RECONCILIATION_REQUIRED"})
 
 

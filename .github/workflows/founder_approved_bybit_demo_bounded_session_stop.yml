@@ -32,7 +32,7 @@ env:
   EXCHANGE_WRITE: "false"
   DEMO_AUTONOMOUS_ENABLED: "false"
   AUTONOMOUS_SEND: "false"
-  DEMO_VAL_URL: https://nexus-bybit-demo-val.zeabur.app
+  DEMO_VAL_URL: https://nexus-bybit-demo-learning-validation.zeabur.app
   ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
 
 jobs:

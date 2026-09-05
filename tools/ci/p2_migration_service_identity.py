@@ -10,6 +10,19 @@ MIGRATION_SERVICE_NAME_PREFIX = "nexus-p2m7"
 # Back-compat alias for tests that still reference the base constant name.
 MIGRATION_SERVICE_NAME = MIGRATION_SERVICE_BASE_NAME
 LEARNING_VALIDATION_SERVICE_NAME = "nexus-bybit-demo-learning-validation"
+# Canonical live control-plane origin for the bounded-Demo learning-validation
+# service, derived from its service name. The old short alias
+# `nexus-bybit-demo-val.zeabur.app` is a DEAD binding (edge-404, no container).
+LEARNING_VALIDATION_ORIGIN = f"https://{LEARNING_VALIDATION_SERVICE_NAME}.zeabur.app"
+
+
+def learning_validation_origin() -> str:
+    """One canonical, configurable bounded-Demo control-plane origin: the
+    ``DEMO_VAL_URL`` env override when set, else the canonical long domain.
+    Never defaults to the dead short alias."""
+    import os
+
+    return (os.environ.get("DEMO_VAL_URL") or LEARNING_VALIDATION_ORIGIN).strip().rstrip("/")
 
 _RUN_SCOPED_RE = re.compile(rf"^{re.escape(MIGRATION_SERVICE_NAME_PREFIX)}-(\d+)-(\d+)$")
 

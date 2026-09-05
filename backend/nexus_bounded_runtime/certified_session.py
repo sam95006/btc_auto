@@ -32,7 +32,7 @@ from backend.nexus_bounded_runtime.runtime_lease import (
     lease_from_request,
     validate_runtime_lease,
 )
-from backend.nexus_demo_execution.bounded_autonomous_engine import BoundedAutonomousSessionEngine
+from backend.nexus_demo_execution.bounded_autonomous_engine import BoundedAutonomousSessionEngine, _env_true
 from backend.nexus_demo_execution.bounded_universe import scan_dynamic_candidates
 from backend.nexus_demo_execution.cost_entry_gate import evaluate_cost_gate
 from backend.nexus_demo_execution.demo_write_client import DemoWriteError
@@ -179,6 +179,25 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
         if not startup.get("entries_allowed"):
             raise ValueError("startup_reconcile_blocks_entry")
 
+    def _founder_start_authorization(self, gate_env: str) -> dict[str, Any] | None:
+        """CERTIFIED authorization SUPERSEDES the founder-approval env.
+
+        Overrides the legacy engine hook: the one-shot Founder authorization is a
+        verified signed start request + a validated unexpired runtime lease
+        (correct runtime SHA) + the consumed founder-auth marker established by
+        ``start()``, under Demo-only safety invariants. When those hold, the
+        transient/permanent ``FOUNDER_6H_APPROVED`` env is NOT required and NOT
+        consulted. The surrounding engine logic (FOUNDER_GATE label check, kill
+        switch, session-id, thread spawn) is inherited UNCHANGED. Fails closed if
+        the one-shot authorization was not actually established, or under
+        MAINNET / REAL_MONEY."""
+        del gate_env  # certified path authorizes via signed one-shot, not env
+        if _env_true("MAINNET") or _env_true("REAL_MONEY"):
+            return redact_secrets({"ok": False, "reason": "demo_only_invariant_violated", "certified_runtime": True})
+        if not self._founder_auth_consumed or self._runtime_lease is None:
+            return redact_secrets({"ok": False, "reason": "certified_founder_authorization_missing", "certified_runtime": True})
+        return None
+
     def start(self, start_request: dict[str, Any] | None = None) -> dict[str, Any]:
         from backend.nexus_bounded_runtime.bootstrap import certified_bounded_runtime_active
 
@@ -186,6 +205,11 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
             return redact_secrets(
                 {"ok": False, "reason": "certified_bounded_runtime_unavailable", "CERTIFIED_BOUNDED_RUNTIME_ACTIVE": False}
             )
+
+        # Demo-only safety invariant is part of the one-shot authorization — fail
+        # fast before any lease claim / Postgres work if it is violated.
+        if _env_true("MAINNET") or _env_true("REAL_MONEY"):
+            return redact_secrets({"ok": False, "reason": "demo_only_invariant_violated", "certified_runtime": True})
 
         # 6H default hook delegates to verify_bounded_start_request; Short overrides only the phrase.
         verified = self._verify_start_request(start_request)
@@ -219,6 +243,8 @@ class CertifiedBounded6HSession(BoundedAutonomousSessionEngine):
         except (ValueError, LeaderLockError) as exc:
             return redact_secrets({"ok": False, "reason": str(exc), "certified_runtime": True})
 
+        # Engine bootstrap; the certified _founder_start_authorization override
+        # supersedes the FOUNDER_6H_APPROVED env with the signed one-shot auth.
         result = super().start()
         if isinstance(result, dict):
             result["runtime_lease_session_id"] = lease.session_id
