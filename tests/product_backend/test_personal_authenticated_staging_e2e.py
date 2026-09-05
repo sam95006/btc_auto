@@ -319,6 +319,93 @@ def test_sanitized_view_excludes_registration_origin():
 # --------------------------------------------------------------------------- #
 # Runner secret-safety (no network needed for the missing-input path).
 # --------------------------------------------------------------------------- #
+def test_e2e_access_consistency_is_read_only_and_cross_endpoint():
+    src = SCRIPT.read_text(encoding="utf-8")
+    # Read-only access-truth consistency + exact-tier markers.
+    assert "PERSONAL_ACCESS_CONSISTENT" in src
+    assert "PERSONAL_ACCESS_TIER_EXACT" in src
+    assert "_access_consistency(" in src and "_access_tier_check(" in src
+    # It uses the trial-aware Personal access endpoint, not generic /billing.
+    assert "/api/v1/personal/access" in src
+    assert "/api/v1/billing/entitlements" not in src and "/api/v1/billing/usage" not in src
+    assert "/api/v1/personal/watchlist" in src
+    # Exact Starter tier is verified (capabilities + quota limits).
+    for tok in ("watchlists", "extended_market_history", "advanced_analysis",
+                "report_generation", "STARTER_WATCHLIST_ITEMS", "STARTER_HISTORY_DAYS"):
+        assert tok in src
+    # It must never CONSUME quota or MUTATE the watchlist.
+    assert '"POST", f"{origin}/api/v1/personal/watchlist' not in src
+    assert '"DELETE", f"{origin}/api/v1/personal/watchlist' not in src
+    assert '/api/v1/personal/analysis' not in src and '/api/v1/personal/report' not in src
+
+
+# --------------------------------------------------------------------------- #
+# State-aware exact-tier check (the release E2E must stay valid past trial expiry).
+# --------------------------------------------------------------------------- #
+_STARTER_ENTS = ["market_overview", "watchlists", "extended_market_history"]
+_STARTER_QUOTAS = [{"quota_code": "watchlist_items", "limit": 20},
+                   {"quota_code": "history_days", "limit": 30}]
+
+
+def _acc(plan, ents=None, usage_available=True, quotas=None):
+    return {"effective_plan_code": plan, "entitlements": ents or [],
+            "usage_available": usage_available, "quotas": quotas}
+
+
+def test_tier_check_trial_starter_exact_ok():
+    out = e2e._access_tier_check("TRIAL", "starter", _acc("starter", _STARTER_ENTS, True, _STARTER_QUOTAS))
+    assert '"tier": "starter"' in out
+
+
+def test_tier_check_trial_missing_starter_capability_fails():
+    with pytest.raises(e2e.E2EError):
+        e2e._access_tier_check("TRIAL", "starter", _acc("starter", ["market_overview"], True, _STARTER_QUOTAS))
+
+
+def test_tier_check_trial_with_pro_capability_fails():
+    with pytest.raises(e2e.E2EError):
+        e2e._access_tier_check("TRIAL", "starter",
+                               _acc("starter", _STARTER_ENTS + ["advanced_analysis"], True, _STARTER_QUOTAS))
+
+
+def test_tier_check_trial_wrong_quota_fails():
+    bad = [{"quota_code": "watchlist_items", "limit": 5}, {"quota_code": "history_days", "limit": 7}]
+    with pytest.raises(e2e.E2EError):
+        e2e._access_tier_check("TRIAL", "starter", _acc("starter", _STARTER_ENTS, True, bad))
+
+
+def test_tier_check_trial_usage_unavailable_fails_closed():
+    with pytest.raises(e2e.E2EError):
+        e2e._access_tier_check("TRIAL", "starter", _acc("starter", _STARTER_ENTS, False, None))
+
+
+def test_tier_check_expired_free_ok_and_non_free_fails():
+    assert '"tier": "free"' in e2e._access_tier_check("TRIAL_EXPIRED", "free", _acc("free"))
+    with pytest.raises(e2e.E2EError):
+        e2e._access_tier_check("TRIAL_EXPIRED", "starter", _acc("starter", _STARTER_ENTS))
+
+
+def test_tier_check_paid_personal_plans_ok():
+    for p in ("starter", "pro", "advanced"):
+        out = e2e._access_tier_check("PAID", p, _acc(p))
+        assert f'"tier": "{p}"' in out
+
+
+def test_tier_check_enterprise_is_rejected_as_personal():
+    with pytest.raises(e2e.E2EError):
+        e2e._access_tier_check("PAID", "enterprise", _acc("enterprise"))
+
+
+def test_tier_check_access_plan_must_match_subscription():
+    with pytest.raises(e2e.E2EError):
+        e2e._access_tier_check("TRIAL", "starter", _acc("free", []))  # access disagrees
+
+
+def test_tier_check_unknown_state_fails_closed():
+    with pytest.raises(e2e.E2EError):
+        e2e._access_tier_check("WHATEVER", "starter", _acc("starter", _STARTER_ENTS, True, _STARTER_QUOTAS))
+
+
 def test_runner_fails_closed_without_inputs():
     r = subprocess.run(
         [sys.executable, str(SCRIPT)],

@@ -178,15 +178,24 @@ def _usage_service(app: Flask) -> Optional[UsageService]:
 
 
 def enforce_quota(
-    app: Flask, account_id: str, quota_code: str, *, amount: int = 1, idempotency_key: str
+    app: Flask, account_id: str, quota_code: str, *, amount: int = 1, idempotency_key: str,
+    effective_plan: Optional[str] = None,
 ) -> tuple[Optional[Response], Optional[UsageDecision]]:
     """Central quota gate. Returns (error_response, None) on deny/unavailable, or
     (None, decision) on success. 429 with a consistent USAGE_LIMIT_EXCEEDED
-    classification when the quota is exhausted; fail closed otherwise."""
+    classification when the quota is exhausted; fail closed otherwise.
+
+    Default behaviour is billing-subscription authoritative. A caller (e.g. a
+    Personal route) MAY pass an explicit `effective_plan` — the canonical Personal
+    access plan — to gate the quota from that plan instead; the UsageService
+    validates the override fail-closed."""
     svc = _usage_service(app)
     if svc is None:
         return _json_no_store({"error": "usage_unavailable", "classification": "UNAVAILABLE"}, 503), None
-    decision = svc.consume(account_id=account_id, quota_code=quota_code, amount=amount, idempotency_key=idempotency_key)
+    decision = svc.consume(
+        account_id=account_id, quota_code=quota_code, amount=amount, idempotency_key=idempotency_key,
+        effective_plan=effective_plan,
+    )
     if decision.allowed:
         return None, decision
     # Consistent, distinct error semantics by reason (fail closed; never dress an

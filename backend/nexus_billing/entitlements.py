@@ -122,6 +122,24 @@ def resolve_entitlements(subscription: Optional[Subscription]) -> EntitlementRes
     )
 
 
+def resolve_entitlements_for_plan(
+    plan_code: str, *, subscription_status: str = STATUS_INACTIVE
+) -> EntitlementResolution:
+    """Resolve entitlements directly from an already-decided effective plan code.
+
+    Used by the canonical Personal access resolver so that a trial-effective plan
+    (e.g. an active Starter trial with no paid billing row) yields the correct
+    entitlements. `subscription_status` carries the raw billing status unchanged —
+    this never invents a paid subscription. Unknown codes fall back to free.
+    """
+    code = plan_code if plan_code in PLAN_TIER_ORDER else DEFAULT_PLAN_CODE
+    return EntitlementResolution(
+        effective_plan_code=code,
+        subscription_status=subscription_status,
+        entitlements=dict(PLAN_ENTITLEMENTS.get(code, PLAN_ENTITLEMENTS[DEFAULT_PLAN_CODE])),
+    )
+
+
 def has_entitlement(subscription: Optional[Subscription], feature_code: str) -> bool:
     return resolve_entitlements(subscription).has(feature_code)
 

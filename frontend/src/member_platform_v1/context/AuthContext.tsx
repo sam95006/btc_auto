@@ -9,8 +9,7 @@ import {
 } from "react";
 import type { MembershipTier, MemberSession } from "../types/dto";
 import {
-  getBillingEntitlements,
-  getMemberEntitlements,
+  getPersonalAccess,
   getMemberSession,
   registrationRequiresVerification,
   stagingLogin,
@@ -19,22 +18,17 @@ import {
   type StagingRegisterResult,
 } from "../services/stagingApi";
 
-const CANONICAL_TIERS: MembershipTier[] = ["free", "starter", "pro", "advanced", "enterprise"];
+// Personal product tiers are ONLY these four. Enterprise is a SEPARATE product
+// and must never become the Personal UI tier — it (and anything unknown) fails
+// closed to free.
+const PERSONAL_TIERS: MembershipTier[] = ["free", "starter", "pro", "advanced"];
 
-/** Coerce a backend plan code to a canonical Personal tier (fail closed to free). */
+/** Coerce the Personal access effective plan to a Personal tier (fail closed to
+ * free). "enterprise" or any unknown code -> free; the frontend never upgrades
+ * access, and never falls back to a legacy entitlement architecture. */
 function normalizeTier(code: string | null | undefined): MembershipTier {
   const c = (code || "").trim().toLowerCase();
-  return (CANONICAL_TIERS as string[]).includes(c) ? (c as MembershipTier) : "free";
-}
-
-/** Best-effort map of the legacy member-entitlement plan naming to canonical. */
-function mapMemberPlan(plan: string | null | undefined): MembershipTier {
-  switch ((plan || "").trim().toUpperCase()) {
-    case "ENTERPRISE": return "enterprise";
-    case "PRO": return "pro";
-    case "INTERMEDIATE": return "advanced";
-    default: return "free";
-  }
+  return (PERSONAL_TIERS as string[]).includes(c) ? (c as MembershipTier) : "free";
 }
 
 type AuthCtx = {
@@ -66,14 +60,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const hydrate = useCallback(async () => {
     const { session: remote, profile } = await getMemberSession();
-    // Canonical effective plan is backend-authoritative (nexus_billing). The old
-    // member-entitlement naming is only a best-effort fallback when billing is
-    // unavailable. The frontend never derives access from a tier rank.
+    // Effective tier is backend-authoritative and TRIAL-AWARE, sourced ONLY from
+    // the Personal access endpoint (NOT the generic billing plan, which is
+    // billing-subscription-only). If Personal access cannot be established we fail
+    // closed to free — never a legacy entitlement fallback, never an upgrade.
     let tier: MembershipTier = "free";
     try {
-      tier = normalizeTier((await getBillingEntitlements()).effective_plan_code);
+      tier = normalizeTier((await getPersonalAccess()).effective_plan_code);
     } catch {
-      try { tier = mapMemberPlan((await getMemberEntitlements()).plan); } catch { tier = "free"; }
+      tier = "free";
     }
     setSession({
       id: remote.user_id, email: remote.email, displayName: profile.display_name || remote.email.split("@")[0],

@@ -13,7 +13,11 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Callable, Optional
 
-from backend.nexus_billing.entitlements import effective_plan_code, plan_has_entitlement
+from backend.nexus_billing.entitlements import (
+    PLAN_TIER_ORDER,
+    effective_plan_code,
+    plan_has_entitlement,
+)
 from backend.nexus_billing.usage_policy import (
     QUOTA_CATALOG,
     TYPE_CONSUMABLE,
@@ -64,8 +68,20 @@ class UsageService:
         subscription = self._subs.get_by_account(account_id)
         return effective_plan_code(subscription)
 
-    def resolve_usage(self, account_id: str) -> dict[str, Any]:
-        plan = self._effective_plan(account_id)
+    def _plan_for(self, account_id: str, effective_plan: Optional[str]) -> Optional[str]:
+        """Resolve the plan whose policy applies. Default is billing-only. A caller
+        MAY pass an explicit canonical effective plan (e.g. the trial-aware Personal
+        access plan); it is validated fail-closed — an unknown/malformed override
+        returns None (the caller must deny / fall back to the free floor), never a
+        silent grant."""
+        if effective_plan is None:
+            return self._effective_plan(account_id)
+        return effective_plan if effective_plan in PLAN_TIER_ORDER else None
+
+    def resolve_usage(self, account_id: str, *, effective_plan: Optional[str] = None) -> dict[str, Any]:
+        # Display path: an invalid override falls back to the free floor (never
+        # over-grants), while a valid override (or None) resolves normally.
+        plan = self._plan_for(account_id, effective_plan) or "free"
         now = self._clock()
         quotas: list[dict[str, Any]] = []
         for code in plan_quota_codes(plan):
@@ -99,7 +115,8 @@ class UsageService:
         return {"effective_plan_code": plan, "quotas": quotas}
 
     def consume(
-        self, *, account_id: str, quota_code: str, amount: int = 1, idempotency_key: str
+        self, *, account_id: str, quota_code: str, amount: int = 1, idempotency_key: str,
+        effective_plan: Optional[str] = None,
     ) -> UsageDecision:
         # Fail closed on any invalid/unknown input.
         if not is_valid_quota(quota_code):
@@ -114,7 +131,11 @@ class UsageService:
         if spec.quota_type != TYPE_CONSUMABLE:
             return UsageDecision(False, quota_code, 0, 0, 0, reason="not_consumable")
 
-        plan = self._effective_plan(account_id)
+        plan = self._plan_for(account_id, effective_plan)
+        if plan is None:
+            # Fail closed: an explicit but unknown/malformed effective-plan override
+            # never grants a metered action.
+            return UsageDecision(False, quota_code, 0, 0, 0, reason="invalid_effective_plan")
         # Entitlement AND Quota: without the gating entitlement there is no usable
         # quota, regardless of any numeric limit.
         if not plan_has_entitlement(plan, spec.entitlement):
