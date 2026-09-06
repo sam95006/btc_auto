@@ -151,6 +151,33 @@ def test_workflow_runs_inruntime_preflight_via_service_exec():
     assert "ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}" in wf
 
 
+def test_workflow_zeabur_cli_deterministically_pinned_and_ordered():
+    wf = WORKFLOW.read_text(encoding="utf-8")
+    # Command lines only — a mention inside a `#` comment must not count as usage.
+    cmds = "\n".join(
+        line for line in wf.splitlines() if not line.lstrip().startswith("#")
+    )
+    assert "npm install -g zeabur@0.21.0" in cmds        # ZEABUR_CLI_VERSION_PINNED=0.21.0
+    assert "zeabur@latest" not in cmds                   # ZEABUR_LATEST_NOT_USED=true
+    assert "zeabur --version" not in cmds                # broken flag removed
+    assert "zeabur version" in cmds                      # ZEABUR_VERSION_COMMAND="zeabur version"
+    # Ordering: install CLI -> `zeabur version` -> (exact service-id validation
+    # and `zeabur auth login`) -> `zeabur service exec`. The version command must
+    # precede every control-plane call; the service-id validation and headless
+    # login must both precede the exec. (The relative order of the id-validation
+    # and login is preflight logic owned elsewhere and not asserted here.)
+    i_install = cmds.index("npm install -g zeabur@0.21.0")
+    i_version = cmds.index("zeabur version")
+    i_login = cmds.index("zeabur auth login --token")
+    i_assert = cmds.index("assert_canonical_validation_service_id")
+    i_exec = cmds.index("zeabur service exec")
+    assert i_install < i_version
+    assert i_version < i_login
+    assert i_version < i_assert
+    assert i_login < i_exec
+    assert i_assert < i_exec
+
+
 def test_workflow_auth_login_before_exec_and_token_not_echoed():
     step = _inruntime_step(WORKFLOW.read_text(encoding="utf-8"))
     assert "zeabur auth login --token" in step
