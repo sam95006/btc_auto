@@ -101,12 +101,15 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install official Zeabur CLI
+      - name: Install official Zeabur CLI (deterministic pin)
         run: |
           set -euo pipefail
-          npm install -g zeabur@latest
+          # Deterministic pin for this safety-critical control plane — never
+          # zeabur@latest (a CLI drift broke `zeabur --version` and skipped the
+          # whole preflight). 0.21.0 uses `zeabur version` (bare subcommand).
+          npm install -g zeabur@0.21.0
           command -v zeabur
-          zeabur --version
+          zeabur version
 
       - name: In-runtime Postgres preflight inside validation service (sanitized, read-only)
         env:
