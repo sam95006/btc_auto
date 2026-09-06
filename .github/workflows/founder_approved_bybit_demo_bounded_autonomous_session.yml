@@ -131,8 +131,14 @@ jobs:
           # never holds the DSN; only sanitized markers cross the boundary.
           ALLOWED='^(POSTGRES_AVAILABLE|MIGRATION_0007_PRESENT|DURABLE_LESSONS_READABLE|DURABLE_ORDER_LEDGER_READABLE|NO_UNRESOLVED_ORPHAN_INTENTS|NO_UNKNOWN_OUTCOME_STATE|DURABLE_LEDGER_ENTRY_READY|INRUNTIME_POSTGRES_PREFLIGHT_PASS|VALIDATION_RUNTIME_POSTGRES_MISSING)=(true|false)$'
           set +e
+          # Run FROM /app so `python -m tools.ci...` resolves: tools/ + tools/ci/ ship
+          # in the full_engine image (COPY tools/) but are namespace packages (no
+          # __init__.py), so resolution needs /app as the working dir — a bare exec
+          # whose cwd is not /app fails "No module named tools" (empty markers, and the
+          # CLI may still report exit 0). Fold stderr into the capture so a masked
+          # in-container failure is observable (only sanitized lines are persisted).
           RAW=$(zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
-            python -m tools.ci.inruntime_postgres_preflight)
+            sh -c 'cd /app && python -m tools.ci.inruntime_postgres_preflight' 2>&1)
           EXEC_CODE=$?
           set -e
           # Persist ONLY sanitized marker lines (never raw/unfiltered service output).
@@ -142,6 +148,16 @@ jobs:
           echo "POSTGRES_PREFLIGHT_LOCATION=VALIDATION_SERVICE"
           echo "PUBLIC_POSTGRES_PORT_REQUIRED=no"
           echo "GITHUB_RUNNER_POSTGRES_DSN_REQUIRED=no"
+          # Sanitized failure classifier (no raw output, no DSN): if the pass marker
+          # is absent, surface ONLY a fixed error-class token so a masked in-container
+          # failure (wrong cwd / import error / missing file) is visible without ever
+          # echoing $RAW. Does NOT affect the fail-closed decision below.
+          if ! grep -q '^INRUNTIME_POSTGRES_PREFLIGHT_PASS=true$' artifacts/demo_bounded_session/inruntime_db_preflight.txt; then
+            for sig in ModuleNotFoundError ImportError SyntaxError PermissionError "No such file or directory" "can't open file" Traceback; do
+              if printf '%s' "$RAW" | grep -qF "$sig"; then echo "INRUNTIME_EXEC_ERROR_CLASS=${sig}"; fi
+            done
+            echo "INRUNTIME_MARKER_LINES_CAPTURED=$(grep -c . artifacts/demo_bounded_session/inruntime_db_preflight.txt 2>/dev/null || echo 0)"
+          fi
           # Fail closed: require a clean exec AND an explicit pass marker.
           test "${EXEC_CODE}" = "0"
           grep -q '^INRUNTIME_POSTGRES_PREFLIGHT_PASS=true$' artifacts/demo_bounded_session/inruntime_db_preflight.txt
