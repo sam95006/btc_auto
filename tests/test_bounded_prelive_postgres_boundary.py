@@ -17,6 +17,8 @@ from pathlib import Path
 WORKFLOW = Path(".github/workflows/founder_approved_bybit_demo_bounded_autonomous_session.yml")
 INRUNTIME = Path("tools/ci/inruntime_postgres_preflight.py")
 PREFLIGHT = Path("tools/ci/demo_bounded_session_preflight.py")
+FULL_ENGINE_DOCKERFILE = Path("deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine")
+DOCKERIGNORE = Path(".dockerignore")
 CANONICAL_SERVICE_ID = "6a82a79aa21454a2cf6b0015"
 
 
@@ -204,6 +206,51 @@ def test_workflow_exec_is_fail_closed_and_sanitized():
     assert "grep -q '^INRUNTIME_POSTGRES_PREFLIGHT_PASS=true$'" in step
     # Only sanitized marker lines are persisted (allow-list grep before writing).
     assert "grep -E \"$ALLOWED\"" in step
+
+
+# --------------------------------------------------------------------------- #
+# VALIDATION IMAGE SINGLE-PREFLIGHT PACKAGING — workflow-only cwd-robust repair.
+# The live validation service is built from Dockerfile.full_engine, which already
+# ships tools/ (COPY tools/ tools/). tools/ and tools/ci are namespace packages
+# (no __init__.py), so `python -m tools.ci...` resolves ONLY when run from /app.
+# The repair is workflow-only: run the preflight FROM /app, fold stderr so masked
+# in-container failures are observable, and keep fail-closed unchanged.
+# --------------------------------------------------------------------------- #
+def test_full_engine_image_packages_tools_tree():
+    df = FULL_ENGINE_DOCKERFILE.read_text(encoding="utf-8")
+    # The full_engine image copies the whole tools/ tree → the preflight ships.
+    assert "COPY tools/ tools/" in df           # FULL_TOOLS_DIRECTORY_COPIED=yes
+    # .dockerignore must not strip the preflight tool from the build context.
+    di = DOCKERIGNORE.read_text(encoding="utf-8")
+    di_lines = [ln.strip() for ln in di.splitlines() if ln.strip() and not ln.strip().startswith("#")]
+    for pat in ("tools/", "tools/*", "tools/ci", "tools/ci/*", "tools/ci/inruntime_postgres_preflight.py"):
+        assert pat not in di_lines, f".dockerignore must not exclude {pat!r}"
+    # The repo actually contains the tool that gets copied.
+    assert INRUNTIME.exists()
+
+
+def test_workflow_preflight_runs_cwd_robust_and_stderr_folded():
+    step = _inruntime_step(WORKFLOW.read_text(encoding="utf-8"))
+    # cwd-robust module invocation: run FROM /app so the namespace package resolves.
+    assert "cd /app && python -m tools.ci.inruntime_postgres_preflight" in step
+    # FOUNDER_WORKFLOW_REMOTE_PREFLIGHT_COMMAND uses -m (not a bare file path, whose
+    # sys.path[0] would be the script dir and break the lazy `import backend`).
+    assert "python /app/inruntime_postgres_preflight.py" not in step
+    # stderr folded into the capture for observability of masked failures.
+    assert "2>&1)" in step
+    # Sanitized failure classifier present, and $RAW is NEVER echoed/printed as
+    # content — every use of "$RAW" must be piped into grep (allow-list filter or
+    # a quiet `grep -qF` presence test), so only fixed tokens/markers reach the log.
+    assert "INRUNTIME_EXEC_ERROR_CLASS=" in step
+    assert 'echo "$RAW"' not in step and "echo $RAW" not in step and 'echo "${RAW' not in step
+    for ln in step.splitlines():
+        if ln.strip().startswith("#"):
+            continue
+        if '"$RAW"' in ln:
+            assert "grep" in ln, f'"$RAW" must only be consumed by grep, never printed: {ln.strip()}'
+    # Fail-closed is preserved exactly (unchanged EXEC_CODE test + explicit PASS grep).
+    assert 'test "${EXEC_CODE}" = "0"' in step
+    assert "grep -q '^INRUNTIME_POSTGRES_PREFLIGHT_PASS=true$'" in step
 
 
 # --------------------------------------------------------------------------- #
