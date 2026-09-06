@@ -145,6 +145,48 @@ def _offline_storage_root() -> Path:
     return Path("artifacts/bounded_runtime_storage").resolve()
 
 
+def _apply_db_checks(
+    checks: dict[str, Any], problems: list[str], *, offline: bool, db_proof: dict[str, Any] | None
+) -> None:
+    """Populate the Postgres checks. The DB proof is obtained INSIDE the validation
+    runtime (via zeabur service exec over the private network) and consumed here as
+    sanitized boolean markers — the GitHub runner NEVER opens Postgres or holds the
+    DSN. Fails closed when the in-runtime proof is missing or any marker is False."""
+    checks["UNRESOLVED_INTENT_BLOCKS_ENTRY"] = True
+    if offline:
+        for key in (
+            "POSTGRES_AVAILABLE", "MIGRATION_0007_PRESENT", "DURABLE_LESSONS_READABLE",
+            "NO_UNRESOLVED_ORPHAN_INTENTS", "NO_UNKNOWN_OUTCOME_STATE",
+            "STARTUP_RECONCILIATION_ENTRIES_ALLOWED", "DB_PROOF_FROM_VALIDATION_RUNTIME",
+        ):
+            checks[key] = True
+        return
+    if db_proof is None:
+        checks["POSTGRES_AVAILABLE"] = False
+        checks["DB_PROOF_FROM_VALIDATION_RUNTIME"] = False
+        problems.append("inruntime_db_proof_missing")
+        return
+    checks["POSTGRES_AVAILABLE"] = db_proof.get("POSTGRES_AVAILABLE") is True
+    checks["MIGRATION_0007_PRESENT"] = db_proof.get("MIGRATION_0007_PRESENT") is True
+    checks["DURABLE_LESSONS_READABLE"] = db_proof.get("DURABLE_LESSONS_READABLE") is True
+    checks["NO_UNRESOLVED_ORPHAN_INTENTS"] = db_proof.get("NO_UNRESOLVED_ORPHAN_INTENTS") is True
+    checks["NO_UNKNOWN_OUTCOME_STATE"] = db_proof.get("NO_UNKNOWN_OUTCOME_STATE") is True
+    checks["STARTUP_RECONCILIATION_ENTRIES_ALLOWED"] = db_proof.get("STARTUP_RECONCILIATION_ENTRIES_ALLOWED") is True
+    checks["DB_PROOF_FROM_VALIDATION_RUNTIME"] = db_proof.get("INRUNTIME_POSTGRES_PREFLIGHT_PASS") is True
+    if db_proof.get("VALIDATION_RUNTIME_POSTGRES_MISSING") is True:
+        problems.append("validation_runtime_postgres_missing")
+    if not checks["NO_UNRESOLVED_ORPHAN_INTENTS"]:
+        problems.append("unresolved_or_orphan_intent")
+    if not checks["NO_UNKNOWN_OUTCOME_STATE"]:
+        problems.append("unknown_outcome_ledger_state")
+    if not checks["MIGRATION_0007_PRESENT"]:
+        problems.append("migration_0007_missing")
+    if not checks["STARTUP_RECONCILIATION_ENTRIES_ALLOWED"]:
+        problems.append("startup_reconciliation_blocks_entry")
+    if not checks["DB_PROOF_FROM_VALIDATION_RUNTIME"]:
+        problems.append("inruntime_db_proof_not_passed")
+
+
 def run_preflight(
     *,
     base_url: str = VALIDATION_URL,
@@ -153,6 +195,7 @@ def run_preflight(
     founder_phrase: str = "",
     service_name: str = LEARNING_VALIDATION_SERVICE_NAME,
     offline: bool = False,
+    db_proof: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     apply_disarmed_flags()
     evidence: dict[str, Any] = {
@@ -246,33 +289,7 @@ def run_preflight(
     checks["RECONCILE_OPEN_ORDERS"] = checks["ACCOUNT_FLAT"]
     checks["RECONCILE_POSITIONS"] = checks["ACCOUNT_FLAT"]
 
-    pg_url = (postgres_url or os.environ.get("NEXUS_POSTGRES_URL") or os.environ.get("NEXUS_STAGING_POSTGRES_URL") or "").strip()
-    if pg_url:
-        pg = _postgres_preflight(pg_url)
-        checks["POSTGRES_AVAILABLE"] = pg.get("postgres_available") is True
-        checks["MIGRATION_0007_PRESENT"] = pg.get("migration_0007_present") is True
-        checks["DURABLE_LESSONS_READABLE"] = pg.get("durable_lessons_readable") is True
-        checks["NO_UNRESOLVED_ORPHAN_INTENTS"] = int(pg.get("unresolved_intent_count") or 0) == 0 and int(
-            pg.get("orphan_positions") or 0
-        ) == 0
-        checks["NO_UNKNOWN_OUTCOME_STATE"] = int(pg.get("unknown_outcome_count") or 0) == 0
-        checks["UNRESOLVED_INTENT_BLOCKS_ENTRY"] = True
-        if not checks["NO_UNRESOLVED_ORPHAN_INTENTS"]:
-            problems.append("unresolved_or_orphan_intent")
-        if not checks["NO_UNKNOWN_OUTCOME_STATE"]:
-            problems.append("unknown_outcome_ledger_state")
-        if not checks["MIGRATION_0007_PRESENT"]:
-            problems.append("migration_0007_missing")
-    elif offline:
-        checks["POSTGRES_AVAILABLE"] = True
-        checks["MIGRATION_0007_PRESENT"] = True
-        checks["DURABLE_LESSONS_READABLE"] = True
-        checks["NO_UNRESOLVED_ORPHAN_INTENTS"] = True
-        checks["NO_UNKNOWN_OUTCOME_STATE"] = True
-        checks["UNRESOLVED_INTENT_BLOCKS_ENTRY"] = True
-    else:
-        checks["POSTGRES_AVAILABLE"] = False
-        problems.append("postgres_url_missing")
+    _apply_db_checks(checks, problems, offline=offline, db_proof=db_proof)
 
     for key in (
         "MAINNET_FALSE",
@@ -289,6 +306,8 @@ def run_preflight(
         "NO_UNKNOWN_OUTCOME_STATE",
         "MIGRATION_0007_PRESENT",
         "DURABLE_LESSONS_READABLE",
+        "STARTUP_RECONCILIATION_ENTRIES_ALLOWED",
+        "DB_PROOF_FROM_VALIDATION_RUNTIME",
         "CERTIFIED_BOUNDED_RUNTIME_ACTIVE",
         "DURABLE_LEASE_STORAGE_PREFLIGHT_PASS",
         "DURABLE_LEASE_STORAGE_RUNTIME_PROVEN",
@@ -322,6 +341,22 @@ def run_preflight(
     return evidence
 
 
+def parse_db_proof(text: str) -> dict[str, Any]:
+    """Parse the sanitized in-runtime Postgres preflight markers (KEY=true/false
+    lines produced by tools.ci.inruntime_postgres_preflight inside the validation
+    service) into a boolean dict. Non-marker lines are ignored."""
+    proof: dict[str, Any] = {}
+    for line in (text or "").splitlines():
+        line = line.strip()
+        if not line or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        if key.isupper():
+            proof[key] = value.strip().lower() == "true"
+    return proof
+
+
 def main() -> int:
     import argparse
 
@@ -330,13 +365,22 @@ def main() -> int:
     parser.add_argument("--expected-sha", default=os.environ.get("GITHUB_SHA", ""))
     parser.add_argument("--founder-phrase", default=os.environ.get("FOUNDER_BOUNDED_SESSION_PHRASE", ""))
     parser.add_argument("--offline", action="store_true")
+    parser.add_argument(
+        "--db-proof-file",
+        default="",
+        help="Path to sanitized in-runtime Postgres preflight markers (from zeabur service exec).",
+    )
     parser.add_argument("--out", default="")
     args = parser.parse_args()
+    db_proof = None
+    if args.db_proof_file:
+        db_proof = parse_db_proof(Path(args.db_proof_file).read_text(encoding="utf-8"))
     report = run_preflight(
         base_url=args.base.rstrip("/"),
         expected_github_sha=args.expected_sha,
         founder_phrase=args.founder_phrase,
         offline=args.offline,
+        db_proof=db_proof,
     )
     text = json.dumps(report, indent=2, sort_keys=True, default=str)
     print(text)

@@ -84,15 +84,17 @@ jobs:
           python -m tools.ci.demo_bounded_session_orchestrator qualify --offline
           echo "BOUNDED_DEMO_SESSION_IMPLEMENTED=true"
 
-      - name: Verify secrets and staging postgres for preflight
+      - name: Verify control-plane secrets for preflight (no runner Postgres DSN)
         env:
-          NEXUS_STAGING_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
         run: |
           set -euo pipefail
-          python tools/ci/p1_mask_dsn.py
-          test -n "${NEXUS_STAGING_POSTGRES_URL:-}"
+          # The GitHub runner does NOT hold or require the Postgres DSN. Database
+          # preflight runs INSIDE the validation service over the Zeabur private
+          # network (next step); PostgreSQL Public Port stays OFF. Only the Zeabur
+          # control token is needed here.
           test -n "${ZEABUR_TOKEN:-}"
+          echo "GITHUB_RUNNER_POSTGRES_DSN_REQUIRED=no"
           echo "PREFLIGHT_SECRET_BOUNDARY_PASS=true"
 
       - uses: actions/setup-node@v4
@@ -106,19 +108,38 @@ jobs:
           command -v zeabur
           zeabur --version
 
+      - name: In-runtime Postgres preflight inside validation service (sanitized)
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ github.event.inputs.validation_service_id }}
+        run: |
+          set -euo pipefail
+          # Execute the read-only DB preflight INSIDE the validation service, which
+          # uses its OWN runtime NEXUS_POSTGRES_URL over the Zeabur private network.
+          # The runner never holds the DSN; only sanitized markers are returned.
+          mkdir -p artifacts/demo_bounded_session
+          OUT=$(zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            python -m tools.ci.inruntime_postgres_preflight)
+          echo "$OUT" | grep -E '^(POSTGRES_AVAILABLE|MIGRATION_0007_PRESENT|DURABLE_LESSONS_READABLE|DURABLE_ORDER_LEDGER_READABLE|NO_UNRESOLVED_ORPHAN_INTENTS|NO_UNKNOWN_OUTCOME_STATE|STARTUP_RECONCILIATION_ENTRIES_ALLOWED|INRUNTIME_POSTGRES_PREFLIGHT_PASS|VALIDATION_RUNTIME_POSTGRES_MISSING)=' \
+            | tee artifacts/demo_bounded_session/inruntime_db_preflight.txt
+          grep -q '^INRUNTIME_POSTGRES_PREFLIGHT_PASS=true$' artifacts/demo_bounded_session/inruntime_db_preflight.txt
+          echo "POSTGRES_PREFLIGHT_LOCATION=VALIDATION_SERVICE"
+          echo "PUBLIC_POSTGRES_PORT_REQUIRED=no"
+
       - name: Run live preflight against validation service
         env:
           PYTHONPATH: ${{ github.workspace }}
           GITHUB_SHA: ${{ github.event.inputs.expected_runtime_sha }}
           FOUNDER_BOUNDED_SESSION_PHRASE: START_NEXUS_BYBIT_DEMO_BOUNDED_6H_SESSION
-          NEXUS_POSTGRES_URL: ${{ secrets.NEXUS_STAGING_POSTGRES_URL }}
         run: |
           set -euo pipefail
           mkdir -p artifacts/demo_bounded_session
+          # DB proof consumed from the in-runtime preflight (no runner Postgres DSN).
           python -m tools.ci.demo_bounded_session_preflight \
             --base "$DEMO_VAL_URL" \
             --expected-sha "$GITHUB_SHA" \
             --founder-phrase "$FOUNDER_BOUNDED_SESSION_PHRASE" \
+            --db-proof-file artifacts/demo_bounded_session/inruntime_db_preflight.txt \
             --out artifacts/demo_bounded_session/preflight.json
           echo "PREFLIGHT_PASS=true"
 
