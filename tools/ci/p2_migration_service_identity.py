@@ -24,6 +24,22 @@ def learning_validation_origin() -> str:
 
     return (os.environ.get("DEMO_VAL_URL") or LEARNING_VALIDATION_ORIGIN).strip().rstrip("/")
 
+
+# The ONLY Zeabur service id permitted for bounded-Demo `zeabur service exec`.
+LEARNING_VALIDATION_SERVICE_ID = "6a82a79aa21454a2cf6b0015"
+
+
+def assert_canonical_validation_service_id(service_id: str | None) -> str:
+    """Fail closed unless the id is EXACTLY the canonical learning-validation
+    service. Empty, the migration-control service, or any other id is rejected —
+    `zeabur service exec` must never target an arbitrary service. Returns the id."""
+    sid = (service_id or "").strip()
+    if not sid:
+        raise ValueError("validation_service_id_missing")
+    if sid != LEARNING_VALIDATION_SERVICE_ID:
+        raise ValueError("validation_service_id_not_canonical")
+    return sid
+
 _RUN_SCOPED_RE = re.compile(rf"^{re.escape(MIGRATION_SERVICE_NAME_PREFIX)}-(\d+)-(\d+)$")
 
 

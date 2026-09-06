@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
-"""IN-RUNTIME read-only Postgres preflight for the bounded-Demo control plane.
+"""IN-RUNTIME, strictly READ-ONLY Postgres preflight for the bounded-Demo plane.
 
 Runs INSIDE the validation service (nexus-bybit-demo-learning-validation) via
 `zeabur service exec`, using the service's OWN runtime NEXUS_POSTGRES_URL over the
-Zeabur private network. The GitHub Actions runner therefore never needs the
-Postgres DSN and the PostgreSQL Public Port stays OFF.
+Zeabur private network. The GitHub runner never needs the DSN; the PostgreSQL
+Public Port stays OFF.
 
-Read-only; no mutation. Prints ONLY sanitized PASS/FAIL markers — never the DSN,
-username, password, host, or any credential. Fails closed on any missing/
-unreadable/unresolved condition.
+STRICTLY READ-ONLY: only PostgresPool SELECTs, schema_migrations, DurableLessonStore
+.list_lessons(), and DurableOrderLedger.unfinished(). It NEVER calls startup
+reconciliation, DurableOrderLedger.transition(), BybitDemoReconciler, or any
+insert/update/delete — so a dry preflight can never mutate durable order state.
+Prints ONLY sanitized boolean markers; never the DSN/credentials. Fails closed.
 """
 from __future__ import annotations
 
 import os
 import sys
 
-# The sanitized boolean markers the control plane consumes (order = stable output).
+# Intents in these states are unresolved/unknown outcomes and block a new entry.
+UNKNOWN_OUTCOME_STATES = frozenset({"SUBMIT_UNKNOWN", "RECONCILIATION_REQUIRED"})
+
 MARKER_KEYS = (
     "POSTGRES_AVAILABLE",
     "MIGRATION_0007_PRESENT",
@@ -23,25 +27,82 @@ MARKER_KEYS = (
     "DURABLE_ORDER_LEDGER_READABLE",
     "NO_UNRESOLVED_ORPHAN_INTENTS",
     "NO_UNKNOWN_OUTCOME_STATE",
-    "STARTUP_RECONCILIATION_ENTRIES_ALLOWED",
+    "DURABLE_LEDGER_ENTRY_READY",
 )
 
 
-def to_markers(pg: dict) -> dict[str, bool]:
-    """Map the raw (never-printed) _postgres_preflight result to sanitized booleans.
-    Raw counts / DSN are NEVER surfaced — only pass/fail booleans."""
-    available = pg.get("postgres_available") is True
-    ledger_readable = available and "error" not in pg
-    return {
-        "POSTGRES_AVAILABLE": available,
-        "MIGRATION_0007_PRESENT": pg.get("migration_0007_present") is True,
-        "DURABLE_LESSONS_READABLE": pg.get("durable_lessons_readable") is True,
-        "DURABLE_ORDER_LEDGER_READABLE": ledger_readable,
-        "NO_UNRESOLVED_ORPHAN_INTENTS": int(pg.get("unresolved_intent_count") or 0) == 0
-        and int(pg.get("orphan_positions") or 0) == 0,
-        "NO_UNKNOWN_OUTCOME_STATE": int(pg.get("unknown_outcome_count") or 0) == 0,
-        "STARTUP_RECONCILIATION_ENTRIES_ALLOWED": pg.get("entries_allowed") is True,
+def _readonly_facts(database_url: str) -> dict:
+    """Gather read-only durable-state facts. NEVER mutates: no startup_reconcile,
+    no ledger.transition, no writes. Returns raw facts (never printed as-is)."""
+    from backend.nexus_demo_execution.durable_order_ledger import DurableOrderLedger
+    from backend.nexus_demo_execution.p2_durable_learning_store import DurableLessonStore
+    from backend.nexus_persistence_pg.pool import PostgresPool
+
+    facts: dict = {
+        "postgres_available": False,
+        "migration_0007_present": False,
+        "durable_lessons_readable": False,
+        "ledger_readable": False,
+        "unresolved_intent_count": 0,
+        "unknown_outcome_count": 0,
     }
+    pool = None
+    store = None
+    try:
+        pool = PostgresPool(database_url)
+        pool.open()
+        facts["postgres_available"] = True
+        versions = {str(row[0]) for row in pool.fetchall("SELECT version FROM nexus.schema_migrations")}
+        facts["migration_0007_present"] = "0007" in versions
+        store = DurableLessonStore(pool=pool)
+        facts["durable_lessons_readable"] = isinstance(store.list_lessons(), list)
+        ledger = DurableOrderLedger(pool)
+        unfinished = ledger.unfinished()  # pure SELECT — read-only
+        facts["ledger_readable"] = isinstance(unfinished, list)
+        facts["unresolved_intent_count"] = len(unfinished)
+        facts["unknown_outcome_count"] = sum(
+            1 for item in unfinished if str(item.get("state") or "") in UNKNOWN_OUTCOME_STATES
+        )
+        return facts
+    except Exception as exc:  # noqa: BLE001 - never leak internals; fail closed
+        facts["error"] = type(exc).__name__
+        return facts
+    finally:
+        if store is not None:
+            try:
+                store.close()
+            except Exception:  # noqa: BLE001
+                pass
+        if pool is not None:
+            try:
+                pool.close()
+            except Exception:  # noqa: BLE001
+                pass
+
+
+def to_markers(facts: dict) -> dict[str, bool]:
+    """Sanitized booleans only — no raw counts, no DSN. DURABLE_LEDGER_ENTRY_READY
+    is an honest durable-state-clean signal (NOT a reconciliation)."""
+    available = facts.get("postgres_available") is True
+    markers = {
+        "POSTGRES_AVAILABLE": available,
+        "MIGRATION_0007_PRESENT": facts.get("migration_0007_present") is True,
+        "DURABLE_LESSONS_READABLE": facts.get("durable_lessons_readable") is True,
+        "DURABLE_ORDER_LEDGER_READABLE": facts.get("ledger_readable") is True and "error" not in facts,
+        "NO_UNRESOLVED_ORPHAN_INTENTS": int(facts.get("unresolved_intent_count") or 0) == 0,
+        "NO_UNKNOWN_OUTCOME_STATE": int(facts.get("unknown_outcome_count") or 0) == 0,
+    }
+    markers["DURABLE_LEDGER_ENTRY_READY"] = all(
+        markers[key]
+        for key in (
+            "POSTGRES_AVAILABLE",
+            "MIGRATION_0007_PRESENT",
+            "DURABLE_ORDER_LEDGER_READABLE",
+            "NO_UNRESOLVED_ORPHAN_INTENTS",
+            "NO_UNKNOWN_OUTCOME_STATE",
+        )
+    )
+    return markers
 
 
 def all_pass(markers: dict[str, bool]) -> bool:
@@ -54,19 +115,12 @@ def _emit(markers: dict[str, bool]) -> None:
 
 
 def main() -> int:
-    # Runtime DSN comes ONLY from the service's own environment; never a runner
-    # value, never a public DSN. Missing -> fail closed (do not inject anything).
     dsn = (os.environ.get("NEXUS_POSTGRES_URL") or "").strip()
     if not dsn:
         print("VALIDATION_RUNTIME_POSTGRES_MISSING=true")
         print("INRUNTIME_POSTGRES_PREFLIGHT_PASS=false")
         return 1
-
-    # Reuse the single canonical read-only DB-proof routine. Its result (which
-    # holds no DSN) is converted to sanitized booleans and never printed raw.
-    from tools.ci.demo_bounded_session_preflight import _postgres_preflight
-
-    markers = to_markers(_postgres_preflight(dsn))
+    markers = to_markers(_readonly_facts(dsn))
     _emit(markers)
     ok = all_pass(markers)
     print(f"INRUNTIME_POSTGRES_PREFLIGHT_PASS={'true' if ok else 'false'}")

@@ -14,15 +14,11 @@ from backend.nexus_bounded_runtime.runtime_lease_storage_proof import (
     prove_runtime_durable_lease_storage,
 )
 from backend.nexus_demo_execution.demo_domain import DEMO_REST_BASE_URL
-from backend.nexus_demo_execution.durable_order_ledger import DurableOrderLedger
 from backend.nexus_demo_execution.kill_switch import KillSwitch
-from backend.nexus_demo_execution.order_reconciliation import BybitDemoReconciler
 from backend.nexus_demo_execution.p1_validation_runtime import apply_disarmed_flags
-from backend.nexus_demo_execution.p2_durable_learning_store import DurableLessonStore
 from backend.nexus_demo_execution.p2_run8_learning_closure import RepeatMistakeGuard
 from backend.nexus_demo_execution.safety_gate import DemoExecutionSafetyGate
 from backend.nexus_demo_execution.session_limits import FIXED_LEVERAGE, MARGIN_PER_TRADE_CAP
-from backend.nexus_persistence_pg.pool import PostgresPool
 from tools.ci.demo_6h_v2_preflight import run_preflight as run_validation_preflight
 from tools.ci.demo_bounded_session_lease import demo_api_base_ok
 from tools.ci.p2_migration_service_identity import (
@@ -33,7 +29,6 @@ from tools.ci.p2_migration_service_identity import (
 # Canonical bounded-Demo control-plane origin (env override else the live long
 # domain). The dead short alias nexus-bybit-demo-val is never the default.
 VALIDATION_URL = learning_validation_origin()
-UNKNOWN_OUTCOME_STATES = frozenset({"SUBMIT_UNKNOWN", "RECONCILIATION_REQUIRED"})
 
 
 def _env_false(name: str) -> bool:
@@ -65,57 +60,6 @@ def _health_sha(health: dict[str, Any] | None) -> str:
             if isinstance(value, str) and value.strip():
                 return value.strip()
     return ""
-
-
-def _postgres_preflight(database_url: str) -> dict[str, Any]:
-    out: dict[str, Any] = {
-        "postgres_available": False,
-        "migration_0007_present": False,
-        "durable_lessons_readable": False,
-        "unresolved_intent_count": 0,
-        "unknown_outcome_count": 0,
-        "orphan_positions": 0,
-        "entries_allowed": False,
-    }
-    pool: PostgresPool | None = None
-    store: DurableLessonStore | None = None
-    try:
-        pool = PostgresPool(database_url)
-        pool.open()
-        out["postgres_available"] = True
-        versions = {str(row[0]) for row in pool.fetchall("SELECT version FROM nexus.schema_migrations")}
-        out["migration_0007_present"] = "0007" in versions
-        store = DurableLessonStore(pool=pool)
-        out["durable_lessons_readable"] = isinstance(store.list_lessons(), list)
-        ledger = DurableOrderLedger(pool)
-        unfinished = ledger.unfinished()
-        out["unresolved_intent_count"] = len(unfinished)
-        out["unknown_outcome_count"] = sum(
-            1 for item in unfinished if str(item.get("state") or "") in UNKNOWN_OUTCOME_STATES
-        )
-
-        class _EmptyReader:
-            def find_order(self, **_kwargs: Any) -> None:
-                return None
-
-            def list_executions(self, **_kwargs: Any) -> list:
-                return []
-
-            def list_positions(self, _symbol: str | None = None) -> list:
-                return []
-
-        startup = BybitDemoReconciler(ledger, _EmptyReader()).startup_reconcile()
-        out["orphan_positions"] = int(startup.get("orphan_positions") or 0)
-        out["entries_allowed"] = bool(startup.get("entries_allowed"))
-        return out
-    except Exception as exc:  # noqa: BLE001
-        out["error"] = f"postgres_preflight:{type(exc).__name__}"
-        return out
-    finally:
-        if store is not None:
-            store.close()
-        if pool is not None:
-            pool.close()
 
 
 def _repeat_mistake_guard_healthy() -> bool:
@@ -156,8 +100,8 @@ def _apply_db_checks(
     if offline:
         for key in (
             "POSTGRES_AVAILABLE", "MIGRATION_0007_PRESENT", "DURABLE_LESSONS_READABLE",
-            "NO_UNRESOLVED_ORPHAN_INTENTS", "NO_UNKNOWN_OUTCOME_STATE",
-            "STARTUP_RECONCILIATION_ENTRIES_ALLOWED", "DB_PROOF_FROM_VALIDATION_RUNTIME",
+            "DURABLE_ORDER_LEDGER_READABLE", "NO_UNRESOLVED_ORPHAN_INTENTS", "NO_UNKNOWN_OUTCOME_STATE",
+            "DURABLE_LEDGER_ENTRY_READY", "DB_PROOF_FROM_VALIDATION_RUNTIME",
         ):
             checks[key] = True
         return
@@ -169,9 +113,12 @@ def _apply_db_checks(
     checks["POSTGRES_AVAILABLE"] = db_proof.get("POSTGRES_AVAILABLE") is True
     checks["MIGRATION_0007_PRESENT"] = db_proof.get("MIGRATION_0007_PRESENT") is True
     checks["DURABLE_LESSONS_READABLE"] = db_proof.get("DURABLE_LESSONS_READABLE") is True
+    checks["DURABLE_ORDER_LEDGER_READABLE"] = db_proof.get("DURABLE_ORDER_LEDGER_READABLE") is True
     checks["NO_UNRESOLVED_ORPHAN_INTENTS"] = db_proof.get("NO_UNRESOLVED_ORPHAN_INTENTS") is True
     checks["NO_UNKNOWN_OUTCOME_STATE"] = db_proof.get("NO_UNKNOWN_OUTCOME_STATE") is True
-    checks["STARTUP_RECONCILIATION_ENTRIES_ALLOWED"] = db_proof.get("STARTUP_RECONCILIATION_ENTRIES_ALLOWED") is True
+    # Honest durable-state-clean signal from the READ-ONLY in-runtime proof (NOT a
+    # reconciliation — no durable state was mutated to produce it).
+    checks["DURABLE_LEDGER_ENTRY_READY"] = db_proof.get("DURABLE_LEDGER_ENTRY_READY") is True
     checks["DB_PROOF_FROM_VALIDATION_RUNTIME"] = db_proof.get("INRUNTIME_POSTGRES_PREFLIGHT_PASS") is True
     if db_proof.get("VALIDATION_RUNTIME_POSTGRES_MISSING") is True:
         problems.append("validation_runtime_postgres_missing")
@@ -181,8 +128,10 @@ def _apply_db_checks(
         problems.append("unknown_outcome_ledger_state")
     if not checks["MIGRATION_0007_PRESENT"]:
         problems.append("migration_0007_missing")
-    if not checks["STARTUP_RECONCILIATION_ENTRIES_ALLOWED"]:
-        problems.append("startup_reconciliation_blocks_entry")
+    if not checks["DURABLE_ORDER_LEDGER_READABLE"]:
+        problems.append("durable_order_ledger_unreadable")
+    if not checks["DURABLE_LEDGER_ENTRY_READY"]:
+        problems.append("durable_ledger_entry_not_ready")
     if not checks["DB_PROOF_FROM_VALIDATION_RUNTIME"]:
         problems.append("inruntime_db_proof_not_passed")
 
@@ -306,7 +255,8 @@ def run_preflight(
         "NO_UNKNOWN_OUTCOME_STATE",
         "MIGRATION_0007_PRESENT",
         "DURABLE_LESSONS_READABLE",
-        "STARTUP_RECONCILIATION_ENTRIES_ALLOWED",
+        "DURABLE_ORDER_LEDGER_READABLE",
+        "DURABLE_LEDGER_ENTRY_READY",
         "DB_PROOF_FROM_VALIDATION_RUNTIME",
         "CERTIFIED_BOUNDED_RUNTIME_ACTIVE",
         "DURABLE_LEASE_STORAGE_PREFLIGHT_PASS",

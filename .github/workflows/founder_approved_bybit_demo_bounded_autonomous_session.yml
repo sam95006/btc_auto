@@ -108,23 +108,40 @@ jobs:
           command -v zeabur
           zeabur --version
 
-      - name: In-runtime Postgres preflight inside validation service (sanitized)
+      - name: In-runtime Postgres preflight inside validation service (sanitized, read-only)
         env:
+          PYTHONPATH: ${{ github.workspace }}
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           SERVICE_ID: ${{ github.event.inputs.validation_service_id }}
         run: |
           set -euo pipefail
-          # Execute the read-only DB preflight INSIDE the validation service, which
-          # uses its OWN runtime NEXUS_POSTGRES_URL over the Zeabur private network.
-          # The runner never holds the DSN; only sanitized markers are returned.
           mkdir -p artifacts/demo_bounded_session
-          OUT=$(zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+          # Enforce the EXACT canonical validation service id before any exec —
+          # never target an arbitrary service (fail closed on empty/other/migration).
+          python -c "import sys; from tools.ci.p2_migration_service_identity import assert_canonical_validation_service_id as a; a(sys.argv[1])" "$SERVICE_ID"
+          echo "EXACT_VALIDATION_SERVICE_ID_ENFORCED=yes"
+          # Explicit headless CLI login BEFORE any service exec (token never echoed).
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false >/dev/null 2>&1
+          echo "ZEABUR_AUTH_LOGIN_BEFORE_EXEC=yes"
+          # Read-only DB preflight INSIDE the validation service, using its OWN
+          # runtime NEXUS_POSTGRES_URL over the Zeabur private network. The runner
+          # never holds the DSN; only sanitized markers cross the boundary.
+          ALLOWED='^(POSTGRES_AVAILABLE|MIGRATION_0007_PRESENT|DURABLE_LESSONS_READABLE|DURABLE_ORDER_LEDGER_READABLE|NO_UNRESOLVED_ORPHAN_INTENTS|NO_UNKNOWN_OUTCOME_STATE|DURABLE_LEDGER_ENTRY_READY|INRUNTIME_POSTGRES_PREFLIGHT_PASS|VALIDATION_RUNTIME_POSTGRES_MISSING)=(true|false)$'
+          set +e
+          RAW=$(zeabur service exec --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
             python -m tools.ci.inruntime_postgres_preflight)
-          echo "$OUT" | grep -E '^(POSTGRES_AVAILABLE|MIGRATION_0007_PRESENT|DURABLE_LESSONS_READABLE|DURABLE_ORDER_LEDGER_READABLE|NO_UNRESOLVED_ORPHAN_INTENTS|NO_UNKNOWN_OUTCOME_STATE|STARTUP_RECONCILIATION_ENTRIES_ALLOWED|INRUNTIME_POSTGRES_PREFLIGHT_PASS|VALIDATION_RUNTIME_POSTGRES_MISSING)=' \
-            | tee artifacts/demo_bounded_session/inruntime_db_preflight.txt
-          grep -q '^INRUNTIME_POSTGRES_PREFLIGHT_PASS=true$' artifacts/demo_bounded_session/inruntime_db_preflight.txt
+          EXEC_CODE=$?
+          set -e
+          # Persist ONLY sanitized marker lines (never raw/unfiltered service output).
+          printf '%s\n' "$RAW" | grep -E "$ALLOWED" > artifacts/demo_bounded_session/inruntime_db_preflight.txt || true
+          cat artifacts/demo_bounded_session/inruntime_db_preflight.txt
+          echo "INRUNTIME_EXEC_EXIT_CODE=${EXEC_CODE}"
           echo "POSTGRES_PREFLIGHT_LOCATION=VALIDATION_SERVICE"
           echo "PUBLIC_POSTGRES_PORT_REQUIRED=no"
+          echo "GITHUB_RUNNER_POSTGRES_DSN_REQUIRED=no"
+          # Fail closed: require a clean exec AND an explicit pass marker.
+          test "${EXEC_CODE}" = "0"
+          grep -q '^INRUNTIME_POSTGRES_PREFLIGHT_PASS=true$' artifacts/demo_bounded_session/inruntime_db_preflight.txt
 
       - name: Run live preflight against validation service
         env:
